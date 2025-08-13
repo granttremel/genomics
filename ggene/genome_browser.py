@@ -1,0 +1,1242 @@
+#!/usr/bin/env python3
+"""
+Interactive genome browser for visualizing personal variants and features.
+"""
+import subprocess
+import sys
+import tty
+import termios
+import os
+from typing import Dict, List, Optional, Tuple, Union, Any, TYPE_CHECKING
+from dataclasses import dataclass
+import logging
+
+from ggene import CODON_TABLE_DNA, CODON_TABLE_RNA, COMPLEMENT_MAP, COMPLEMENT_MAP_RNA, to_rna, complement, reverse_complement
+
+if TYPE_CHECKING:
+    from .genomemanager import GenomeManager
+
+logger = logging.getLogger(__name__)
+
+# ANSI color codes
+class Colors:
+    RESET = '\033[0m'
+    BOLD = '\033[1m'
+    DIM = '\033[2m'
+    
+    # Variant colors
+    SNP = '\033[91m'        # Red for SNPs
+    INSERTION = '\033[92m'   # Green for insertions
+    DELETION = '\033[93m'    # Yellow for deletions
+    
+    # Feature colors
+    GENE = '\033[94m'        # Blue
+    TRANSCRIPT = '\033[95m'  # Magenta
+    EXON = '\033[96m'        # Cyan
+    CDS = '\033[93m'         # Yellow
+    UTR = '\033[90m'         # Gray
+    
+    # Navigation
+    POSITION = '\033[97m'    # White
+    
+    @classmethod
+    def variant_color(cls, ref: str, alt: str) -> str:
+        """Get color based on variant type."""
+        if len(ref) == len(alt):
+            return cls.SNP
+        elif len(ref) > len(alt):
+            return cls.DELETION
+        else:
+            return cls.INSERTION
+
+
+@dataclass
+class BrowserState:
+    """Current state of the genome browser."""
+    chrom: Union[str, int]
+    position: int
+    window_size: int
+    stride: int
+    show_features: bool = True
+    show_quality: bool = False
+    show_amino_acids: bool = False
+    show_reverse_strand: bool = False
+    show_rna: bool = False
+    feature_types: Optional[List[str]] = None
+
+
+class InteractiveGenomeBrowser:
+    """Interactive terminal-based genome browser."""
+    
+    genecard="https://www.genecards.org/cgi-bin/carddisp.pl?gene={name}"
+    wiki="https://en.wikipedia.org/wiki/{name}"
+    
+    def __init__(self, genome_manager: 'GenomeManager'):
+        """Initialize the genome browser.
+        
+        Args:
+            genome_manager: Initialized GenomeManager instance
+        """
+        self.gm = genome_manager
+        self.state = None
+        self.history = []
+        self.iterator = None
+        
+        self._current_features={}
+        self._gene_cache=""
+        
+        # Feature display order (based on hierarchy)
+        self.feature_hierarchy = [
+            'gene', 'transcript', 'exon', 'intron', 
+            'CDS', 'five_prime_utr', 'three_prime_utr',
+            'start_codon', 'stop_codon', 'variant'
+        ]
+    
+    def start(self, chrom: Union[str, int], position: int = 1,
+             window_size: int = 160, stride: int = 40):
+        """Start the interactive browser.
+        
+        Args:
+            chrom: Chromosome to browse
+            position: Starting position
+            window_size: Size of sequence window to display
+            stride: How many bases to move on arrow key
+        """
+        self.state = BrowserState(
+            chrom=chrom,
+            position=position,
+            window_size=window_size,
+            stride=stride
+        )
+        
+        # Clear screen
+        os.system('clear' if os.name == 'posix' else 'cls')
+        
+        print(f"{Colors.BOLD}Interactive Genome Browser{Colors.RESET}")
+        print(f"Navigate with arrow keys, 'q' to quit, 'h' for help")
+        print("-" * 80)
+        
+        try:
+            self._run_browser()
+        except KeyboardInterrupt:
+            self._cleanup()
+    
+    def _render_pos(self,start, end):
+        if self.state.show_reverse_strand:
+            return self.state.window_size-end, self.state.window_size-start
+        else:
+            return start,end
+        
+    def _render_seq(self, seq):
+        if self.state.show_reverse_strand:
+            seq = reverse_complement(seq)
+        if self.state.show_rna:
+            seq = to_rna(seq)
+        return seq
+        
+    def _run_browser(self):
+        """Main browser loop."""
+        while True:
+            # Display current view
+            self._display_current_view()
+            
+            # Get user input
+            key = self._get_key()
+            
+            # Handle navigation
+            if key == 'q':
+                break
+            elif key == '\x1b[C':  # Right arrow or 'l'
+                self._move_forward()
+            elif key == '\x1b[D':  # Left arrow or 'h'
+                self._move_backward()
+            elif key == '\x1b[A':  # Up arrow or 'k'
+                self._move_forward(large=True)
+            elif key == '\x1b[B':  # Down arrow or 'j'
+                self._move_backward(large=True)
+            elif key == ' ' or key == '\n' or key == '\r':  # Space or Enter
+                self._move_forward()
+            elif key == 'g':  # Go to position
+                self._goto_position()
+            elif key == 'n':
+                self._next_feature()
+            elif key == 'p':
+                self._prev_feature()
+            elif key == 'c':
+                self._switch_chromosome()
+            elif key == 'f':  # Toggle features
+                self.state.show_features = not self.state.show_features
+            elif key == 'a':  # Toggle amino acid display
+                self.state.show_amino_acids = not self.state.show_amino_acids
+            elif key == 'r':  # Toggle RNA mode
+                self.state.show_rna = not self.state.show_rna
+            elif key == '-':  # Toggle reverse strand
+                self.state.show_reverse_strand = not self.state.show_reverse_strand
+            elif key == 'w':  # Change window size
+                self._change_window_size()
+            elif key == 's':  # Change stride
+                self._change_stride()
+            elif key == '?':  # Help
+                self._show_help()
+            elif key == 'i':  # Show position info
+                self._show_position_info()
+            elif key == 'l':
+                self.gm.assemble_gene(self._gene_cache, self.state.chrom)
+            elif key == 'o':
+                self._open_gene_card()
+            elif key == 'k':
+                self._open_wiki()
+            elif key == 't':
+                self._translate_transcript()
+                # self.gm.ribo.translate_transcript()
+        
+        self._cleanup()
+    
+    def _display_current_view(self):
+        """Display the current genomic view."""
+        # Clear previous display
+        print('\033[2J\033[H')  # Clear screen and move to top
+        
+        # Header with mode indicators
+        mode_indicators = []
+        if self.state.show_reverse_strand:
+            mode_indicators.append("(-) strand")
+        else:
+            mode_indicators.append("(+) strand")
+        if self.state.show_rna:
+            mode_indicators.append("RNA")
+        else:
+            mode_indicators.append("DNA")
+        
+        print(f"{Colors.BOLD}Chromosome {self.state.chrom} | "
+              f"Position {self.state.position:,} | "
+              f"Window {self.state.window_size}bp | "
+              f"{' | '.join(mode_indicators)}{Colors.RESET}")
+        print("-" * 80)
+        
+        # Get sequences
+        from .genome_iterator import GenomeIterator
+        
+        iterator = GenomeIterator(
+            self.gm,
+            self.state.chrom,
+            self.state.position,
+            self.state.position + self.state.window_size - 1,
+            window_size=self.state.window_size,
+            integrate_variants=True,
+            track_features=True
+        )
+        
+        try:
+            ref_seq, personal_seq, features = next(iterator)
+            
+            self._cache_current_gene(features)
+            
+            # Apply strand and RNA transformations
+            if self.state.show_reverse_strand:
+                ref_seq = reverse_complement(ref_seq, rna=False)
+                personal_seq = reverse_complement(personal_seq, rna=False)
+                # Reverse features positions for display
+                # (features stay the same, just displayed differently)
+            
+            if self.state.show_rna:
+                ref_seq = to_rna(ref_seq)
+                personal_seq = to_rna(personal_seq)
+            
+            # Display sequences with codon highlighting
+            self._display_sequences(ref_seq, personal_seq, features)
+            
+            # Display amino acid translation if in CDS
+            if self.state.show_amino_acids:
+                self._display_amino_acid_changes(ref_seq, personal_seq, features)
+            
+            # Display features
+            if self.state.show_features and features:
+                self._display_features(features)
+            
+            # Navigation hints
+            print("\n" + "-" * 80)
+            print(f"{Colors.DIM}[←/→: move | ↑/↓: jump | g: goto | f: features | a: amino acids | ?: help | q: quit]{Colors.RESET}")
+            
+        except StopIteration:
+            print(f"{Colors.DIM}No sequence data available at this position{Colors.RESET}")
+    
+    def _cache_current_features(self, features):
+        self._current_features={}
+        for f in features:
+            ftype = f['feature']
+            if not ftype in self._current_features:
+                self._current_features=[]
+            self._current_features.append(f)
+        
+    
+    def _cache_current_gene(self, features):
+        for f in features:
+            if f['feature']=="gene":
+                if 'gene_name' in f:
+                    self._gene_cache=f['gene_name']
+                    return
+                elif 'gene_name' in f['info']:
+                    self._gene_cache=f['info']['gene_name']
+                    return
+        self._gene_cache=""
+        
+    
+    def _open_gene_card(self):
+        
+        if not self._gene_cache:
+            return
+        
+        subprocess.run(["firefox",self.genecard.format(name=self._gene_cache)])
+    
+    def _open_wiki(self):
+        
+        if not self._gene_cache:
+            return
+        
+        subprocess.run(["firefox",self.wiki.format(name=self._gene_cache)])
+    
+    def _align_sequences_with_gaps(self, ref_seq: str, personal_seq: str, features: List[Dict[str, Any]]):
+        """Align reference and personal sequences by inserting gaps at indel positions.
+        
+        Returns:
+            Tuple of (aligned_ref, aligned_pers, variant_positions)
+        """
+        # Find variant features to identify indels
+        variant_features = [f for f in features if f.get('feature') == 'variant']
+        
+        # Create a list of indel events in the window
+        indels = []
+        window_start = self.state.position
+        
+        for var in variant_features:
+            var_start = var.get('start', 0)
+            ref = var.get('ref', '')
+            alt = var.get('alt', '')
+            
+            # Calculate position in our window (0-based)
+            window_pos = var_start - window_start
+            
+            # Only process if the variant starts within our window
+            if 0 <= window_pos < len(ref_seq):
+                if len(ref) != len(alt):
+                    indels.append({
+                        'pos': window_pos,
+                        'ref_len': len(ref),
+                        'alt_len': len(alt),
+                        'ref': ref,
+                        'alt': alt
+                    })
+        
+        # Sort indels by position
+        indels.sort(key=lambda x: x['pos'])
+        
+        # Build aligned sequences with gaps
+        aligned_ref = []
+        aligned_pers = []
+        variant_positions = []  # Track where variants are for coloring
+        
+        ref_idx = 0
+        pers_idx = 0
+        
+        for i in range(len(ref_seq)):
+            # Check if we're at an indel position
+            current_indel = None
+            for indel in indels:
+                if indel['pos'] == i:
+                    current_indel = indel
+                    break
+            
+            if current_indel:
+                ref_len = current_indel['ref_len']
+                alt_len = current_indel['alt_len']
+                
+                if alt_len > ref_len:
+                    # Insertion - add gaps to reference
+                    for j in range(ref_len):
+                        aligned_ref.append(ref_seq[ref_idx] if ref_idx < len(ref_seq) else 'N')
+                        aligned_pers.append(personal_seq[pers_idx] if pers_idx < len(personal_seq) else 'N')
+                        variant_positions.append(True)
+                        ref_idx += 1
+                        pers_idx += 1
+                    
+                    # Add the inserted bases with gaps in reference
+                    for j in range(alt_len - ref_len):
+                        aligned_ref.append('-')
+                        aligned_pers.append(personal_seq[pers_idx] if pers_idx < len(personal_seq) else 'N')
+                        variant_positions.append(True)
+                        pers_idx += 1
+                        
+                elif ref_len > alt_len:
+                    # Deletion - add gaps to personal  
+                    for j in range(alt_len):
+                        aligned_ref.append(ref_seq[ref_idx] if ref_idx < len(ref_seq) else 'N')
+                        aligned_pers.append(personal_seq[pers_idx] if pers_idx < len(personal_seq) else 'N')
+                        variant_positions.append(True)
+                        ref_idx += 1
+                        pers_idx += 1
+                    
+                    # Add the deleted bases with gaps in personal
+                    for j in range(ref_len - alt_len):
+                        aligned_ref.append(ref_seq[ref_idx] if ref_idx < len(ref_seq) else 'N')
+                        aligned_pers.append('-')
+                        variant_positions.append(True)
+                        ref_idx += 1
+                        
+                else:
+                    # SNP - just add both
+                    aligned_ref.append(ref_seq[ref_idx] if ref_idx < len(ref_seq) else 'N')
+                    aligned_pers.append(personal_seq[pers_idx] if pers_idx < len(personal_seq) else 'N')
+                    variant_positions.append(ref_seq[ref_idx] != personal_seq[pers_idx])
+                    ref_idx += 1
+                    pers_idx += 1
+            else:
+                # No indel at this position
+                if ref_idx < len(ref_seq) and pers_idx < len(personal_seq):
+                    aligned_ref.append(ref_seq[ref_idx])
+                    aligned_pers.append(personal_seq[pers_idx])
+                    variant_positions.append(ref_seq[ref_idx] != personal_seq[pers_idx])
+                    ref_idx += 1
+                    pers_idx += 1
+                elif ref_idx < len(ref_seq):
+                    aligned_ref.append(ref_seq[ref_idx])
+                    aligned_pers.append('-')
+                    variant_positions.append(True)
+                    ref_idx += 1
+                elif pers_idx < len(personal_seq):
+                    aligned_ref.append('-')
+                    aligned_pers.append(personal_seq[pers_idx])
+                    variant_positions.append(True)
+                    pers_idx += 1
+        
+        return ''.join(aligned_ref), ''.join(aligned_pers), variant_positions
+    
+    def _display_sequences(self, ref_seq: str, personal_seq: str, features: List[Dict[str, Any]] = None):
+        """Display reference and personal sequences with variant highlighting.
+        
+        Args:
+            ref_seq: Reference sequence
+            personal_seq: Personal sequence with variants
+            features: Features in current window for codon highlighting
+        """
+        if not ref_seq or not personal_seq:
+            return
+        
+        # Align sequences with gaps for indels
+        if features:
+            aligned_ref, aligned_pers, variant_positions = self._align_sequences_with_gaps(ref_seq, personal_seq, features)
+        else:
+            aligned_ref = ref_seq
+            aligned_pers = personal_seq
+            variant_positions = [ref_seq[i] != personal_seq[i] for i in range(min(len(ref_seq), len(personal_seq)))]
+        
+        # Find start and stop codons in features
+        start_codons = []
+        stop_codons = []
+        if features:
+            window_start = self.state.position
+            for feature in features:
+                ftype = feature.get('feature')
+                if ftype == 'start_codon':
+                    codon_start = max(0, feature.get('start', 0) - window_start)
+                    codon_end = min(len(aligned_ref), feature.get('end', 0) - window_start + 1)
+                    start_codons.append((codon_start, codon_end))
+                elif ftype == 'stop_codon':
+                    codon_start = max(0, feature.get('start', 0) - window_start)
+                    codon_end = min(len(aligned_ref), feature.get('end', 0) - window_start + 1)
+                    stop_codons.append((codon_start, codon_end))
+        
+        # Calculate position labels
+        start_pos = self.state.position
+        pos_labels = []
+        for i in range(0, len(ref_seq), 10):
+            pos_labels.append(f"{start_pos + i:,}")
+        
+        # Position ruler (adjusted for alignment)
+        print(f"\n{Colors.POSITION}Position:{Colors.RESET}")
+        strand = '-' if self.state.show_reverse_strand else '+'
+        ruler = ""
+        pos_counter = 0  # Track actual genomic positions despite gaps
+        for i in range(len(aligned_ref)):
+            if aligned_ref[i] != '-':  # Only count non-gap positions
+                if pos_counter % 10 == 0:
+                    ruler += "|"
+                elif pos_counter % 5 == 0:
+                    ruler += strand
+                else:
+                    ruler += "."
+                pos_counter += 1
+            else:
+                ruler += " "  # Space for gaps
+        print(f"         {ruler}")
+        
+        # Position numbers (every 10 bases, adjusted for gaps)
+        pos_line = "         "
+        pos_counter = 0
+        for i in range(len(aligned_ref)):
+            if aligned_ref[i] != '-':
+                if pos_counter % 10 == 0:
+                    label = f"{start_pos + pos_counter:,}"
+                    pos_line = pos_line[:len(pos_line)] + label
+                pos_counter += 1
+            pos_line += " " if i < len(aligned_ref) - 1 else ""
+        print(pos_line[:len(aligned_ref) + 9])
+        
+        # Reference sequence with codon highlighting
+        ref_display = f"\n{Colors.BOLD}Ref:    {Colors.RESET} "
+        for i, base in enumerate(aligned_ref):
+            # Check if in start/stop codon
+            in_start = any(start <= i < end for start, end in start_codons)
+            in_stop = any(start <= i < end for start, end in stop_codons)
+            
+            if base == '-':
+                ref_display += f"{Colors.DIM}-{Colors.RESET}"
+            elif in_start:
+                ref_display += f"{Colors.INSERTION}{base}{Colors.RESET}"
+            elif in_stop:
+                ref_display += f"{Colors.SNP}{base}{Colors.RESET}"
+            else:
+                ref_display += base
+        print(ref_display)
+        
+        # Personal sequence with variant and codon coloring
+        personal_display = f"{Colors.BOLD}Persnl: {Colors.RESET} "
+        
+        for i in range(len(aligned_pers)):
+            ref_base = aligned_ref[i] if i < len(aligned_ref) else ''
+            pers_base = aligned_pers[i]
+            
+            # Check if in start/stop codon
+            in_start = any(start <= i < end for start, end in start_codons)
+            in_stop = any(start <= i < end for start, end in stop_codons)
+            
+            if pers_base == '-':
+                personal_display += f"{Colors.DIM}-{Colors.RESET}"
+            elif variant_positions[i] if i < len(variant_positions) else False:
+                # Variant detected
+                color = Colors.variant_color(ref_base, pers_base)
+                personal_display += f"{color}{pers_base}{Colors.RESET}"
+            elif in_start:
+                personal_display += f"{Colors.INSERTION}{pers_base}{Colors.RESET}"
+            elif in_stop:
+                personal_display += f"{Colors.SNP}{pers_base}{Colors.RESET}"
+            else:
+                personal_display += pers_base
+        
+        print(personal_display)
+        
+        # Variant indicator line
+        variant_line = "         "
+        for i in range(len(variant_positions)):
+            if variant_positions[i]:
+                variant_line += "*"
+            else:
+                variant_line += " "
+        
+        if any(variant_positions):
+            print(f"{Colors.DIM}{variant_line}{Colors.RESET}")
+    
+    def _display_features(self, features: List[Dict[str, Any]]):
+        """Display feature annotations as labeled bars with compression.
+        
+        Args:
+            features: List of features in the current window
+        """
+        if not features:
+            return
+        
+        print(f"\n{Colors.BOLD}Features:{Colors.RESET}")
+        
+
+        
+        # Group features by type and extent
+        feature_groups = {}
+        for feature in features:
+            ftype = feature.get('feature', 'unknown')
+            # Skip start/stop codons as they're shown differently
+            if ftype in ['start_codon', 'stop_codon']:
+                continue
+            if ftype not in feature_groups:
+                feature_groups[ftype] = {}
+            
+            # Group by extent (start and end positions)
+            feat_start = feature.get('start', 0)
+            feat_end = feature.get('end', 0)
+            extent_key = (feat_start, feat_end)
+            
+            if extent_key not in feature_groups[ftype]:
+                feature_groups[ftype][extent_key] = []
+            feature_groups[ftype][extent_key].append(feature)
+        
+        # Display features in hierarchical order
+        window_start = self.state.position
+        
+        for ftype in self.feature_hierarchy:
+            if ftype not in feature_groups:
+                continue
+            
+            color = self._get_feature_color(ftype)
+            
+            # Display each unique extent
+            for extent_key, extent_features in feature_groups[ftype].items():
+                feat_start, feat_end = extent_key
+                
+                # Calculate display positions using render_pos for strand awareness
+                # First get the feature position relative to window
+                rel_start = feat_start - window_start
+                rel_end = feat_end - window_start
+                
+                # Apply strand-aware rendering
+                if self.state.show_reverse_strand:
+                    # Reverse the positions for display
+                    display_start, display_end = self._render_pos(rel_start, rel_end + 1)
+                else:
+                    display_start = max(0, rel_start)
+                    display_end = min(self.state.window_size, rel_end + 1)
+                
+                # Only display if feature overlaps with window
+                # Check if the feature overlaps with the visible window at all
+                if feat_end >= window_start and feat_start <= window_start + self.state.window_size - 1:
+                    # Create feature bar
+                    bar = " " * 9  # Indent to align with sequences
+                    
+                    for i in range(self.state.window_size):
+                        # Check if this position is within the feature
+                        actual_pos = window_start + i
+                        
+                        # For reverse strand, we need to check positions differently
+                        if self.state.show_reverse_strand:
+                            # On reverse strand, features appear flipped
+                            render_i = self.state.window_size - 1 - i
+                            if feat_start <= window_start + render_i <= feat_end:
+                                # Determine what character to use
+                                if render_i == rel_start and feat_start >= window_start:
+                                    bar += "|"  # Feature starts in window
+                                elif render_i == rel_end and feat_end <= window_start + self.state.window_size - 1:
+                                    bar += "|"  # Feature ends in window
+                                else:
+                                    bar += "-"
+                            else:
+                                bar += " "
+                        else:
+                            # Normal forward strand display
+                            if feat_start <= actual_pos <= feat_end:
+                                # Determine what character to use
+                                if i == display_start and feat_start >= window_start:
+                                    bar += "|"  # Feature starts in window
+                                elif i == display_end - 1 and feat_end <= window_start + self.state.window_size - 1:
+                                    bar += "|"  # Feature ends in window
+                                else:
+                                    bar += "-"
+                            else:
+                                bar += " "
+                    
+                    # Create compressed label for multiple features
+                    label = self._format_compressed_label(ftype, extent_features)
+                    
+                    currstrand = '-' if self.state.show_reverse_strand else '+'
+                    if ftype=='gene':
+                        feat = feature_groups[ftype][extent_key][0]
+                        if not feat['strand']==currstrand:
+                            labelstr = label + f'({feat['strand']})'
+                            label=labelstr
+                            
+                    
+                    # Calculate label position (keep label visible and centered)
+                    if self.state.show_reverse_strand:
+                        # For reverse strand, adjust label position
+                        visible_start = max(0, min(display_start, display_end))
+                        visible_end = min(self.state.window_size, max(display_start, display_end))
+                    else:
+                        visible_start = max(0, display_start)
+                        visible_end = min(self.state.window_size, display_end)
+                    label_center = visible_start + (visible_end - visible_start) // 2
+                    label_pos = 9 + label_center - len(label) // 2
+                    
+                    # Ensure label stays within the visible part of the feature
+                    label_pos = max(9 + visible_start, label_pos)
+                    label_pos = min(9 + visible_end - len(label), label_pos)
+                    
+                    # Insert label into bar if it fits
+                    if label_pos > 9 and label_pos + len(label) < len(bar):
+                        bar = bar[:label_pos] + label + bar[label_pos + len(label):]
+                    
+                    print(f"{color}{bar}{Colors.RESET}")
+                    
+        # lastly display variants separately with details
+        variant_features = [f for f in features if f.get('feature') == 'variant']
+        if variant_features:
+            print(f"  {Colors.SNP}Variants:{Colors.RESET}")
+            for var in variant_features:
+                var_start = var.get('start', 0)
+                var_end = var.get('end', 0) 
+                ref = var.get('ref', '')
+                alt = var.get('alt', '')
+                ref = self._render_seq(ref)
+                alt = self._render_seq(alt)
+                
+                qual = var.get('qual', 0)
+                
+                # Only show if overlaps with window
+                if var_end >= self.state.position and var_start <= self.state.position + self.state.window_size - 1:
+                    var_type = 'SNP' if len(ref) == len(alt) else '``INDEL'
+                    print(f"    {var_start}: {ref}→{alt} ({var_type}, Q={qual:.1f})")
+    
+    def _format_compressed_label(self, ftype: str, features: List[Dict[str, Any]]) -> str:
+        """Format a compressed label for multiple features.
+        
+        Args:
+            ftype: Feature type
+            features: List of features with same extent
+            
+        Returns:
+            Formatted compressed label string
+        """
+        if len(features) == 1:
+            return self._format_single_feature_label(features[0])
+        
+        # Compress multiple features
+        if ftype == 'gene':
+            names = [f.get('info', {}).get('name', '?') for f in features]
+            return '/'.join(set(names))[:30]
+        elif ftype == 'transcript':
+            names = []
+            for f in features:
+                info = f.get('info', {})
+                name = info.get('transcript_name', info.get('transcript_id', '?'))
+                # Extract just the suffix if format is GENE-001
+                if '-' in name:
+                    names.append(name.split('-')[-1])
+                else:
+                    names.append(name)
+            # Get unique names and join
+            unique_names = sorted(set(names))
+            if len(unique_names) > 3:
+                return f"txs({len(unique_names)})"
+            return '/'.join(unique_names)[:30]
+        elif ftype == 'exon':
+            nums = [str(f.get('info', {}).get('exon_number', '?')) for f in features]
+            unique_nums = sorted(set(nums), key=lambda x: int(x) if x.isdigit() else 0)
+            if len(unique_nums) > 3:
+                return f"exons({len(unique_nums)})"
+            return f"exon {'/'.join(unique_nums)}"
+        elif ftype == 'CDS':
+            return f"CDS({len(features)})" if len(features) > 1 else "CDS"
+        else:
+            return f"{ftype}({len(features)})" if len(features) > 1 else ftype[:10]
+    
+    def _format_single_feature_label(self, feature: Dict[str, Any]) -> str:
+        """Format a label for a single feature.
+        
+        Args:
+            feature: Feature dictionary
+            
+        Returns:
+            Formatted label string
+        """
+        ftype = feature.get('feature', 'unknown')
+        info = feature.get('info', {})
+        
+        if ftype == 'gene':
+            return info.get('gene_name', 'gene')
+        elif ftype == 'transcript':
+            name = info.get('transcript_name', info.get('transcript_id', 'transcript'))
+            # Shorten long transcript names
+            if len(name) > 20:
+                if '-' in name:
+                    return name.split('-')[-1]
+                return name[:20]
+            return name
+        elif ftype == 'exon':
+            exon_num = info.get('exon_number', '?')
+            return f"exon {exon_num}"
+        elif ftype == 'CDS':
+            return "CDS"
+        elif ftype == 'variant':
+            info = feature.get('info', {})
+            ref = info.get('ref', '?')
+            alt = info.get('alt', '?')
+            ref = self._render_seq(ref)
+            alt = self._render_seq(alt)
+            
+            
+            if len(ref) == len(alt):
+                return f"{ref}→{alt}"
+            else:
+                return f"VAR({len(ref)}→{len(alt)})"
+        elif ftype == 'five_prime_utr':
+            return "5'UTR"
+        elif ftype == 'three_prime_utr':
+            return "3'UTR"
+        elif ftype == 'intron':
+            return "intron"
+        else:
+            return ftype[:10]
+    
+    def _display_amino_acid_changes(self, ref_seq: str, personal_seq: str, features: List[Dict[str, Any]]):
+        """Display amino acid changes for variants in CDS regions.
+        
+        Note: Sequences may contain alignment gaps ('-') which are removed before translation.
+        
+        Args:
+            ref_seq: Reference DNA sequence (may contain gaps from alignment)
+            personal_seq: Personal DNA sequence (may contain gaps from alignment)
+            features: Features in current window
+        """
+        # Check if we're in a CDS region
+        cds_features = [f for f in features if f.get('feature') == 'CDS']
+        if not cds_features:
+            return
+        
+        window_start = self.state.position
+        window_end = window_start + len(ref_seq) - 1
+        
+        # For each CDS, determine reading frame and translate
+        for cds in cds_features:
+            cds_start = cds.get('start', 0)
+            cds_end = cds.get('end', 0)
+            strand = cds.get('strand', '+')
+            
+            # Determine the overlap between CDS and window
+            overlap_start = max(cds_start, window_start)
+            overlap_end = min(cds_end, window_end)
+            
+            if overlap_start > overlap_end:
+                continue  # No overlap
+            
+            # Calculate positions in the window
+            window_cds_start = overlap_start - window_start
+            window_cds_end = overlap_end - window_start + 1
+            
+            # Calculate frame offset based on position in CDS
+            cds_offset = overlap_start - cds_start
+            frame_offset = cds_offset % 3
+            
+            # Adjust to codon boundaries within the CDS region only
+            adj_start = window_cds_start + (3 - frame_offset) % 3
+            adj_end = window_cds_end - ((window_cds_end - window_cds_start - frame_offset) % 3)
+            
+            if adj_end <= adj_start:
+                continue
+            
+            # Extract only the CDS portion and remove gaps for translation
+            ref_coding_with_gaps = ref_seq[adj_start:adj_end]
+            pers_coding_with_gaps = personal_seq[adj_start:adj_end]
+            
+            # Remove gaps for translation (gaps are from alignment display)
+            ref_coding = ref_coding_with_gaps.replace('-', '')
+            pers_coding = pers_coding_with_gaps.replace('-', '')
+            
+            # Reverse complement if negative strand
+            if strand == '-':
+                ref_coding = reverse_complement(ref_coding)
+                pers_coding = reverse_complement(pers_coding)
+            
+            # Translate to amino acids
+            ref_aa = self._translate_dna(ref_coding)
+            pers_aa = self._translate_dna(pers_coding)
+            
+            # Display amino acid sequences
+            info = cds.get('info', {})
+            gene_name = info.get('gene_name', 'Unknown')
+            print(f"\n{Colors.BOLD}AA Translation (CDS - {gene_name}):{Colors.RESET}")
+            
+            # Show position alignment (account for gaps in display)
+            position_line = " " * 9
+            gap_adjust = 0
+            for i in range(adj_start):
+                if i < len(ref_seq) and ref_seq[i] == '-':
+                    gap_adjust += 1
+                position_line += "   "  # Three spaces for non-CDS positions
+            
+            # Position indicators for codons
+            aa_ruler = position_line
+            for i in range(len(ref_aa)):
+                aa_ruler += f"{i%10}  "
+            print(aa_ruler)
+            
+            # Reference amino acids
+            ref_aa_display = f"Ref AA:  {' ' * ((adj_start + gap_adjust) * 3)}"
+            for aa in ref_aa:
+                ref_aa_display += f"{aa}  "
+            print(f"{Colors.DIM}{ref_aa_display}{Colors.RESET}")
+            
+            # Personal amino acids with change highlighting
+            pers_aa_display = f"Pers AA: {' ' * ((adj_start + gap_adjust) * 3)}"
+            for i, (ref_a, pers_a) in enumerate(zip(ref_aa, pers_aa)):
+                if ref_a != pers_a:
+                    # Missense mutation
+                    if pers_a == '*':
+                        # Nonsense mutation (stop gained)
+                        pers_aa_display += f"{Colors.SNP}{pers_a}{Colors.RESET}  "
+                    elif ref_a == '*':
+                        # Stop lost
+                        pers_aa_display += f"{Colors.INSERTION}{pers_a}{Colors.RESET}  "
+                    else:
+                        # Regular missense
+                        pers_aa_display += f"{Colors.DELETION}{pers_a}{Colors.RESET}  "
+                else:
+                    pers_aa_display += f"{pers_a}  "
+            print(pers_aa_display)
+            
+            # Show CDS boundaries with bars
+            boundary_line = " " * 9
+            for i in range(self.state.window_size):
+                if i >= window_cds_start and i < window_cds_end:
+                    if i == window_cds_start:
+                        boundary_line += "|"
+                    elif i == window_cds_end - 1:
+                        boundary_line += "|"
+                    else:
+                        boundary_line += "-"
+                else:
+                    boundary_line += " "
+            print(f"{Colors.DIM}{boundary_line} CDS region{Colors.RESET}")
+            
+            # Show mutation types
+            mutations = []
+            for i, (ref_a, pers_a) in enumerate(zip(ref_aa, pers_aa)):
+                if ref_a != pers_a:
+                    # Calculate actual position in the CDS
+                    aa_position_in_cds = (overlap_start - cds_start + frame_offset) // 3 + i + 1
+                    if pers_a == '*':
+                        mutations.append(f"p.{ref_a}{aa_position_in_cds}* (nonsense)")
+                    elif ref_a == '*':
+                        mutations.append(f"p.*{aa_position_in_cds}{pers_a} (stop lost)")
+                    else:
+                        mutations.append(f"p.{ref_a}{aa_position_in_cds}{pers_a}")
+            
+            if mutations:
+                print(f"{Colors.DIM}Mutations: {', '.join(mutations[:5])}{Colors.RESET}")
+            
+            break  # Only show first CDS for clarity
+    
+    def _translate_dna(self, dna_seq: str) -> str:
+        """Translate DNA sequence to amino acids.
+        
+        Args:
+            dna_seq: DNA sequence (should be multiple of 3, gaps removed)
+            
+        Returns:
+            Amino acid sequence
+        """
+        # Remove any remaining gaps just in case
+        dna_seq = dna_seq.replace('-', '')
+        
+        # Standard genetic code
+        codon_table = CODON_TABLE_DNA
+        
+        amino_acids = []
+        for i in range(0, len(dna_seq) - 2, 3):
+            codon = dna_seq[i:i+3].upper()
+            if 'N' in codon or '-' in codon:
+                amino_acids.append('X')  # Unknown
+            else:
+                amino_acids.append(codon_table.get(codon, 'X'))
+        
+        return ''.join(amino_acids)
+    
+    def _translate_transcript(self):
+        
+        feats = self.gm.get_features_at_position(self.state.chrom, self.state.position, include_types=['transcript'])
+        i=0
+        for f in feats:
+            print(i, f['info']['transcript_id'])
+            i+=1
+        
+        txi = input("transcript to transcribe")
+        txi = int(txi)
+        
+        if not txi < i:
+            print('invalid transcript index')
+            return
+        
+        txid = feats[txi]['info']['transcript_id']
+        seq = self.gm.transcribe_gene(self._gene_cache, txi)
+        res = seq['result']
+        
+        print(f"Warnings: {', '.join(res.warnings)}")
+        print(f"Protein sequence for gene {self._gene_cache}, {txid}:")
+        for i in range(len(res.protein_sequence)//80 + 1):
+            print(res.protein_sequence[i*80:i*80+80]+'...')
+    
+    def _get_feature_color(self, ftype: str) -> str:
+        """Get color for a feature type.
+        
+        Args:
+            ftype: Feature type
+            
+        Returns:
+            Color code
+        """
+        color_map = {
+            'gene': Colors.GENE,
+            'transcript': Colors.TRANSCRIPT,
+            'exon': Colors.EXON,
+            'CDS': Colors.CDS,
+            'five_prime_utr': Colors.UTR,
+            'three_prime_utr': Colors.UTR,
+            'start_codon': Colors.SNP,
+            'stop_codon': Colors.SNP,
+            'variant': Colors.DELETION
+        }
+        return color_map.get(ftype, Colors.DIM)
+    
+    def _move_forward(self, large: bool = False):
+        """Move forward in the genome (considers strand direction)."""
+        move_distance = self.state.stride * (10 if large else 1)
+        if self.state.show_reverse_strand:
+            # On reverse strand, forward means lower positions
+            self.state.position = max(1, self.state.position - move_distance)
+        else:
+            # On forward strand, forward means higher positions
+            self.state.position += move_distance
+    
+    def _move_backward(self, large: bool = False):
+        """Move backward in the genome (considers strand direction)."""
+        move_distance = self.state.stride * (10 if large else 1)
+        if self.state.show_reverse_strand:
+            # On reverse strand, backward means higher positions
+            self.state.position += move_distance
+        else:
+            # On forward strand, backward means lower positions
+            self.state.position = max(1, self.state.position - move_distance)
+    
+    def _switch_chromosome(self):
+        
+        c=input("new chromosome: ")
+        pos=input("new position (default=1,000,000): ")
+        if not pos:
+            pos = 1000000
+        else:
+            pos=int(pos)
+        
+        if c in list(map(str,range(23))) + ['MT','X','Y']:
+            self.state.chrom=c
+            self.state.position=pos
+            
+        self._display_current_view()
+        
+    
+    def _goto_position(self):
+        """Jump to a specific position."""
+        print("\n" + "-" * 40)
+        try:
+            pos_input = input("Enter position (or gene name): ").strip()
+            
+            # Try to parse as number
+            try:
+                new_pos = int(pos_input.replace(',', ''))
+                self.state.position = max(1, new_pos)
+            except ValueError:
+                # Try as gene name
+                gene_name = pos_input.upper()
+                chrom, gene_info = self.gm.gene_map.find_gene(gene_name)
+                
+                if chrom and gene_info:
+                    gene_data = gene_info[0]
+                    self.state.chrom = chrom
+                    self.state.position = gene_data['start']
+                    print(f"Jumping to {gene_name} on chromosome {chrom}")
+                else:
+                    print(f"Gene '{gene_name}' not found")
+                    input("Press Enter to continue...")
+        except Exception as e:
+            print(f"Error: {e}")
+            input("Press Enter to continue...")
+    
+    def _next_feature(self):
+        """Jump to the next feature of specified type."""
+        print("\n" + "-" * 40)
+        feat_type = input("Next feature type (default: gene): ").strip()
+        if not feat_type:
+            feat_type = "gene"
+        
+        # gene_end = self.gm
+        
+        result = self.gm.find_next_feature(
+            self.state.chrom, 
+            self.state.position,
+            feat_type
+        )
+        
+        if result:
+            self.state.position = result['start']
+            print(f"Jumped to {result['type']}: {result['name']} at position {result['start']:,}")
+            print(f"Distance: {result['distance']:,} bp")
+        else:
+            print(f"No {feat_type} found downstream")
+            input("Press Enter to continue...")
+    
+    def _prev_feature(self):
+        """Jump to the previous feature of specified type."""
+        print("\n" + "-" * 40)
+        feat_type = input("Previous feature type (default: gene): ").strip()
+        if not feat_type:
+            feat_type = "gene"
+        
+        result = self.gm.find_prev_feature(
+            self.state.chrom,
+            self.state.position,
+            feat_type
+        )
+        
+        if result:
+            self.state.position = result['start']
+            print(f"Jumped to {result['type']}: {result['name']} at position {result['start']:,}")
+            print(f"Distance: {result['distance']:,} bp")
+        else:
+            print(f"No {feat_type} found upstream")
+            input("Press Enter to continue...")
+    
+    def _change_window_size(self):
+        """Change the window size."""
+        print("\n" + "-" * 40)
+        try:
+            new_size = int(input(f"Enter new window size (current: {self.state.window_size}): "))
+            if 10 <= new_size <= 200:
+                self.state.window_size = new_size
+            else:
+                print("Window size must be between 10 and 200")
+                input("Press Enter to continue...")
+        except ValueError:
+            print("Invalid input")
+            input("Press Enter to continue...")
+    
+    def _change_stride(self):
+        """Change the stride."""
+        print("\n" + "-" * 40)
+        try:
+            new_stride = int(input(f"Enter new stride (current: {self.state.stride}): "))
+            if 1 <= new_stride <= 1000:
+                self.state.stride = new_stride
+            else:
+                print("Stride must be between 1 and 1000")
+                input("Press Enter to continue...")
+        except ValueError:
+            print("Invalid input")
+            input("Press Enter to continue...")
+    
+    def _show_position_info(self):
+        """Show detailed information about current position."""
+        print("\n" + "=" * 60)
+        print(f"Position Information")
+        print("=" * 60)
+        
+        # Get all features at current position
+        features = self.gm.get_features_at_position(
+            self.state.chrom, 
+            self.state.position
+        )
+        
+        print(f"Chromosome: {self.state.chrom}")
+        print(f"Position: {self.state.position:,}")
+        print(f"Features at this position: {len(features)}")
+        
+        if features:
+            print("\nFeature details:")
+            for feature in features:
+                ftype = feature.get('feature', 'unknown')
+                info = feature.get('info', {})
+                print(f"  - {ftype}:")
+                
+                # Show relevant info
+                if 'gene_name' in info:
+                    print(f"      Gene: {info['gene_name']}")
+                if 'transcript_name' in info:
+                    print(f"      Transcript: {info['transcript_name']}")
+                if 'exon_number' in info:
+                    print(f"      Exon number: {info['exon_number']}")
+                if 'strand' in feature:
+                    print(f"      Strand: {feature['strand']}")
+        
+        # Check for variants at this position
+        try:
+            variants = []
+            for var in self.gm.vcf(self.gm._make_index(
+                self.state.chrom, 
+                self.state.position, 
+                self.state.position
+            )):
+                variants.append(var)
+            
+            if variants:
+                print(f"\nVariants at this position: {len(variants)}")
+                for var in variants:
+                    print(f"  - {var.REF} -> {var.ALT[0] if var.ALT else 'N/A'}")
+                    print(f"      Quality: {var.QUAL:.1f}")
+        except:
+            pass
+        
+        input("\nPress Enter to continue...")
+    
+    def _show_help(self):
+        """Show help information."""
+        print("\n" + "=" * 60)
+        print("Genome Browser Help")
+        print("=" * 60)
+        print("Navigation:")
+        print("  → / l     : Move forward by stride")
+        print("  ← / h     : Move backward by stride")
+        print("  ↑ / k     : Jump forward (10x stride)")
+        print("  ↓ / j     : Jump backward (10x stride)")
+        print("  Space/Enter: Move forward by stride")
+        print("  g         : Go to position or gene")
+        print("  n         : Jump to next feature")
+        print("  p         : Jump to previous feature")
+        print("\nDisplay:")
+        print("  f         : Toggle feature display")
+        print("  a         : Toggle amino acid translation")
+        print("  r         : Toggle RNA mode (T→U)")
+        print("  -         : Toggle reverse strand")
+        print("  w         : Change window size")
+        print("  s         : Change stride")
+        print("  i         : Show position info")
+        print("\nColors:")
+        print(f"  {Colors.SNP}Red{Colors.RESET}      : SNPs")
+        print(f"  {Colors.INSERTION}Green{Colors.RESET}    : Insertions")
+        print(f"  {Colors.DELETION}Yellow{Colors.RESET}   : Deletions")
+        print(f"  {Colors.GENE}Blue{Colors.RESET}     : Genes")
+        print(f"  {Colors.EXON}Cyan{Colors.RESET}     : Exons")
+        print("\nOther:")
+        print("  ?         : Show this help")
+        print("  q         : Quit")
+        print("=" * 60)
+        input("Press Enter to continue...")
+    
+    def _get_key(self):
+        """Get a single keypress from the user."""
+        fd = sys.stdin.fileno()
+        old_settings = termios.tcgetattr(fd)
+        try:
+            tty.setraw(sys.stdin.fileno())
+            key = sys.stdin.read(1)
+            
+            # Check for escape sequences (arrow keys)
+            if key == '\x1b':
+                key += sys.stdin.read(2)
+            
+            return key
+        finally:
+            termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+    
+    def _cleanup(self):
+        """Clean up before exiting."""
+        print("\n" + "-" * 40)
+        print("Exiting genome browser")
+
+
+def browse_genome(genome_manager: 'GenomeManager', 
+                  chrom: Union[str, int] = 1,
+                  position: int = 1000000,
+                  window_size: int = 80):
+    """Convenience function to start the genome browser.
+    
+    Args:
+        genome_manager: Initialized GenomeManager
+        chrom: Starting chromosome
+        position: Starting position
+        window_size: Initial window size
+    """
+    browser = InteractiveGenomeBrowser(genome_manager)
+    browser.start(chrom, position, window_size)

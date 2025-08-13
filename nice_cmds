@@ -1,0 +1,15 @@
+
+
+sort a gtf using zcat:
+
+zcat Homo_sapiens.GRCh38.112.gtf.gz | sort -k1,1 -k4,4n > sorted.gtf
+
+compress:
+
+bgzip sorted.gtf
+
+index with tabix:
+
+tabix -p gff sorted.gtf.gz
+
+
