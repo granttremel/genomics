@@ -8,6 +8,8 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
+all_features = ["gene","transcript","exon","CDS","intron","five_prime_utr","start_codon","stop_codon","three_prime_utr","variant"]
+
 @dataclass
 class GenomicPosition:
     """Represents a single position in the genome with associated features and variants."""
@@ -45,7 +47,7 @@ class GenomeIterator:
                  integrate_variants: bool = True,
                  min_variant_quality: float = 5.0,
                  track_features: bool = True,
-                 feature_types: Optional[List[str]] = None,
+                 feature_types: Optional[List[str]] = all_features,
                  window_size: Optional[int] = None):
         """Initialize the genome iterator.
         
@@ -159,6 +161,8 @@ class GenomeIterator:
         # Use cache if available
         if position in self._feature_cache:
             features = self._feature_cache[position]
+            feats = ', '.join(features.keys())
+            print(f'using cached features: {feats}')
         else:
             # Direct query if not in cache
             features = list(self.gm.gene_map.get_feature(self.chrom, position))
@@ -316,7 +320,8 @@ class GenomeIterator:
             else:
                 # For windows, get all features that overlap with any part of the window
                 window_features = list(self.gm.gene_map.fetch(
-                    self.chrom, self.current_pos, window_end
+                    self.chrom, self.current_pos, window_end,
+                    features=tuple(self.feature_types) if self.feature_types else tuple()
                 ))
                 features = window_features
         

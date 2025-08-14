@@ -1,0 +1,1649 @@
+{
+   "name": "ZNF595",
+   "type": "gene",
+   "chrom": 4,
+   "start": 53286,
+   "end": 88208,
+   "strand": "+",
+   "start_relative": 0,
+   "end_relative": 34922,
+   "gene_id": "ENSG00000272602",
+   "gene_version": 6,
+   "gene_name": "ZNF595",
+   "gene_source": "ensembl_havana",
+   "gene_biotype": "protein_coding",
+   "transcripts": {
+      "ZNF595-203": {
+         "type": "transcript",
+         "sfid": "transcript-ZNF595-203",
+         "start": 53286,
+         "end": 87523,
+         "start_relative": 0,
+         "end_relative": 34237,
+         "transcript_name": "ZNF595-203",
+         "subfeatures": [
+            "exon-1",
+            "five_prime_utr-1",
+            "exon-1",
+            "five_prime_utr-2",
+            "exon-1",
+            "five_prime_utr-3",
+            "exon-1",
+            "five_prime_utr-4",
+            "exon-1",
+            "CDS-1",
+            "start_codon-1",
+            "intron-1",
+            "intron-2",
+            "intron-3",
+            "intron-4",
+            "intron-5",
+            "variant-1 (ts 0)",
+            "variant-2 (tv 0)",
+            "variant-3 (ts 0)",
+            "variant-4 (tv 0)",
+            "variant-5 (ts 0)",
+            "exon-2",
+            "CDS-2",
+            "intron-6",
+            "variant-6 (tv 0)",
+            "variant-7 (tv 0)",
+            "exon-3",
+            "exon-3",
+            "CDS-3",
+            "intron-7",
+            "intron-8",
+            "variant-8 (ts 0)",
+            "variant-9 (ts 0)",
+            "variant-10 (ts 0)",
+            "variant-11 (tv 0)",
+            "variant-12 (tv 0)",
+            "variant-13 (ts 0)",
+            "variant-14 (ts 0)",
+            "variant-15 (tv 0)",
+            "variant-16 (del -1)",
+            "variant-17 (tv 0)",
+            "variant-18 (tv 0)",
+            "variant-19 (ts 0)",
+            "exon-4",
+            "CDS-4",
+            "stop_codon-1",
+            "three_prime_utr-1",
+            "intron-9",
+            "variant-20 (tv 0)",
+            "variant-21 (ts 0)",
+            "variant-22 (tv 0)",
+            "variant-23 (ts 0)",
+            "exon-3",
+            "exon-2",
+            "CDS-5",
+            "five_prime_utr-5",
+            "CDS-6",
+            "start_codon-2",
+            "stop_codon-2",
+            "three_prime_utr-2",
+            "three_prime_utr-3",
+            "intron-10",
+            "intron-11"
+         ]
+      },
+      "ZNF595-204": {
+         "type": "transcript",
+         "sfid": "transcript-ZNF595-204",
+         "start": 53295,
+         "end": 87521,
+         "start_relative": 9,
+         "end_relative": 34235,
+         "transcript_name": "ZNF595-204",
+         "subfeatures": [
+            "exon-1",
+            "five_prime_utr-2",
+            "exon-1",
+            "five_prime_utr-3",
+            "exon-1",
+            "five_prime_utr-4",
+            "exon-1",
+            "CDS-1",
+            "start_codon-1",
+            "intron-1",
+            "intron-2",
+            "intron-3",
+            "intron-4",
+            "intron-5",
+            "variant-1 (ts 0)",
+            "variant-2 (tv 0)",
+            "variant-3 (ts 0)",
+            "variant-4 (tv 0)",
+            "variant-5 (ts 0)",
+            "exon-2",
+            "CDS-2",
+            "intron-6",
+            "variant-6 (tv 0)",
+            "variant-7 (tv 0)",
+            "exon-3",
+            "exon-3",
+            "CDS-3",
+            "intron-7",
+            "intron-8",
+            "variant-8 (ts 0)",
+            "variant-9 (ts 0)",
+            "variant-10 (ts 0)",
+            "variant-11 (tv 0)",
+            "variant-12 (tv 0)",
+            "variant-13 (ts 0)",
+            "variant-14 (ts 0)",
+            "variant-15 (tv 0)",
+            "variant-16 (del -1)",
+            "variant-17 (tv 0)",
+            "variant-18 (tv 0)",
+            "variant-19 (ts 0)",
+            "exon-4",
+            "CDS-4",
+            "stop_codon-1",
+            "three_prime_utr-1",
+            "intron-9",
+            "variant-20 (tv 0)",
+            "variant-21 (ts 0)",
+            "variant-22 (tv 0)",
+            "variant-23 (ts 0)",
+            "exon-3",
+            "CDS-5",
+            "five_prime_utr-5",
+            "CDS-6",
+            "start_codon-2",
+            "stop_codon-2",
+            "three_prime_utr-2",
+            "intron-10",
+            "intron-11"
+         ]
+      },
+      "ZNF595-202": {
+         "type": "transcript",
+         "sfid": "transcript-ZNF595-202",
+         "start": 53304,
+         "end": 68500,
+         "start_relative": 18,
+         "end_relative": 15214,
+         "transcript_name": "ZNF595-202",
+         "subfeatures": [
+            "exon-1",
+            "five_prime_utr-3",
+            "exon-1",
+            "five_prime_utr-4",
+            "exon-1",
+            "CDS-1",
+            "start_codon-1",
+            "intron-1",
+            "intron-2",
+            "intron-3",
+            "intron-4",
+            "intron-5",
+            "variant-1 (ts 0)",
+            "variant-2 (tv 0)",
+            "variant-3 (ts 0)",
+            "variant-4 (tv 0)",
+            "variant-5 (ts 0)",
+            "exon-2",
+            "CDS-2",
+            "intron-6",
+            "variant-6 (tv 0)",
+            "variant-7 (tv 0)",
+            "exon-3",
+            "exon-3",
+            "CDS-3",
+            "intron-7",
+            "intron-8",
+            "variant-8 (ts 0)",
+            "variant-9 (ts 0)",
+            "variant-10 (ts 0)",
+            "variant-11 (tv 0)",
+            "variant-12 (tv 0)",
+            "variant-13 (ts 0)",
+            "variant-14 (ts 0)",
+            "variant-15 (tv 0)",
+            "variant-16 (del -1)",
+            "variant-17 (tv 0)",
+            "variant-18 (tv 0)",
+            "variant-19 (ts 0)",
+            "exon-4",
+            "CDS-4",
+            "stop_codon-1",
+            "three_prime_utr-1"
+         ]
+      },
+      "ZNF595-205": {
+         "type": "transcript",
+         "sfid": "transcript-ZNF595-205",
+         "start": 53321,
+         "end": 88208,
+         "start_relative": 35,
+         "end_relative": 34922,
+         "transcript_name": "ZNF595-205",
+         "subfeatures": [
+            "exon-1",
+            "five_prime_utr-4",
+            "exon-1",
+            "CDS-1",
+            "start_codon-1",
+            "intron-1",
+            "intron-2",
+            "intron-3",
+            "intron-4",
+            "intron-5",
+            "variant-1 (ts 0)",
+            "variant-2 (tv 0)",
+            "variant-3 (ts 0)",
+            "variant-4 (tv 0)",
+            "variant-5 (ts 0)",
+            "exon-2",
+            "CDS-2",
+            "intron-6",
+            "variant-6 (tv 0)",
+            "variant-7 (tv 0)",
+            "exon-3",
+            "exon-3",
+            "CDS-3",
+            "intron-7",
+            "intron-8",
+            "variant-8 (ts 0)",
+            "variant-9 (ts 0)",
+            "variant-10 (ts 0)",
+            "variant-11 (tv 0)",
+            "variant-12 (tv 0)",
+            "variant-13 (ts 0)",
+            "variant-14 (ts 0)",
+            "variant-15 (tv 0)",
+            "variant-16 (del -1)",
+            "variant-17 (tv 0)",
+            "variant-18 (tv 0)",
+            "variant-19 (ts 0)",
+            "exon-4",
+            "CDS-4",
+            "stop_codon-1",
+            "three_prime_utr-1",
+            "intron-9",
+            "variant-20 (tv 0)",
+            "variant-21 (ts 0)",
+            "variant-22 (tv 0)",
+            "variant-23 (ts 0)",
+            "exon-3",
+            "exon-2",
+            "exon-4",
+            "CDS-5",
+            "five_prime_utr-5",
+            "CDS-6",
+            "start_codon-2",
+            "stop_codon-2",
+            "three_prime_utr-2",
+            "three_prime_utr-3",
+            "three_prime_utr-4",
+            "intron-10",
+            "intron-11",
+            "variant-24 (tv 0)"
+         ]
+      },
+      "ZNF595-201": {
+         "type": "transcript",
+         "sfid": "transcript-ZNF595-201",
+         "start": 53329,
+         "end": 60514,
+         "start_relative": 43,
+         "end_relative": 7228,
+         "transcript_name": "ZNF595-201",
+         "subfeatures": [
+            "exon-1",
+            "CDS-1",
+            "start_codon-1",
+            "intron-1",
+            "intron-2",
+            "intron-3",
+            "intron-4",
+            "intron-5",
+            "variant-1 (ts 0)",
+            "variant-2 (tv 0)",
+            "variant-3 (ts 0)",
+            "variant-4 (tv 0)",
+            "variant-5 (ts 0)",
+            "exon-2",
+            "CDS-2",
+            "intron-6",
+            "variant-6 (tv 0)",
+            "variant-7 (tv 0)",
+            "exon-3",
+            "exon-3",
+            "CDS-3",
+            "intron-7"
+         ]
+      }
+   },
+   "exons": {
+      "-6321842661597465080": {
+         "type": "exon",
+         "sfid": "exon-1",
+         "start": 53286,
+         "end": 53491,
+         "start_relative": 0,
+         "end_relative": 205,
+         "transcript_name": "ZNF595-203",
+         "exon_number": 1,
+         "parents": [
+            "transcript-ZNF595-203"
+         ],
+         "subfeatures": [
+            "five_prime_utr-1",
+            "five_prime_utr-2",
+            "five_prime_utr-3",
+            "five_prime_utr-4",
+            "CDS-1",
+            "start_codon-1"
+         ]
+      },
+      "-4538875039244599165": {
+         "type": "exon",
+         "sfid": "exon-1",
+         "start": 53295,
+         "end": 53491,
+         "start_relative": 9,
+         "end_relative": 205,
+         "transcript_name": "ZNF595-204",
+         "exon_number": 1,
+         "parents": [
+            "transcript-ZNF595-203",
+            "transcript-ZNF595-204"
+         ],
+         "subfeatures": [
+            "five_prime_utr-2",
+            "five_prime_utr-3",
+            "five_prime_utr-4",
+            "CDS-1",
+            "start_codon-1"
+         ]
+      },
+      "7801987541097552749": {
+         "type": "exon",
+         "sfid": "exon-1",
+         "start": 53304,
+         "end": 53491,
+         "start_relative": 18,
+         "end_relative": 205,
+         "transcript_name": "ZNF595-202",
+         "exon_number": 1,
+         "parents": [
+            "transcript-ZNF595-203",
+            "transcript-ZNF595-204",
+            "transcript-ZNF595-202"
+         ],
+         "subfeatures": [
+            "five_prime_utr-3",
+            "five_prime_utr-4",
+            "CDS-1",
+            "start_codon-1"
+         ]
+      },
+      "-4641763441166021344": {
+         "type": "exon",
+         "sfid": "exon-1",
+         "start": 53321,
+         "end": 53491,
+         "start_relative": 35,
+         "end_relative": 205,
+         "transcript_name": "ZNF595-205",
+         "exon_number": 1,
+         "parents": [
+            "transcript-ZNF595-203",
+            "transcript-ZNF595-204",
+            "transcript-ZNF595-202",
+            "transcript-ZNF595-205"
+         ],
+         "subfeatures": [
+            "five_prime_utr-4",
+            "CDS-1",
+            "start_codon-1"
+         ]
+      },
+      "-8310587087793175353": {
+         "type": "exon",
+         "sfid": "exon-1",
+         "start": 53329,
+         "end": 53491,
+         "start_relative": 43,
+         "end_relative": 205,
+         "transcript_name": "ZNF595-201",
+         "exon_number": 1,
+         "parents": [
+            "transcript-ZNF595-203",
+            "transcript-ZNF595-204",
+            "transcript-ZNF595-202",
+            "transcript-ZNF595-205",
+            "transcript-ZNF595-201"
+         ],
+         "subfeatures": [
+            "CDS-1",
+            "start_codon-1"
+         ]
+      },
+      "3543190276403343435": {
+         "type": "exon",
+         "sfid": "exon-2",
+         "start": 59430,
+         "end": 59556,
+         "start_relative": 6144,
+         "end_relative": 6270,
+         "transcript_name": "ZNF595-204",
+         "exon_number": 2,
+         "parents": [
+            "transcript-ZNF595-203",
+            "transcript-ZNF595-204",
+            "transcript-ZNF595-202",
+            "transcript-ZNF595-205",
+            "transcript-ZNF595-201"
+         ],
+         "subfeatures": [
+            "CDS-2",
+            "CDS-6",
+            "start_codon-2",
+            "stop_codon-2"
+         ]
+      },
+      "9178854120801275464": {
+         "type": "exon",
+         "sfid": "exon-3",
+         "start": 60058,
+         "end": 60153,
+         "start_relative": 6772,
+         "end_relative": 6867,
+         "transcript_name": "ZNF595-205",
+         "exon_number": 3,
+         "parents": [
+            "transcript-ZNF595-203",
+            "transcript-ZNF595-204",
+            "transcript-ZNF595-202",
+            "transcript-ZNF595-205",
+            "transcript-ZNF595-201"
+         ],
+         "subfeatures": [
+            "CDS-3",
+            "CDS-5"
+         ]
+      },
+      "7462111847389268641": {
+         "type": "exon",
+         "sfid": "exon-3",
+         "start": 60058,
+         "end": 60514,
+         "start_relative": 6772,
+         "end_relative": 7228,
+         "transcript_name": "ZNF595-201",
+         "exon_number": 3,
+         "parents": [
+            "transcript-ZNF595-203",
+            "transcript-ZNF595-204",
+            "transcript-ZNF595-202",
+            "transcript-ZNF595-205",
+            "transcript-ZNF595-201"
+         ],
+         "subfeatures": [
+            "CDS-3",
+            "CDS-5"
+         ]
+      },
+      "4190860663120562538": {
+         "type": "exon",
+         "sfid": "exon-4",
+         "start": 67840,
+         "end": 68500,
+         "start_relative": 14554,
+         "end_relative": 15214,
+         "transcript_name": "ZNF595-202",
+         "exon_number": 4,
+         "parents": [
+            "transcript-ZNF595-203",
+            "transcript-ZNF595-204",
+            "transcript-ZNF595-202",
+            "transcript-ZNF595-205"
+         ],
+         "subfeatures": [
+            "CDS-4",
+            "stop_codon-1",
+            "three_prime_utr-1"
+         ]
+      },
+      "-8968966618643100129": {
+         "type": "exon",
+         "sfid": "exon-3",
+         "start": 85731,
+         "end": 87521,
+         "start_relative": 32445,
+         "end_relative": 34235,
+         "transcript_name": "ZNF595-204",
+         "exon_number": 3,
+         "parents": [
+            "transcript-ZNF595-203",
+            "transcript-ZNF595-204",
+            "transcript-ZNF595-205"
+         ],
+         "subfeatures": [
+            "CDS-3",
+            "CDS-5",
+            "five_prime_utr-5",
+            "CDS-6",
+            "start_codon-2",
+            "stop_codon-2",
+            "three_prime_utr-2"
+         ]
+      },
+      "6693986799211385418": {
+         "type": "exon",
+         "sfid": "exon-2",
+         "start": 85731,
+         "end": 87523,
+         "start_relative": 32445,
+         "end_relative": 34237,
+         "transcript_name": "ZNF595-203",
+         "exon_number": 2,
+         "parents": [
+            "transcript-ZNF595-203",
+            "transcript-ZNF595-205"
+         ],
+         "subfeatures": [
+            "CDS-2",
+            "CDS-5",
+            "five_prime_utr-5",
+            "CDS-6",
+            "start_codon-2",
+            "stop_codon-2",
+            "three_prime_utr-2",
+            "three_prime_utr-3"
+         ]
+      },
+      "5568863264027900168": {
+         "type": "exon",
+         "sfid": "exon-4",
+         "start": 85731,
+         "end": 88208,
+         "start_relative": 32445,
+         "end_relative": 34922,
+         "transcript_name": "ZNF595-205",
+         "exon_number": 4,
+         "parents": [
+            "transcript-ZNF595-205"
+         ],
+         "subfeatures": [
+            "CDS-4",
+            "stop_codon-1",
+            "CDS-5",
+            "five_prime_utr-5",
+            "CDS-6",
+            "start_codon-2",
+            "stop_codon-2",
+            "three_prime_utr-2",
+            "three_prime_utr-3",
+            "three_prime_utr-4",
+            "variant-24 (tv 0)"
+         ]
+      }
+   },
+   "proteins": {
+      "ENSP00000476408": {
+         "type": "protein",
+         "sfid": "protein-ENSP00000476408",
+         "start_relative": 0,
+         "end_relative": 0,
+         "protein_id": "ENSP00000476408"
+      },
+      "ENSP00000477392": {
+         "type": "protein",
+         "sfid": "protein-ENSP00000477392",
+         "start_relative": 0,
+         "end_relative": 0,
+         "protein_id": "ENSP00000477392"
+      },
+      "ENSP00000434858": {
+         "type": "protein",
+         "sfid": "protein-ENSP00000434858",
+         "start_relative": 0,
+         "end_relative": 0,
+         "protein_id": "ENSP00000434858"
+      },
+      "ENSP00000476367": {
+         "type": "protein",
+         "sfid": "protein-ENSP00000476367",
+         "start_relative": 0,
+         "end_relative": 0,
+         "protein_id": "ENSP00000476367"
+      }
+   },
+   "cds": [
+      {
+         "type": "CDS",
+         "sfid": "CDS-1",
+         "start": 53489,
+         "end": 53491,
+         "start_relative": 203,
+         "end_relative": 205,
+         "transcript_name": "ZNF595-204",
+         "exon_number": 1,
+         "protein_id": "ENSP00000476408",
+         "parents": [
+            "transcript-ZNF595-203",
+            "transcript-ZNF595-204",
+            "transcript-ZNF595-202",
+            "transcript-ZNF595-205",
+            "transcript-ZNF595-201",
+            "exon-1",
+            "exon-1",
+            "exon-1",
+            "exon-1",
+            "exon-1"
+         ],
+         "subfeatures": [
+            "start_codon-1"
+         ]
+      },
+      {
+         "type": "CDS",
+         "sfid": "CDS-2",
+         "start": 59430,
+         "end": 59556,
+         "start_relative": 6144,
+         "end_relative": 6270,
+         "transcript_name": "ZNF595-204",
+         "exon_number": 2,
+         "protein_id": "ENSP00000476408",
+         "parents": [
+            "transcript-ZNF595-203",
+            "transcript-ZNF595-204",
+            "transcript-ZNF595-202",
+            "transcript-ZNF595-205",
+            "transcript-ZNF595-201",
+            "exon-2",
+            "exon-2"
+         ]
+      },
+      {
+         "type": "CDS",
+         "sfid": "CDS-3",
+         "start": 60058,
+         "end": 60153,
+         "start_relative": 6772,
+         "end_relative": 6867,
+         "transcript_name": "ZNF595-205",
+         "exon_number": 3,
+         "protein_id": "ENSP00000477392",
+         "parents": [
+            "transcript-ZNF595-203",
+            "transcript-ZNF595-204",
+            "transcript-ZNF595-202",
+            "transcript-ZNF595-205",
+            "transcript-ZNF595-201",
+            "exon-3",
+            "exon-3",
+            "exon-3"
+         ]
+      },
+      {
+         "type": "CDS",
+         "sfid": "CDS-4",
+         "start": 67840,
+         "end": 67868,
+         "start_relative": 14554,
+         "end_relative": 14582,
+         "transcript_name": "ZNF595-202",
+         "exon_number": 4,
+         "protein_id": "ENSP00000434858",
+         "parents": [
+            "transcript-ZNF595-203",
+            "transcript-ZNF595-204",
+            "transcript-ZNF595-202",
+            "transcript-ZNF595-205",
+            "exon-4",
+            "exon-4"
+         ]
+      },
+      {
+         "type": "CDS",
+         "sfid": "CDS-5",
+         "start": 85731,
+         "end": 87448,
+         "start_relative": 32445,
+         "end_relative": 34162,
+         "transcript_name": "ZNF595-204",
+         "exon_number": 3,
+         "protein_id": "ENSP00000476408",
+         "parents": [
+            "transcript-ZNF595-203",
+            "transcript-ZNF595-204",
+            "transcript-ZNF595-205",
+            "exon-3",
+            "exon-3",
+            "exon-3",
+            "exon-2",
+            "exon-4"
+         ],
+         "subfeatures": [
+            "five_prime_utr-5",
+            "start_codon-2"
+         ]
+      },
+      {
+         "type": "CDS",
+         "sfid": "CDS-6",
+         "start": 86054,
+         "end": 87448,
+         "start_relative": 32768,
+         "end_relative": 34162,
+         "transcript_name": "ZNF595-203",
+         "exon_number": 2,
+         "protein_id": "ENSP00000476367",
+         "parents": [
+            "transcript-ZNF595-203",
+            "transcript-ZNF595-204",
+            "transcript-ZNF595-205",
+            "exon-2",
+            "exon-3",
+            "exon-2",
+            "exon-4"
+         ],
+         "subfeatures": [
+            "start_codon-2"
+         ]
+      }
+   ],
+   "subfeatures": [
+      {
+         "type": "five_prime_utr",
+         "sfid": "five_prime_utr-1",
+         "start": 53286,
+         "end": 53491,
+         "start_relative": 0,
+         "end_relative": 205,
+         "transcript_name": "ZNF595-203",
+         "parents": [
+            "transcript-ZNF595-203",
+            "exon-1"
+         ]
+      },
+      {
+         "type": "five_prime_utr",
+         "sfid": "five_prime_utr-2",
+         "start": 53295,
+         "end": 53488,
+         "start_relative": 9,
+         "end_relative": 202,
+         "transcript_name": "ZNF595-204",
+         "parents": [
+            "transcript-ZNF595-203",
+            "exon-1",
+            "transcript-ZNF595-204",
+            "exon-1"
+         ]
+      },
+      {
+         "type": "five_prime_utr",
+         "sfid": "five_prime_utr-3",
+         "start": 53304,
+         "end": 53488,
+         "start_relative": 18,
+         "end_relative": 202,
+         "transcript_name": "ZNF595-202",
+         "parents": [
+            "transcript-ZNF595-203",
+            "exon-1",
+            "transcript-ZNF595-204",
+            "exon-1",
+            "transcript-ZNF595-202",
+            "exon-1"
+         ]
+      },
+      {
+         "type": "five_prime_utr",
+         "sfid": "five_prime_utr-4",
+         "start": 53321,
+         "end": 53488,
+         "start_relative": 35,
+         "end_relative": 202,
+         "transcript_name": "ZNF595-205",
+         "parents": [
+            "transcript-ZNF595-203",
+            "exon-1",
+            "transcript-ZNF595-204",
+            "exon-1",
+            "transcript-ZNF595-202",
+            "exon-1",
+            "transcript-ZNF595-205",
+            "exon-1"
+         ]
+      },
+      {
+         "type": "start_codon",
+         "sfid": "start_codon-1",
+         "start": 53489,
+         "end": 53491,
+         "start_relative": 203,
+         "end_relative": 205,
+         "transcript_name": "ZNF595-204",
+         "exon_number": 1,
+         "parents": [
+            "transcript-ZNF595-203",
+            "exon-1",
+            "transcript-ZNF595-204",
+            "exon-1",
+            "transcript-ZNF595-202",
+            "exon-1",
+            "transcript-ZNF595-205",
+            "exon-1",
+            "transcript-ZNF595-201",
+            "exon-1",
+            "CDS-1"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-1",
+         "start": 53491,
+         "end": 53295,
+         "start_relative": 205,
+         "end_relative": 9,
+         "parents": [
+            "transcript-ZNF595-203",
+            "transcript-ZNF595-204",
+            "transcript-ZNF595-202",
+            "transcript-ZNF595-205",
+            "transcript-ZNF595-201"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-2",
+         "start": 53491,
+         "end": 53304,
+         "start_relative": 205,
+         "end_relative": 18,
+         "parents": [
+            "transcript-ZNF595-203",
+            "transcript-ZNF595-204",
+            "transcript-ZNF595-202",
+            "transcript-ZNF595-205",
+            "transcript-ZNF595-201"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-3",
+         "start": 53491,
+         "end": 53321,
+         "start_relative": 205,
+         "end_relative": 35,
+         "parents": [
+            "transcript-ZNF595-203",
+            "transcript-ZNF595-204",
+            "transcript-ZNF595-202",
+            "transcript-ZNF595-205",
+            "transcript-ZNF595-201"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-4",
+         "start": 53491,
+         "end": 53329,
+         "start_relative": 205,
+         "end_relative": 43,
+         "parents": [
+            "transcript-ZNF595-203",
+            "transcript-ZNF595-204",
+            "transcript-ZNF595-202",
+            "transcript-ZNF595-205",
+            "transcript-ZNF595-201"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-5",
+         "start": 53491,
+         "end": 59430,
+         "start_relative": 205,
+         "end_relative": 6144,
+         "parents": [
+            "transcript-ZNF595-203",
+            "transcript-ZNF595-204",
+            "transcript-ZNF595-202",
+            "transcript-ZNF595-205",
+            "transcript-ZNF595-201"
+         ],
+         "subfeatures": [
+            "variant-1 (ts 0)",
+            "variant-2 (tv 0)",
+            "variant-3 (ts 0)",
+            "variant-4 (tv 0)",
+            "variant-5 (ts 0)"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-6",
+         "start": 59556,
+         "end": 60058,
+         "start_relative": 6270,
+         "end_relative": 6772,
+         "parents": [
+            "transcript-ZNF595-203",
+            "transcript-ZNF595-204",
+            "transcript-ZNF595-202",
+            "transcript-ZNF595-205",
+            "transcript-ZNF595-201"
+         ],
+         "subfeatures": [
+            "variant-6 (tv 0)",
+            "variant-7 (tv 0)"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-7",
+         "start": 60153,
+         "end": 60058,
+         "start_relative": 6867,
+         "end_relative": 6772,
+         "parents": [
+            "transcript-ZNF595-203",
+            "transcript-ZNF595-204",
+            "transcript-ZNF595-202",
+            "transcript-ZNF595-205",
+            "transcript-ZNF595-201"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-8",
+         "start": 60514,
+         "end": 67840,
+         "start_relative": 7228,
+         "end_relative": 14554,
+         "parents": [
+            "transcript-ZNF595-203",
+            "transcript-ZNF595-204",
+            "transcript-ZNF595-202",
+            "transcript-ZNF595-205"
+         ],
+         "subfeatures": [
+            "variant-8 (ts 0)",
+            "variant-9 (ts 0)",
+            "variant-10 (ts 0)",
+            "variant-11 (tv 0)",
+            "variant-12 (tv 0)",
+            "variant-13 (ts 0)",
+            "variant-14 (ts 0)",
+            "variant-15 (tv 0)",
+            "variant-16 (del -1)",
+            "variant-17 (tv 0)",
+            "variant-18 (tv 0)",
+            "variant-19 (ts 0)"
+         ]
+      },
+      {
+         "type": "stop_codon",
+         "sfid": "stop_codon-1",
+         "start": 67869,
+         "end": 67871,
+         "start_relative": 14583,
+         "end_relative": 14585,
+         "transcript_name": "ZNF595-202",
+         "exon_number": 4,
+         "parents": [
+            "transcript-ZNF595-203",
+            "transcript-ZNF595-204",
+            "transcript-ZNF595-202",
+            "transcript-ZNF595-205",
+            "exon-4",
+            "exon-4"
+         ]
+      },
+      {
+         "type": "three_prime_utr",
+         "sfid": "three_prime_utr-1",
+         "start": 67872,
+         "end": 68500,
+         "start_relative": 14586,
+         "end_relative": 15214,
+         "transcript_name": "ZNF595-202",
+         "parents": [
+            "transcript-ZNF595-203",
+            "transcript-ZNF595-204",
+            "transcript-ZNF595-202",
+            "transcript-ZNF595-205",
+            "exon-4"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-9",
+         "start": 68500,
+         "end": 85731,
+         "start_relative": 15214,
+         "end_relative": 32445,
+         "parents": [
+            "transcript-ZNF595-203",
+            "transcript-ZNF595-204",
+            "transcript-ZNF595-205"
+         ],
+         "subfeatures": [
+            "variant-20 (tv 0)",
+            "variant-21 (ts 0)",
+            "variant-22 (tv 0)",
+            "variant-23 (ts 0)"
+         ]
+      },
+      {
+         "type": "five_prime_utr",
+         "sfid": "five_prime_utr-5",
+         "start": 85731,
+         "end": 86053,
+         "start_relative": 32445,
+         "end_relative": 32767,
+         "transcript_name": "ZNF595-203",
+         "parents": [
+            "transcript-ZNF595-203",
+            "transcript-ZNF595-204",
+            "transcript-ZNF595-205",
+            "exon-3",
+            "exon-2",
+            "exon-4",
+            "CDS-5"
+         ]
+      },
+      {
+         "type": "start_codon",
+         "sfid": "start_codon-2",
+         "start": 86054,
+         "end": 86056,
+         "start_relative": 32768,
+         "end_relative": 32770,
+         "transcript_name": "ZNF595-203",
+         "exon_number": 2,
+         "parents": [
+            "transcript-ZNF595-203",
+            "transcript-ZNF595-204",
+            "transcript-ZNF595-205",
+            "exon-2",
+            "exon-3",
+            "exon-2",
+            "exon-4",
+            "CDS-5",
+            "CDS-6"
+         ]
+      },
+      {
+         "type": "stop_codon",
+         "sfid": "stop_codon-2",
+         "start": 87449,
+         "end": 87451,
+         "start_relative": 34163,
+         "end_relative": 34165,
+         "transcript_name": "ZNF595-203",
+         "exon_number": 2,
+         "parents": [
+            "transcript-ZNF595-203",
+            "transcript-ZNF595-204",
+            "transcript-ZNF595-205",
+            "exon-2",
+            "exon-3",
+            "exon-2",
+            "exon-4"
+         ]
+      },
+      {
+         "type": "three_prime_utr",
+         "sfid": "three_prime_utr-2",
+         "start": 87452,
+         "end": 87521,
+         "start_relative": 34166,
+         "end_relative": 34235,
+         "transcript_name": "ZNF595-204",
+         "parents": [
+            "transcript-ZNF595-203",
+            "transcript-ZNF595-204",
+            "transcript-ZNF595-205",
+            "exon-3",
+            "exon-2",
+            "exon-4"
+         ]
+      },
+      {
+         "type": "three_prime_utr",
+         "sfid": "three_prime_utr-3",
+         "start": 87452,
+         "end": 87523,
+         "start_relative": 34166,
+         "end_relative": 34237,
+         "transcript_name": "ZNF595-203",
+         "parents": [
+            "transcript-ZNF595-203",
+            "transcript-ZNF595-205",
+            "exon-2",
+            "exon-4"
+         ]
+      },
+      {
+         "type": "three_prime_utr",
+         "sfid": "three_prime_utr-4",
+         "start": 87452,
+         "end": 88208,
+         "start_relative": 34166,
+         "end_relative": 34922,
+         "transcript_name": "ZNF595-205",
+         "parents": [
+            "transcript-ZNF595-205",
+            "exon-4"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-10",
+         "start": 87521,
+         "end": 85731,
+         "start_relative": 34235,
+         "end_relative": 32445,
+         "parents": [
+            "transcript-ZNF595-203",
+            "transcript-ZNF595-204",
+            "transcript-ZNF595-205"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-11",
+         "start": 87523,
+         "end": 85731,
+         "start_relative": 34237,
+         "end_relative": 32445,
+         "parents": [
+            "transcript-ZNF595-203",
+            "transcript-ZNF595-204",
+            "transcript-ZNF595-205"
+         ]
+      }
+   ],
+   "variants": [
+      {
+         "type": "variant",
+         "sfid": "variant-1",
+         "start": 54651,
+         "end": 54652,
+         "start_relative": 1365,
+         "end_relative": 1366,
+         "alt": "T",
+         "ref": "C",
+         "qual": 8.640000343322754,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-ZNF595-203",
+            "transcript-ZNF595-204",
+            "transcript-ZNF595-202",
+            "transcript-ZNF595-205",
+            "transcript-ZNF595-201",
+            "intron-5"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-2",
+         "start": 55477,
+         "end": 55478,
+         "start_relative": 2191,
+         "end_relative": 2192,
+         "alt": "C",
+         "ref": "G",
+         "qual": 14.880000114440918,
+         "delta": 0,
+         "var_type": "tv",
+         "parents": [
+            "transcript-ZNF595-203",
+            "transcript-ZNF595-204",
+            "transcript-ZNF595-202",
+            "transcript-ZNF595-205",
+            "transcript-ZNF595-201",
+            "intron-5"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-3",
+         "start": 56898,
+         "end": 56899,
+         "start_relative": 3612,
+         "end_relative": 3613,
+         "alt": "C",
+         "ref": "T",
+         "qual": 5.039999961853027,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-ZNF595-203",
+            "transcript-ZNF595-204",
+            "transcript-ZNF595-202",
+            "transcript-ZNF595-205",
+            "transcript-ZNF595-201",
+            "intron-5"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-4",
+         "start": 57194,
+         "end": 57195,
+         "start_relative": 3908,
+         "end_relative": 3909,
+         "alt": "G",
+         "ref": "T",
+         "qual": 5.019999980926514,
+         "delta": 0,
+         "var_type": "tv",
+         "parents": [
+            "transcript-ZNF595-203",
+            "transcript-ZNF595-204",
+            "transcript-ZNF595-202",
+            "transcript-ZNF595-205",
+            "transcript-ZNF595-201",
+            "intron-5"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-5",
+         "start": 57853,
+         "end": 57854,
+         "start_relative": 4567,
+         "end_relative": 4568,
+         "alt": "G",
+         "ref": "A",
+         "qual": 7.03000020980835,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-ZNF595-203",
+            "transcript-ZNF595-204",
+            "transcript-ZNF595-202",
+            "transcript-ZNF595-205",
+            "transcript-ZNF595-201",
+            "intron-5"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-6",
+         "start": 59672,
+         "end": 59673,
+         "start_relative": 6386,
+         "end_relative": 6387,
+         "alt": "A",
+         "ref": "C",
+         "qual": 7.730000019073486,
+         "delta": 0,
+         "var_type": "tv",
+         "parents": [
+            "transcript-ZNF595-203",
+            "transcript-ZNF595-204",
+            "transcript-ZNF595-202",
+            "transcript-ZNF595-205",
+            "transcript-ZNF595-201",
+            "intron-6"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-7",
+         "start": 59677,
+         "end": 59678,
+         "start_relative": 6391,
+         "end_relative": 6392,
+         "alt": "T",
+         "ref": "A",
+         "qual": 6.400000095367432,
+         "delta": 0,
+         "var_type": "tv",
+         "parents": [
+            "transcript-ZNF595-203",
+            "transcript-ZNF595-204",
+            "transcript-ZNF595-202",
+            "transcript-ZNF595-205",
+            "transcript-ZNF595-201",
+            "intron-6"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-8",
+         "start": 61339,
+         "end": 61340,
+         "start_relative": 8053,
+         "end_relative": 8054,
+         "alt": "T",
+         "ref": "C",
+         "qual": 11.130000114440918,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-ZNF595-203",
+            "transcript-ZNF595-204",
+            "transcript-ZNF595-202",
+            "transcript-ZNF595-205",
+            "intron-8"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-9",
+         "start": 61849,
+         "end": 61850,
+         "start_relative": 8563,
+         "end_relative": 8564,
+         "alt": "A",
+         "ref": "G",
+         "qual": 8.079999923706055,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-ZNF595-203",
+            "transcript-ZNF595-204",
+            "transcript-ZNF595-202",
+            "transcript-ZNF595-205",
+            "intron-8"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-10",
+         "start": 62521,
+         "end": 62522,
+         "start_relative": 9235,
+         "end_relative": 9236,
+         "alt": "A",
+         "ref": "G",
+         "qual": 7.329999923706055,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-ZNF595-203",
+            "transcript-ZNF595-204",
+            "transcript-ZNF595-202",
+            "transcript-ZNF595-205",
+            "intron-8"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-11",
+         "start": 62637,
+         "end": 62638,
+         "start_relative": 9351,
+         "end_relative": 9352,
+         "alt": "A",
+         "ref": "C",
+         "qual": 5.670000076293945,
+         "delta": 0,
+         "var_type": "tv",
+         "parents": [
+            "transcript-ZNF595-203",
+            "transcript-ZNF595-204",
+            "transcript-ZNF595-202",
+            "transcript-ZNF595-205",
+            "intron-8"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-12",
+         "start": 63941,
+         "end": 63942,
+         "start_relative": 10655,
+         "end_relative": 10656,
+         "alt": "G",
+         "ref": "T",
+         "qual": 7.909999847412109,
+         "delta": 0,
+         "var_type": "tv",
+         "parents": [
+            "transcript-ZNF595-203",
+            "transcript-ZNF595-204",
+            "transcript-ZNF595-202",
+            "transcript-ZNF595-205",
+            "intron-8"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-13",
+         "start": 65215,
+         "end": 65216,
+         "start_relative": 11929,
+         "end_relative": 11930,
+         "alt": "A",
+         "ref": "G",
+         "qual": 7.480000019073486,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-ZNF595-203",
+            "transcript-ZNF595-204",
+            "transcript-ZNF595-202",
+            "transcript-ZNF595-205",
+            "intron-8"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-14",
+         "start": 65649,
+         "end": 65650,
+         "start_relative": 12363,
+         "end_relative": 12364,
+         "alt": "C",
+         "ref": "T",
+         "qual": 5.739999771118164,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-ZNF595-203",
+            "transcript-ZNF595-204",
+            "transcript-ZNF595-202",
+            "transcript-ZNF595-205",
+            "intron-8"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-15",
+         "start": 65803,
+         "end": 65804,
+         "start_relative": 12517,
+         "end_relative": 12518,
+         "alt": "G",
+         "ref": "T",
+         "qual": 6.670000076293945,
+         "delta": 0,
+         "var_type": "tv",
+         "parents": [
+            "transcript-ZNF595-203",
+            "transcript-ZNF595-204",
+            "transcript-ZNF595-202",
+            "transcript-ZNF595-205",
+            "intron-8"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-16",
+         "start": 66332,
+         "end": 66334,
+         "start_relative": 13046,
+         "end_relative": 13048,
+         "alt": "G",
+         "ref": "GT",
+         "qual": 27.68000030517578,
+         "delta": -1,
+         "var_type": "del",
+         "parents": [
+            "transcript-ZNF595-203",
+            "transcript-ZNF595-204",
+            "transcript-ZNF595-202",
+            "transcript-ZNF595-205",
+            "intron-8"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-17",
+         "start": 66841,
+         "end": 66842,
+         "start_relative": 13555,
+         "end_relative": 13556,
+         "alt": "T",
+         "ref": "A",
+         "qual": 13.489999771118164,
+         "delta": 0,
+         "var_type": "tv",
+         "parents": [
+            "transcript-ZNF595-203",
+            "transcript-ZNF595-204",
+            "transcript-ZNF595-202",
+            "transcript-ZNF595-205",
+            "intron-8"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-18",
+         "start": 67135,
+         "end": 67136,
+         "start_relative": 13849,
+         "end_relative": 13850,
+         "alt": "C",
+         "ref": "A",
+         "qual": 14.130000114440918,
+         "delta": 0,
+         "var_type": "tv",
+         "parents": [
+            "transcript-ZNF595-203",
+            "transcript-ZNF595-204",
+            "transcript-ZNF595-202",
+            "transcript-ZNF595-205",
+            "intron-8"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-19",
+         "start": 67703,
+         "end": 67704,
+         "start_relative": 14417,
+         "end_relative": 14418,
+         "alt": "A",
+         "ref": "G",
+         "qual": 5.460000038146973,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-ZNF595-203",
+            "transcript-ZNF595-204",
+            "transcript-ZNF595-202",
+            "transcript-ZNF595-205",
+            "intron-8"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-20",
+         "start": 68710,
+         "end": 68711,
+         "start_relative": 15424,
+         "end_relative": 15425,
+         "alt": "G",
+         "ref": "T",
+         "qual": 6.699999809265137,
+         "delta": 0,
+         "var_type": "tv",
+         "parents": [
+            "transcript-ZNF595-203",
+            "transcript-ZNF595-204",
+            "transcript-ZNF595-205",
+            "intron-9"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-21",
+         "start": 69917,
+         "end": 69918,
+         "start_relative": 16631,
+         "end_relative": 16632,
+         "alt": "G",
+         "ref": "A",
+         "qual": 58.75,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-ZNF595-203",
+            "transcript-ZNF595-204",
+            "transcript-ZNF595-205",
+            "intron-9"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-22",
+         "start": 71184,
+         "end": 71185,
+         "start_relative": 17898,
+         "end_relative": 17899,
+         "alt": "C",
+         "ref": "G",
+         "qual": 46.310001373291016,
+         "delta": 0,
+         "var_type": "tv",
+         "parents": [
+            "transcript-ZNF595-203",
+            "transcript-ZNF595-204",
+            "transcript-ZNF595-205",
+            "intron-9"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-23",
+         "start": 73615,
+         "end": 73616,
+         "start_relative": 20329,
+         "end_relative": 20330,
+         "alt": "C",
+         "ref": "T",
+         "qual": 41.81999969482422,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-ZNF595-203",
+            "transcript-ZNF595-204",
+            "transcript-ZNF595-205",
+            "intron-9"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-24",
+         "start": 87861,
+         "end": 87862,
+         "start_relative": 34575,
+         "end_relative": 34576,
+         "alt": "A",
+         "ref": "C",
+         "qual": 42.900001525878906,
+         "delta": 0,
+         "var_type": "tv",
+         "parents": [
+            "transcript-ZNF595-205",
+            "exon-4"
+         ]
+      }
+   ]
+}

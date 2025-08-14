@@ -1,0 +1,2809 @@
+{
+   "name": "RSPO4",
+   "type": "gene",
+   "chrom": 20,
+   "start": 958452,
+   "end": 1002311,
+   "strand": "-",
+   "start_relative": 0,
+   "end_relative": 43859,
+   "gene_id": "ENSG00000101282",
+   "gene_version": 9,
+   "gene_name": "RSPO4",
+   "gene_source": "ensembl_havana",
+   "gene_biotype": "protein_coding",
+   "transcripts": {
+      "RSPO4-201": {
+         "type": "transcript",
+         "sfid": "transcript-RSPO4-201",
+         "start": 958452,
+         "end": 1002311,
+         "start_relative": 0,
+         "end_relative": 43859,
+         "transcript_name": "RSPO4-201",
+         "subfeatures": [
+            "exon-1",
+            "five_prime_utr-2",
+            "exon-1",
+            "five_prime_utr-1",
+            "variant-112 (ts 0)",
+            "CDS-5",
+            "start_codon-1",
+            "intron-5",
+            "intron-6",
+            "variant-111 (ts 0)",
+            "variant-110 (ts 0)",
+            "variant-109 (ts 0)",
+            "variant-108 (ts 0)",
+            "variant-107 (del -1)",
+            "variant-106 (tv 0)",
+            "variant-105 (ts 0)",
+            "variant-104 (ins 2)",
+            "variant-103 (tv 0)",
+            "variant-102 (tv 0)",
+            "variant-101 (ts 0)",
+            "variant-100 (del -1)",
+            "variant-99 (ts 0)",
+            "variant-98 (tv 0)",
+            "variant-97 (ts 0)",
+            "variant-96 (del -1)",
+            "variant-95 (ts 0)",
+            "variant-94 (ins 1)",
+            "variant-93 (ts 0)",
+            "variant-92 (ts 0)",
+            "variant-91 (ins 1)",
+            "variant-90 (ins 4)",
+            "variant-89 (ts 0)",
+            "variant-88 (tv 0)",
+            "variant-87 (ins 4)",
+            "variant-86 (ts 0)",
+            "variant-85 (tv 0)",
+            "variant-84 (tv 0)",
+            "variant-83 (ts 0)",
+            "variant-82 (ts 0)",
+            "variant-81 (ts 0)",
+            "variant-80 (ts 0)",
+            "variant-79 (ts 0)",
+            "variant-78 (tv 0)",
+            "variant-77 (ts 0)",
+            "variant-76 (ts 0)",
+            "variant-75 (ts 0)",
+            "variant-74 (ts 0)",
+            "variant-73 (tv 0)",
+            "variant-72 (ts 0)",
+            "variant-71 (ts 0)",
+            "variant-70 (tv 0)",
+            "variant-69 (ts 0)",
+            "variant-68 (ins 4)",
+            "variant-67 (tv 0)",
+            "variant-66 (ins 4)",
+            "variant-65 (del -44)",
+            "variant-64 (ts 0)",
+            "variant-63 (del -4)",
+            "variant-62 (ins 4)",
+            "variant-61 (ts 0)",
+            "variant-60 (ts 0)",
+            "variant-59 (del -2)",
+            "variant-58 (ts 0)",
+            "variant-57 (ts 0)",
+            "variant-56 (ts 0)",
+            "variant-55 (ts 0)",
+            "variant-54 (ts 0)",
+            "variant-53 (tv 0)",
+            "variant-52 (ts 0)",
+            "variant-51 (ts 0)",
+            "variant-50 (tv 0)",
+            "variant-49 (ts 0)",
+            "variant-48 (ts 0)",
+            "variant-47 (ts 0)",
+            "variant-46 (ts 0)",
+            "variant-45 (ts 0)",
+            "variant-44 (ts 0)",
+            "variant-43 (del -4)",
+            "variant-42 (tv 0)",
+            "variant-41 (ts 0)",
+            "variant-40 (ts 0)",
+            "variant-39 (ts 0)",
+            "variant-38 (ts 0)",
+            "variant-37 (ts 0)",
+            "exon-2",
+            "CDS-4",
+            "intron-4",
+            "exon-3",
+            "CDS-3",
+            "intron-3",
+            "variant-36 (del -8)",
+            "variant-35 (ts 0)",
+            "variant-34 (ts 0)",
+            "variant-33 (ins 2)",
+            "variant-32 (ts 0)",
+            "variant-31 (ts 0)",
+            "variant-30 (tv 0)",
+            "variant-29 (tv 0)",
+            "variant-28 (ts 0)",
+            "variant-27 (tv 0)",
+            "variant-26 (ts 0)",
+            "variant-25 (tv 0)",
+            "variant-24 (ts 0)",
+            "variant-22 (del -2)",
+            "variant-23 (ts 0)",
+            "variant-21 (ts 0)",
+            "variant-20 (ins 2)",
+            "variant-19 (ts 0)",
+            "variant-18 (ts 0)",
+            "exon-4",
+            "CDS-2",
+            "intron-2",
+            "variant-17 (ts 0)",
+            "variant-16 (ts 0)",
+            "variant-15 (tv 0)",
+            "variant-14 (tv 0)",
+            "exon-5",
+            "exon-4",
+            "CDS-1",
+            "stop_codon-1",
+            "three_prime_utr-1",
+            "three_prime_utr-2",
+            "intron-1",
+            "variant-13 (ts 0)",
+            "variant-12 (ts 0)",
+            "variant-11 (tv 0)",
+            "variant-10 (del -42)",
+            "variant-9 (tv 0)",
+            "variant-8 (del -22)",
+            "variant-7 (tv 0)",
+            "variant-6 (ts 0)",
+            "variant-5 (tv 0)",
+            "variant-4 (tv 0)",
+            "variant-3 (del -2)",
+            "variant-2 (ts 0)",
+            "variant-1 (tv 0)"
+         ]
+      },
+      "RSPO4-202": {
+         "type": "transcript",
+         "sfid": "transcript-RSPO4-202",
+         "start": 960254,
+         "end": 1002264,
+         "start_relative": 1802,
+         "end_relative": 43812,
+         "transcript_name": "RSPO4-202",
+         "subfeatures": [
+            "exon-1",
+            "five_prime_utr-1",
+            "variant-112 (ts 0)",
+            "CDS-5",
+            "start_codon-1",
+            "intron-5",
+            "intron-6",
+            "variant-111 (ts 0)",
+            "variant-110 (ts 0)",
+            "variant-109 (ts 0)",
+            "variant-108 (ts 0)",
+            "variant-107 (del -1)",
+            "variant-106 (tv 0)",
+            "variant-105 (ts 0)",
+            "variant-104 (ins 2)",
+            "variant-103 (tv 0)",
+            "variant-102 (tv 0)",
+            "variant-101 (ts 0)",
+            "variant-100 (del -1)",
+            "variant-99 (ts 0)",
+            "variant-98 (tv 0)",
+            "variant-97 (ts 0)",
+            "variant-96 (del -1)",
+            "variant-95 (ts 0)",
+            "variant-94 (ins 1)",
+            "variant-93 (ts 0)",
+            "variant-92 (ts 0)",
+            "variant-91 (ins 1)",
+            "variant-90 (ins 4)",
+            "variant-89 (ts 0)",
+            "variant-88 (tv 0)",
+            "variant-87 (ins 4)",
+            "variant-86 (ts 0)",
+            "variant-85 (tv 0)",
+            "variant-84 (tv 0)",
+            "variant-83 (ts 0)",
+            "variant-82 (ts 0)",
+            "variant-81 (ts 0)",
+            "variant-80 (ts 0)",
+            "variant-79 (ts 0)",
+            "variant-78 (tv 0)",
+            "variant-77 (ts 0)",
+            "variant-76 (ts 0)",
+            "variant-75 (ts 0)",
+            "variant-74 (ts 0)",
+            "variant-73 (tv 0)",
+            "variant-72 (ts 0)",
+            "variant-71 (ts 0)",
+            "variant-70 (tv 0)",
+            "variant-69 (ts 0)",
+            "variant-68 (ins 4)",
+            "variant-67 (tv 0)",
+            "variant-66 (ins 4)",
+            "variant-65 (del -44)",
+            "variant-64 (ts 0)",
+            "variant-63 (del -4)",
+            "variant-62 (ins 4)",
+            "variant-61 (ts 0)",
+            "variant-60 (ts 0)",
+            "variant-59 (del -2)",
+            "variant-58 (ts 0)",
+            "variant-57 (ts 0)",
+            "variant-56 (ts 0)",
+            "variant-55 (ts 0)",
+            "variant-54 (ts 0)",
+            "variant-53 (tv 0)",
+            "variant-52 (ts 0)",
+            "variant-51 (ts 0)",
+            "variant-50 (tv 0)",
+            "variant-49 (ts 0)",
+            "variant-48 (ts 0)",
+            "variant-47 (ts 0)",
+            "variant-46 (ts 0)",
+            "variant-45 (ts 0)",
+            "variant-44 (ts 0)",
+            "variant-43 (del -4)",
+            "variant-42 (tv 0)",
+            "variant-41 (ts 0)",
+            "variant-40 (ts 0)",
+            "variant-39 (ts 0)",
+            "variant-38 (ts 0)",
+            "variant-37 (ts 0)",
+            "exon-2",
+            "CDS-4",
+            "intron-4",
+            "exon-3",
+            "CDS-3",
+            "intron-3",
+            "variant-36 (del -8)",
+            "variant-35 (ts 0)",
+            "variant-34 (ts 0)",
+            "variant-33 (ins 2)",
+            "variant-32 (ts 0)",
+            "variant-31 (ts 0)",
+            "variant-30 (tv 0)",
+            "variant-29 (tv 0)",
+            "variant-28 (ts 0)",
+            "variant-27 (tv 0)",
+            "variant-26 (ts 0)",
+            "variant-25 (tv 0)",
+            "variant-24 (ts 0)",
+            "variant-22 (del -2)",
+            "variant-23 (ts 0)",
+            "variant-21 (ts 0)",
+            "variant-20 (ins 2)",
+            "variant-19 (ts 0)",
+            "variant-18 (ts 0)",
+            "exon-4",
+            "CDS-2",
+            "intron-2",
+            "variant-17 (ts 0)",
+            "variant-16 (ts 0)",
+            "variant-15 (tv 0)",
+            "variant-14 (tv 0)",
+            "exon-4",
+            "CDS-1",
+            "stop_codon-1",
+            "three_prime_utr-2",
+            "intron-1"
+         ]
+      }
+   },
+   "exons": {
+      "-2467469663875105743": {
+         "type": "exon",
+         "sfid": "exon-1",
+         "start": 1002086,
+         "end": 1002311,
+         "start_relative": 43634,
+         "end_relative": 43859,
+         "transcript_name": "RSPO4-201",
+         "exon_number": 1,
+         "parents": [
+            "transcript-RSPO4-201"
+         ],
+         "subfeatures": [
+            "five_prime_utr-2",
+            "five_prime_utr-1",
+            "variant-112 (ts 0)",
+            "CDS-5",
+            "start_codon-1"
+         ]
+      },
+      "4963129861072016742": {
+         "type": "exon",
+         "sfid": "exon-1",
+         "start": 1002086,
+         "end": 1002264,
+         "start_relative": 43634,
+         "end_relative": 43812,
+         "transcript_name": "RSPO4-202",
+         "exon_number": 1,
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202"
+         ],
+         "subfeatures": [
+            "five_prime_utr-1",
+            "variant-112 (ts 0)",
+            "CDS-5",
+            "start_codon-1"
+         ]
+      },
+      "6366036275862114072": {
+         "type": "exon",
+         "sfid": "exon-2",
+         "start": 967950,
+         "end": 968138,
+         "start_relative": 9498,
+         "end_relative": 9686,
+         "transcript_name": "RSPO4-201",
+         "exon_number": 2,
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202"
+         ],
+         "subfeatures": [
+            "CDS-4"
+         ]
+      },
+      "824354302303898750": {
+         "type": "exon",
+         "sfid": "exon-3",
+         "start": 967174,
+         "end": 967314,
+         "start_relative": 8722,
+         "end_relative": 8862,
+         "transcript_name": "RSPO4-201",
+         "exon_number": 3,
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202"
+         ],
+         "subfeatures": [
+            "CDS-3"
+         ]
+      },
+      "2290962989411284039": {
+         "type": "exon",
+         "sfid": "exon-4",
+         "start": 963935,
+         "end": 964120,
+         "start_relative": 5483,
+         "end_relative": 5668,
+         "transcript_name": "RSPO4-201",
+         "exon_number": 4,
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202"
+         ],
+         "subfeatures": [
+            "CDS-2"
+         ]
+      },
+      "211765055997449277": {
+         "type": "exon",
+         "sfid": "exon-5",
+         "start": 958452,
+         "end": 960466,
+         "start_relative": 0,
+         "end_relative": 2014,
+         "transcript_name": "RSPO4-201",
+         "exon_number": 5,
+         "parents": [
+            "transcript-RSPO4-201"
+         ],
+         "subfeatures": [
+            "CDS-1",
+            "stop_codon-1",
+            "three_prime_utr-1",
+            "three_prime_utr-2",
+            "variant-13 (ts 0)",
+            "variant-12 (ts 0)",
+            "variant-11 (tv 0)",
+            "variant-10 (del -42)",
+            "variant-9 (tv 0)",
+            "variant-8 (del -22)",
+            "variant-7 (tv 0)",
+            "variant-6 (ts 0)",
+            "variant-5 (tv 0)",
+            "variant-4 (tv 0)",
+            "variant-3 (del -2)",
+            "variant-2 (ts 0)",
+            "variant-1 (tv 0)"
+         ]
+      },
+      "6546336099093051994": {
+         "type": "exon",
+         "sfid": "exon-4",
+         "start": 960254,
+         "end": 960466,
+         "start_relative": 1802,
+         "end_relative": 2014,
+         "transcript_name": "RSPO4-202",
+         "exon_number": 4,
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202"
+         ],
+         "subfeatures": [
+            "CDS-2",
+            "CDS-1",
+            "stop_codon-1",
+            "three_prime_utr-2"
+         ]
+      }
+   },
+   "proteins": {
+      "ENSP00000217260": {
+         "type": "protein",
+         "sfid": "protein-ENSP00000217260",
+         "start_relative": 0,
+         "end_relative": 0,
+         "protein_id": "ENSP00000217260"
+      }
+   },
+   "cds": [
+      {
+         "type": "CDS",
+         "sfid": "CDS-5",
+         "start": 1002086,
+         "end": 1002164,
+         "start_relative": 43634,
+         "end_relative": 43712,
+         "transcript_name": "RSPO4-201",
+         "exon_number": 1,
+         "protein_id": "ENSP00000217260",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "exon-1",
+            "exon-1"
+         ],
+         "subfeatures": [
+            "start_codon-1"
+         ]
+      },
+      {
+         "type": "CDS",
+         "sfid": "CDS-4",
+         "start": 967950,
+         "end": 968138,
+         "start_relative": 9498,
+         "end_relative": 9686,
+         "transcript_name": "RSPO4-201",
+         "exon_number": 2,
+         "protein_id": "ENSP00000217260",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "exon-2"
+         ]
+      },
+      {
+         "type": "CDS",
+         "sfid": "CDS-3",
+         "start": 967174,
+         "end": 967314,
+         "start_relative": 8722,
+         "end_relative": 8862,
+         "transcript_name": "RSPO4-201",
+         "exon_number": 3,
+         "protein_id": "ENSP00000217260",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "exon-3"
+         ]
+      },
+      {
+         "type": "CDS",
+         "sfid": "CDS-2",
+         "start": 963935,
+         "end": 964120,
+         "start_relative": 5483,
+         "end_relative": 5668,
+         "transcript_name": "RSPO4-201",
+         "exon_number": 4,
+         "protein_id": "ENSP00000217260",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "exon-4",
+            "exon-4"
+         ]
+      },
+      {
+         "type": "CDS",
+         "sfid": "CDS-1",
+         "start": 960360,
+         "end": 960466,
+         "start_relative": 1908,
+         "end_relative": 2014,
+         "transcript_name": "RSPO4-201",
+         "exon_number": 5,
+         "protein_id": "ENSP00000217260",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "exon-5",
+            "exon-4"
+         ]
+      }
+   ],
+   "subfeatures": [
+      {
+         "type": "five_prime_utr",
+         "sfid": "five_prime_utr-2",
+         "start": 1002165,
+         "end": 1002311,
+         "start_relative": 43713,
+         "end_relative": 43859,
+         "transcript_name": "RSPO4-201",
+         "parents": [
+            "transcript-RSPO4-201",
+            "exon-1"
+         ]
+      },
+      {
+         "type": "five_prime_utr",
+         "sfid": "five_prime_utr-1",
+         "start": 1002165,
+         "end": 1002264,
+         "start_relative": 43713,
+         "end_relative": 43812,
+         "transcript_name": "RSPO4-202",
+         "parents": [
+            "transcript-RSPO4-201",
+            "exon-1",
+            "transcript-RSPO4-202",
+            "exon-1"
+         ]
+      },
+      {
+         "type": "start_codon",
+         "sfid": "start_codon-1",
+         "start": 1002162,
+         "end": 1002164,
+         "start_relative": 43710,
+         "end_relative": 43712,
+         "transcript_name": "RSPO4-201",
+         "exon_number": 1,
+         "parents": [
+            "transcript-RSPO4-201",
+            "exon-1",
+            "transcript-RSPO4-202",
+            "exon-1",
+            "CDS-5"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-5",
+         "start": 968138,
+         "end": 1002086,
+         "start_relative": 9686,
+         "end_relative": 43634,
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202"
+         ],
+         "subfeatures": [
+            "variant-111 (ts 0)",
+            "variant-110 (ts 0)",
+            "variant-109 (ts 0)",
+            "variant-108 (ts 0)",
+            "variant-107 (del -1)",
+            "variant-106 (tv 0)",
+            "variant-105 (ts 0)",
+            "variant-104 (ins 2)",
+            "variant-103 (tv 0)",
+            "variant-102 (tv 0)",
+            "variant-101 (ts 0)",
+            "variant-100 (del -1)",
+            "variant-99 (ts 0)",
+            "variant-98 (tv 0)",
+            "variant-97 (ts 0)",
+            "variant-96 (del -1)",
+            "variant-95 (ts 0)",
+            "variant-94 (ins 1)",
+            "variant-93 (ts 0)",
+            "variant-92 (ts 0)",
+            "variant-91 (ins 1)",
+            "variant-90 (ins 4)",
+            "variant-89 (ts 0)",
+            "variant-88 (tv 0)",
+            "variant-87 (ins 4)",
+            "variant-86 (ts 0)",
+            "variant-85 (tv 0)",
+            "variant-84 (tv 0)",
+            "variant-83 (ts 0)",
+            "variant-82 (ts 0)",
+            "variant-81 (ts 0)",
+            "variant-80 (ts 0)",
+            "variant-79 (ts 0)",
+            "variant-78 (tv 0)",
+            "variant-77 (ts 0)",
+            "variant-76 (ts 0)",
+            "variant-75 (ts 0)",
+            "variant-74 (ts 0)",
+            "variant-73 (tv 0)",
+            "variant-72 (ts 0)",
+            "variant-71 (ts 0)",
+            "variant-70 (tv 0)",
+            "variant-69 (ts 0)",
+            "variant-68 (ins 4)",
+            "variant-67 (tv 0)",
+            "variant-66 (ins 4)",
+            "variant-65 (del -44)",
+            "variant-64 (ts 0)",
+            "variant-63 (del -4)",
+            "variant-62 (ins 4)",
+            "variant-61 (ts 0)",
+            "variant-60 (ts 0)",
+            "variant-59 (del -2)",
+            "variant-58 (ts 0)",
+            "variant-57 (ts 0)",
+            "variant-56 (ts 0)",
+            "variant-55 (ts 0)",
+            "variant-54 (ts 0)",
+            "variant-53 (tv 0)",
+            "variant-52 (ts 0)",
+            "variant-51 (ts 0)",
+            "variant-50 (tv 0)",
+            "variant-49 (ts 0)",
+            "variant-48 (ts 0)",
+            "variant-47 (ts 0)",
+            "variant-46 (ts 0)",
+            "variant-45 (ts 0)",
+            "variant-44 (ts 0)",
+            "variant-43 (del -4)",
+            "variant-42 (tv 0)",
+            "variant-41 (ts 0)",
+            "variant-40 (ts 0)",
+            "variant-39 (ts 0)",
+            "variant-38 (ts 0)",
+            "variant-37 (ts 0)"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-6",
+         "start": 1002264,
+         "end": 1002086,
+         "start_relative": 43812,
+         "end_relative": 43634,
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-4",
+         "start": 967314,
+         "end": 967950,
+         "start_relative": 8862,
+         "end_relative": 9498,
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-3",
+         "start": 964120,
+         "end": 967174,
+         "start_relative": 5668,
+         "end_relative": 8722,
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202"
+         ],
+         "subfeatures": [
+            "variant-36 (del -8)",
+            "variant-35 (ts 0)",
+            "variant-34 (ts 0)",
+            "variant-33 (ins 2)",
+            "variant-32 (ts 0)",
+            "variant-31 (ts 0)",
+            "variant-30 (tv 0)",
+            "variant-29 (tv 0)",
+            "variant-28 (ts 0)",
+            "variant-27 (tv 0)",
+            "variant-26 (ts 0)",
+            "variant-25 (tv 0)",
+            "variant-24 (ts 0)",
+            "variant-22 (del -2)",
+            "variant-23 (ts 0)",
+            "variant-21 (ts 0)",
+            "variant-20 (ins 2)",
+            "variant-19 (ts 0)",
+            "variant-18 (ts 0)"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-2",
+         "start": 960466,
+         "end": 963935,
+         "start_relative": 2014,
+         "end_relative": 5483,
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202"
+         ],
+         "subfeatures": [
+            "variant-17 (ts 0)",
+            "variant-16 (ts 0)",
+            "variant-15 (tv 0)",
+            "variant-14 (tv 0)"
+         ]
+      },
+      {
+         "type": "stop_codon",
+         "sfid": "stop_codon-1",
+         "start": 960357,
+         "end": 960359,
+         "start_relative": 1905,
+         "end_relative": 1907,
+         "transcript_name": "RSPO4-201",
+         "exon_number": 5,
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "exon-5",
+            "exon-4"
+         ]
+      },
+      {
+         "type": "three_prime_utr",
+         "sfid": "three_prime_utr-1",
+         "start": 958452,
+         "end": 960356,
+         "start_relative": 0,
+         "end_relative": 1904,
+         "transcript_name": "RSPO4-201",
+         "parents": [
+            "transcript-RSPO4-201",
+            "exon-5"
+         ]
+      },
+      {
+         "type": "three_prime_utr",
+         "sfid": "three_prime_utr-2",
+         "start": 960254,
+         "end": 960356,
+         "start_relative": 1802,
+         "end_relative": 1904,
+         "transcript_name": "RSPO4-202",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "exon-5",
+            "exon-4"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-1",
+         "start": 960466,
+         "end": 960254,
+         "start_relative": 2014,
+         "end_relative": 1802,
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202"
+         ]
+      }
+   ],
+   "variants": [
+      {
+         "type": "variant",
+         "sfid": "variant-112",
+         "start": 1002248,
+         "end": 1002249,
+         "start_relative": 43796,
+         "end_relative": 43797,
+         "alt": "A",
+         "ref": "G",
+         "qual": 48.400001525878906,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-RSPO4-201",
+            "exon-1",
+            "transcript-RSPO4-202",
+            "exon-1"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-111",
+         "start": 1000489,
+         "end": 1000490,
+         "start_relative": 42037,
+         "end_relative": 42038,
+         "alt": "T",
+         "ref": "C",
+         "qual": 35.060001373291016,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-5"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-110",
+         "start": 1000474,
+         "end": 1000475,
+         "start_relative": 42022,
+         "end_relative": 42023,
+         "alt": "G",
+         "ref": "A",
+         "qual": 37.86000061035156,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-5"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-109",
+         "start": 999234,
+         "end": 999235,
+         "start_relative": 40782,
+         "end_relative": 40783,
+         "alt": "A",
+         "ref": "G",
+         "qual": 51.709999084472656,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-5"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-108",
+         "start": 999076,
+         "end": 999077,
+         "start_relative": 40624,
+         "end_relative": 40625,
+         "alt": "C",
+         "ref": "T",
+         "qual": 34.91999816894531,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-5"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-107",
+         "start": 998984,
+         "end": 998986,
+         "start_relative": 40532,
+         "end_relative": 40534,
+         "alt": "C",
+         "ref": "CT",
+         "qual": 37.349998474121094,
+         "delta": -1,
+         "var_type": "del",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-5"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-106",
+         "start": 998554,
+         "end": 998555,
+         "start_relative": 40102,
+         "end_relative": 40103,
+         "alt": "C",
+         "ref": "G",
+         "qual": 44.7599983215332,
+         "delta": 0,
+         "var_type": "tv",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-5"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-105",
+         "start": 998076,
+         "end": 998077,
+         "start_relative": 39624,
+         "end_relative": 39625,
+         "alt": "T",
+         "ref": "C",
+         "qual": 52.150001525878906,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-5"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-104",
+         "start": 996844,
+         "end": 996845,
+         "start_relative": 38392,
+         "end_relative": 38393,
+         "alt": "TCC",
+         "ref": "T",
+         "qual": 40.709999084472656,
+         "delta": 2,
+         "var_type": "ins",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-5"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-103",
+         "start": 996840,
+         "end": 996841,
+         "start_relative": 38388,
+         "end_relative": 38389,
+         "alt": "G",
+         "ref": "C",
+         "qual": 41.34000015258789,
+         "delta": 0,
+         "var_type": "tv",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-5"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-102",
+         "start": 996833,
+         "end": 996834,
+         "start_relative": 38381,
+         "end_relative": 38382,
+         "alt": "G",
+         "ref": "C",
+         "qual": 43.709999084472656,
+         "delta": 0,
+         "var_type": "tv",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-5"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-101",
+         "start": 996761,
+         "end": 996762,
+         "start_relative": 38309,
+         "end_relative": 38310,
+         "alt": "T",
+         "ref": "C",
+         "qual": 47.599998474121094,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-5"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-100",
+         "start": 995546,
+         "end": 995548,
+         "start_relative": 37094,
+         "end_relative": 37096,
+         "alt": "G",
+         "ref": "GA",
+         "qual": 23.670000076293945,
+         "delta": -1,
+         "var_type": "del",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-5"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-99",
+         "start": 995484,
+         "end": 995485,
+         "start_relative": 37032,
+         "end_relative": 37033,
+         "alt": "T",
+         "ref": "C",
+         "qual": 48.150001525878906,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-5"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-98",
+         "start": 995233,
+         "end": 995234,
+         "start_relative": 36781,
+         "end_relative": 36782,
+         "alt": "G",
+         "ref": "C",
+         "qual": 48.77000045776367,
+         "delta": 0,
+         "var_type": "tv",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-5"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-97",
+         "start": 994675,
+         "end": 994676,
+         "start_relative": 36223,
+         "end_relative": 36224,
+         "alt": "T",
+         "ref": "C",
+         "qual": 46.59000015258789,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-5"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-96",
+         "start": 994672,
+         "end": 994674,
+         "start_relative": 36220,
+         "end_relative": 36222,
+         "alt": "C",
+         "ref": "CA",
+         "qual": 47.0099983215332,
+         "delta": -1,
+         "var_type": "del",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-5"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-95",
+         "start": 994604,
+         "end": 994605,
+         "start_relative": 36152,
+         "end_relative": 36153,
+         "alt": "G",
+         "ref": "A",
+         "qual": 49.31999969482422,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-5"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-94",
+         "start": 994441,
+         "end": 994442,
+         "start_relative": 35989,
+         "end_relative": 35990,
+         "alt": "AC",
+         "ref": "A",
+         "qual": 42.9900016784668,
+         "delta": 1,
+         "var_type": "ins",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-5"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-93",
+         "start": 994378,
+         "end": 994379,
+         "start_relative": 35926,
+         "end_relative": 35927,
+         "alt": "T",
+         "ref": "C",
+         "qual": 66.7300033569336,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-5"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-92",
+         "start": 993794,
+         "end": 993795,
+         "start_relative": 35342,
+         "end_relative": 35343,
+         "alt": "C",
+         "ref": "T",
+         "qual": 26.6200008392334,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-5"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-91",
+         "start": 992262,
+         "end": 992263,
+         "start_relative": 33810,
+         "end_relative": 33811,
+         "alt": "CT",
+         "ref": "C",
+         "qual": 30.610000610351562,
+         "delta": 1,
+         "var_type": "ins",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-5"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-90",
+         "start": 992031,
+         "end": 992032,
+         "start_relative": 33579,
+         "end_relative": 33580,
+         "alt": "GGGAC",
+         "ref": "G",
+         "qual": 51.31999969482422,
+         "delta": 4,
+         "var_type": "ins",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-5"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-89",
+         "start": 991485,
+         "end": 991486,
+         "start_relative": 33033,
+         "end_relative": 33034,
+         "alt": "G",
+         "ref": "A",
+         "qual": 48.290000915527344,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-5"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-88",
+         "start": 991318,
+         "end": 991319,
+         "start_relative": 32866,
+         "end_relative": 32867,
+         "alt": "T",
+         "ref": "G",
+         "qual": 40.68000030517578,
+         "delta": 0,
+         "var_type": "tv",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-5"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-87",
+         "start": 990521,
+         "end": 990522,
+         "start_relative": 32069,
+         "end_relative": 32070,
+         "alt": "CTCCT",
+         "ref": "C",
+         "qual": 7.309999942779541,
+         "delta": 4,
+         "var_type": "ins",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-5"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-86",
+         "start": 990420,
+         "end": 990421,
+         "start_relative": 31968,
+         "end_relative": 31969,
+         "alt": "G",
+         "ref": "A",
+         "qual": 32.540000915527344,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-5"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-85",
+         "start": 990061,
+         "end": 990062,
+         "start_relative": 31609,
+         "end_relative": 31610,
+         "alt": "G",
+         "ref": "C",
+         "qual": 46.619998931884766,
+         "delta": 0,
+         "var_type": "tv",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-5"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-84",
+         "start": 989919,
+         "end": 989920,
+         "start_relative": 31467,
+         "end_relative": 31468,
+         "alt": "A",
+         "ref": "C",
+         "qual": 49.2400016784668,
+         "delta": 0,
+         "var_type": "tv",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-5"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-83",
+         "start": 988696,
+         "end": 988697,
+         "start_relative": 30244,
+         "end_relative": 30245,
+         "alt": "T",
+         "ref": "C",
+         "qual": 28.709999084472656,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-5"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-82",
+         "start": 988248,
+         "end": 988249,
+         "start_relative": 29796,
+         "end_relative": 29797,
+         "alt": "T",
+         "ref": "C",
+         "qual": 33.93000030517578,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-5"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-81",
+         "start": 988033,
+         "end": 988034,
+         "start_relative": 29581,
+         "end_relative": 29582,
+         "alt": "C",
+         "ref": "T",
+         "qual": 46.34000015258789,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-5"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-80",
+         "start": 987853,
+         "end": 987854,
+         "start_relative": 29401,
+         "end_relative": 29402,
+         "alt": "A",
+         "ref": "G",
+         "qual": 52.88999938964844,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-5"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-79",
+         "start": 987818,
+         "end": 987819,
+         "start_relative": 29366,
+         "end_relative": 29367,
+         "alt": "G",
+         "ref": "A",
+         "qual": 52.33000183105469,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-5"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-78",
+         "start": 987343,
+         "end": 987344,
+         "start_relative": 28891,
+         "end_relative": 28892,
+         "alt": "G",
+         "ref": "C",
+         "qual": 39.5099983215332,
+         "delta": 0,
+         "var_type": "tv",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-5"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-77",
+         "start": 987313,
+         "end": 987314,
+         "start_relative": 28861,
+         "end_relative": 28862,
+         "alt": "G",
+         "ref": "A",
+         "qual": 44.130001068115234,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-5"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-76",
+         "start": 987204,
+         "end": 987205,
+         "start_relative": 28752,
+         "end_relative": 28753,
+         "alt": "T",
+         "ref": "C",
+         "qual": 48.9900016784668,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-5"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-75",
+         "start": 986990,
+         "end": 986991,
+         "start_relative": 28538,
+         "end_relative": 28539,
+         "alt": "T",
+         "ref": "C",
+         "qual": 50.83000183105469,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-5"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-74",
+         "start": 986104,
+         "end": 986105,
+         "start_relative": 27652,
+         "end_relative": 27653,
+         "alt": "C",
+         "ref": "T",
+         "qual": 52.59000015258789,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-5"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-73",
+         "start": 985860,
+         "end": 985861,
+         "start_relative": 27408,
+         "end_relative": 27409,
+         "alt": "T",
+         "ref": "G",
+         "qual": 47.16999816894531,
+         "delta": 0,
+         "var_type": "tv",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-5"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-72",
+         "start": 985571,
+         "end": 985572,
+         "start_relative": 27119,
+         "end_relative": 27120,
+         "alt": "G",
+         "ref": "A",
+         "qual": 44.849998474121094,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-5"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-71",
+         "start": 985458,
+         "end": 985459,
+         "start_relative": 27006,
+         "end_relative": 27007,
+         "alt": "C",
+         "ref": "T",
+         "qual": 51.709999084472656,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-5"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-70",
+         "start": 985336,
+         "end": 985337,
+         "start_relative": 26884,
+         "end_relative": 26885,
+         "alt": "A",
+         "ref": "C",
+         "qual": 40.09000015258789,
+         "delta": 0,
+         "var_type": "tv",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-5"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-69",
+         "start": 985327,
+         "end": 985328,
+         "start_relative": 26875,
+         "end_relative": 26876,
+         "alt": "T",
+         "ref": "C",
+         "qual": 39.400001525878906,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-5"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-68",
+         "start": 985267,
+         "end": 985268,
+         "start_relative": 26815,
+         "end_relative": 26816,
+         "alt": "TCCAC",
+         "ref": "T",
+         "qual": 22.5,
+         "delta": 4,
+         "var_type": "ins",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-5"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-67",
+         "start": 985232,
+         "end": 985233,
+         "start_relative": 26780,
+         "end_relative": 26781,
+         "alt": "C",
+         "ref": "A",
+         "qual": 23.559999465942383,
+         "delta": 0,
+         "var_type": "tv",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-5"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-66",
+         "start": 985199,
+         "end": 985200,
+         "start_relative": 26747,
+         "end_relative": 26748,
+         "alt": "CCCAT",
+         "ref": "C",
+         "qual": 28.290000915527344,
+         "delta": 4,
+         "var_type": "ins",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-5"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-65",
+         "start": 985015,
+         "end": 985060,
+         "start_relative": 26563,
+         "end_relative": 26608,
+         "alt": "C",
+         "ref": "CATCCATCCACCAACCCATCTATCCATCCAATCACCCACCCATCT",
+         "qual": 8.069999694824219,
+         "delta": -44,
+         "var_type": "del",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-5"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-64",
+         "start": 984979,
+         "end": 984980,
+         "start_relative": 26527,
+         "end_relative": 26528,
+         "alt": "T",
+         "ref": "C",
+         "qual": 33.06999969482422,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-5"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-63",
+         "start": 984949,
+         "end": 984954,
+         "start_relative": 26497,
+         "end_relative": 26502,
+         "alt": "T",
+         "ref": "TCCAC",
+         "qual": 35.560001373291016,
+         "delta": -4,
+         "var_type": "del",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-5"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-62",
+         "start": 984921,
+         "end": 984922,
+         "start_relative": 26469,
+         "end_relative": 26470,
+         "alt": "CCCAT",
+         "ref": "C",
+         "qual": 30.510000228881836,
+         "delta": 4,
+         "var_type": "ins",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-5"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-61",
+         "start": 984801,
+         "end": 984802,
+         "start_relative": 26349,
+         "end_relative": 26350,
+         "alt": "C",
+         "ref": "T",
+         "qual": 38.7599983215332,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-5"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-60",
+         "start": 984735,
+         "end": 984736,
+         "start_relative": 26283,
+         "end_relative": 26284,
+         "alt": "T",
+         "ref": "C",
+         "qual": 19.190000534057617,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-5"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-59",
+         "start": 984328,
+         "end": 984331,
+         "start_relative": 25876,
+         "end_relative": 25879,
+         "alt": "A",
+         "ref": "ACT",
+         "qual": 46.689998626708984,
+         "delta": -2,
+         "var_type": "del",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-5"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-58",
+         "start": 984152,
+         "end": 984153,
+         "start_relative": 25700,
+         "end_relative": 25701,
+         "alt": "T",
+         "ref": "C",
+         "qual": 53.22999954223633,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-5"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-57",
+         "start": 984008,
+         "end": 984009,
+         "start_relative": 25556,
+         "end_relative": 25557,
+         "alt": "C",
+         "ref": "T",
+         "qual": 42.380001068115234,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-5"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-56",
+         "start": 983639,
+         "end": 983640,
+         "start_relative": 25187,
+         "end_relative": 25188,
+         "alt": "T",
+         "ref": "C",
+         "qual": 47.31999969482422,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-5"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-55",
+         "start": 980576,
+         "end": 980577,
+         "start_relative": 22124,
+         "end_relative": 22125,
+         "alt": "C",
+         "ref": "T",
+         "qual": 52.33000183105469,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-5"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-54",
+         "start": 978695,
+         "end": 978696,
+         "start_relative": 20243,
+         "end_relative": 20244,
+         "alt": "G",
+         "ref": "A",
+         "qual": 33.779998779296875,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-5"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-53",
+         "start": 978560,
+         "end": 978561,
+         "start_relative": 20108,
+         "end_relative": 20109,
+         "alt": "T",
+         "ref": "G",
+         "qual": 47.220001220703125,
+         "delta": 0,
+         "var_type": "tv",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-5"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-52",
+         "start": 977236,
+         "end": 977237,
+         "start_relative": 18784,
+         "end_relative": 18785,
+         "alt": "A",
+         "ref": "G",
+         "qual": 54.04999923706055,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-5"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-51",
+         "start": 976041,
+         "end": 976042,
+         "start_relative": 17589,
+         "end_relative": 17590,
+         "alt": "T",
+         "ref": "C",
+         "qual": 47.65999984741211,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-5"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-50",
+         "start": 975692,
+         "end": 975693,
+         "start_relative": 17240,
+         "end_relative": 17241,
+         "alt": "G",
+         "ref": "C",
+         "qual": 44.91999816894531,
+         "delta": 0,
+         "var_type": "tv",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-5"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-49",
+         "start": 974768,
+         "end": 974769,
+         "start_relative": 16316,
+         "end_relative": 16317,
+         "alt": "C",
+         "ref": "T",
+         "qual": 46.88999938964844,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-5"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-48",
+         "start": 974232,
+         "end": 974233,
+         "start_relative": 15780,
+         "end_relative": 15781,
+         "alt": "A",
+         "ref": "G",
+         "qual": 42.88999938964844,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-5"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-47",
+         "start": 974109,
+         "end": 974110,
+         "start_relative": 15657,
+         "end_relative": 15658,
+         "alt": "A",
+         "ref": "G",
+         "qual": 20.8799991607666,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-5"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-46",
+         "start": 973720,
+         "end": 973721,
+         "start_relative": 15268,
+         "end_relative": 15269,
+         "alt": "A",
+         "ref": "G",
+         "qual": 60.7400016784668,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-5"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-45",
+         "start": 973632,
+         "end": 973633,
+         "start_relative": 15180,
+         "end_relative": 15181,
+         "alt": "C",
+         "ref": "T",
+         "qual": 59.22999954223633,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-5"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-44",
+         "start": 973559,
+         "end": 973560,
+         "start_relative": 15107,
+         "end_relative": 15108,
+         "alt": "A",
+         "ref": "G",
+         "qual": 62.70000076293945,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-5"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-43",
+         "start": 973458,
+         "end": 973463,
+         "start_relative": 15006,
+         "end_relative": 15011,
+         "alt": "A",
+         "ref": "ATTGT",
+         "qual": 53.619998931884766,
+         "delta": -4,
+         "var_type": "del",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-5"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-42",
+         "start": 972958,
+         "end": 972959,
+         "start_relative": 14506,
+         "end_relative": 14507,
+         "alt": "C",
+         "ref": "A",
+         "qual": 63.630001068115234,
+         "delta": 0,
+         "var_type": "tv",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-5"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-41",
+         "start": 972876,
+         "end": 972877,
+         "start_relative": 14424,
+         "end_relative": 14425,
+         "alt": "C",
+         "ref": "T",
+         "qual": 62.83000183105469,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-5"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-40",
+         "start": 972632,
+         "end": 972633,
+         "start_relative": 14180,
+         "end_relative": 14181,
+         "alt": "A",
+         "ref": "G",
+         "qual": 62.630001068115234,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-5"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-39",
+         "start": 972406,
+         "end": 972407,
+         "start_relative": 13954,
+         "end_relative": 13955,
+         "alt": "C",
+         "ref": "T",
+         "qual": 64.55999755859375,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-5"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-38",
+         "start": 972262,
+         "end": 972263,
+         "start_relative": 13810,
+         "end_relative": 13811,
+         "alt": "G",
+         "ref": "A",
+         "qual": 64.66999816894531,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-5"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-37",
+         "start": 969238,
+         "end": 969239,
+         "start_relative": 10786,
+         "end_relative": 10787,
+         "alt": "A",
+         "ref": "G",
+         "qual": 52.970001220703125,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-5"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-36",
+         "start": 966857,
+         "end": 966866,
+         "start_relative": 8405,
+         "end_relative": 8414,
+         "alt": "A",
+         "ref": "AAAACAAGC",
+         "qual": 43.45000076293945,
+         "delta": -8,
+         "var_type": "del",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-3"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-35",
+         "start": 966839,
+         "end": 966840,
+         "start_relative": 8387,
+         "end_relative": 8388,
+         "alt": "C",
+         "ref": "T",
+         "qual": 38.790000915527344,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-3"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-34",
+         "start": 966506,
+         "end": 966507,
+         "start_relative": 8054,
+         "end_relative": 8055,
+         "alt": "T",
+         "ref": "C",
+         "qual": 42.93000030517578,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-3"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-33",
+         "start": 966448,
+         "end": 966449,
+         "start_relative": 7996,
+         "end_relative": 7997,
+         "alt": "GTC",
+         "ref": "G",
+         "qual": 40.68000030517578,
+         "delta": 2,
+         "var_type": "ins",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-3"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-32",
+         "start": 966410,
+         "end": 966411,
+         "start_relative": 7958,
+         "end_relative": 7959,
+         "alt": "G",
+         "ref": "A",
+         "qual": 46.4900016784668,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-3"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-31",
+         "start": 966155,
+         "end": 966156,
+         "start_relative": 7703,
+         "end_relative": 7704,
+         "alt": "A",
+         "ref": "G",
+         "qual": 50.880001068115234,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-3"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-30",
+         "start": 966122,
+         "end": 966123,
+         "start_relative": 7670,
+         "end_relative": 7671,
+         "alt": "T",
+         "ref": "A",
+         "qual": 48.939998626708984,
+         "delta": 0,
+         "var_type": "tv",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-3"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-29",
+         "start": 965854,
+         "end": 965855,
+         "start_relative": 7402,
+         "end_relative": 7403,
+         "alt": "C",
+         "ref": "G",
+         "qual": 48.29999923706055,
+         "delta": 0,
+         "var_type": "tv",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-3"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-28",
+         "start": 965818,
+         "end": 965819,
+         "start_relative": 7366,
+         "end_relative": 7367,
+         "alt": "C",
+         "ref": "T",
+         "qual": 48.15999984741211,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-3"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-27",
+         "start": 965693,
+         "end": 965694,
+         "start_relative": 7241,
+         "end_relative": 7242,
+         "alt": "A",
+         "ref": "T",
+         "qual": 42.16999816894531,
+         "delta": 0,
+         "var_type": "tv",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-3"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-26",
+         "start": 965670,
+         "end": 965671,
+         "start_relative": 7218,
+         "end_relative": 7219,
+         "alt": "G",
+         "ref": "A",
+         "qual": 47.56999969482422,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-3"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-25",
+         "start": 965665,
+         "end": 965666,
+         "start_relative": 7213,
+         "end_relative": 7214,
+         "alt": "G",
+         "ref": "C",
+         "qual": 42.81999969482422,
+         "delta": 0,
+         "var_type": "tv",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-3"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-24",
+         "start": 964834,
+         "end": 964835,
+         "start_relative": 6382,
+         "end_relative": 6383,
+         "alt": "C",
+         "ref": "T",
+         "qual": 27.920000076293945,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-3"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-22",
+         "start": 964830,
+         "end": 964833,
+         "start_relative": 6378,
+         "end_relative": 6381,
+         "alt": "C",
+         "ref": "CAT",
+         "qual": 33.689998626708984,
+         "delta": -2,
+         "var_type": "del",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-3"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-23",
+         "start": 964832,
+         "end": 964833,
+         "start_relative": 6380,
+         "end_relative": 6381,
+         "alt": "C",
+         "ref": "T",
+         "qual": 23.329999923706055,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-3"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-21",
+         "start": 964804,
+         "end": 964805,
+         "start_relative": 6352,
+         "end_relative": 6353,
+         "alt": "C",
+         "ref": "T",
+         "qual": 27.110000610351562,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-3"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-20",
+         "start": 964762,
+         "end": 964763,
+         "start_relative": 6310,
+         "end_relative": 6311,
+         "alt": "TAC",
+         "ref": "T",
+         "qual": 45.59000015258789,
+         "delta": 2,
+         "var_type": "ins",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-3"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-19",
+         "start": 964701,
+         "end": 964702,
+         "start_relative": 6249,
+         "end_relative": 6250,
+         "alt": "G",
+         "ref": "A",
+         "qual": 48.380001068115234,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-3"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-18",
+         "start": 964680,
+         "end": 964681,
+         "start_relative": 6228,
+         "end_relative": 6229,
+         "alt": "C",
+         "ref": "T",
+         "qual": 44.25,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-3"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-17",
+         "start": 963168,
+         "end": 963169,
+         "start_relative": 4716,
+         "end_relative": 4717,
+         "alt": "T",
+         "ref": "C",
+         "qual": 45.689998626708984,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-2"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-16",
+         "start": 962817,
+         "end": 962818,
+         "start_relative": 4365,
+         "end_relative": 4366,
+         "alt": "T",
+         "ref": "C",
+         "qual": 52.40999984741211,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-2"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-15",
+         "start": 962414,
+         "end": 962415,
+         "start_relative": 3962,
+         "end_relative": 3963,
+         "alt": "T",
+         "ref": "G",
+         "qual": 43.349998474121094,
+         "delta": 0,
+         "var_type": "tv",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-2"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-14",
+         "start": 961080,
+         "end": 961081,
+         "start_relative": 2628,
+         "end_relative": 2629,
+         "alt": "T",
+         "ref": "G",
+         "qual": 64.91000366210938,
+         "delta": 0,
+         "var_type": "tv",
+         "parents": [
+            "transcript-RSPO4-201",
+            "transcript-RSPO4-202",
+            "intron-2"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-13",
+         "start": 959568,
+         "end": 959569,
+         "start_relative": 1116,
+         "end_relative": 1117,
+         "alt": "G",
+         "ref": "A",
+         "qual": 52.459999084472656,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-RSPO4-201",
+            "exon-5"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-12",
+         "start": 959314,
+         "end": 959315,
+         "start_relative": 862,
+         "end_relative": 863,
+         "alt": "G",
+         "ref": "A",
+         "qual": 53.279998779296875,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-RSPO4-201",
+            "exon-5"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-11",
+         "start": 959220,
+         "end": 959221,
+         "start_relative": 768,
+         "end_relative": 769,
+         "alt": "G",
+         "ref": "T",
+         "qual": 43.16999816894531,
+         "delta": 0,
+         "var_type": "tv",
+         "parents": [
+            "transcript-RSPO4-201",
+            "exon-5"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-10",
+         "start": 959149,
+         "end": 959192,
+         "start_relative": 697,
+         "end_relative": 740,
+         "alt": "A",
+         "ref": "AGTGCGGTGATGGGTGTGGGCAAGTGTGGGGGTGGGTGTCAGC",
+         "qual": 7.78000020980835,
+         "delta": -42,
+         "var_type": "del",
+         "parents": [
+            "transcript-RSPO4-201",
+            "exon-5"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-9",
+         "start": 959126,
+         "end": 959127,
+         "start_relative": 674,
+         "end_relative": 675,
+         "alt": "G",
+         "ref": "C",
+         "qual": 13.34000015258789,
+         "delta": 0,
+         "var_type": "tv",
+         "parents": [
+            "transcript-RSPO4-201",
+            "exon-5"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-8",
+         "start": 959064,
+         "end": 959087,
+         "start_relative": 612,
+         "end_relative": 635,
+         "alt": "C",
+         "ref": "CTGGTGGTGGGTGTGGGCGAGTG",
+         "qual": 39.63999938964844,
+         "delta": -22,
+         "var_type": "del",
+         "parents": [
+            "transcript-RSPO4-201",
+            "exon-5"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-7",
+         "start": 959059,
+         "end": 959060,
+         "start_relative": 607,
+         "end_relative": 608,
+         "alt": "C",
+         "ref": "A",
+         "qual": 44.43000030517578,
+         "delta": 0,
+         "var_type": "tv",
+         "parents": [
+            "transcript-RSPO4-201",
+            "exon-5"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-6",
+         "start": 958952,
+         "end": 958953,
+         "start_relative": 500,
+         "end_relative": 501,
+         "alt": "C",
+         "ref": "T",
+         "qual": 49.439998626708984,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-RSPO4-201",
+            "exon-5"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-5",
+         "start": 958929,
+         "end": 958930,
+         "start_relative": 477,
+         "end_relative": 478,
+         "alt": "C",
+         "ref": "G",
+         "qual": 48.31999969482422,
+         "delta": 0,
+         "var_type": "tv",
+         "parents": [
+            "transcript-RSPO4-201",
+            "exon-5"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-4",
+         "start": 958650,
+         "end": 958651,
+         "start_relative": 198,
+         "end_relative": 199,
+         "alt": "C",
+         "ref": "G",
+         "qual": 49.86000061035156,
+         "delta": 0,
+         "var_type": "tv",
+         "parents": [
+            "transcript-RSPO4-201",
+            "exon-5"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-3",
+         "start": 958645,
+         "end": 958648,
+         "start_relative": 193,
+         "end_relative": 196,
+         "alt": "G",
+         "ref": "GGA",
+         "qual": 43.709999084472656,
+         "delta": -2,
+         "var_type": "del",
+         "parents": [
+            "transcript-RSPO4-201",
+            "exon-5"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-2",
+         "start": 958517,
+         "end": 958518,
+         "start_relative": 65,
+         "end_relative": 66,
+         "alt": "G",
+         "ref": "A",
+         "qual": 51.119998931884766,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-RSPO4-201",
+            "exon-5"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-1",
+         "start": 958486,
+         "end": 958487,
+         "start_relative": 34,
+         "end_relative": 35,
+         "alt": "A",
+         "ref": "T",
+         "qual": 48.310001373291016,
+         "delta": 0,
+         "var_type": "tv",
+         "parents": [
+            "transcript-RSPO4-201",
+            "exon-5"
+         ]
+      }
+   ]
+}

@@ -268,7 +268,6 @@ class InteractiveGenomeBrowser:
             if not ftype in self._current_features:
                 self._current_features=[]
             self._current_features.append(f)
-        
     
     def _cache_current_gene(self, features):
         for f in features:
@@ -279,6 +278,7 @@ class InteractiveGenomeBrowser:
                 elif 'gene_name' in f['info']:
                     self._gene_cache=f['info']['gene_name']
                     return
+                
         self._gene_cache=""
         
     
@@ -1229,7 +1229,8 @@ class InteractiveGenomeBrowser:
 def browse_genome(genome_manager: 'GenomeManager', 
                   chrom: Union[str, int] = 1,
                   position: int = 1000000,
-                  window_size: int = 80):
+                  window_size: int = 80,
+                  use_gui: bool = False):
     """Convenience function to start the genome browser.
     
     Args:
@@ -1237,6 +1238,18 @@ def browse_genome(genome_manager: 'GenomeManager',
         chrom: Starting chromosome
         position: Starting position
         window_size: Initial window size
+        use_gui: If True, launch the PyQt GUI version instead of terminal version
     """
-    browser = InteractiveGenomeBrowser(genome_manager)
-    browser.start(chrom, position, window_size)
+    if use_gui:
+        try:
+            from .genome_browser_gui import launch_genome_browser
+            launch_genome_browser(genome_manager)
+        except ImportError as e:
+            print(f"GUI mode requires PyQt6: {e}")
+            print("Falling back to terminal mode...")
+            input()
+            browser = InteractiveGenomeBrowser(genome_manager)
+            browser.start(chrom, position, window_size)
+    else:
+        browser = InteractiveGenomeBrowser(genome_manager)
+        browser.start(chrom, position, window_size)

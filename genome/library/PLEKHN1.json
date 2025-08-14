@@ -1,0 +1,1878 @@
+{
+   "name": "PLEKHN1",
+   "type": "gene",
+   "chrom": 1,
+   "start": 966482,
+   "end": 975865,
+   "strand": "+",
+   "start_relative": 0,
+   "end_relative": 9383,
+   "gene_id": "ENSG00000187583",
+   "gene_version": 11,
+   "gene_name": "PLEKHN1",
+   "gene_source": "ensembl_havana",
+   "gene_biotype": "protein_coding",
+   "transcripts": {
+      "PLEKHN1-203": {
+         "type": "transcript",
+         "sfid": "transcript-PLEKHN1-203",
+         "start": 966482,
+         "end": 975865,
+         "start_relative": 0,
+         "end_relative": 9383,
+         "transcript_name": "PLEKHN1-203",
+         "subfeatures": [
+            "exon-1",
+            "five_prime_utr-1",
+            "exon-1",
+            "five_prime_utr-2",
+            "CDS-1",
+            "start_codon-1",
+            "intron-1",
+            "intron-2",
+            "exon-2",
+            "CDS-2",
+            "intron-3",
+            "variant-1 (del -1)",
+            "variant-2 (tv 0)",
+            "variant-3 (ts 0)",
+            "variant-4 (ts 0)",
+            "variant-5 (ts 0)",
+            "variant-6 (ins 2)",
+            "variant-7 (del -2)",
+            "variant-8 (del -2)",
+            "variant-9 (ts 0)",
+            "variant-10 (ts 0)",
+            "exon-3",
+            "CDS-3",
+            "intron-4",
+            "exon-4",
+            "CDS-4",
+            "intron-5",
+            "exon-5",
+            "exon-5",
+            "CDS-5",
+            "CDS-6",
+            "intron-6",
+            "exon-1",
+            "exon-6",
+            "CDS-7",
+            "intron-7",
+            "intron-8",
+            "intron-9",
+            "exon-7",
+            "CDS-8",
+            "exon-7",
+            "CDS-9",
+            "intron-10",
+            "intron-11",
+            "exon-8",
+            "exon-3",
+            "CDS-10",
+            "intron-12",
+            "intron-13",
+            "exon-9",
+            "CDS-11",
+            "intron-14",
+            "exon-10",
+            "CDS-12",
+            "intron-15",
+            "exon-11",
+            "CDS-13",
+            "intron-16",
+            "exon-11",
+            "CDS-14",
+            "intron-17",
+            "exon-12",
+            "CDS-15",
+            "exon-1",
+            "CDS-16",
+            "intron-18",
+            "intron-19",
+            "variant-11 (ts 0)",
+            "exon-13",
+            "CDS-17",
+            "variant-12 (tv 0)",
+            "intron-20",
+            "variant-13 (ts 0)",
+            "exon-14",
+            "CDS-18",
+            "intron-21",
+            "variant-14 (ts 0)",
+            "exon-15",
+            "exon-16",
+            "exon-4",
+            "CDS-19",
+            "stop_codon-1",
+            "three_prime_utr-1",
+            "three_prime_utr-2",
+            "three_prime_utr-3",
+            "intron-24",
+            "intron-22",
+            "variant-15 (ts 0)",
+            "variant-16 (ts 0)",
+            "exon-5",
+            "three_prime_utr-4",
+            "intron-23"
+         ]
+      },
+      "PLEKHN1-201": {
+         "type": "transcript",
+         "sfid": "transcript-PLEKHN1-201",
+         "start": 966502,
+         "end": 975008,
+         "start_relative": 20,
+         "end_relative": 8526,
+         "transcript_name": "PLEKHN1-201",
+         "subfeatures": [
+            "exon-1",
+            "five_prime_utr-2",
+            "CDS-1",
+            "start_codon-1",
+            "intron-1",
+            "intron-2",
+            "exon-2",
+            "CDS-2",
+            "intron-3",
+            "variant-1 (del -1)",
+            "variant-2 (tv 0)",
+            "variant-3 (ts 0)",
+            "variant-4 (ts 0)",
+            "variant-5 (ts 0)",
+            "variant-6 (ins 2)",
+            "variant-7 (del -2)",
+            "variant-8 (del -2)",
+            "variant-9 (ts 0)",
+            "variant-10 (ts 0)",
+            "exon-3",
+            "CDS-3",
+            "intron-4",
+            "exon-4",
+            "CDS-4",
+            "intron-5",
+            "exon-5",
+            "exon-5",
+            "CDS-5",
+            "CDS-6",
+            "intron-6",
+            "exon-1",
+            "exon-6",
+            "CDS-7",
+            "intron-7",
+            "intron-8",
+            "intron-9",
+            "exon-7",
+            "CDS-8",
+            "exon-7",
+            "CDS-9",
+            "intron-10",
+            "intron-11",
+            "exon-8",
+            "exon-3",
+            "CDS-10",
+            "intron-12",
+            "intron-13",
+            "exon-9",
+            "CDS-11",
+            "intron-14",
+            "exon-10",
+            "CDS-12",
+            "intron-15",
+            "exon-11",
+            "CDS-13",
+            "intron-16",
+            "exon-11",
+            "CDS-14",
+            "intron-17",
+            "exon-12",
+            "CDS-15",
+            "exon-1",
+            "CDS-16",
+            "intron-18",
+            "intron-19",
+            "variant-11 (ts 0)",
+            "exon-13",
+            "CDS-17",
+            "variant-12 (tv 0)",
+            "intron-20",
+            "variant-13 (ts 0)",
+            "exon-14",
+            "CDS-18",
+            "intron-21",
+            "variant-14 (ts 0)",
+            "exon-15",
+            "exon-4",
+            "CDS-19",
+            "stop_codon-1",
+            "three_prime_utr-1",
+            "three_prime_utr-3",
+            "intron-22",
+            "intron-23"
+         ]
+      },
+      "PLEKHN1-204": {
+         "type": "transcript",
+         "sfid": "transcript-PLEKHN1-204",
+         "start": 970875,
+         "end": 971523,
+         "start_relative": 4393,
+         "end_relative": 5041,
+         "transcript_name": "PLEKHN1-204",
+         "subfeatures": [
+            "exon-1",
+            "exon-6",
+            "CDS-7",
+            "intron-7",
+            "intron-8",
+            "intron-9",
+            "exon-7",
+            "CDS-8",
+            "exon-7",
+            "CDS-9",
+            "intron-10",
+            "intron-11",
+            "exon-8",
+            "exon-3",
+            "CDS-10",
+            "intron-12"
+         ]
+      },
+      "PLEKHN1-205": {
+         "type": "transcript",
+         "sfid": "transcript-PLEKHN1-205",
+         "start": 973512,
+         "end": 975865,
+         "start_relative": 7030,
+         "end_relative": 9383,
+         "transcript_name": "PLEKHN1-205",
+         "subfeatures": [
+            "exon-1",
+            "CDS-16",
+            "intron-18",
+            "intron-19",
+            "variant-11 (ts 0)",
+            "exon-13",
+            "CDS-17",
+            "variant-12 (tv 0)",
+            "intron-20",
+            "variant-13 (ts 0)",
+            "exon-14",
+            "CDS-18",
+            "intron-21",
+            "variant-14 (ts 0)",
+            "exon-15",
+            "exon-16",
+            "exon-4",
+            "CDS-19",
+            "stop_codon-1",
+            "three_prime_utr-1",
+            "three_prime_utr-2",
+            "three_prime_utr-3",
+            "intron-24",
+            "intron-22",
+            "variant-15 (ts 0)",
+            "variant-16 (ts 0)",
+            "exon-5",
+            "three_prime_utr-4",
+            "intron-23"
+         ]
+      }
+   },
+   "exons": {
+      "2625490550364480844": {
+         "type": "exon",
+         "sfid": "exon-1",
+         "start": 966482,
+         "end": 966614,
+         "start_relative": 0,
+         "end_relative": 132,
+         "transcript_name": "PLEKHN1-203",
+         "exon_number": 1,
+         "parents": [
+            "transcript-PLEKHN1-203"
+         ],
+         "subfeatures": [
+            "five_prime_utr-1",
+            "five_prime_utr-2",
+            "CDS-1",
+            "start_codon-1",
+            "CDS-16"
+         ]
+      },
+      "45527897307217327": {
+         "type": "exon",
+         "sfid": "exon-1",
+         "start": 966502,
+         "end": 966614,
+         "start_relative": 20,
+         "end_relative": 132,
+         "transcript_name": "PLEKHN1-201",
+         "exon_number": 1,
+         "parents": [
+            "transcript-PLEKHN1-203",
+            "transcript-PLEKHN1-201"
+         ],
+         "subfeatures": [
+            "five_prime_utr-2",
+            "CDS-1",
+            "start_codon-1",
+            "CDS-16"
+         ]
+      },
+      "8200757493457105512": {
+         "type": "exon",
+         "sfid": "exon-2",
+         "start": 966704,
+         "end": 966803,
+         "start_relative": 222,
+         "end_relative": 321,
+         "transcript_name": "PLEKHN1-201",
+         "exon_number": 2,
+         "parents": [
+            "transcript-PLEKHN1-203",
+            "transcript-PLEKHN1-201"
+         ],
+         "subfeatures": [
+            "CDS-2"
+         ]
+      },
+      "-8416922227573740964": {
+         "type": "exon",
+         "sfid": "exon-3",
+         "start": 970277,
+         "end": 970423,
+         "start_relative": 3795,
+         "end_relative": 3941,
+         "transcript_name": "PLEKHN1-201",
+         "exon_number": 3,
+         "parents": [
+            "transcript-PLEKHN1-203",
+            "transcript-PLEKHN1-201"
+         ],
+         "subfeatures": [
+            "CDS-3"
+         ]
+      },
+      "7608428026980684873": {
+         "type": "exon",
+         "sfid": "exon-4",
+         "start": 970521,
+         "end": 970601,
+         "start_relative": 4039,
+         "end_relative": 4119,
+         "transcript_name": "PLEKHN1-201",
+         "exon_number": 4,
+         "parents": [
+            "transcript-PLEKHN1-203",
+            "transcript-PLEKHN1-201"
+         ],
+         "subfeatures": [
+            "CDS-4"
+         ]
+      },
+      "268878745766566286": {
+         "type": "exon",
+         "sfid": "exon-5",
+         "start": 970686,
+         "end": 970758,
+         "start_relative": 4204,
+         "end_relative": 4276,
+         "transcript_name": "PLEKHN1-201",
+         "exon_number": 5,
+         "parents": [
+            "transcript-PLEKHN1-203",
+            "transcript-PLEKHN1-201"
+         ],
+         "subfeatures": [
+            "CDS-5",
+            "CDS-6"
+         ]
+      },
+      "2965666351830233326": {
+         "type": "exon",
+         "sfid": "exon-5",
+         "start": 970686,
+         "end": 971006,
+         "start_relative": 4204,
+         "end_relative": 4524,
+         "transcript_name": "PLEKHN1-202",
+         "exon_number": 5,
+         "parents": [
+            "transcript-PLEKHN1-203",
+            "transcript-PLEKHN1-201"
+         ],
+         "subfeatures": [
+            "CDS-5",
+            "CDS-6",
+            "CDS-7"
+         ]
+      },
+      "4993571458967313028": {
+         "type": "exon",
+         "sfid": "exon-1",
+         "start": 970875,
+         "end": 971006,
+         "start_relative": 4393,
+         "end_relative": 4524,
+         "transcript_name": "PLEKHN1-204",
+         "exon_number": 1,
+         "parents": [
+            "transcript-PLEKHN1-203",
+            "transcript-PLEKHN1-201",
+            "transcript-PLEKHN1-204"
+         ],
+         "subfeatures": [
+            "CDS-1",
+            "start_codon-1",
+            "CDS-7",
+            "CDS-16"
+         ]
+      },
+      "-785264922206396785": {
+         "type": "exon",
+         "sfid": "exon-6",
+         "start": 970879,
+         "end": 971006,
+         "start_relative": 4397,
+         "end_relative": 4524,
+         "transcript_name": "PLEKHN1-201",
+         "exon_number": 6,
+         "parents": [
+            "transcript-PLEKHN1-203",
+            "transcript-PLEKHN1-201",
+            "transcript-PLEKHN1-204"
+         ],
+         "subfeatures": [
+            "CDS-7"
+         ]
+      },
+      "8259920909321641991": {
+         "type": "exon",
+         "sfid": "exon-7",
+         "start": 971077,
+         "end": 971208,
+         "start_relative": 4595,
+         "end_relative": 4726,
+         "transcript_name": "PLEKHN1-201",
+         "exon_number": 7,
+         "parents": [
+            "transcript-PLEKHN1-203",
+            "transcript-PLEKHN1-201",
+            "transcript-PLEKHN1-204"
+         ],
+         "subfeatures": [
+            "CDS-8",
+            "CDS-9"
+         ]
+      },
+      "-814869209904520752": {
+         "type": "exon",
+         "sfid": "exon-7",
+         "start": 971113,
+         "end": 971208,
+         "start_relative": 4631,
+         "end_relative": 4726,
+         "transcript_name": "PLEKHN1-203",
+         "exon_number": 7,
+         "parents": [
+            "transcript-PLEKHN1-203",
+            "transcript-PLEKHN1-201",
+            "transcript-PLEKHN1-204"
+         ],
+         "subfeatures": [
+            "CDS-8",
+            "CDS-9"
+         ]
+      },
+      "-7611609720675558714": {
+         "type": "exon",
+         "sfid": "exon-8",
+         "start": 971324,
+         "end": 971404,
+         "start_relative": 4842,
+         "end_relative": 4922,
+         "transcript_name": "PLEKHN1-201",
+         "exon_number": 8,
+         "parents": [
+            "transcript-PLEKHN1-203",
+            "transcript-PLEKHN1-201",
+            "transcript-PLEKHN1-204"
+         ],
+         "subfeatures": [
+            "CDS-10"
+         ]
+      },
+      "-179082016672999737": {
+         "type": "exon",
+         "sfid": "exon-3",
+         "start": 971324,
+         "end": 971523,
+         "start_relative": 4842,
+         "end_relative": 5041,
+         "transcript_name": "PLEKHN1-204",
+         "exon_number": 3,
+         "parents": [
+            "transcript-PLEKHN1-203",
+            "transcript-PLEKHN1-201",
+            "transcript-PLEKHN1-204"
+         ],
+         "subfeatures": [
+            "CDS-3",
+            "CDS-10"
+         ]
+      },
+      "8373711447474310247": {
+         "type": "exon",
+         "sfid": "exon-9",
+         "start": 972075,
+         "end": 972150,
+         "start_relative": 5593,
+         "end_relative": 5668,
+         "transcript_name": "PLEKHN1-201",
+         "exon_number": 9,
+         "parents": [
+            "transcript-PLEKHN1-203",
+            "transcript-PLEKHN1-201"
+         ],
+         "subfeatures": [
+            "CDS-11"
+         ]
+      },
+      "7184005510394537113": {
+         "type": "exon",
+         "sfid": "exon-10",
+         "start": 972288,
+         "end": 972424,
+         "start_relative": 5806,
+         "end_relative": 5942,
+         "transcript_name": "PLEKHN1-201",
+         "exon_number": 10,
+         "parents": [
+            "transcript-PLEKHN1-203",
+            "transcript-PLEKHN1-201"
+         ],
+         "subfeatures": [
+            "CDS-12"
+         ]
+      },
+      "-6112593529086667029": {
+         "type": "exon",
+         "sfid": "exon-11",
+         "start": 972861,
+         "end": 973010,
+         "start_relative": 6379,
+         "end_relative": 6528,
+         "transcript_name": "PLEKHN1-201",
+         "exon_number": 11,
+         "parents": [
+            "transcript-PLEKHN1-203",
+            "transcript-PLEKHN1-201"
+         ],
+         "subfeatures": [
+            "CDS-13",
+            "CDS-14"
+         ]
+      },
+      "25626198714734530": {
+         "type": "exon",
+         "sfid": "exon-11",
+         "start": 973186,
+         "end": 973326,
+         "start_relative": 6704,
+         "end_relative": 6844,
+         "transcript_name": "PLEKHN1-202",
+         "exon_number": 11,
+         "parents": [
+            "transcript-PLEKHN1-203",
+            "transcript-PLEKHN1-201"
+         ],
+         "subfeatures": [
+            "CDS-13",
+            "CDS-14"
+         ]
+      },
+      "8912209474796963462": {
+         "type": "exon",
+         "sfid": "exon-12",
+         "start": 973500,
+         "end": 973640,
+         "start_relative": 7018,
+         "end_relative": 7158,
+         "transcript_name": "PLEKHN1-201",
+         "exon_number": 12,
+         "parents": [
+            "transcript-PLEKHN1-203",
+            "transcript-PLEKHN1-201"
+         ],
+         "subfeatures": [
+            "CDS-15",
+            "CDS-16"
+         ]
+      },
+      "7353398562716365257": {
+         "type": "exon",
+         "sfid": "exon-1",
+         "start": 973512,
+         "end": 973640,
+         "start_relative": 7030,
+         "end_relative": 7158,
+         "transcript_name": "PLEKHN1-205",
+         "exon_number": 1,
+         "parents": [
+            "transcript-PLEKHN1-203",
+            "transcript-PLEKHN1-201",
+            "transcript-PLEKHN1-205"
+         ],
+         "subfeatures": [
+            "CDS-1",
+            "start_codon-1",
+            "CDS-16"
+         ]
+      },
+      "6518538994914861956": {
+         "type": "exon",
+         "sfid": "exon-13",
+         "start": 973833,
+         "end": 974051,
+         "start_relative": 7351,
+         "end_relative": 7569,
+         "transcript_name": "PLEKHN1-201",
+         "exon_number": 13,
+         "parents": [
+            "transcript-PLEKHN1-203",
+            "transcript-PLEKHN1-201",
+            "transcript-PLEKHN1-205"
+         ],
+         "subfeatures": [
+            "CDS-17",
+            "variant-12 (tv 0)"
+         ]
+      },
+      "-7942488543617967641": {
+         "type": "exon",
+         "sfid": "exon-14",
+         "start": 974316,
+         "end": 974364,
+         "start_relative": 7834,
+         "end_relative": 7882,
+         "transcript_name": "PLEKHN1-201",
+         "exon_number": 14,
+         "parents": [
+            "transcript-PLEKHN1-203",
+            "transcript-PLEKHN1-201",
+            "transcript-PLEKHN1-205"
+         ],
+         "subfeatures": [
+            "CDS-18"
+         ]
+      },
+      "-8643444259785922353": {
+         "type": "exon",
+         "sfid": "exon-15",
+         "start": 974442,
+         "end": 975008,
+         "start_relative": 7960,
+         "end_relative": 8526,
+         "transcript_name": "PLEKHN1-201",
+         "exon_number": 15,
+         "parents": [
+            "transcript-PLEKHN1-203",
+            "transcript-PLEKHN1-201",
+            "transcript-PLEKHN1-205"
+         ],
+         "subfeatures": [
+            "CDS-19",
+            "stop_codon-1",
+            "three_prime_utr-1",
+            "three_prime_utr-3"
+         ]
+      },
+      "4727089873214750426": {
+         "type": "exon",
+         "sfid": "exon-16",
+         "start": 974442,
+         "end": 975865,
+         "start_relative": 7960,
+         "end_relative": 9383,
+         "transcript_name": "PLEKHN1-203",
+         "exon_number": 16,
+         "parents": [
+            "transcript-PLEKHN1-203",
+            "transcript-PLEKHN1-205"
+         ],
+         "subfeatures": [
+            "CDS-19",
+            "stop_codon-1",
+            "three_prime_utr-1",
+            "three_prime_utr-2",
+            "three_prime_utr-3",
+            "variant-15 (ts 0)",
+            "variant-16 (ts 0)",
+            "three_prime_utr-4"
+         ]
+      },
+      "-2990788077339827678": {
+         "type": "exon",
+         "sfid": "exon-4",
+         "start": 974442,
+         "end": 974588,
+         "start_relative": 7960,
+         "end_relative": 8106,
+         "transcript_name": "PLEKHN1-205",
+         "exon_number": 4,
+         "parents": [
+            "transcript-PLEKHN1-203",
+            "transcript-PLEKHN1-201",
+            "transcript-PLEKHN1-205"
+         ],
+         "subfeatures": [
+            "CDS-4",
+            "CDS-19",
+            "stop_codon-1",
+            "three_prime_utr-3"
+         ]
+      },
+      "-823235859811144360": {
+         "type": "exon",
+         "sfid": "exon-5",
+         "start": 975712,
+         "end": 975865,
+         "start_relative": 9230,
+         "end_relative": 9383,
+         "transcript_name": "PLEKHN1-205",
+         "exon_number": 5,
+         "parents": [
+            "transcript-PLEKHN1-203",
+            "transcript-PLEKHN1-205"
+         ],
+         "subfeatures": [
+            "CDS-5",
+            "CDS-6",
+            "three_prime_utr-4"
+         ]
+      }
+   },
+   "proteins": {
+      "ENSP00000368717": {
+         "type": "protein",
+         "sfid": "protein-ENSP00000368717",
+         "start_relative": 0,
+         "end_relative": 0,
+         "protein_id": "ENSP00000368717"
+      },
+      "ENSP00000368719": {
+         "type": "protein",
+         "sfid": "protein-ENSP00000368719",
+         "start_relative": 0,
+         "end_relative": 0,
+         "protein_id": "ENSP00000368719"
+      },
+      "ENSP00000368720": {
+         "type": "protein",
+         "sfid": "protein-ENSP00000368720",
+         "start_relative": 0,
+         "end_relative": 0,
+         "protein_id": "ENSP00000368720"
+      },
+      "ENSP00000462558": {
+         "type": "protein",
+         "sfid": "protein-ENSP00000462558",
+         "start_relative": 0,
+         "end_relative": 0,
+         "protein_id": "ENSP00000462558"
+      }
+   },
+   "cds": [
+      {
+         "type": "CDS",
+         "sfid": "CDS-1",
+         "start": 966532,
+         "end": 966614,
+         "start_relative": 50,
+         "end_relative": 132,
+         "transcript_name": "PLEKHN1-201",
+         "exon_number": 1,
+         "protein_id": "ENSP00000368717",
+         "parents": [
+            "transcript-PLEKHN1-203",
+            "transcript-PLEKHN1-201",
+            "exon-1",
+            "exon-1",
+            "exon-1",
+            "exon-1"
+         ],
+         "subfeatures": [
+            "start_codon-1"
+         ]
+      },
+      {
+         "type": "CDS",
+         "sfid": "CDS-2",
+         "start": 966704,
+         "end": 966803,
+         "start_relative": 222,
+         "end_relative": 321,
+         "transcript_name": "PLEKHN1-201",
+         "exon_number": 2,
+         "protein_id": "ENSP00000368717",
+         "parents": [
+            "transcript-PLEKHN1-203",
+            "transcript-PLEKHN1-201",
+            "exon-2"
+         ]
+      },
+      {
+         "type": "CDS",
+         "sfid": "CDS-3",
+         "start": 970277,
+         "end": 970423,
+         "start_relative": 3795,
+         "end_relative": 3941,
+         "transcript_name": "PLEKHN1-201",
+         "exon_number": 3,
+         "protein_id": "ENSP00000368717",
+         "parents": [
+            "transcript-PLEKHN1-203",
+            "transcript-PLEKHN1-201",
+            "exon-3",
+            "exon-3"
+         ]
+      },
+      {
+         "type": "CDS",
+         "sfid": "CDS-4",
+         "start": 970521,
+         "end": 970601,
+         "start_relative": 4039,
+         "end_relative": 4119,
+         "transcript_name": "PLEKHN1-201",
+         "exon_number": 4,
+         "protein_id": "ENSP00000368717",
+         "parents": [
+            "transcript-PLEKHN1-203",
+            "transcript-PLEKHN1-201",
+            "exon-4",
+            "exon-4"
+         ]
+      },
+      {
+         "type": "CDS",
+         "sfid": "CDS-5",
+         "start": 970686,
+         "end": 970758,
+         "start_relative": 4204,
+         "end_relative": 4276,
+         "transcript_name": "PLEKHN1-201",
+         "exon_number": 5,
+         "protein_id": "ENSP00000368717",
+         "parents": [
+            "transcript-PLEKHN1-203",
+            "transcript-PLEKHN1-201",
+            "exon-5",
+            "exon-5",
+            "exon-5"
+         ]
+      },
+      {
+         "type": "CDS",
+         "sfid": "CDS-6",
+         "start": 970686,
+         "end": 971006,
+         "start_relative": 4204,
+         "end_relative": 4524,
+         "transcript_name": "PLEKHN1-202",
+         "exon_number": 5,
+         "protein_id": "ENSP00000368719",
+         "parents": [
+            "transcript-PLEKHN1-203",
+            "transcript-PLEKHN1-201",
+            "exon-5",
+            "exon-5",
+            "exon-5"
+         ]
+      },
+      {
+         "type": "CDS",
+         "sfid": "CDS-7",
+         "start": 970879,
+         "end": 971006,
+         "start_relative": 4397,
+         "end_relative": 4524,
+         "transcript_name": "PLEKHN1-201",
+         "exon_number": 6,
+         "protein_id": "ENSP00000368717",
+         "parents": [
+            "transcript-PLEKHN1-203",
+            "transcript-PLEKHN1-201",
+            "transcript-PLEKHN1-204",
+            "exon-5",
+            "exon-1",
+            "exon-6"
+         ]
+      },
+      {
+         "type": "CDS",
+         "sfid": "CDS-8",
+         "start": 971077,
+         "end": 971208,
+         "start_relative": 4595,
+         "end_relative": 4726,
+         "transcript_name": "PLEKHN1-201",
+         "exon_number": 7,
+         "protein_id": "ENSP00000368717",
+         "parents": [
+            "transcript-PLEKHN1-203",
+            "transcript-PLEKHN1-201",
+            "transcript-PLEKHN1-204",
+            "exon-7",
+            "exon-7"
+         ]
+      },
+      {
+         "type": "CDS",
+         "sfid": "CDS-9",
+         "start": 971113,
+         "end": 971208,
+         "start_relative": 4631,
+         "end_relative": 4726,
+         "transcript_name": "PLEKHN1-203",
+         "exon_number": 7,
+         "protein_id": "ENSP00000368720",
+         "parents": [
+            "transcript-PLEKHN1-203",
+            "transcript-PLEKHN1-201",
+            "transcript-PLEKHN1-204",
+            "exon-7",
+            "exon-7"
+         ]
+      },
+      {
+         "type": "CDS",
+         "sfid": "CDS-10",
+         "start": 971324,
+         "end": 971404,
+         "start_relative": 4842,
+         "end_relative": 4922,
+         "transcript_name": "PLEKHN1-201",
+         "exon_number": 8,
+         "protein_id": "ENSP00000368717",
+         "parents": [
+            "transcript-PLEKHN1-203",
+            "transcript-PLEKHN1-201",
+            "transcript-PLEKHN1-204",
+            "exon-8",
+            "exon-3"
+         ]
+      },
+      {
+         "type": "CDS",
+         "sfid": "CDS-11",
+         "start": 972075,
+         "end": 972150,
+         "start_relative": 5593,
+         "end_relative": 5668,
+         "transcript_name": "PLEKHN1-201",
+         "exon_number": 9,
+         "protein_id": "ENSP00000368717",
+         "parents": [
+            "transcript-PLEKHN1-203",
+            "transcript-PLEKHN1-201",
+            "exon-9"
+         ]
+      },
+      {
+         "type": "CDS",
+         "sfid": "CDS-12",
+         "start": 972288,
+         "end": 972424,
+         "start_relative": 5806,
+         "end_relative": 5942,
+         "transcript_name": "PLEKHN1-201",
+         "exon_number": 10,
+         "protein_id": "ENSP00000368717",
+         "parents": [
+            "transcript-PLEKHN1-203",
+            "transcript-PLEKHN1-201",
+            "exon-10"
+         ]
+      },
+      {
+         "type": "CDS",
+         "sfid": "CDS-13",
+         "start": 972861,
+         "end": 973010,
+         "start_relative": 6379,
+         "end_relative": 6528,
+         "transcript_name": "PLEKHN1-201",
+         "exon_number": 11,
+         "protein_id": "ENSP00000368717",
+         "parents": [
+            "transcript-PLEKHN1-203",
+            "transcript-PLEKHN1-201",
+            "exon-11",
+            "exon-11"
+         ]
+      },
+      {
+         "type": "CDS",
+         "sfid": "CDS-14",
+         "start": 973186,
+         "end": 973326,
+         "start_relative": 6704,
+         "end_relative": 6844,
+         "transcript_name": "PLEKHN1-202",
+         "exon_number": 11,
+         "protein_id": "ENSP00000368719",
+         "parents": [
+            "transcript-PLEKHN1-203",
+            "transcript-PLEKHN1-201",
+            "exon-11",
+            "exon-11"
+         ]
+      },
+      {
+         "type": "CDS",
+         "sfid": "CDS-15",
+         "start": 973500,
+         "end": 973640,
+         "start_relative": 7018,
+         "end_relative": 7158,
+         "transcript_name": "PLEKHN1-201",
+         "exon_number": 12,
+         "protein_id": "ENSP00000368717",
+         "parents": [
+            "transcript-PLEKHN1-203",
+            "transcript-PLEKHN1-201",
+            "exon-12"
+         ]
+      },
+      {
+         "type": "CDS",
+         "sfid": "CDS-16",
+         "start": 973512,
+         "end": 973640,
+         "start_relative": 7030,
+         "end_relative": 7158,
+         "transcript_name": "PLEKHN1-205",
+         "exon_number": 1,
+         "protein_id": "ENSP00000462558",
+         "parents": [
+            "transcript-PLEKHN1-203",
+            "transcript-PLEKHN1-201",
+            "transcript-PLEKHN1-205",
+            "exon-1",
+            "exon-1",
+            "exon-1",
+            "exon-12",
+            "exon-1"
+         ]
+      },
+      {
+         "type": "CDS",
+         "sfid": "CDS-17",
+         "start": 973833,
+         "end": 974051,
+         "start_relative": 7351,
+         "end_relative": 7569,
+         "transcript_name": "PLEKHN1-201",
+         "exon_number": 13,
+         "protein_id": "ENSP00000368717",
+         "parents": [
+            "transcript-PLEKHN1-203",
+            "transcript-PLEKHN1-201",
+            "transcript-PLEKHN1-205",
+            "exon-13"
+         ],
+         "subfeatures": [
+            "variant-12 (tv 0)"
+         ]
+      },
+      {
+         "type": "CDS",
+         "sfid": "CDS-18",
+         "start": 974316,
+         "end": 974364,
+         "start_relative": 7834,
+         "end_relative": 7882,
+         "transcript_name": "PLEKHN1-201",
+         "exon_number": 14,
+         "protein_id": "ENSP00000368717",
+         "parents": [
+            "transcript-PLEKHN1-203",
+            "transcript-PLEKHN1-201",
+            "transcript-PLEKHN1-205",
+            "exon-14"
+         ]
+      },
+      {
+         "type": "CDS",
+         "sfid": "CDS-19",
+         "start": 974442,
+         "end": 974572,
+         "start_relative": 7960,
+         "end_relative": 8090,
+         "transcript_name": "PLEKHN1-201",
+         "exon_number": 15,
+         "protein_id": "ENSP00000368717",
+         "parents": [
+            "transcript-PLEKHN1-203",
+            "transcript-PLEKHN1-201",
+            "transcript-PLEKHN1-205",
+            "exon-15",
+            "exon-16",
+            "exon-4"
+         ]
+      }
+   ],
+   "subfeatures": [
+      {
+         "type": "five_prime_utr",
+         "sfid": "five_prime_utr-1",
+         "start": 966482,
+         "end": 966531,
+         "start_relative": 0,
+         "end_relative": 49,
+         "transcript_name": "PLEKHN1-203",
+         "parents": [
+            "transcript-PLEKHN1-203",
+            "exon-1"
+         ]
+      },
+      {
+         "type": "five_prime_utr",
+         "sfid": "five_prime_utr-2",
+         "start": 966502,
+         "end": 966531,
+         "start_relative": 20,
+         "end_relative": 49,
+         "transcript_name": "PLEKHN1-201",
+         "parents": [
+            "transcript-PLEKHN1-203",
+            "exon-1",
+            "transcript-PLEKHN1-201",
+            "exon-1"
+         ]
+      },
+      {
+         "type": "start_codon",
+         "sfid": "start_codon-1",
+         "start": 966532,
+         "end": 966534,
+         "start_relative": 50,
+         "end_relative": 52,
+         "transcript_name": "PLEKHN1-201",
+         "exon_number": 1,
+         "parents": [
+            "transcript-PLEKHN1-203",
+            "exon-1",
+            "transcript-PLEKHN1-201",
+            "exon-1",
+            "CDS-1",
+            "exon-1",
+            "exon-1"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-1",
+         "start": 966614,
+         "end": 966502,
+         "start_relative": 132,
+         "end_relative": 20,
+         "parents": [
+            "transcript-PLEKHN1-203",
+            "transcript-PLEKHN1-201"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-2",
+         "start": 966614,
+         "end": 966704,
+         "start_relative": 132,
+         "end_relative": 222,
+         "parents": [
+            "transcript-PLEKHN1-203",
+            "transcript-PLEKHN1-201"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-3",
+         "start": 966803,
+         "end": 970277,
+         "start_relative": 321,
+         "end_relative": 3795,
+         "parents": [
+            "transcript-PLEKHN1-203",
+            "transcript-PLEKHN1-201"
+         ],
+         "subfeatures": [
+            "variant-1 (del -1)",
+            "variant-2 (tv 0)",
+            "variant-3 (ts 0)",
+            "variant-4 (ts 0)",
+            "variant-5 (ts 0)",
+            "variant-6 (ins 2)",
+            "variant-7 (del -2)",
+            "variant-8 (del -2)",
+            "variant-9 (ts 0)",
+            "variant-10 (ts 0)"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-4",
+         "start": 970423,
+         "end": 970521,
+         "start_relative": 3941,
+         "end_relative": 4039,
+         "parents": [
+            "transcript-PLEKHN1-203",
+            "transcript-PLEKHN1-201"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-5",
+         "start": 970601,
+         "end": 970686,
+         "start_relative": 4119,
+         "end_relative": 4204,
+         "parents": [
+            "transcript-PLEKHN1-203",
+            "transcript-PLEKHN1-201"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-6",
+         "start": 970758,
+         "end": 970686,
+         "start_relative": 4276,
+         "end_relative": 4204,
+         "parents": [
+            "transcript-PLEKHN1-203",
+            "transcript-PLEKHN1-201"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-7",
+         "start": 971006,
+         "end": 970875,
+         "start_relative": 4524,
+         "end_relative": 4393,
+         "parents": [
+            "transcript-PLEKHN1-203",
+            "transcript-PLEKHN1-201",
+            "transcript-PLEKHN1-204"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-8",
+         "start": 971006,
+         "end": 970879,
+         "start_relative": 4524,
+         "end_relative": 4397,
+         "parents": [
+            "transcript-PLEKHN1-203",
+            "transcript-PLEKHN1-201",
+            "transcript-PLEKHN1-204"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-9",
+         "start": 971006,
+         "end": 971077,
+         "start_relative": 4524,
+         "end_relative": 4595,
+         "parents": [
+            "transcript-PLEKHN1-203",
+            "transcript-PLEKHN1-201",
+            "transcript-PLEKHN1-204"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-10",
+         "start": 971208,
+         "end": 971113,
+         "start_relative": 4726,
+         "end_relative": 4631,
+         "parents": [
+            "transcript-PLEKHN1-203",
+            "transcript-PLEKHN1-201",
+            "transcript-PLEKHN1-204"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-11",
+         "start": 971208,
+         "end": 971324,
+         "start_relative": 4726,
+         "end_relative": 4842,
+         "parents": [
+            "transcript-PLEKHN1-203",
+            "transcript-PLEKHN1-201",
+            "transcript-PLEKHN1-204"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-12",
+         "start": 971404,
+         "end": 971324,
+         "start_relative": 4922,
+         "end_relative": 4842,
+         "parents": [
+            "transcript-PLEKHN1-203",
+            "transcript-PLEKHN1-201",
+            "transcript-PLEKHN1-204"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-13",
+         "start": 971523,
+         "end": 972075,
+         "start_relative": 5041,
+         "end_relative": 5593,
+         "parents": [
+            "transcript-PLEKHN1-203",
+            "transcript-PLEKHN1-201"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-14",
+         "start": 972150,
+         "end": 972288,
+         "start_relative": 5668,
+         "end_relative": 5806,
+         "parents": [
+            "transcript-PLEKHN1-203",
+            "transcript-PLEKHN1-201"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-15",
+         "start": 972424,
+         "end": 972861,
+         "start_relative": 5942,
+         "end_relative": 6379,
+         "parents": [
+            "transcript-PLEKHN1-203",
+            "transcript-PLEKHN1-201"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-16",
+         "start": 973010,
+         "end": 973186,
+         "start_relative": 6528,
+         "end_relative": 6704,
+         "parents": [
+            "transcript-PLEKHN1-203",
+            "transcript-PLEKHN1-201"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-17",
+         "start": 973326,
+         "end": 973500,
+         "start_relative": 6844,
+         "end_relative": 7018,
+         "parents": [
+            "transcript-PLEKHN1-203",
+            "transcript-PLEKHN1-201"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-18",
+         "start": 973640,
+         "end": 973512,
+         "start_relative": 7158,
+         "end_relative": 7030,
+         "parents": [
+            "transcript-PLEKHN1-203",
+            "transcript-PLEKHN1-201",
+            "transcript-PLEKHN1-205"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-19",
+         "start": 973640,
+         "end": 973833,
+         "start_relative": 7158,
+         "end_relative": 7351,
+         "parents": [
+            "transcript-PLEKHN1-203",
+            "transcript-PLEKHN1-201",
+            "transcript-PLEKHN1-205"
+         ],
+         "subfeatures": [
+            "variant-11 (ts 0)"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-20",
+         "start": 974051,
+         "end": 974316,
+         "start_relative": 7569,
+         "end_relative": 7834,
+         "parents": [
+            "transcript-PLEKHN1-203",
+            "transcript-PLEKHN1-201",
+            "transcript-PLEKHN1-205"
+         ],
+         "subfeatures": [
+            "variant-13 (ts 0)"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-21",
+         "start": 974364,
+         "end": 974442,
+         "start_relative": 7882,
+         "end_relative": 7960,
+         "parents": [
+            "transcript-PLEKHN1-203",
+            "transcript-PLEKHN1-201",
+            "transcript-PLEKHN1-205"
+         ],
+         "subfeatures": [
+            "variant-14 (ts 0)"
+         ]
+      },
+      {
+         "type": "stop_codon",
+         "sfid": "stop_codon-1",
+         "start": 974573,
+         "end": 974575,
+         "start_relative": 8091,
+         "end_relative": 8093,
+         "transcript_name": "PLEKHN1-201",
+         "exon_number": 15,
+         "parents": [
+            "transcript-PLEKHN1-203",
+            "transcript-PLEKHN1-201",
+            "transcript-PLEKHN1-205",
+            "exon-15",
+            "exon-16",
+            "exon-4"
+         ]
+      },
+      {
+         "type": "three_prime_utr",
+         "sfid": "three_prime_utr-1",
+         "start": 974576,
+         "end": 975008,
+         "start_relative": 8094,
+         "end_relative": 8526,
+         "transcript_name": "PLEKHN1-201",
+         "parents": [
+            "transcript-PLEKHN1-203",
+            "transcript-PLEKHN1-201",
+            "transcript-PLEKHN1-205",
+            "exon-15",
+            "exon-16"
+         ]
+      },
+      {
+         "type": "three_prime_utr",
+         "sfid": "three_prime_utr-2",
+         "start": 974576,
+         "end": 975865,
+         "start_relative": 8094,
+         "end_relative": 9383,
+         "transcript_name": "PLEKHN1-203",
+         "parents": [
+            "transcript-PLEKHN1-203",
+            "transcript-PLEKHN1-205",
+            "exon-16"
+         ]
+      },
+      {
+         "type": "three_prime_utr",
+         "sfid": "three_prime_utr-3",
+         "start": 974576,
+         "end": 974588,
+         "start_relative": 8094,
+         "end_relative": 8106,
+         "transcript_name": "PLEKHN1-205",
+         "parents": [
+            "transcript-PLEKHN1-203",
+            "transcript-PLEKHN1-201",
+            "transcript-PLEKHN1-205",
+            "exon-15",
+            "exon-16",
+            "exon-4"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-24",
+         "start": 974588,
+         "end": 975712,
+         "start_relative": 8106,
+         "end_relative": 9230,
+         "parents": [
+            "transcript-PLEKHN1-203",
+            "transcript-PLEKHN1-205"
+         ],
+         "subfeatures": [
+            "variant-15 (ts 0)",
+            "variant-16 (ts 0)"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-22",
+         "start": 975008,
+         "end": 974442,
+         "start_relative": 8526,
+         "end_relative": 7960,
+         "parents": [
+            "transcript-PLEKHN1-203",
+            "transcript-PLEKHN1-201",
+            "transcript-PLEKHN1-205"
+         ]
+      },
+      {
+         "type": "three_prime_utr",
+         "sfid": "three_prime_utr-4",
+         "start": 975712,
+         "end": 975865,
+         "start_relative": 9230,
+         "end_relative": 9383,
+         "transcript_name": "PLEKHN1-205",
+         "parents": [
+            "transcript-PLEKHN1-203",
+            "transcript-PLEKHN1-205",
+            "exon-16",
+            "exon-5"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-23",
+         "start": 975865,
+         "end": 974442,
+         "start_relative": 9383,
+         "end_relative": 7960,
+         "parents": [
+            "transcript-PLEKHN1-203",
+            "transcript-PLEKHN1-201",
+            "transcript-PLEKHN1-205"
+         ]
+      }
+   ],
+   "variants": [
+      {
+         "type": "variant",
+         "sfid": "variant-1",
+         "start": 967375,
+         "end": 967377,
+         "start_relative": 893,
+         "end_relative": 895,
+         "alt": "A",
+         "ref": "AC",
+         "qual": 57.84000015258789,
+         "delta": -1,
+         "var_type": "del",
+         "parents": [
+            "transcript-PLEKHN1-203",
+            "transcript-PLEKHN1-201",
+            "intron-3"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-2",
+         "start": 967383,
+         "end": 967384,
+         "start_relative": 901,
+         "end_relative": 902,
+         "alt": "G",
+         "ref": "C",
+         "qual": 63.56999969482422,
+         "delta": 0,
+         "var_type": "tv",
+         "parents": [
+            "transcript-PLEKHN1-203",
+            "transcript-PLEKHN1-201",
+            "intron-3"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-3",
+         "start": 967616,
+         "end": 967617,
+         "start_relative": 1134,
+         "end_relative": 1135,
+         "alt": "A",
+         "ref": "G",
+         "qual": 61.25,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-PLEKHN1-203",
+            "transcript-PLEKHN1-201",
+            "intron-3"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-4",
+         "start": 967864,
+         "end": 967865,
+         "start_relative": 1382,
+         "end_relative": 1383,
+         "alt": "G",
+         "ref": "A",
+         "qual": 66.5199966430664,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-PLEKHN1-203",
+            "transcript-PLEKHN1-201",
+            "intron-3"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-5",
+         "start": 967940,
+         "end": 967941,
+         "start_relative": 1458,
+         "end_relative": 1459,
+         "alt": "A",
+         "ref": "G",
+         "qual": 65.01000213623047,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-PLEKHN1-203",
+            "transcript-PLEKHN1-201",
+            "intron-3"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-6",
+         "start": 969376,
+         "end": 969377,
+         "start_relative": 2894,
+         "end_relative": 2895,
+         "alt": "ATG",
+         "ref": "A",
+         "qual": 58.119998931884766,
+         "delta": 2,
+         "var_type": "ins",
+         "parents": [
+            "transcript-PLEKHN1-203",
+            "transcript-PLEKHN1-201",
+            "intron-3"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-7",
+         "start": 969749,
+         "end": 969752,
+         "start_relative": 3267,
+         "end_relative": 3270,
+         "alt": "A",
+         "ref": "ATG",
+         "qual": 58.9900016784668,
+         "delta": -2,
+         "var_type": "del",
+         "parents": [
+            "transcript-PLEKHN1-203",
+            "transcript-PLEKHN1-201",
+            "intron-3"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-8",
+         "start": 969777,
+         "end": 969780,
+         "start_relative": 3295,
+         "end_relative": 3298,
+         "alt": "T",
+         "ref": "TGC",
+         "qual": 39.83000183105469,
+         "delta": -2,
+         "var_type": "del",
+         "parents": [
+            "transcript-PLEKHN1-203",
+            "transcript-PLEKHN1-201",
+            "intron-3"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-9",
+         "start": 969779,
+         "end": 969780,
+         "start_relative": 3297,
+         "end_relative": 3298,
+         "alt": "T",
+         "ref": "C",
+         "qual": 39.869998931884766,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-PLEKHN1-203",
+            "transcript-PLEKHN1-201",
+            "intron-3"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-10",
+         "start": 969784,
+         "end": 969785,
+         "start_relative": 3302,
+         "end_relative": 3303,
+         "alt": "G",
+         "ref": "A",
+         "qual": 63.34000015258789,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-PLEKHN1-203",
+            "transcript-PLEKHN1-201",
+            "intron-3"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-11",
+         "start": 973692,
+         "end": 973693,
+         "start_relative": 7210,
+         "end_relative": 7211,
+         "alt": "T",
+         "ref": "C",
+         "qual": 56.31999969482422,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-PLEKHN1-203",
+            "transcript-PLEKHN1-201",
+            "transcript-PLEKHN1-205",
+            "intron-19"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-12",
+         "start": 973857,
+         "end": 973858,
+         "start_relative": 7375,
+         "end_relative": 7376,
+         "alt": "C",
+         "ref": "G",
+         "qual": 62.0099983215332,
+         "delta": 0,
+         "var_type": "tv",
+         "parents": [
+            "transcript-PLEKHN1-203",
+            "transcript-PLEKHN1-201",
+            "transcript-PLEKHN1-205",
+            "exon-13",
+            "CDS-17"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-13",
+         "start": 974174,
+         "end": 974175,
+         "start_relative": 7692,
+         "end_relative": 7693,
+         "alt": "G",
+         "ref": "A",
+         "qual": 62.41999816894531,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-PLEKHN1-203",
+            "transcript-PLEKHN1-201",
+            "transcript-PLEKHN1-205",
+            "intron-20"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-14",
+         "start": 974387,
+         "end": 974388,
+         "start_relative": 7905,
+         "end_relative": 7906,
+         "alt": "G",
+         "ref": "A",
+         "qual": 62.060001373291016,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-PLEKHN1-203",
+            "transcript-PLEKHN1-201",
+            "transcript-PLEKHN1-205",
+            "intron-21"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-15",
+         "start": 975057,
+         "end": 975058,
+         "start_relative": 8575,
+         "end_relative": 8576,
+         "alt": "G",
+         "ref": "A",
+         "qual": 59.36000061035156,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-PLEKHN1-203",
+            "transcript-PLEKHN1-205",
+            "exon-16",
+            "intron-24"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-16",
+         "start": 975522,
+         "end": 975523,
+         "start_relative": 9040,
+         "end_relative": 9041,
+         "alt": "C",
+         "ref": "T",
+         "qual": 63.20000076293945,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-PLEKHN1-203",
+            "transcript-PLEKHN1-205",
+            "exon-16",
+            "intron-24"
+         ]
+      }
+   ]
+}

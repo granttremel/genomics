@@ -19,7 +19,7 @@ from . import shorten_variant
 from . import utils
 from .genemap import GeneMap
 from .features import Gene, Feature
-from .transcribe import Ribosome
+from .translate import Ribosome
 from .genome_iterator import GenomeIterator, FeatureExtractor
 from .genome_browser import InteractiveGenomeBrowser
 

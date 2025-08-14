@@ -1,0 +1,5758 @@
+{
+   "name": "AGRN",
+   "type": "gene",
+   "chrom": 1,
+   "start": 1020120,
+   "end": 1056118,
+   "strand": "+",
+   "start_relative": 0,
+   "end_relative": 35998,
+   "gene_id": "ENSG00000188157",
+   "gene_version": 15,
+   "gene_name": "AGRN",
+   "gene_source": "ensembl_havana",
+   "gene_biotype": "protein_coding",
+   "transcripts": {
+      "AGRN-201": {
+         "type": "transcript",
+         "sfid": "transcript-AGRN-201",
+         "start": 1020120,
+         "end": 1056116,
+         "start_relative": 0,
+         "end_relative": 35996,
+         "transcript_name": "AGRN-201",
+         "subfeatures": [
+            "exon-1",
+            "five_prime_utr-1",
+            "exon-1",
+            "five_prime_utr-2",
+            "CDS-1",
+            "start_codon-1",
+            "intron-1",
+            "intron-2",
+            "variant-1 (ins 3)",
+            "variant-2 (ins 3)",
+            "variant-3 (ts 0)",
+            "exon-2",
+            "CDS-2",
+            "five_prime_utr-3",
+            "CDS-3",
+            "start_codon-2",
+            "intron-3",
+            "variant-4 (ins 23)",
+            "variant-5 (ts 0)",
+            "variant-6 (tv 0)",
+            "variant-7 (ts 0)",
+            "variant-8 (tv 0)",
+            "variant-9 (tv 0)",
+            "variant-10 (ts 0)",
+            "variant-11 (ts 0)",
+            "variant-12 (ts 0)",
+            "variant-13 (ts 0)",
+            "variant-14 (ts 0)",
+            "variant-15 (del -2)",
+            "variant-16 (tv 0)",
+            "variant-17 (ts 0)",
+            "variant-18 (ts 0)",
+            "variant-19 (tv 0)",
+            "variant-20 (ts 0)",
+            "variant-21 (ins 31)",
+            "variant-22 (ts 0)",
+            "variant-23 (tv 0)",
+            "variant-24 (ins 2)",
+            "variant-25 (ts 0)",
+            "variant-26 (del -6)",
+            "variant-27 (ts 0)",
+            "variant-28 (ts 0)",
+            "variant-29 (ins 2)",
+            "variant-30 (del -2)",
+            "variant-31 (ins 2)",
+            "variant-32 (ts 0)",
+            "variant-33 (ts 0)",
+            "variant-34 (del -2)",
+            "variant-35 (ins 2)",
+            "variant-36 (tv 0)",
+            "variant-37 (ts 0)",
+            "variant-38 (del -2)",
+            "variant-39 (ts 0)",
+            "variant-40 (ts 0)",
+            "variant-41 (del -2)",
+            "variant-42 (del -38)",
+            "variant-43 (del -2)",
+            "variant-44 (ts 0)",
+            "exon-1",
+            "five_prime_utr-4",
+            "CDS-4",
+            "start_codon-3",
+            "intron-4",
+            "variant-45 (tv 0)",
+            "exon-1",
+            "variant-46 (del -1)",
+            "exon-3",
+            "CDS-5",
+            "intron-5",
+            "intron-6",
+            "variant-47 (ts 0)",
+            "variant-48 (ts 0)",
+            "variant-49 (ts 0)",
+            "variant-50 (ts 0)",
+            "variant-51 (ts 0)",
+            "variant-52 (ts 0)",
+            "variant-53 (ts 0)",
+            "variant-54 (ts 0)",
+            "variant-55 (tv 0)",
+            "variant-56 (ts 0)",
+            "variant-57 (ts 0)",
+            "variant-58 (ts 0)",
+            "variant-59 (ts 0)",
+            "variant-60 (ts 0)",
+            "variant-61 (tv 0)",
+            "variant-62 (tv 0)",
+            "variant-63 (tv 0)",
+            "variant-64 (ins 2)",
+            "variant-65 (ts 0)",
+            "variant-66 (tv 0)",
+            "variant-67 (ts 0)",
+            "exon-4",
+            "CDS-6",
+            "intron-7",
+            "variant-68 (tv 0)",
+            "variant-69 (del -3)",
+            "variant-70 (del -8)",
+            "exon-5",
+            "CDS-7",
+            "intron-8",
+            "exon-6",
+            "CDS-8",
+            "intron-9",
+            "variant-71 (del -47)",
+            "variant-72 (ts 0)",
+            "exon-7",
+            "CDS-9",
+            "intron-10",
+            "variant-73 (ts 0)",
+            "variant-74 (ts 0)",
+            "variant-75 (del -2)",
+            "exon-8",
+            "CDS-10",
+            "intron-11",
+            "exon-9",
+            "CDS-11",
+            "intron-12",
+            "exon-10",
+            "CDS-12",
+            "intron-13",
+            "exon-11",
+            "CDS-13",
+            "intron-14",
+            "exon-12",
+            "CDS-14",
+            "intron-15",
+            "variant-76 (ts 0)",
+            "exon-13",
+            "CDS-15",
+            "intron-16",
+            "exon-14",
+            "CDS-16",
+            "exon-1",
+            "intron-17",
+            "intron-18",
+            "variant-77 (ts 0)",
+            "exon-15",
+            "CDS-17",
+            "intron-19",
+            "exon-16",
+            "CDS-18",
+            "intron-20",
+            "exon-17",
+            "exon-4",
+            "CDS-19",
+            "intron-21",
+            "intron-22",
+            "exon-18",
+            "CDS-20",
+            "variant-78 (ts 0)",
+            "intron-23",
+            "exon-19",
+            "CDS-21",
+            "intron-24",
+            "variant-79 (ts 0)",
+            "variant-80 (ts 0)",
+            "variant-81 (ts 0)",
+            "exon-1",
+            "exon-20",
+            "CDS-22",
+            "intron-25",
+            "intron-26",
+            "variant-82 (tv 0)",
+            "exon-1",
+            "variant-83 (ts 0)",
+            "exon-21",
+            "CDS-23",
+            "variant-84 (ts 0)",
+            "intron-27",
+            "intron-28",
+            "exon-22",
+            "exon-2",
+            "exon-3",
+            "CDS-24",
+            "intron-30",
+            "intron-31",
+            "intron-29",
+            "exon-23",
+            "CDS-25",
+            "intron-32",
+            "exon-1",
+            "variant-85 (del -11)",
+            "variant-86 (del -2)",
+            "exon-24",
+            "CDS-26",
+            "variant-87 (ts 0)",
+            "intron-33",
+            "intron-34",
+            "variant-88 (del -1)",
+            "exon-25",
+            "exon-2",
+            "CDS-27",
+            "intron-36",
+            "intron-35",
+            "exon-26",
+            "CDS-28",
+            "intron-37",
+            "variant-89 (ts 0)",
+            "exon-27",
+            "CDS-29",
+            "intron-38",
+            "variant-90 (tv 0)",
+            "variant-91 (ts 0)",
+            "exon-28",
+            "CDS-30",
+            "intron-39",
+            "exon-29",
+            "CDS-31",
+            "intron-40",
+            "exon-30",
+            "CDS-32",
+            "intron-41",
+            "exon-31",
+            "CDS-33",
+            "intron-42",
+            "variant-92 (ts 0)",
+            "exon-32",
+            "CDS-34",
+            "intron-43",
+            "exon-33",
+            "CDS-35",
+            "intron-44",
+            "exon-34",
+            "CDS-36",
+            "intron-45",
+            "variant-93 (ts 0)",
+            "exon-1",
+            "exon-35",
+            "CDS-37",
+            "intron-47",
+            "variant-94 (tv 0)",
+            "variant-95 (ins 2)",
+            "variant-96 (tv 0)",
+            "exon-36",
+            "CDS-38",
+            "intron-48",
+            "variant-97 (tv 0)",
+            "exon-37",
+            "CDS-39",
+            "intron-46",
+            "intron-49",
+            "exon-38",
+            "CDS-40",
+            "intron-50",
+            "exon-36",
+            "exon-3",
+            "CDS-41",
+            "variant-98 (ts 0)",
+            "stop_codon-1",
+            "three_prime_utr-1",
+            "variant-99 (ts 0)",
+            "variant-100 (ts 0)",
+            "variant-101 (ts 0)",
+            "variant-102 (ts 0)",
+            "intron-52",
+            "intron-51"
+         ]
+      },
+      "AGRN-208": {
+         "type": "transcript",
+         "sfid": "transcript-AGRN-208",
+         "start": 1020123,
+         "end": 1056118,
+         "start_relative": 3,
+         "end_relative": 35998,
+         "transcript_name": "AGRN-208",
+         "subfeatures": [
+            "exon-1",
+            "five_prime_utr-2",
+            "CDS-1",
+            "start_codon-1",
+            "intron-1",
+            "intron-2",
+            "variant-1 (ins 3)",
+            "variant-2 (ins 3)",
+            "variant-3 (ts 0)",
+            "exon-2",
+            "CDS-2",
+            "five_prime_utr-3",
+            "CDS-3",
+            "start_codon-2",
+            "intron-3",
+            "variant-4 (ins 23)",
+            "variant-5 (ts 0)",
+            "variant-6 (tv 0)",
+            "variant-7 (ts 0)",
+            "variant-8 (tv 0)",
+            "variant-9 (tv 0)",
+            "variant-10 (ts 0)",
+            "variant-11 (ts 0)",
+            "variant-12 (ts 0)",
+            "variant-13 (ts 0)",
+            "variant-14 (ts 0)",
+            "variant-15 (del -2)",
+            "variant-16 (tv 0)",
+            "variant-17 (ts 0)",
+            "variant-18 (ts 0)",
+            "variant-19 (tv 0)",
+            "variant-20 (ts 0)",
+            "variant-21 (ins 31)",
+            "variant-22 (ts 0)",
+            "variant-23 (tv 0)",
+            "variant-24 (ins 2)",
+            "variant-25 (ts 0)",
+            "variant-26 (del -6)",
+            "variant-27 (ts 0)",
+            "variant-28 (ts 0)",
+            "variant-29 (ins 2)",
+            "variant-30 (del -2)",
+            "variant-31 (ins 2)",
+            "variant-32 (ts 0)",
+            "variant-33 (ts 0)",
+            "variant-34 (del -2)",
+            "variant-35 (ins 2)",
+            "variant-36 (tv 0)",
+            "variant-37 (ts 0)",
+            "variant-38 (del -2)",
+            "variant-39 (ts 0)",
+            "variant-40 (ts 0)",
+            "variant-41 (del -2)",
+            "variant-42 (del -38)",
+            "variant-43 (del -2)",
+            "variant-44 (ts 0)",
+            "exon-1",
+            "five_prime_utr-4",
+            "CDS-4",
+            "start_codon-3",
+            "intron-4",
+            "variant-45 (tv 0)",
+            "exon-1",
+            "variant-46 (del -1)",
+            "exon-3",
+            "CDS-5",
+            "intron-5",
+            "intron-6",
+            "variant-47 (ts 0)",
+            "variant-48 (ts 0)",
+            "variant-49 (ts 0)",
+            "variant-50 (ts 0)",
+            "variant-51 (ts 0)",
+            "variant-52 (ts 0)",
+            "variant-53 (ts 0)",
+            "variant-54 (ts 0)",
+            "variant-55 (tv 0)",
+            "variant-56 (ts 0)",
+            "variant-57 (ts 0)",
+            "variant-58 (ts 0)",
+            "variant-59 (ts 0)",
+            "variant-60 (ts 0)",
+            "variant-61 (tv 0)",
+            "variant-62 (tv 0)",
+            "variant-63 (tv 0)",
+            "variant-64 (ins 2)",
+            "variant-65 (ts 0)",
+            "variant-66 (tv 0)",
+            "variant-67 (ts 0)",
+            "exon-4",
+            "CDS-6",
+            "intron-7",
+            "variant-68 (tv 0)",
+            "variant-69 (del -3)",
+            "variant-70 (del -8)",
+            "exon-5",
+            "CDS-7",
+            "intron-8",
+            "exon-6",
+            "CDS-8",
+            "intron-9",
+            "variant-71 (del -47)",
+            "variant-72 (ts 0)",
+            "exon-7",
+            "CDS-9",
+            "intron-10",
+            "variant-73 (ts 0)",
+            "variant-74 (ts 0)",
+            "variant-75 (del -2)",
+            "exon-8",
+            "CDS-10",
+            "intron-11",
+            "exon-9",
+            "CDS-11",
+            "intron-12",
+            "exon-10",
+            "CDS-12",
+            "intron-13",
+            "exon-11",
+            "CDS-13",
+            "intron-14",
+            "exon-12",
+            "CDS-14",
+            "intron-15",
+            "variant-76 (ts 0)",
+            "exon-13",
+            "CDS-15",
+            "intron-16",
+            "exon-14",
+            "CDS-16",
+            "exon-1",
+            "intron-17",
+            "intron-18",
+            "variant-77 (ts 0)",
+            "exon-15",
+            "CDS-17",
+            "intron-19",
+            "exon-16",
+            "CDS-18",
+            "intron-20",
+            "exon-17",
+            "exon-4",
+            "CDS-19",
+            "intron-21",
+            "intron-22",
+            "exon-18",
+            "CDS-20",
+            "variant-78 (ts 0)",
+            "intron-23",
+            "exon-19",
+            "CDS-21",
+            "intron-24",
+            "variant-79 (ts 0)",
+            "variant-80 (ts 0)",
+            "variant-81 (ts 0)",
+            "exon-1",
+            "exon-20",
+            "CDS-22",
+            "intron-25",
+            "intron-26",
+            "variant-82 (tv 0)",
+            "exon-1",
+            "variant-83 (ts 0)",
+            "exon-21",
+            "CDS-23",
+            "variant-84 (ts 0)",
+            "intron-27",
+            "intron-28",
+            "exon-22",
+            "exon-2",
+            "exon-3",
+            "CDS-24",
+            "intron-30",
+            "intron-31",
+            "intron-29",
+            "exon-23",
+            "CDS-25",
+            "intron-32",
+            "exon-1",
+            "variant-85 (del -11)",
+            "variant-86 (del -2)",
+            "exon-24",
+            "CDS-26",
+            "variant-87 (ts 0)",
+            "intron-33",
+            "intron-34",
+            "variant-88 (del -1)",
+            "exon-25",
+            "exon-2",
+            "CDS-27",
+            "intron-36",
+            "intron-35",
+            "exon-26",
+            "CDS-28",
+            "intron-37",
+            "variant-89 (ts 0)",
+            "exon-27",
+            "CDS-29",
+            "intron-38",
+            "variant-90 (tv 0)",
+            "variant-91 (ts 0)",
+            "exon-28",
+            "CDS-30",
+            "intron-39",
+            "exon-29",
+            "CDS-31",
+            "intron-40",
+            "exon-30",
+            "CDS-32",
+            "intron-41",
+            "exon-31",
+            "CDS-33",
+            "intron-42",
+            "variant-92 (ts 0)",
+            "exon-32",
+            "CDS-34",
+            "intron-43",
+            "exon-33",
+            "CDS-35",
+            "intron-44",
+            "exon-34",
+            "CDS-36",
+            "intron-45",
+            "variant-93 (ts 0)",
+            "exon-1",
+            "exon-35",
+            "CDS-37",
+            "intron-47",
+            "variant-94 (tv 0)",
+            "variant-95 (ins 2)",
+            "variant-96 (tv 0)",
+            "exon-36",
+            "CDS-38",
+            "intron-48",
+            "variant-97 (tv 0)",
+            "exon-37",
+            "CDS-39",
+            "intron-46",
+            "intron-49",
+            "exon-38",
+            "CDS-40",
+            "intron-50",
+            "exon-39",
+            "exon-36",
+            "exon-3",
+            "CDS-41",
+            "variant-98 (ts 0)",
+            "stop_codon-1",
+            "three_prime_utr-1",
+            "three_prime_utr-2",
+            "variant-99 (ts 0)",
+            "variant-100 (ts 0)",
+            "variant-101 (ts 0)",
+            "variant-102 (ts 0)",
+            "intron-52",
+            "intron-51"
+         ]
+      },
+      "AGRN-209": {
+         "type": "transcript",
+         "sfid": "transcript-AGRN-209",
+         "start": 1034106,
+         "end": 1056116,
+         "start_relative": 13986,
+         "end_relative": 35996,
+         "transcript_name": "AGRN-209",
+         "subfeatures": [
+            "exon-1",
+            "five_prime_utr-4",
+            "CDS-4",
+            "start_codon-3",
+            "intron-4",
+            "variant-45 (tv 0)",
+            "exon-1",
+            "variant-46 (del -1)",
+            "exon-3",
+            "CDS-5",
+            "intron-5",
+            "intron-6",
+            "variant-47 (ts 0)",
+            "variant-48 (ts 0)",
+            "variant-49 (ts 0)",
+            "variant-50 (ts 0)",
+            "variant-51 (ts 0)",
+            "variant-52 (ts 0)",
+            "variant-53 (ts 0)",
+            "variant-54 (ts 0)",
+            "variant-55 (tv 0)",
+            "variant-56 (ts 0)",
+            "variant-57 (ts 0)",
+            "variant-58 (ts 0)",
+            "variant-59 (ts 0)",
+            "variant-60 (ts 0)",
+            "variant-61 (tv 0)",
+            "variant-62 (tv 0)",
+            "variant-63 (tv 0)",
+            "variant-64 (ins 2)",
+            "variant-65 (ts 0)",
+            "variant-66 (tv 0)",
+            "variant-67 (ts 0)",
+            "exon-4",
+            "CDS-6",
+            "intron-7",
+            "variant-68 (tv 0)",
+            "variant-69 (del -3)",
+            "variant-70 (del -8)",
+            "exon-5",
+            "CDS-7",
+            "intron-8",
+            "exon-6",
+            "CDS-8",
+            "intron-9",
+            "variant-71 (del -47)",
+            "variant-72 (ts 0)",
+            "exon-7",
+            "CDS-9",
+            "intron-10",
+            "variant-73 (ts 0)",
+            "variant-74 (ts 0)",
+            "variant-75 (del -2)",
+            "exon-8",
+            "CDS-10",
+            "intron-11",
+            "exon-9",
+            "CDS-11",
+            "intron-12",
+            "exon-10",
+            "CDS-12",
+            "intron-13",
+            "exon-11",
+            "CDS-13",
+            "intron-14",
+            "exon-12",
+            "CDS-14",
+            "intron-15",
+            "variant-76 (ts 0)",
+            "exon-13",
+            "CDS-15",
+            "intron-16",
+            "exon-14",
+            "CDS-16",
+            "exon-1",
+            "intron-17",
+            "intron-18",
+            "variant-77 (ts 0)",
+            "exon-15",
+            "CDS-17",
+            "intron-19",
+            "exon-16",
+            "CDS-18",
+            "intron-20",
+            "exon-17",
+            "exon-4",
+            "CDS-19",
+            "intron-21",
+            "intron-22",
+            "exon-18",
+            "CDS-20",
+            "variant-78 (ts 0)",
+            "intron-23",
+            "exon-19",
+            "CDS-21",
+            "intron-24",
+            "variant-79 (ts 0)",
+            "variant-80 (ts 0)",
+            "variant-81 (ts 0)",
+            "exon-1",
+            "exon-20",
+            "CDS-22",
+            "intron-25",
+            "intron-26",
+            "variant-82 (tv 0)",
+            "exon-1",
+            "variant-83 (ts 0)",
+            "exon-21",
+            "CDS-23",
+            "variant-84 (ts 0)",
+            "intron-27",
+            "intron-28",
+            "exon-22",
+            "exon-2",
+            "exon-3",
+            "CDS-24",
+            "intron-30",
+            "intron-31",
+            "intron-29",
+            "exon-23",
+            "CDS-25",
+            "intron-32",
+            "exon-1",
+            "variant-85 (del -11)",
+            "variant-86 (del -2)",
+            "exon-24",
+            "CDS-26",
+            "variant-87 (ts 0)",
+            "intron-33",
+            "intron-34",
+            "variant-88 (del -1)",
+            "exon-25",
+            "exon-2",
+            "CDS-27",
+            "intron-36",
+            "intron-35",
+            "exon-26",
+            "CDS-28",
+            "intron-37",
+            "variant-89 (ts 0)",
+            "exon-27",
+            "CDS-29",
+            "intron-38",
+            "variant-90 (tv 0)",
+            "variant-91 (ts 0)",
+            "exon-28",
+            "CDS-30",
+            "intron-39",
+            "exon-29",
+            "CDS-31",
+            "intron-40",
+            "exon-30",
+            "CDS-32",
+            "intron-41",
+            "exon-31",
+            "CDS-33",
+            "intron-42",
+            "variant-92 (ts 0)",
+            "exon-32",
+            "CDS-34",
+            "intron-43",
+            "exon-33",
+            "CDS-35",
+            "intron-44",
+            "exon-34",
+            "CDS-36",
+            "intron-45",
+            "variant-93 (ts 0)",
+            "exon-1",
+            "exon-35",
+            "CDS-37",
+            "intron-47",
+            "variant-94 (tv 0)",
+            "variant-95 (ins 2)",
+            "variant-96 (tv 0)",
+            "exon-36",
+            "CDS-38",
+            "intron-48",
+            "variant-97 (tv 0)",
+            "exon-37",
+            "CDS-39",
+            "intron-46",
+            "intron-49",
+            "exon-38",
+            "CDS-40",
+            "intron-50",
+            "exon-36",
+            "exon-3",
+            "CDS-41",
+            "variant-98 (ts 0)",
+            "stop_codon-1",
+            "three_prime_utr-1",
+            "variant-99 (ts 0)",
+            "variant-100 (ts 0)",
+            "variant-101 (ts 0)",
+            "variant-102 (ts 0)",
+            "intron-52",
+            "intron-51"
+         ]
+      },
+      "AGRN-204": {
+         "type": "transcript",
+         "sfid": "transcript-AGRN-204",
+         "start": 1034867,
+         "end": 1041397,
+         "start_relative": 14747,
+         "end_relative": 21277,
+         "transcript_name": "AGRN-204",
+         "subfeatures": [
+            "exon-1",
+            "variant-46 (del -1)",
+            "exon-3",
+            "CDS-5",
+            "intron-5",
+            "intron-6",
+            "variant-47 (ts 0)",
+            "variant-48 (ts 0)",
+            "variant-49 (ts 0)",
+            "variant-50 (ts 0)",
+            "variant-51 (ts 0)",
+            "variant-52 (ts 0)",
+            "variant-53 (ts 0)",
+            "variant-54 (ts 0)",
+            "variant-55 (tv 0)",
+            "variant-56 (ts 0)",
+            "variant-57 (ts 0)",
+            "variant-58 (ts 0)",
+            "variant-59 (ts 0)",
+            "variant-60 (ts 0)",
+            "variant-61 (tv 0)",
+            "variant-62 (tv 0)",
+            "variant-63 (tv 0)",
+            "variant-64 (ins 2)",
+            "variant-65 (ts 0)",
+            "variant-66 (tv 0)",
+            "variant-67 (ts 0)",
+            "exon-4",
+            "CDS-6",
+            "intron-7",
+            "variant-68 (tv 0)",
+            "variant-69 (del -3)",
+            "variant-70 (del -8)",
+            "exon-5",
+            "CDS-7"
+         ]
+      },
+      "AGRN-206": {
+         "type": "transcript",
+         "sfid": "transcript-AGRN-206",
+         "start": 1045399,
+         "end": 1046349,
+         "start_relative": 25279,
+         "end_relative": 26229,
+         "transcript_name": "AGRN-206",
+         "subfeatures": [
+            "exon-1",
+            "intron-17",
+            "intron-18",
+            "variant-77 (ts 0)",
+            "exon-15",
+            "CDS-17",
+            "intron-19",
+            "exon-16",
+            "CDS-18",
+            "intron-20",
+            "exon-17",
+            "exon-4",
+            "CDS-19",
+            "intron-21"
+         ]
+      },
+      "AGRN-203": {
+         "type": "transcript",
+         "sfid": "transcript-AGRN-203",
+         "start": 1047201,
+         "end": 1047865,
+         "start_relative": 27081,
+         "end_relative": 27745,
+         "transcript_name": "AGRN-203",
+         "subfeatures": [
+            "exon-1",
+            "exon-20",
+            "CDS-22",
+            "intron-25",
+            "intron-26",
+            "variant-82 (tv 0)",
+            "exon-1",
+            "variant-83 (ts 0)",
+            "exon-21",
+            "CDS-23",
+            "variant-84 (ts 0)",
+            "intron-27",
+            "intron-28",
+            "exon-2",
+            "exon-3",
+            "intron-30",
+            "intron-29"
+         ]
+      },
+      "AGRN-205": {
+         "type": "transcript",
+         "sfid": "transcript-AGRN-205",
+         "start": 1047475,
+         "end": 1047838,
+         "start_relative": 27355,
+         "end_relative": 27718,
+         "transcript_name": "AGRN-205",
+         "subfeatures": [
+            "exon-1",
+            "variant-83 (ts 0)",
+            "exon-21",
+            "CDS-23",
+            "variant-84 (ts 0)",
+            "intron-27",
+            "intron-28",
+            "exon-2",
+            "intron-30",
+            "intron-29"
+         ]
+      },
+      "AGRN-207": {
+         "type": "transcript",
+         "sfid": "transcript-AGRN-207",
+         "start": 1048529,
+         "end": 1049394,
+         "start_relative": 28409,
+         "end_relative": 29274,
+         "transcript_name": "AGRN-207",
+         "subfeatures": [
+            "exon-1",
+            "variant-85 (del -11)",
+            "variant-86 (del -2)",
+            "exon-24",
+            "CDS-26",
+            "variant-87 (ts 0)",
+            "intron-33",
+            "intron-34",
+            "variant-88 (del -1)",
+            "exon-2",
+            "intron-35"
+         ]
+      },
+      "AGRN-202": {
+         "type": "transcript",
+         "sfid": "transcript-AGRN-202",
+         "start": 1051986,
+         "end": 1056112,
+         "start_relative": 31866,
+         "end_relative": 35992,
+         "transcript_name": "AGRN-202",
+         "subfeatures": [
+            "exon-1",
+            "exon-35",
+            "CDS-37",
+            "intron-47",
+            "variant-94 (tv 0)",
+            "variant-95 (ins 2)",
+            "variant-96 (tv 0)",
+            "exon-36",
+            "CDS-38",
+            "intron-48",
+            "variant-97 (tv 0)",
+            "exon-37",
+            "CDS-39",
+            "intron-46",
+            "intron-49",
+            "exon-38",
+            "CDS-40",
+            "intron-50",
+            "exon-3",
+            "CDS-41",
+            "variant-98 (ts 0)",
+            "stop_codon-1",
+            "variant-99 (ts 0)",
+            "variant-100 (ts 0)",
+            "variant-101 (ts 0)",
+            "variant-102 (ts 0)",
+            "intron-52",
+            "intron-51"
+         ]
+      }
+   },
+   "exons": {
+      "-4131047321839640591": {
+         "type": "exon",
+         "sfid": "exon-1",
+         "start": 1020120,
+         "end": 1020373,
+         "start_relative": 0,
+         "end_relative": 253,
+         "transcript_name": "AGRN-201",
+         "exon_number": 1,
+         "parents": [
+            "transcript-AGRN-201"
+         ],
+         "subfeatures": [
+            "five_prime_utr-1",
+            "five_prime_utr-2",
+            "CDS-1",
+            "start_codon-1",
+            "CDS-4",
+            "start_codon-3"
+         ]
+      },
+      "-7472825856273104711": {
+         "type": "exon",
+         "sfid": "exon-1",
+         "start": 1020123,
+         "end": 1020373,
+         "start_relative": 3,
+         "end_relative": 253,
+         "transcript_name": "AGRN-208",
+         "exon_number": 1,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208"
+         ],
+         "subfeatures": [
+            "five_prime_utr-2",
+            "CDS-1",
+            "start_codon-1",
+            "CDS-4",
+            "start_codon-3"
+         ]
+      },
+      "-8794314484223618847": {
+         "type": "exon",
+         "sfid": "exon-2",
+         "start": 1022201,
+         "end": 1022462,
+         "start_relative": 2081,
+         "end_relative": 2342,
+         "transcript_name": "AGRN-208",
+         "exon_number": 2,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208"
+         ],
+         "subfeatures": [
+            "CDS-2",
+            "five_prime_utr-3",
+            "CDS-3",
+            "start_codon-2"
+         ]
+      },
+      "8224918971727409571": {
+         "type": "exon",
+         "sfid": "exon-1",
+         "start": 1034106,
+         "end": 1034703,
+         "start_relative": 13986,
+         "end_relative": 14583,
+         "transcript_name": "AGRN-209",
+         "exon_number": 1,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209"
+         ],
+         "subfeatures": [
+            "CDS-1",
+            "start_codon-1",
+            "five_prime_utr-4",
+            "CDS-4",
+            "start_codon-3"
+         ]
+      },
+      "8675922010993475065": {
+         "type": "exon",
+         "sfid": "exon-1",
+         "start": 1034867,
+         "end": 1035324,
+         "start_relative": 14747,
+         "end_relative": 15204,
+         "transcript_name": "AGRN-204",
+         "exon_number": 1,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-204"
+         ],
+         "subfeatures": [
+            "CDS-1",
+            "start_codon-1",
+            "CDS-4",
+            "start_codon-3",
+            "variant-46 (del -1)",
+            "CDS-5"
+         ]
+      },
+      "6788106581564692842": {
+         "type": "exon",
+         "sfid": "exon-3",
+         "start": 1035277,
+         "end": 1035324,
+         "start_relative": 15157,
+         "end_relative": 15204,
+         "transcript_name": "AGRN-208",
+         "exon_number": 3,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-204"
+         ],
+         "subfeatures": [
+            "CDS-5"
+         ]
+      },
+      "2795646814615630771": {
+         "type": "exon",
+         "sfid": "exon-4",
+         "start": 1040665,
+         "end": 1040880,
+         "start_relative": 20545,
+         "end_relative": 20760,
+         "transcript_name": "AGRN-208",
+         "exon_number": 4,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-204"
+         ],
+         "subfeatures": [
+            "CDS-6"
+         ]
+      },
+      "-4722414915002905307": {
+         "type": "exon",
+         "sfid": "exon-5",
+         "start": 1041173,
+         "end": 1041397,
+         "start_relative": 21053,
+         "end_relative": 21277,
+         "transcript_name": "AGRN-208",
+         "exon_number": 5,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-204"
+         ],
+         "subfeatures": [
+            "CDS-7"
+         ]
+      },
+      "2610365223060355433": {
+         "type": "exon",
+         "sfid": "exon-6",
+         "start": 1041478,
+         "end": 1041702,
+         "start_relative": 21358,
+         "end_relative": 21582,
+         "transcript_name": "AGRN-208",
+         "exon_number": 6,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209"
+         ],
+         "subfeatures": [
+            "CDS-8"
+         ]
+      },
+      "-874942215281878577": {
+         "type": "exon",
+         "sfid": "exon-7",
+         "start": 1041956,
+         "end": 1042162,
+         "start_relative": 21836,
+         "end_relative": 22042,
+         "transcript_name": "AGRN-208",
+         "exon_number": 7,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209"
+         ],
+         "subfeatures": [
+            "CDS-9"
+         ]
+      },
+      "-4922767917262384346": {
+         "type": "exon",
+         "sfid": "exon-8",
+         "start": 1043239,
+         "end": 1043457,
+         "start_relative": 23119,
+         "end_relative": 23337,
+         "transcript_name": "AGRN-208",
+         "exon_number": 8,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209"
+         ],
+         "subfeatures": [
+            "CDS-10"
+         ]
+      },
+      "2148253247176243101": {
+         "type": "exon",
+         "sfid": "exon-9",
+         "start": 1043538,
+         "end": 1043732,
+         "start_relative": 23418,
+         "end_relative": 23612,
+         "transcript_name": "AGRN-208",
+         "exon_number": 9,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209"
+         ],
+         "subfeatures": [
+            "CDS-11"
+         ]
+      },
+      "-6199656567154143556": {
+         "type": "exon",
+         "sfid": "exon-10",
+         "start": 1043823,
+         "end": 1044023,
+         "start_relative": 23703,
+         "end_relative": 23903,
+         "transcript_name": "AGRN-208",
+         "exon_number": 10,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209"
+         ],
+         "subfeatures": [
+            "CDS-12"
+         ]
+      },
+      "-7922277922706956821": {
+         "type": "exon",
+         "sfid": "exon-11",
+         "start": 1044109,
+         "end": 1044257,
+         "start_relative": 23989,
+         "end_relative": 24137,
+         "transcript_name": "AGRN-208",
+         "exon_number": 11,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209"
+         ],
+         "subfeatures": [
+            "CDS-13"
+         ]
+      },
+      "5804971005156218869": {
+         "type": "exon",
+         "sfid": "exon-12",
+         "start": 1044334,
+         "end": 1044439,
+         "start_relative": 24214,
+         "end_relative": 24319,
+         "transcript_name": "AGRN-208",
+         "exon_number": 12,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209"
+         ],
+         "subfeatures": [
+            "CDS-14"
+         ]
+      },
+      "-5919095284060297269": {
+         "type": "exon",
+         "sfid": "exon-13",
+         "start": 1045161,
+         "end": 1045277,
+         "start_relative": 25041,
+         "end_relative": 25157,
+         "transcript_name": "AGRN-208",
+         "exon_number": 13,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209"
+         ],
+         "subfeatures": [
+            "CDS-15"
+         ]
+      },
+      "-3184275593548429586": {
+         "type": "exon",
+         "sfid": "exon-14",
+         "start": 1045359,
+         "end": 1045523,
+         "start_relative": 25239,
+         "end_relative": 25403,
+         "transcript_name": "AGRN-208",
+         "exon_number": 14,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209"
+         ],
+         "subfeatures": [
+            "CDS-16"
+         ]
+      },
+      "-1831241485310675739": {
+         "type": "exon",
+         "sfid": "exon-1",
+         "start": 1045399,
+         "end": 1045523,
+         "start_relative": 25279,
+         "end_relative": 25403,
+         "transcript_name": "AGRN-206",
+         "exon_number": 1,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-206"
+         ],
+         "subfeatures": [
+            "CDS-1",
+            "start_codon-1",
+            "CDS-4",
+            "start_codon-3"
+         ]
+      },
+      "6429256758853552036": {
+         "type": "exon",
+         "sfid": "exon-15",
+         "start": 1045733,
+         "end": 1045876,
+         "start_relative": 25613,
+         "end_relative": 25756,
+         "transcript_name": "AGRN-208",
+         "exon_number": 15,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-206"
+         ],
+         "subfeatures": [
+            "CDS-17"
+         ]
+      },
+      "7702095784439632105": {
+         "type": "exon",
+         "sfid": "exon-16",
+         "start": 1045964,
+         "end": 1046088,
+         "start_relative": 25844,
+         "end_relative": 25968,
+         "transcript_name": "AGRN-208",
+         "exon_number": 16,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-206"
+         ],
+         "subfeatures": [
+            "CDS-18"
+         ]
+      },
+      "3268498602102882663": {
+         "type": "exon",
+         "sfid": "exon-17",
+         "start": 1046160,
+         "end": 1046265,
+         "start_relative": 26040,
+         "end_relative": 26145,
+         "transcript_name": "AGRN-208",
+         "exon_number": 17,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-206"
+         ],
+         "subfeatures": [
+            "CDS-19"
+         ]
+      },
+      "-3822790028834279521": {
+         "type": "exon",
+         "sfid": "exon-4",
+         "start": 1046160,
+         "end": 1046349,
+         "start_relative": 26040,
+         "end_relative": 26229,
+         "transcript_name": "AGRN-206",
+         "exon_number": 4,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-206"
+         ],
+         "subfeatures": [
+            "CDS-6",
+            "CDS-19"
+         ]
+      },
+      "-7650573640578226562": {
+         "type": "exon",
+         "sfid": "exon-18",
+         "start": 1046397,
+         "end": 1046735,
+         "start_relative": 26277,
+         "end_relative": 26615,
+         "transcript_name": "AGRN-208",
+         "exon_number": 18,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209"
+         ],
+         "subfeatures": [
+            "CDS-20",
+            "variant-78 (ts 0)"
+         ]
+      },
+      "-7143706968328252911": {
+         "type": "exon",
+         "sfid": "exon-19",
+         "start": 1046820,
+         "end": 1046957,
+         "start_relative": 26700,
+         "end_relative": 26837,
+         "transcript_name": "AGRN-208",
+         "exon_number": 19,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209"
+         ],
+         "subfeatures": [
+            "CDS-21"
+         ]
+      },
+      "-4596956290509465339": {
+         "type": "exon",
+         "sfid": "exon-1",
+         "start": 1047201,
+         "end": 1047454,
+         "start_relative": 27081,
+         "end_relative": 27334,
+         "transcript_name": "AGRN-203",
+         "exon_number": 1,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-203"
+         ],
+         "subfeatures": [
+            "CDS-1",
+            "start_codon-1",
+            "CDS-4",
+            "start_codon-3",
+            "CDS-22"
+         ]
+      },
+      "5555193451779547489": {
+         "type": "exon",
+         "sfid": "exon-20",
+         "start": 1047327,
+         "end": 1047454,
+         "start_relative": 27207,
+         "end_relative": 27334,
+         "transcript_name": "AGRN-208",
+         "exon_number": 20,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-203"
+         ],
+         "subfeatures": [
+            "CDS-22"
+         ]
+      },
+      "1018799008620954921": {
+         "type": "exon",
+         "sfid": "exon-1",
+         "start": 1047475,
+         "end": 1047687,
+         "start_relative": 27355,
+         "end_relative": 27567,
+         "transcript_name": "AGRN-205",
+         "exon_number": 1,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-203",
+            "transcript-AGRN-205"
+         ],
+         "subfeatures": [
+            "CDS-1",
+            "start_codon-1",
+            "CDS-4",
+            "start_codon-3",
+            "variant-83 (ts 0)",
+            "CDS-23",
+            "variant-84 (ts 0)"
+         ]
+      },
+      "-537611035377120559": {
+         "type": "exon",
+         "sfid": "exon-21",
+         "start": 1047573,
+         "end": 1047687,
+         "start_relative": 27453,
+         "end_relative": 27567,
+         "transcript_name": "AGRN-208",
+         "exon_number": 21,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-203",
+            "transcript-AGRN-205"
+         ],
+         "subfeatures": [
+            "CDS-23",
+            "variant-84 (ts 0)"
+         ]
+      },
+      "5978200576710277680": {
+         "type": "exon",
+         "sfid": "exon-22",
+         "start": 1047776,
+         "end": 1047895,
+         "start_relative": 27656,
+         "end_relative": 27775,
+         "transcript_name": "AGRN-208",
+         "exon_number": 22,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209"
+         ],
+         "subfeatures": [
+            "CDS-24"
+         ]
+      },
+      "2731966446904931335": {
+         "type": "exon",
+         "sfid": "exon-2",
+         "start": 1047776,
+         "end": 1047838,
+         "start_relative": 27656,
+         "end_relative": 27718,
+         "transcript_name": "AGRN-205",
+         "exon_number": 2,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-203",
+            "transcript-AGRN-205"
+         ],
+         "subfeatures": [
+            "CDS-2",
+            "CDS-3",
+            "start_codon-2"
+         ]
+      },
+      "8193515854221485725": {
+         "type": "exon",
+         "sfid": "exon-3",
+         "start": 1047776,
+         "end": 1047865,
+         "start_relative": 27656,
+         "end_relative": 27745,
+         "transcript_name": "AGRN-203",
+         "exon_number": 3,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-203"
+         ],
+         "subfeatures": [
+            "CDS-5"
+         ]
+      },
+      "3655723755774332019": {
+         "type": "exon",
+         "sfid": "exon-23",
+         "start": 1048012,
+         "end": 1048365,
+         "start_relative": 27892,
+         "end_relative": 28245,
+         "transcript_name": "AGRN-208",
+         "exon_number": 23,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209"
+         ],
+         "subfeatures": [
+            "CDS-25"
+         ]
+      },
+      "-2007494020467531439": {
+         "type": "exon",
+         "sfid": "exon-1",
+         "start": 1048529,
+         "end": 1049059,
+         "start_relative": 28409,
+         "end_relative": 28939,
+         "transcript_name": "AGRN-207",
+         "exon_number": 1,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-207"
+         ],
+         "subfeatures": [
+            "CDS-1",
+            "start_codon-1",
+            "CDS-4",
+            "start_codon-3",
+            "variant-85 (del -11)",
+            "variant-86 (del -2)",
+            "CDS-26",
+            "variant-87 (ts 0)"
+         ]
+      },
+      "-7193567030151391499": {
+         "type": "exon",
+         "sfid": "exon-24",
+         "start": 1048867,
+         "end": 1049059,
+         "start_relative": 28747,
+         "end_relative": 28939,
+         "transcript_name": "AGRN-208",
+         "exon_number": 24,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-207"
+         ],
+         "subfeatures": [
+            "CDS-26",
+            "variant-87 (ts 0)"
+         ]
+      },
+      "9055573552023380338": {
+         "type": "exon",
+         "sfid": "exon-25",
+         "start": 1049236,
+         "end": 1049451,
+         "start_relative": 29116,
+         "end_relative": 29331,
+         "transcript_name": "AGRN-208",
+         "exon_number": 25,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209"
+         ],
+         "subfeatures": [
+            "CDS-27"
+         ]
+      },
+      "-8239047268507149495": {
+         "type": "exon",
+         "sfid": "exon-2",
+         "start": 1049236,
+         "end": 1049394,
+         "start_relative": 29116,
+         "end_relative": 29274,
+         "transcript_name": "AGRN-207",
+         "exon_number": 2,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-207"
+         ],
+         "subfeatures": [
+            "CDS-2",
+            "CDS-3",
+            "start_codon-2"
+         ]
+      },
+      "-7409877910718969712": {
+         "type": "exon",
+         "sfid": "exon-26",
+         "start": 1049566,
+         "end": 1049795,
+         "start_relative": 29446,
+         "end_relative": 29675,
+         "transcript_name": "AGRN-208",
+         "exon_number": 26,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209"
+         ],
+         "subfeatures": [
+            "CDS-28"
+         ]
+      },
+      "-18599150282189471": {
+         "type": "exon",
+         "sfid": "exon-27",
+         "start": 1049903,
+         "end": 1050037,
+         "start_relative": 29783,
+         "end_relative": 29917,
+         "transcript_name": "AGRN-208",
+         "exon_number": 27,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209"
+         ],
+         "subfeatures": [
+            "CDS-29"
+         ]
+      },
+      "8453233541240268293": {
+         "type": "exon",
+         "sfid": "exon-28",
+         "start": 1050233,
+         "end": 1050329,
+         "start_relative": 30113,
+         "end_relative": 30209,
+         "transcript_name": "AGRN-208",
+         "exon_number": 28,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209"
+         ],
+         "subfeatures": [
+            "CDS-30"
+         ]
+      },
+      "3911746794564478350": {
+         "type": "exon",
+         "sfid": "exon-29",
+         "start": 1050427,
+         "end": 1050591,
+         "start_relative": 30307,
+         "end_relative": 30471,
+         "transcript_name": "AGRN-208",
+         "exon_number": 29,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209"
+         ],
+         "subfeatures": [
+            "CDS-31"
+         ]
+      },
+      "8305009207541617476": {
+         "type": "exon",
+         "sfid": "exon-30",
+         "start": 1050726,
+         "end": 1050837,
+         "start_relative": 30606,
+         "end_relative": 30717,
+         "transcript_name": "AGRN-208",
+         "exon_number": 30,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209"
+         ],
+         "subfeatures": [
+            "CDS-32"
+         ]
+      },
+      "-7123945137401603329": {
+         "type": "exon",
+         "sfid": "exon-31",
+         "start": 1051032,
+         "end": 1051043,
+         "start_relative": 30912,
+         "end_relative": 30923,
+         "transcript_name": "AGRN-208",
+         "exon_number": 31,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209"
+         ],
+         "subfeatures": [
+            "CDS-33"
+         ]
+      },
+      "5214906482115541866": {
+         "type": "exon",
+         "sfid": "exon-32",
+         "start": 1051253,
+         "end": 1051369,
+         "start_relative": 31133,
+         "end_relative": 31249,
+         "transcript_name": "AGRN-208",
+         "exon_number": 32,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209"
+         ],
+         "subfeatures": [
+            "CDS-34"
+         ]
+      },
+      "-900884990384839625": {
+         "type": "exon",
+         "sfid": "exon-33",
+         "start": 1051453,
+         "end": 1051645,
+         "start_relative": 31333,
+         "end_relative": 31525,
+         "transcript_name": "AGRN-208",
+         "exon_number": 33,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209"
+         ],
+         "subfeatures": [
+            "CDS-35"
+         ]
+      },
+      "-7083904053470421541": {
+         "type": "exon",
+         "sfid": "exon-34",
+         "start": 1051728,
+         "end": 1051815,
+         "start_relative": 31608,
+         "end_relative": 31695,
+         "transcript_name": "AGRN-208",
+         "exon_number": 34,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209"
+         ],
+         "subfeatures": [
+            "CDS-36"
+         ]
+      },
+      "1793086811546905702": {
+         "type": "exon",
+         "sfid": "exon-1",
+         "start": 1051986,
+         "end": 1053977,
+         "start_relative": 31866,
+         "end_relative": 33857,
+         "transcript_name": "AGRN-202",
+         "exon_number": 1,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-202"
+         ],
+         "subfeatures": [
+            "CDS-1",
+            "start_codon-1",
+            "CDS-4",
+            "start_codon-3",
+            "CDS-37",
+            "variant-94 (tv 0)",
+            "variant-95 (ins 2)",
+            "variant-96 (tv 0)",
+            "CDS-38",
+            "variant-97 (tv 0)",
+            "CDS-39"
+         ]
+      },
+      "8794018845308263743": {
+         "type": "exon",
+         "sfid": "exon-35",
+         "start": 1051993,
+         "end": 1052016,
+         "start_relative": 31873,
+         "end_relative": 31896,
+         "transcript_name": "AGRN-208",
+         "exon_number": 35,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-202"
+         ],
+         "subfeatures": [
+            "CDS-37"
+         ]
+      },
+      "-1326336110756371799": {
+         "type": "exon",
+         "sfid": "exon-36",
+         "start": 1053461,
+         "end": 1053493,
+         "start_relative": 33341,
+         "end_relative": 33373,
+         "transcript_name": "AGRN-208",
+         "exon_number": 36,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-202"
+         ],
+         "subfeatures": [
+            "CDS-38",
+            "stop_codon-1"
+         ]
+      },
+      "-3681353946581126147": {
+         "type": "exon",
+         "sfid": "exon-37",
+         "start": 1053753,
+         "end": 1053977,
+         "start_relative": 33633,
+         "end_relative": 33857,
+         "transcript_name": "AGRN-208",
+         "exon_number": 37,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-202"
+         ],
+         "subfeatures": [
+            "CDS-39"
+         ]
+      },
+      "-8940009861497010409": {
+         "type": "exon",
+         "sfid": "exon-38",
+         "start": 1054448,
+         "end": 1054551,
+         "start_relative": 34328,
+         "end_relative": 34431,
+         "transcript_name": "AGRN-208",
+         "exon_number": 38,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-202"
+         ],
+         "subfeatures": [
+            "CDS-40"
+         ]
+      },
+      "-4093746290162819121": {
+         "type": "exon",
+         "sfid": "exon-39",
+         "start": 1054824,
+         "end": 1056118,
+         "start_relative": 34704,
+         "end_relative": 35998,
+         "transcript_name": "AGRN-208",
+         "exon_number": 39,
+         "parents": [
+            "transcript-AGRN-208"
+         ],
+         "subfeatures": [
+            "CDS-41",
+            "variant-98 (ts 0)",
+            "stop_codon-1",
+            "three_prime_utr-1",
+            "three_prime_utr-2",
+            "variant-99 (ts 0)",
+            "variant-100 (ts 0)",
+            "variant-101 (ts 0)",
+            "variant-102 (ts 0)"
+         ]
+      },
+      "-5708313017292121180": {
+         "type": "exon",
+         "sfid": "exon-36",
+         "start": 1054824,
+         "end": 1056116,
+         "start_relative": 34704,
+         "end_relative": 35996,
+         "transcript_name": "AGRN-201",
+         "exon_number": 36,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209"
+         ],
+         "subfeatures": [
+            "CDS-38",
+            "CDS-41",
+            "variant-98 (ts 0)",
+            "stop_codon-1",
+            "three_prime_utr-1",
+            "variant-99 (ts 0)",
+            "variant-100 (ts 0)",
+            "variant-101 (ts 0)",
+            "variant-102 (ts 0)"
+         ]
+      },
+      "-4539089088566357170": {
+         "type": "exon",
+         "sfid": "exon-3",
+         "start": 1054824,
+         "end": 1056112,
+         "start_relative": 34704,
+         "end_relative": 35992,
+         "transcript_name": "AGRN-202",
+         "exon_number": 3,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-202"
+         ],
+         "subfeatures": [
+            "CDS-5",
+            "CDS-41",
+            "variant-98 (ts 0)",
+            "stop_codon-1",
+            "variant-99 (ts 0)",
+            "variant-100 (ts 0)",
+            "variant-101 (ts 0)",
+            "variant-102 (ts 0)"
+         ]
+      }
+   },
+   "proteins": {
+      "ENSP00000368678": {
+         "type": "protein",
+         "sfid": "protein-ENSP00000368678",
+         "start_relative": 0,
+         "end_relative": 0,
+         "protein_id": "ENSP00000368678"
+      },
+      "ENSP00000484607": {
+         "type": "protein",
+         "sfid": "protein-ENSP00000484607",
+         "start_relative": 0,
+         "end_relative": 0,
+         "protein_id": "ENSP00000484607"
+      },
+      "ENSP00000499046": {
+         "type": "protein",
+         "sfid": "protein-ENSP00000499046",
+         "start_relative": 0,
+         "end_relative": 0,
+         "protein_id": "ENSP00000499046"
+      }
+   },
+   "cds": [
+      {
+         "type": "CDS",
+         "sfid": "CDS-1",
+         "start": 1020173,
+         "end": 1020373,
+         "start_relative": 53,
+         "end_relative": 253,
+         "transcript_name": "AGRN-201",
+         "exon_number": 1,
+         "protein_id": "ENSP00000368678",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "exon-1",
+            "exon-1",
+            "exon-1",
+            "exon-1",
+            "exon-1",
+            "exon-1",
+            "exon-1",
+            "exon-1",
+            "exon-1"
+         ],
+         "subfeatures": [
+            "start_codon-1"
+         ]
+      },
+      {
+         "type": "CDS",
+         "sfid": "CDS-2",
+         "start": 1022201,
+         "end": 1022462,
+         "start_relative": 2081,
+         "end_relative": 2342,
+         "transcript_name": "AGRN-201",
+         "exon_number": 2,
+         "protein_id": "ENSP00000368678",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "exon-2",
+            "exon-2",
+            "exon-2"
+         ],
+         "subfeatures": [
+            "five_prime_utr-3",
+            "start_codon-2"
+         ]
+      },
+      {
+         "type": "CDS",
+         "sfid": "CDS-3",
+         "start": 1022414,
+         "end": 1022462,
+         "start_relative": 2294,
+         "end_relative": 2342,
+         "transcript_name": "AGRN-208",
+         "exon_number": 2,
+         "protein_id": "ENSP00000484607",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "exon-2",
+            "exon-2",
+            "exon-2"
+         ],
+         "subfeatures": [
+            "start_codon-2"
+         ]
+      },
+      {
+         "type": "CDS",
+         "sfid": "CDS-4",
+         "start": 1034556,
+         "end": 1034703,
+         "start_relative": 14436,
+         "end_relative": 14583,
+         "transcript_name": "AGRN-209",
+         "exon_number": 1,
+         "protein_id": "ENSP00000499046",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "exon-1",
+            "exon-1",
+            "exon-1",
+            "exon-1",
+            "exon-1",
+            "exon-1",
+            "exon-1",
+            "exon-1",
+            "exon-1"
+         ],
+         "subfeatures": [
+            "start_codon-3"
+         ]
+      },
+      {
+         "type": "CDS",
+         "sfid": "CDS-5",
+         "start": 1035277,
+         "end": 1035324,
+         "start_relative": 15157,
+         "end_relative": 15204,
+         "transcript_name": "AGRN-208",
+         "exon_number": 3,
+         "protein_id": "ENSP00000484607",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-204",
+            "exon-1",
+            "exon-3",
+            "exon-3",
+            "exon-3"
+         ]
+      },
+      {
+         "type": "CDS",
+         "sfid": "CDS-6",
+         "start": 1040665,
+         "end": 1040880,
+         "start_relative": 20545,
+         "end_relative": 20760,
+         "transcript_name": "AGRN-208",
+         "exon_number": 4,
+         "protein_id": "ENSP00000484607",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-204",
+            "exon-4",
+            "exon-4"
+         ]
+      },
+      {
+         "type": "CDS",
+         "sfid": "CDS-7",
+         "start": 1041173,
+         "end": 1041397,
+         "start_relative": 21053,
+         "end_relative": 21277,
+         "transcript_name": "AGRN-208",
+         "exon_number": 5,
+         "protein_id": "ENSP00000484607",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-204",
+            "exon-5"
+         ]
+      },
+      {
+         "type": "CDS",
+         "sfid": "CDS-8",
+         "start": 1041478,
+         "end": 1041702,
+         "start_relative": 21358,
+         "end_relative": 21582,
+         "transcript_name": "AGRN-208",
+         "exon_number": 6,
+         "protein_id": "ENSP00000484607",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "exon-6"
+         ]
+      },
+      {
+         "type": "CDS",
+         "sfid": "CDS-9",
+         "start": 1041956,
+         "end": 1042162,
+         "start_relative": 21836,
+         "end_relative": 22042,
+         "transcript_name": "AGRN-208",
+         "exon_number": 7,
+         "protein_id": "ENSP00000484607",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "exon-7"
+         ]
+      },
+      {
+         "type": "CDS",
+         "sfid": "CDS-10",
+         "start": 1043239,
+         "end": 1043457,
+         "start_relative": 23119,
+         "end_relative": 23337,
+         "transcript_name": "AGRN-208",
+         "exon_number": 8,
+         "protein_id": "ENSP00000484607",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "exon-8"
+         ]
+      },
+      {
+         "type": "CDS",
+         "sfid": "CDS-11",
+         "start": 1043538,
+         "end": 1043732,
+         "start_relative": 23418,
+         "end_relative": 23612,
+         "transcript_name": "AGRN-208",
+         "exon_number": 9,
+         "protein_id": "ENSP00000484607",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "exon-9"
+         ]
+      },
+      {
+         "type": "CDS",
+         "sfid": "CDS-12",
+         "start": 1043823,
+         "end": 1044023,
+         "start_relative": 23703,
+         "end_relative": 23903,
+         "transcript_name": "AGRN-208",
+         "exon_number": 10,
+         "protein_id": "ENSP00000484607",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "exon-10"
+         ]
+      },
+      {
+         "type": "CDS",
+         "sfid": "CDS-13",
+         "start": 1044109,
+         "end": 1044257,
+         "start_relative": 23989,
+         "end_relative": 24137,
+         "transcript_name": "AGRN-208",
+         "exon_number": 11,
+         "protein_id": "ENSP00000484607",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "exon-11"
+         ]
+      },
+      {
+         "type": "CDS",
+         "sfid": "CDS-14",
+         "start": 1044334,
+         "end": 1044439,
+         "start_relative": 24214,
+         "end_relative": 24319,
+         "transcript_name": "AGRN-208",
+         "exon_number": 12,
+         "protein_id": "ENSP00000484607",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "exon-12"
+         ]
+      },
+      {
+         "type": "CDS",
+         "sfid": "CDS-15",
+         "start": 1045161,
+         "end": 1045277,
+         "start_relative": 25041,
+         "end_relative": 25157,
+         "transcript_name": "AGRN-208",
+         "exon_number": 13,
+         "protein_id": "ENSP00000484607",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "exon-13"
+         ]
+      },
+      {
+         "type": "CDS",
+         "sfid": "CDS-16",
+         "start": 1045359,
+         "end": 1045523,
+         "start_relative": 25239,
+         "end_relative": 25403,
+         "transcript_name": "AGRN-208",
+         "exon_number": 14,
+         "protein_id": "ENSP00000484607",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "exon-14"
+         ]
+      },
+      {
+         "type": "CDS",
+         "sfid": "CDS-17",
+         "start": 1045733,
+         "end": 1045876,
+         "start_relative": 25613,
+         "end_relative": 25756,
+         "transcript_name": "AGRN-208",
+         "exon_number": 15,
+         "protein_id": "ENSP00000484607",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-206",
+            "exon-15"
+         ]
+      },
+      {
+         "type": "CDS",
+         "sfid": "CDS-18",
+         "start": 1045964,
+         "end": 1046088,
+         "start_relative": 25844,
+         "end_relative": 25968,
+         "transcript_name": "AGRN-208",
+         "exon_number": 16,
+         "protein_id": "ENSP00000484607",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-206",
+            "exon-16"
+         ]
+      },
+      {
+         "type": "CDS",
+         "sfid": "CDS-19",
+         "start": 1046160,
+         "end": 1046265,
+         "start_relative": 26040,
+         "end_relative": 26145,
+         "transcript_name": "AGRN-208",
+         "exon_number": 17,
+         "protein_id": "ENSP00000484607",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-206",
+            "exon-17",
+            "exon-4"
+         ]
+      },
+      {
+         "type": "CDS",
+         "sfid": "CDS-20",
+         "start": 1046397,
+         "end": 1046735,
+         "start_relative": 26277,
+         "end_relative": 26615,
+         "transcript_name": "AGRN-208",
+         "exon_number": 18,
+         "protein_id": "ENSP00000484607",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "exon-18"
+         ],
+         "subfeatures": [
+            "variant-78 (ts 0)"
+         ]
+      },
+      {
+         "type": "CDS",
+         "sfid": "CDS-21",
+         "start": 1046820,
+         "end": 1046957,
+         "start_relative": 26700,
+         "end_relative": 26837,
+         "transcript_name": "AGRN-208",
+         "exon_number": 19,
+         "protein_id": "ENSP00000484607",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "exon-19"
+         ]
+      },
+      {
+         "type": "CDS",
+         "sfid": "CDS-22",
+         "start": 1047327,
+         "end": 1047454,
+         "start_relative": 27207,
+         "end_relative": 27334,
+         "transcript_name": "AGRN-208",
+         "exon_number": 20,
+         "protein_id": "ENSP00000484607",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-203",
+            "exon-1",
+            "exon-20"
+         ]
+      },
+      {
+         "type": "CDS",
+         "sfid": "CDS-23",
+         "start": 1047573,
+         "end": 1047687,
+         "start_relative": 27453,
+         "end_relative": 27567,
+         "transcript_name": "AGRN-208",
+         "exon_number": 21,
+         "protein_id": "ENSP00000484607",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-203",
+            "transcript-AGRN-205",
+            "exon-1",
+            "exon-21"
+         ],
+         "subfeatures": [
+            "variant-84 (ts 0)"
+         ]
+      },
+      {
+         "type": "CDS",
+         "sfid": "CDS-24",
+         "start": 1047776,
+         "end": 1047895,
+         "start_relative": 27656,
+         "end_relative": 27775,
+         "transcript_name": "AGRN-208",
+         "exon_number": 22,
+         "protein_id": "ENSP00000484607",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "exon-22"
+         ]
+      },
+      {
+         "type": "CDS",
+         "sfid": "CDS-25",
+         "start": 1048012,
+         "end": 1048365,
+         "start_relative": 27892,
+         "end_relative": 28245,
+         "transcript_name": "AGRN-208",
+         "exon_number": 23,
+         "protein_id": "ENSP00000484607",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "exon-23"
+         ]
+      },
+      {
+         "type": "CDS",
+         "sfid": "CDS-26",
+         "start": 1048867,
+         "end": 1049059,
+         "start_relative": 28747,
+         "end_relative": 28939,
+         "transcript_name": "AGRN-208",
+         "exon_number": 24,
+         "protein_id": "ENSP00000484607",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-207",
+            "exon-1",
+            "exon-24"
+         ],
+         "subfeatures": [
+            "variant-87 (ts 0)"
+         ]
+      },
+      {
+         "type": "CDS",
+         "sfid": "CDS-27",
+         "start": 1049236,
+         "end": 1049451,
+         "start_relative": 29116,
+         "end_relative": 29331,
+         "transcript_name": "AGRN-208",
+         "exon_number": 25,
+         "protein_id": "ENSP00000484607",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "exon-25"
+         ]
+      },
+      {
+         "type": "CDS",
+         "sfid": "CDS-28",
+         "start": 1049566,
+         "end": 1049795,
+         "start_relative": 29446,
+         "end_relative": 29675,
+         "transcript_name": "AGRN-208",
+         "exon_number": 26,
+         "protein_id": "ENSP00000484607",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "exon-26"
+         ]
+      },
+      {
+         "type": "CDS",
+         "sfid": "CDS-29",
+         "start": 1049903,
+         "end": 1050037,
+         "start_relative": 29783,
+         "end_relative": 29917,
+         "transcript_name": "AGRN-208",
+         "exon_number": 27,
+         "protein_id": "ENSP00000484607",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "exon-27"
+         ]
+      },
+      {
+         "type": "CDS",
+         "sfid": "CDS-30",
+         "start": 1050233,
+         "end": 1050329,
+         "start_relative": 30113,
+         "end_relative": 30209,
+         "transcript_name": "AGRN-208",
+         "exon_number": 28,
+         "protein_id": "ENSP00000484607",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "exon-28"
+         ]
+      },
+      {
+         "type": "CDS",
+         "sfid": "CDS-31",
+         "start": 1050427,
+         "end": 1050591,
+         "start_relative": 30307,
+         "end_relative": 30471,
+         "transcript_name": "AGRN-208",
+         "exon_number": 29,
+         "protein_id": "ENSP00000484607",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "exon-29"
+         ]
+      },
+      {
+         "type": "CDS",
+         "sfid": "CDS-32",
+         "start": 1050726,
+         "end": 1050837,
+         "start_relative": 30606,
+         "end_relative": 30717,
+         "transcript_name": "AGRN-208",
+         "exon_number": 30,
+         "protein_id": "ENSP00000484607",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "exon-30"
+         ]
+      },
+      {
+         "type": "CDS",
+         "sfid": "CDS-33",
+         "start": 1051032,
+         "end": 1051043,
+         "start_relative": 30912,
+         "end_relative": 30923,
+         "transcript_name": "AGRN-208",
+         "exon_number": 31,
+         "protein_id": "ENSP00000484607",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "exon-31"
+         ]
+      },
+      {
+         "type": "CDS",
+         "sfid": "CDS-34",
+         "start": 1051253,
+         "end": 1051369,
+         "start_relative": 31133,
+         "end_relative": 31249,
+         "transcript_name": "AGRN-208",
+         "exon_number": 32,
+         "protein_id": "ENSP00000484607",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "exon-32"
+         ]
+      },
+      {
+         "type": "CDS",
+         "sfid": "CDS-35",
+         "start": 1051453,
+         "end": 1051645,
+         "start_relative": 31333,
+         "end_relative": 31525,
+         "transcript_name": "AGRN-208",
+         "exon_number": 33,
+         "protein_id": "ENSP00000484607",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "exon-33"
+         ]
+      },
+      {
+         "type": "CDS",
+         "sfid": "CDS-36",
+         "start": 1051728,
+         "end": 1051815,
+         "start_relative": 31608,
+         "end_relative": 31695,
+         "transcript_name": "AGRN-208",
+         "exon_number": 34,
+         "protein_id": "ENSP00000484607",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "exon-34"
+         ]
+      },
+      {
+         "type": "CDS",
+         "sfid": "CDS-37",
+         "start": 1051993,
+         "end": 1052016,
+         "start_relative": 31873,
+         "end_relative": 31896,
+         "transcript_name": "AGRN-208",
+         "exon_number": 35,
+         "protein_id": "ENSP00000484607",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-202",
+            "exon-1",
+            "exon-35"
+         ]
+      },
+      {
+         "type": "CDS",
+         "sfid": "CDS-38",
+         "start": 1053461,
+         "end": 1053493,
+         "start_relative": 33341,
+         "end_relative": 33373,
+         "transcript_name": "AGRN-208",
+         "exon_number": 36,
+         "protein_id": "ENSP00000484607",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-202",
+            "exon-1",
+            "exon-36",
+            "exon-36"
+         ]
+      },
+      {
+         "type": "CDS",
+         "sfid": "CDS-39",
+         "start": 1053753,
+         "end": 1053977,
+         "start_relative": 33633,
+         "end_relative": 33857,
+         "transcript_name": "AGRN-208",
+         "exon_number": 37,
+         "protein_id": "ENSP00000484607",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-202",
+            "exon-1",
+            "exon-37"
+         ]
+      },
+      {
+         "type": "CDS",
+         "sfid": "CDS-40",
+         "start": 1054448,
+         "end": 1054551,
+         "start_relative": 34328,
+         "end_relative": 34431,
+         "transcript_name": "AGRN-208",
+         "exon_number": 38,
+         "protein_id": "ENSP00000484607",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-202",
+            "exon-38"
+         ]
+      },
+      {
+         "type": "CDS",
+         "sfid": "CDS-41",
+         "start": 1054824,
+         "end": 1054978,
+         "start_relative": 34704,
+         "end_relative": 34858,
+         "transcript_name": "AGRN-208",
+         "exon_number": 39,
+         "protein_id": "ENSP00000484607",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-202",
+            "exon-39",
+            "exon-36",
+            "exon-3"
+         ],
+         "subfeatures": [
+            "variant-98 (ts 0)"
+         ]
+      }
+   ],
+   "subfeatures": [
+      {
+         "type": "five_prime_utr",
+         "sfid": "five_prime_utr-1",
+         "start": 1020120,
+         "end": 1020172,
+         "start_relative": 0,
+         "end_relative": 52,
+         "transcript_name": "AGRN-201",
+         "parents": [
+            "transcript-AGRN-201",
+            "exon-1"
+         ]
+      },
+      {
+         "type": "five_prime_utr",
+         "sfid": "five_prime_utr-2",
+         "start": 1020123,
+         "end": 1020373,
+         "start_relative": 3,
+         "end_relative": 253,
+         "transcript_name": "AGRN-208",
+         "parents": [
+            "transcript-AGRN-201",
+            "exon-1",
+            "transcript-AGRN-208",
+            "exon-1"
+         ]
+      },
+      {
+         "type": "start_codon",
+         "sfid": "start_codon-1",
+         "start": 1020173,
+         "end": 1020175,
+         "start_relative": 53,
+         "end_relative": 55,
+         "transcript_name": "AGRN-201",
+         "exon_number": 1,
+         "parents": [
+            "transcript-AGRN-201",
+            "exon-1",
+            "transcript-AGRN-208",
+            "exon-1",
+            "CDS-1",
+            "exon-1",
+            "exon-1",
+            "exon-1",
+            "exon-1",
+            "exon-1",
+            "exon-1",
+            "exon-1"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-1",
+         "start": 1020373,
+         "end": 1020123,
+         "start_relative": 253,
+         "end_relative": 3,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-2",
+         "start": 1020373,
+         "end": 1022201,
+         "start_relative": 253,
+         "end_relative": 2081,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208"
+         ],
+         "subfeatures": [
+            "variant-1 (ins 3)",
+            "variant-2 (ins 3)",
+            "variant-3 (ts 0)"
+         ]
+      },
+      {
+         "type": "five_prime_utr",
+         "sfid": "five_prime_utr-3",
+         "start": 1022201,
+         "end": 1022413,
+         "start_relative": 2081,
+         "end_relative": 2293,
+         "transcript_name": "AGRN-208",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "exon-2",
+            "CDS-2"
+         ]
+      },
+      {
+         "type": "start_codon",
+         "sfid": "start_codon-2",
+         "start": 1022414,
+         "end": 1022416,
+         "start_relative": 2294,
+         "end_relative": 2296,
+         "transcript_name": "AGRN-208",
+         "exon_number": 2,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "exon-2",
+            "CDS-2",
+            "CDS-3",
+            "exon-2",
+            "exon-2"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-3",
+         "start": 1022462,
+         "end": 1034106,
+         "start_relative": 2342,
+         "end_relative": 13986,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208"
+         ],
+         "subfeatures": [
+            "variant-4 (ins 23)",
+            "variant-5 (ts 0)",
+            "variant-6 (tv 0)",
+            "variant-7 (ts 0)",
+            "variant-8 (tv 0)",
+            "variant-9 (tv 0)",
+            "variant-10 (ts 0)",
+            "variant-11 (ts 0)",
+            "variant-12 (ts 0)",
+            "variant-13 (ts 0)",
+            "variant-14 (ts 0)",
+            "variant-15 (del -2)",
+            "variant-16 (tv 0)",
+            "variant-17 (ts 0)",
+            "variant-18 (ts 0)",
+            "variant-19 (tv 0)",
+            "variant-20 (ts 0)",
+            "variant-21 (ins 31)",
+            "variant-22 (ts 0)",
+            "variant-23 (tv 0)",
+            "variant-24 (ins 2)",
+            "variant-25 (ts 0)",
+            "variant-26 (del -6)",
+            "variant-27 (ts 0)",
+            "variant-28 (ts 0)",
+            "variant-29 (ins 2)",
+            "variant-30 (del -2)",
+            "variant-31 (ins 2)",
+            "variant-32 (ts 0)",
+            "variant-33 (ts 0)",
+            "variant-34 (del -2)",
+            "variant-35 (ins 2)",
+            "variant-36 (tv 0)",
+            "variant-37 (ts 0)",
+            "variant-38 (del -2)",
+            "variant-39 (ts 0)",
+            "variant-40 (ts 0)",
+            "variant-41 (del -2)",
+            "variant-42 (del -38)",
+            "variant-43 (del -2)",
+            "variant-44 (ts 0)"
+         ]
+      },
+      {
+         "type": "five_prime_utr",
+         "sfid": "five_prime_utr-4",
+         "start": 1034106,
+         "end": 1034555,
+         "start_relative": 13986,
+         "end_relative": 14435,
+         "transcript_name": "AGRN-209",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "exon-1"
+         ]
+      },
+      {
+         "type": "start_codon",
+         "sfid": "start_codon-3",
+         "start": 1034556,
+         "end": 1034558,
+         "start_relative": 14436,
+         "end_relative": 14438,
+         "transcript_name": "AGRN-209",
+         "exon_number": 1,
+         "parents": [
+            "transcript-AGRN-201",
+            "exon-1",
+            "transcript-AGRN-208",
+            "exon-1",
+            "transcript-AGRN-209",
+            "exon-1",
+            "CDS-4",
+            "exon-1",
+            "exon-1",
+            "exon-1",
+            "exon-1",
+            "exon-1",
+            "exon-1"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-4",
+         "start": 1034703,
+         "end": 1034867,
+         "start_relative": 14583,
+         "end_relative": 14747,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209"
+         ],
+         "subfeatures": [
+            "variant-45 (tv 0)"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-5",
+         "start": 1035324,
+         "end": 1035277,
+         "start_relative": 15204,
+         "end_relative": 15157,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-204"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-6",
+         "start": 1035324,
+         "end": 1040665,
+         "start_relative": 15204,
+         "end_relative": 20545,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-204"
+         ],
+         "subfeatures": [
+            "variant-47 (ts 0)",
+            "variant-48 (ts 0)",
+            "variant-49 (ts 0)",
+            "variant-50 (ts 0)",
+            "variant-51 (ts 0)",
+            "variant-52 (ts 0)",
+            "variant-53 (ts 0)",
+            "variant-54 (ts 0)",
+            "variant-55 (tv 0)",
+            "variant-56 (ts 0)",
+            "variant-57 (ts 0)",
+            "variant-58 (ts 0)",
+            "variant-59 (ts 0)",
+            "variant-60 (ts 0)",
+            "variant-61 (tv 0)",
+            "variant-62 (tv 0)",
+            "variant-63 (tv 0)",
+            "variant-64 (ins 2)",
+            "variant-65 (ts 0)",
+            "variant-66 (tv 0)",
+            "variant-67 (ts 0)"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-7",
+         "start": 1040880,
+         "end": 1041173,
+         "start_relative": 20760,
+         "end_relative": 21053,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-204"
+         ],
+         "subfeatures": [
+            "variant-68 (tv 0)",
+            "variant-69 (del -3)",
+            "variant-70 (del -8)"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-8",
+         "start": 1041397,
+         "end": 1041478,
+         "start_relative": 21277,
+         "end_relative": 21358,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-9",
+         "start": 1041702,
+         "end": 1041956,
+         "start_relative": 21582,
+         "end_relative": 21836,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209"
+         ],
+         "subfeatures": [
+            "variant-71 (del -47)",
+            "variant-72 (ts 0)"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-10",
+         "start": 1042162,
+         "end": 1043239,
+         "start_relative": 22042,
+         "end_relative": 23119,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209"
+         ],
+         "subfeatures": [
+            "variant-73 (ts 0)",
+            "variant-74 (ts 0)",
+            "variant-75 (del -2)"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-11",
+         "start": 1043457,
+         "end": 1043538,
+         "start_relative": 23337,
+         "end_relative": 23418,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-12",
+         "start": 1043732,
+         "end": 1043823,
+         "start_relative": 23612,
+         "end_relative": 23703,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-13",
+         "start": 1044023,
+         "end": 1044109,
+         "start_relative": 23903,
+         "end_relative": 23989,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-14",
+         "start": 1044257,
+         "end": 1044334,
+         "start_relative": 24137,
+         "end_relative": 24214,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-15",
+         "start": 1044439,
+         "end": 1045161,
+         "start_relative": 24319,
+         "end_relative": 25041,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209"
+         ],
+         "subfeatures": [
+            "variant-76 (ts 0)"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-16",
+         "start": 1045277,
+         "end": 1045359,
+         "start_relative": 25157,
+         "end_relative": 25239,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-17",
+         "start": 1045523,
+         "end": 1045399,
+         "start_relative": 25403,
+         "end_relative": 25279,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-206"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-18",
+         "start": 1045523,
+         "end": 1045733,
+         "start_relative": 25403,
+         "end_relative": 25613,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-206"
+         ],
+         "subfeatures": [
+            "variant-77 (ts 0)"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-19",
+         "start": 1045876,
+         "end": 1045964,
+         "start_relative": 25756,
+         "end_relative": 25844,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-206"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-20",
+         "start": 1046088,
+         "end": 1046160,
+         "start_relative": 25968,
+         "end_relative": 26040,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-206"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-21",
+         "start": 1046265,
+         "end": 1046160,
+         "start_relative": 26145,
+         "end_relative": 26040,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-206"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-22",
+         "start": 1046349,
+         "end": 1046397,
+         "start_relative": 26229,
+         "end_relative": 26277,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-23",
+         "start": 1046735,
+         "end": 1046820,
+         "start_relative": 26615,
+         "end_relative": 26700,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-24",
+         "start": 1046957,
+         "end": 1047201,
+         "start_relative": 26837,
+         "end_relative": 27081,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209"
+         ],
+         "subfeatures": [
+            "variant-79 (ts 0)",
+            "variant-80 (ts 0)",
+            "variant-81 (ts 0)"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-25",
+         "start": 1047454,
+         "end": 1047327,
+         "start_relative": 27334,
+         "end_relative": 27207,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-203"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-26",
+         "start": 1047454,
+         "end": 1047475,
+         "start_relative": 27334,
+         "end_relative": 27355,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-203"
+         ],
+         "subfeatures": [
+            "variant-82 (tv 0)"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-27",
+         "start": 1047687,
+         "end": 1047573,
+         "start_relative": 27567,
+         "end_relative": 27453,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-203",
+            "transcript-AGRN-205"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-28",
+         "start": 1047687,
+         "end": 1047776,
+         "start_relative": 27567,
+         "end_relative": 27656,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-203",
+            "transcript-AGRN-205"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-30",
+         "start": 1047838,
+         "end": 1047776,
+         "start_relative": 27718,
+         "end_relative": 27656,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-203",
+            "transcript-AGRN-205"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-31",
+         "start": 1047865,
+         "end": 1048012,
+         "start_relative": 27745,
+         "end_relative": 27892,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-29",
+         "start": 1047895,
+         "end": 1047776,
+         "start_relative": 27775,
+         "end_relative": 27656,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-203",
+            "transcript-AGRN-205"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-32",
+         "start": 1048365,
+         "end": 1048529,
+         "start_relative": 28245,
+         "end_relative": 28409,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-33",
+         "start": 1049059,
+         "end": 1048867,
+         "start_relative": 28939,
+         "end_relative": 28747,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-207"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-34",
+         "start": 1049059,
+         "end": 1049236,
+         "start_relative": 28939,
+         "end_relative": 29116,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-207"
+         ],
+         "subfeatures": [
+            "variant-88 (del -1)"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-36",
+         "start": 1049394,
+         "end": 1049566,
+         "start_relative": 29274,
+         "end_relative": 29446,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-35",
+         "start": 1049451,
+         "end": 1049236,
+         "start_relative": 29331,
+         "end_relative": 29116,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-207"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-37",
+         "start": 1049795,
+         "end": 1049903,
+         "start_relative": 29675,
+         "end_relative": 29783,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209"
+         ],
+         "subfeatures": [
+            "variant-89 (ts 0)"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-38",
+         "start": 1050037,
+         "end": 1050233,
+         "start_relative": 29917,
+         "end_relative": 30113,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209"
+         ],
+         "subfeatures": [
+            "variant-90 (tv 0)",
+            "variant-91 (ts 0)"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-39",
+         "start": 1050329,
+         "end": 1050427,
+         "start_relative": 30209,
+         "end_relative": 30307,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-40",
+         "start": 1050591,
+         "end": 1050726,
+         "start_relative": 30471,
+         "end_relative": 30606,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-41",
+         "start": 1050837,
+         "end": 1051032,
+         "start_relative": 30717,
+         "end_relative": 30912,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-42",
+         "start": 1051043,
+         "end": 1051253,
+         "start_relative": 30923,
+         "end_relative": 31133,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209"
+         ],
+         "subfeatures": [
+            "variant-92 (ts 0)"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-43",
+         "start": 1051369,
+         "end": 1051453,
+         "start_relative": 31249,
+         "end_relative": 31333,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-44",
+         "start": 1051645,
+         "end": 1051728,
+         "start_relative": 31525,
+         "end_relative": 31608,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-45",
+         "start": 1051815,
+         "end": 1051986,
+         "start_relative": 31695,
+         "end_relative": 31866,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209"
+         ],
+         "subfeatures": [
+            "variant-93 (ts 0)"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-47",
+         "start": 1052016,
+         "end": 1053461,
+         "start_relative": 31896,
+         "end_relative": 33341,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-202"
+         ],
+         "subfeatures": [
+            "variant-94 (tv 0)",
+            "variant-95 (ins 2)",
+            "variant-96 (tv 0)"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-48",
+         "start": 1053493,
+         "end": 1053753,
+         "start_relative": 33373,
+         "end_relative": 33633,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-202"
+         ],
+         "subfeatures": [
+            "variant-97 (tv 0)"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-46",
+         "start": 1053977,
+         "end": 1051993,
+         "start_relative": 33857,
+         "end_relative": 31873,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-202"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-49",
+         "start": 1053977,
+         "end": 1054448,
+         "start_relative": 33857,
+         "end_relative": 34328,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-202"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-50",
+         "start": 1054551,
+         "end": 1054824,
+         "start_relative": 34431,
+         "end_relative": 34704,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-202"
+         ]
+      },
+      {
+         "type": "stop_codon",
+         "sfid": "stop_codon-1",
+         "start": 1054979,
+         "end": 1054981,
+         "start_relative": 34859,
+         "end_relative": 34861,
+         "transcript_name": "AGRN-201",
+         "exon_number": 36,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-202",
+            "exon-36",
+            "exon-39",
+            "exon-36",
+            "exon-3"
+         ]
+      },
+      {
+         "type": "three_prime_utr",
+         "sfid": "three_prime_utr-1",
+         "start": 1054982,
+         "end": 1056116,
+         "start_relative": 34862,
+         "end_relative": 35996,
+         "transcript_name": "AGRN-201",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "exon-39",
+            "exon-36"
+         ]
+      },
+      {
+         "type": "three_prime_utr",
+         "sfid": "three_prime_utr-2",
+         "start": 1054982,
+         "end": 1056118,
+         "start_relative": 34862,
+         "end_relative": 35998,
+         "transcript_name": "AGRN-208",
+         "parents": [
+            "transcript-AGRN-208",
+            "exon-39"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-52",
+         "start": 1056116,
+         "end": 1054824,
+         "start_relative": 35996,
+         "end_relative": 34704,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-202"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-51",
+         "start": 1056118,
+         "end": 1054824,
+         "start_relative": 35998,
+         "end_relative": 34704,
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-202"
+         ]
+      }
+   ],
+   "variants": [
+      {
+         "type": "variant",
+         "sfid": "variant-1",
+         "start": 1020846,
+         "end": 1020847,
+         "start_relative": 726,
+         "end_relative": 727,
+         "alt": "CGGG",
+         "ref": "C",
+         "qual": 37.91999816894531,
+         "delta": 3,
+         "var_type": "ins",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "intron-2"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-2",
+         "start": 1020850,
+         "end": 1020851,
+         "start_relative": 730,
+         "end_relative": 731,
+         "alt": "GGGT",
+         "ref": "G",
+         "qual": 40.95000076293945,
+         "delta": 3,
+         "var_type": "ins",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "intron-2"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-3",
+         "start": 1021471,
+         "end": 1021472,
+         "start_relative": 1351,
+         "end_relative": 1352,
+         "alt": "T",
+         "ref": "C",
+         "qual": 58.70000076293945,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "intron-2"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-4",
+         "start": 1022586,
+         "end": 1022587,
+         "start_relative": 2466,
+         "end_relative": 2467,
+         "alt": "TTGTAGTCTGACCTGTGGTCTGAC",
+         "ref": "T",
+         "qual": 58.5,
+         "delta": 23,
+         "var_type": "ins",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "intron-3"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-5",
+         "start": 1023774,
+         "end": 1023775,
+         "start_relative": 3654,
+         "end_relative": 3655,
+         "alt": "A",
+         "ref": "G",
+         "qual": 61.13999938964844,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "intron-3"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-6",
+         "start": 1023788,
+         "end": 1023789,
+         "start_relative": 3668,
+         "end_relative": 3669,
+         "alt": "C",
+         "ref": "G",
+         "qual": 60.7400016784668,
+         "delta": 0,
+         "var_type": "tv",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "intron-3"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-7",
+         "start": 1023850,
+         "end": 1023851,
+         "start_relative": 3730,
+         "end_relative": 3731,
+         "alt": "A",
+         "ref": "G",
+         "qual": 45.9900016784668,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "intron-3"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-8",
+         "start": 1024128,
+         "end": 1024129,
+         "start_relative": 4008,
+         "end_relative": 4009,
+         "alt": "G",
+         "ref": "T",
+         "qual": 44.81999969482422,
+         "delta": 0,
+         "var_type": "tv",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "intron-3"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-9",
+         "start": 1025028,
+         "end": 1025029,
+         "start_relative": 4908,
+         "end_relative": 4909,
+         "alt": "C",
+         "ref": "G",
+         "qual": 62.06999969482422,
+         "delta": 0,
+         "var_type": "tv",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "intron-3"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-10",
+         "start": 1026446,
+         "end": 1026447,
+         "start_relative": 6326,
+         "end_relative": 6327,
+         "alt": "A",
+         "ref": "G",
+         "qual": 63.34000015258789,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "intron-3"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-11",
+         "start": 1027225,
+         "end": 1027226,
+         "start_relative": 7105,
+         "end_relative": 7106,
+         "alt": "A",
+         "ref": "G",
+         "qual": 66.12999725341797,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "intron-3"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-12",
+         "start": 1027510,
+         "end": 1027511,
+         "start_relative": 7390,
+         "end_relative": 7391,
+         "alt": "T",
+         "ref": "C",
+         "qual": 62.0,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "intron-3"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-13",
+         "start": 1027632,
+         "end": 1027633,
+         "start_relative": 7512,
+         "end_relative": 7513,
+         "alt": "T",
+         "ref": "C",
+         "qual": 67.52999877929688,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "intron-3"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-14",
+         "start": 1027868,
+         "end": 1027869,
+         "start_relative": 7748,
+         "end_relative": 7749,
+         "alt": "T",
+         "ref": "C",
+         "qual": 63.36000061035156,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "intron-3"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-15",
+         "start": 1028319,
+         "end": 1028322,
+         "start_relative": 8199,
+         "end_relative": 8202,
+         "alt": "G",
+         "ref": "GCC",
+         "qual": 42.66999816894531,
+         "delta": -2,
+         "var_type": "del",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "intron-3"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-16",
+         "start": 1028323,
+         "end": 1028324,
+         "start_relative": 8203,
+         "end_relative": 8204,
+         "alt": "A",
+         "ref": "C",
+         "qual": 42.15999984741211,
+         "delta": 0,
+         "var_type": "tv",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "intron-3"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-17",
+         "start": 1028340,
+         "end": 1028341,
+         "start_relative": 8220,
+         "end_relative": 8221,
+         "alt": "C",
+         "ref": "T",
+         "qual": 48.709999084472656,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "intron-3"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-18",
+         "start": 1028747,
+         "end": 1028748,
+         "start_relative": 8627,
+         "end_relative": 8628,
+         "alt": "T",
+         "ref": "C",
+         "qual": 21.010000228881836,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "intron-3"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-19",
+         "start": 1028917,
+         "end": 1028918,
+         "start_relative": 8797,
+         "end_relative": 8798,
+         "alt": "G",
+         "ref": "C",
+         "qual": 8.84000015258789,
+         "delta": 0,
+         "var_type": "tv",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "intron-3"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-20",
+         "start": 1029008,
+         "end": 1029009,
+         "start_relative": 8888,
+         "end_relative": 8889,
+         "alt": "T",
+         "ref": "C",
+         "qual": 33.95000076293945,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "intron-3"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-21",
+         "start": 1029385,
+         "end": 1029386,
+         "start_relative": 9265,
+         "end_relative": 9266,
+         "alt": "GATCAGTGTCTATGCAGGCAGGTGGGGGGGAC",
+         "ref": "G",
+         "qual": 41.599998474121094,
+         "delta": 31,
+         "var_type": "ins",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "intron-3"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-22",
+         "start": 1029459,
+         "end": 1029460,
+         "start_relative": 9339,
+         "end_relative": 9340,
+         "alt": "C",
+         "ref": "T",
+         "qual": 45.15999984741211,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "intron-3"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-23",
+         "start": 1029467,
+         "end": 1029468,
+         "start_relative": 9347,
+         "end_relative": 9348,
+         "alt": "T",
+         "ref": "A",
+         "qual": 37.459999084472656,
+         "delta": 0,
+         "var_type": "tv",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "intron-3"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-24",
+         "start": 1029627,
+         "end": 1029628,
+         "start_relative": 9507,
+         "end_relative": 9508,
+         "alt": "CGT",
+         "ref": "C",
+         "qual": 32.599998474121094,
+         "delta": 2,
+         "var_type": "ins",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "intron-3"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-25",
+         "start": 1029628,
+         "end": 1029629,
+         "start_relative": 9508,
+         "end_relative": 9509,
+         "alt": "G",
+         "ref": "A",
+         "qual": 58.400001525878906,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "intron-3"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-26",
+         "start": 1029670,
+         "end": 1029677,
+         "start_relative": 9550,
+         "end_relative": 9557,
+         "alt": "A",
+         "ref": "ATGTGTG",
+         "qual": 31.68000030517578,
+         "delta": -6,
+         "var_type": "del",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "intron-3"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-27",
+         "start": 1029794,
+         "end": 1029795,
+         "start_relative": 9674,
+         "end_relative": 9675,
+         "alt": "G",
+         "ref": "A",
+         "qual": 60.810001373291016,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "intron-3"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-28",
+         "start": 1029897,
+         "end": 1029898,
+         "start_relative": 9777,
+         "end_relative": 9778,
+         "alt": "C",
+         "ref": "T",
+         "qual": 25.3799991607666,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "intron-3"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-29",
+         "start": 1029980,
+         "end": 1029981,
+         "start_relative": 9860,
+         "end_relative": 9861,
+         "alt": "ATG",
+         "ref": "A",
+         "qual": 35.2400016784668,
+         "delta": 2,
+         "var_type": "ins",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "intron-3"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-30",
+         "start": 1030099,
+         "end": 1030102,
+         "start_relative": 9979,
+         "end_relative": 9982,
+         "alt": "C",
+         "ref": "CAT",
+         "qual": 32.66999816894531,
+         "delta": -2,
+         "var_type": "del",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "intron-3"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-31",
+         "start": 1030141,
+         "end": 1030142,
+         "start_relative": 10021,
+         "end_relative": 10022,
+         "alt": "CGT",
+         "ref": "C",
+         "qual": 9.5,
+         "delta": 2,
+         "var_type": "ins",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "intron-3"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-32",
+         "start": 1030223,
+         "end": 1030224,
+         "start_relative": 10103,
+         "end_relative": 10104,
+         "alt": "T",
+         "ref": "C",
+         "qual": 20.479999542236328,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "intron-3"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-33",
+         "start": 1030260,
+         "end": 1030261,
+         "start_relative": 10140,
+         "end_relative": 10141,
+         "alt": "A",
+         "ref": "G",
+         "qual": 12.59000015258789,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "intron-3"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-34",
+         "start": 1030375,
+         "end": 1030378,
+         "start_relative": 10255,
+         "end_relative": 10258,
+         "alt": "C",
+         "ref": "CAT",
+         "qual": 7.289999961853027,
+         "delta": -2,
+         "var_type": "del",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "intron-3"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-35",
+         "start": 1030495,
+         "end": 1030496,
+         "start_relative": 10375,
+         "end_relative": 10376,
+         "alt": "CGT",
+         "ref": "C",
+         "qual": 19.809999465942383,
+         "delta": 2,
+         "var_type": "ins",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "intron-3"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-36",
+         "start": 1030558,
+         "end": 1030559,
+         "start_relative": 10438,
+         "end_relative": 10439,
+         "alt": "T",
+         "ref": "A",
+         "qual": 35.04999923706055,
+         "delta": 0,
+         "var_type": "tv",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "intron-3"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-37",
+         "start": 1030568,
+         "end": 1030569,
+         "start_relative": 10448,
+         "end_relative": 10449,
+         "alt": "G",
+         "ref": "A",
+         "qual": 10.229999542236328,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "intron-3"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-38",
+         "start": 1030630,
+         "end": 1030633,
+         "start_relative": 10510,
+         "end_relative": 10513,
+         "alt": "T",
+         "ref": "TGA",
+         "qual": 29.270000457763672,
+         "delta": -2,
+         "var_type": "del",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "intron-3"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-39",
+         "start": 1030683,
+         "end": 1030684,
+         "start_relative": 10563,
+         "end_relative": 10564,
+         "alt": "C",
+         "ref": "T",
+         "qual": 9.029999732971191,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "intron-3"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-40",
+         "start": 1030698,
+         "end": 1030699,
+         "start_relative": 10578,
+         "end_relative": 10579,
+         "alt": "C",
+         "ref": "T",
+         "qual": 7.210000038146973,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "intron-3"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-41",
+         "start": 1030766,
+         "end": 1030769,
+         "start_relative": 10646,
+         "end_relative": 10649,
+         "alt": "A",
+         "ref": "ATG",
+         "qual": 33.45000076293945,
+         "delta": -2,
+         "var_type": "del",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "intron-3"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-42",
+         "start": 1030888,
+         "end": 1030927,
+         "start_relative": 10768,
+         "end_relative": 10807,
+         "alt": "A",
+         "ref": "ATGTGTGTGTGTGCAGTGCATGGTGCTGTGAGATCAGCG",
+         "qual": 13.850000381469727,
+         "delta": -38,
+         "var_type": "del",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "intron-3"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-43",
+         "start": 1031010,
+         "end": 1031013,
+         "start_relative": 10890,
+         "end_relative": 10893,
+         "alt": "A",
+         "ref": "ATG",
+         "qual": 29.979999542236328,
+         "delta": -2,
+         "var_type": "del",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "intron-3"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-44",
+         "start": 1032277,
+         "end": 1032278,
+         "start_relative": 12157,
+         "end_relative": 12158,
+         "alt": "T",
+         "ref": "C",
+         "qual": 57.939998626708984,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "intron-3"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-45",
+         "start": 1034834,
+         "end": 1034835,
+         "start_relative": 14714,
+         "end_relative": 14715,
+         "alt": "C",
+         "ref": "G",
+         "qual": 60.5099983215332,
+         "delta": 0,
+         "var_type": "tv",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "intron-4"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-46",
+         "start": 1035168,
+         "end": 1035170,
+         "start_relative": 15048,
+         "end_relative": 15050,
+         "alt": "T",
+         "ref": "TG",
+         "qual": 38.41999816894531,
+         "delta": -1,
+         "var_type": "del",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-204",
+            "exon-1"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-47",
+         "start": 1035843,
+         "end": 1035844,
+         "start_relative": 15723,
+         "end_relative": 15724,
+         "alt": "G",
+         "ref": "A",
+         "qual": 65.69000244140625,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-204",
+            "intron-6"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-48",
+         "start": 1035986,
+         "end": 1035987,
+         "start_relative": 15866,
+         "end_relative": 15867,
+         "alt": "C",
+         "ref": "T",
+         "qual": 59.560001373291016,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-204",
+            "intron-6"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-49",
+         "start": 1036753,
+         "end": 1036754,
+         "start_relative": 16633,
+         "end_relative": 16634,
+         "alt": "T",
+         "ref": "C",
+         "qual": 62.31999969482422,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-204",
+            "intron-6"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-50",
+         "start": 1036799,
+         "end": 1036800,
+         "start_relative": 16679,
+         "end_relative": 16680,
+         "alt": "A",
+         "ref": "G",
+         "qual": 66.45999908447266,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-204",
+            "intron-6"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-51",
+         "start": 1037955,
+         "end": 1037956,
+         "start_relative": 17835,
+         "end_relative": 17836,
+         "alt": "G",
+         "ref": "A",
+         "qual": 64.23999786376953,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-204",
+            "intron-6"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-52",
+         "start": 1037996,
+         "end": 1037997,
+         "start_relative": 17876,
+         "end_relative": 17877,
+         "alt": "A",
+         "ref": "G",
+         "qual": 65.33999633789062,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-204",
+            "intron-6"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-53",
+         "start": 1038077,
+         "end": 1038078,
+         "start_relative": 17957,
+         "end_relative": 17958,
+         "alt": "T",
+         "ref": "C",
+         "qual": 61.34000015258789,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-204",
+            "intron-6"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-54",
+         "start": 1038287,
+         "end": 1038288,
+         "start_relative": 18167,
+         "end_relative": 18168,
+         "alt": "G",
+         "ref": "A",
+         "qual": 63.36000061035156,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-204",
+            "intron-6"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-55",
+         "start": 1038799,
+         "end": 1038800,
+         "start_relative": 18679,
+         "end_relative": 18680,
+         "alt": "T",
+         "ref": "G",
+         "qual": 60.40999984741211,
+         "delta": 0,
+         "var_type": "tv",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-204",
+            "intron-6"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-56",
+         "start": 1038818,
+         "end": 1038819,
+         "start_relative": 18698,
+         "end_relative": 18699,
+         "alt": "T",
+         "ref": "C",
+         "qual": 62.599998474121094,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-204",
+            "intron-6"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-57",
+         "start": 1038844,
+         "end": 1038845,
+         "start_relative": 18724,
+         "end_relative": 18725,
+         "alt": "G",
+         "ref": "A",
+         "qual": 64.6500015258789,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-204",
+            "intron-6"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-58",
+         "start": 1038915,
+         "end": 1038916,
+         "start_relative": 18795,
+         "end_relative": 18796,
+         "alt": "G",
+         "ref": "A",
+         "qual": 65.47000122070312,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-204",
+            "intron-6"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-59",
+         "start": 1038974,
+         "end": 1038975,
+         "start_relative": 18854,
+         "end_relative": 18855,
+         "alt": "A",
+         "ref": "G",
+         "qual": 60.81999969482422,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-204",
+            "intron-6"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-60",
+         "start": 1038975,
+         "end": 1038976,
+         "start_relative": 18855,
+         "end_relative": 18856,
+         "alt": "C",
+         "ref": "T",
+         "qual": 61.7400016784668,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-204",
+            "intron-6"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-61",
+         "start": 1039113,
+         "end": 1039114,
+         "start_relative": 18993,
+         "end_relative": 18994,
+         "alt": "T",
+         "ref": "G",
+         "qual": 62.150001525878906,
+         "delta": 0,
+         "var_type": "tv",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-204",
+            "intron-6"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-62",
+         "start": 1039189,
+         "end": 1039190,
+         "start_relative": 19069,
+         "end_relative": 19070,
+         "alt": "G",
+         "ref": "T",
+         "qual": 59.18000030517578,
+         "delta": 0,
+         "var_type": "tv",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-204",
+            "intron-6"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-63",
+         "start": 1039281,
+         "end": 1039282,
+         "start_relative": 19161,
+         "end_relative": 19162,
+         "alt": "T",
+         "ref": "G",
+         "qual": 60.810001373291016,
+         "delta": 0,
+         "var_type": "tv",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-204",
+            "intron-6"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-64",
+         "start": 1039410,
+         "end": 1039411,
+         "start_relative": 19290,
+         "end_relative": 19291,
+         "alt": "TGG",
+         "ref": "T",
+         "qual": 53.2599983215332,
+         "delta": 2,
+         "var_type": "ins",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-204",
+            "intron-6"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-65",
+         "start": 1039513,
+         "end": 1039514,
+         "start_relative": 19393,
+         "end_relative": 19394,
+         "alt": "T",
+         "ref": "C",
+         "qual": 62.650001525878906,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-204",
+            "intron-6"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-66",
+         "start": 1039752,
+         "end": 1039753,
+         "start_relative": 19632,
+         "end_relative": 19633,
+         "alt": "A",
+         "ref": "T",
+         "qual": 59.349998474121094,
+         "delta": 0,
+         "var_type": "tv",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-204",
+            "intron-6"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-67",
+         "start": 1040321,
+         "end": 1040322,
+         "start_relative": 20201,
+         "end_relative": 20202,
+         "alt": "G",
+         "ref": "A",
+         "qual": 60.5099983215332,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-204",
+            "intron-6"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-68",
+         "start": 1041047,
+         "end": 1041048,
+         "start_relative": 20927,
+         "end_relative": 20928,
+         "alt": "A",
+         "ref": "C",
+         "qual": 45.70000076293945,
+         "delta": 0,
+         "var_type": "tv",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-204",
+            "intron-7"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-69",
+         "start": 1041118,
+         "end": 1041122,
+         "start_relative": 20998,
+         "end_relative": 21002,
+         "alt": "G",
+         "ref": "GGGC",
+         "qual": 42.75,
+         "delta": -3,
+         "var_type": "del",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-204",
+            "intron-7"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-70",
+         "start": 1041125,
+         "end": 1041134,
+         "start_relative": 21005,
+         "end_relative": 21014,
+         "alt": "A",
+         "ref": "AGCGGGGGC",
+         "qual": 39.720001220703125,
+         "delta": -8,
+         "var_type": "del",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-204",
+            "intron-7"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-71",
+         "start": 1041775,
+         "end": 1041823,
+         "start_relative": 21655,
+         "end_relative": 21703,
+         "alt": "C",
+         "ref": "CCGGCCAGTGCCAGGGTCGAGGTGGGCGGCTCCCCCGGGGGAGGGCTG",
+         "qual": 21.75,
+         "delta": -47,
+         "var_type": "del",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "intron-9"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-72",
+         "start": 1041949,
+         "end": 1041950,
+         "start_relative": 21829,
+         "end_relative": 21830,
+         "alt": "C",
+         "ref": "T",
+         "qual": 65.95999908447266,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "intron-9"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-73",
+         "start": 1042189,
+         "end": 1042190,
+         "start_relative": 22069,
+         "end_relative": 22070,
+         "alt": "A",
+         "ref": "G",
+         "qual": 56.16999816894531,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "intron-10"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-74",
+         "start": 1042399,
+         "end": 1042400,
+         "start_relative": 22279,
+         "end_relative": 22280,
+         "alt": "T",
+         "ref": "C",
+         "qual": 63.66999816894531,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "intron-10"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-75",
+         "start": 1043222,
+         "end": 1043225,
+         "start_relative": 23102,
+         "end_relative": 23105,
+         "alt": "C",
+         "ref": "CCT",
+         "qual": 57.20000076293945,
+         "delta": -2,
+         "var_type": "del",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "intron-10"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-76",
+         "start": 1045079,
+         "end": 1045080,
+         "start_relative": 24959,
+         "end_relative": 24960,
+         "alt": "A",
+         "ref": "G",
+         "qual": 66.9000015258789,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "intron-15"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-77",
+         "start": 1045706,
+         "end": 1045707,
+         "start_relative": 25586,
+         "end_relative": 25587,
+         "alt": "G",
+         "ref": "A",
+         "qual": 66.05999755859375,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-206",
+            "intron-18"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-78",
+         "start": 1046550,
+         "end": 1046551,
+         "start_relative": 26430,
+         "end_relative": 26431,
+         "alt": "G",
+         "ref": "A",
+         "qual": 63.61000061035156,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "exon-18",
+            "CDS-20"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-79",
+         "start": 1047063,
+         "end": 1047064,
+         "start_relative": 26943,
+         "end_relative": 26944,
+         "alt": "G",
+         "ref": "A",
+         "qual": 64.27999877929688,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "intron-24"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-80",
+         "start": 1047081,
+         "end": 1047082,
+         "start_relative": 26961,
+         "end_relative": 26962,
+         "alt": "C",
+         "ref": "T",
+         "qual": 65.5199966430664,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "intron-24"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-81",
+         "start": 1047132,
+         "end": 1047133,
+         "start_relative": 27012,
+         "end_relative": 27013,
+         "alt": "C",
+         "ref": "T",
+         "qual": 70.62000274658203,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "intron-24"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-82",
+         "start": 1047463,
+         "end": 1047464,
+         "start_relative": 27343,
+         "end_relative": 27344,
+         "alt": "C",
+         "ref": "G",
+         "qual": 52.599998474121094,
+         "delta": 0,
+         "var_type": "tv",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-203",
+            "intron-26"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-83",
+         "start": 1047560,
+         "end": 1047561,
+         "start_relative": 27440,
+         "end_relative": 27441,
+         "alt": "C",
+         "ref": "T",
+         "qual": 63.65999984741211,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-203",
+            "transcript-AGRN-205",
+            "exon-1"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-84",
+         "start": 1047613,
+         "end": 1047614,
+         "start_relative": 27493,
+         "end_relative": 27494,
+         "alt": "C",
+         "ref": "T",
+         "qual": 63.43000030517578,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-203",
+            "transcript-AGRN-205",
+            "exon-1",
+            "exon-21",
+            "CDS-23"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-85",
+         "start": 1048766,
+         "end": 1048778,
+         "start_relative": 28646,
+         "end_relative": 28658,
+         "alt": "C",
+         "ref": "CAAAAAAAAAAA",
+         "qual": 56.310001373291016,
+         "delta": -11,
+         "var_type": "del",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-207",
+            "exon-1"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-86",
+         "start": 1048790,
+         "end": 1048793,
+         "start_relative": 28670,
+         "end_relative": 28673,
+         "alt": "C",
+         "ref": "CAG",
+         "qual": 48.439998626708984,
+         "delta": -2,
+         "var_type": "del",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-207",
+            "exon-1"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-87",
+         "start": 1048921,
+         "end": 1048922,
+         "start_relative": 28801,
+         "end_relative": 28802,
+         "alt": "C",
+         "ref": "T",
+         "qual": 60.130001068115234,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-207",
+            "exon-1",
+            "exon-24",
+            "CDS-26"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-88",
+         "start": 1049113,
+         "end": 1049115,
+         "start_relative": 28993,
+         "end_relative": 28995,
+         "alt": "G",
+         "ref": "GC",
+         "qual": 41.099998474121094,
+         "delta": -1,
+         "var_type": "del",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-207",
+            "intron-34"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-89",
+         "start": 1049885,
+         "end": 1049886,
+         "start_relative": 29765,
+         "end_relative": 29766,
+         "alt": "T",
+         "ref": "C",
+         "qual": 62.209999084472656,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "intron-37"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-90",
+         "start": 1050065,
+         "end": 1050066,
+         "start_relative": 29945,
+         "end_relative": 29946,
+         "alt": "T",
+         "ref": "G",
+         "qual": 59.900001525878906,
+         "delta": 0,
+         "var_type": "tv",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "intron-38"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-91",
+         "start": 1050068,
+         "end": 1050069,
+         "start_relative": 29948,
+         "end_relative": 29949,
+         "alt": "A",
+         "ref": "G",
+         "qual": 55.7599983215332,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "intron-38"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-92",
+         "start": 1051062,
+         "end": 1051063,
+         "start_relative": 30942,
+         "end_relative": 30943,
+         "alt": "T",
+         "ref": "C",
+         "qual": 63.45000076293945,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "intron-42"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-93",
+         "start": 1051819,
+         "end": 1051820,
+         "start_relative": 31699,
+         "end_relative": 31700,
+         "alt": "T",
+         "ref": "C",
+         "qual": 61.63999938964844,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "intron-45"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-94",
+         "start": 1052289,
+         "end": 1052290,
+         "start_relative": 32169,
+         "end_relative": 32170,
+         "alt": "G",
+         "ref": "T",
+         "qual": 66.79000091552734,
+         "delta": 0,
+         "var_type": "tv",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-202",
+            "exon-1",
+            "intron-47"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-95",
+         "start": 1052513,
+         "end": 1052514,
+         "start_relative": 32393,
+         "end_relative": 32394,
+         "alt": "CGT",
+         "ref": "C",
+         "qual": 57.83000183105469,
+         "delta": 2,
+         "var_type": "ins",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-202",
+            "exon-1",
+            "intron-47"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-96",
+         "start": 1053122,
+         "end": 1053123,
+         "start_relative": 33002,
+         "end_relative": 33003,
+         "alt": "T",
+         "ref": "A",
+         "qual": 61.86000061035156,
+         "delta": 0,
+         "var_type": "tv",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-202",
+            "exon-1",
+            "intron-47"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-97",
+         "start": 1053551,
+         "end": 1053552,
+         "start_relative": 33431,
+         "end_relative": 33432,
+         "alt": "C",
+         "ref": "G",
+         "qual": 63.40999984741211,
+         "delta": 0,
+         "var_type": "tv",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-202",
+            "exon-1",
+            "intron-48"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-98",
+         "start": 1054899,
+         "end": 1054900,
+         "start_relative": 34779,
+         "end_relative": 34780,
+         "alt": "T",
+         "ref": "C",
+         "qual": 64.94000244140625,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-202",
+            "exon-39",
+            "exon-36",
+            "exon-3",
+            "CDS-41"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-99",
+         "start": 1055136,
+         "end": 1055137,
+         "start_relative": 35016,
+         "end_relative": 35017,
+         "alt": "T",
+         "ref": "C",
+         "qual": 63.38999938964844,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-202",
+            "exon-39",
+            "exon-36",
+            "exon-3"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-100",
+         "start": 1055392,
+         "end": 1055393,
+         "start_relative": 35272,
+         "end_relative": 35273,
+         "alt": "T",
+         "ref": "C",
+         "qual": 57.220001220703125,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-202",
+            "exon-39",
+            "exon-36",
+            "exon-3"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-101",
+         "start": 1055425,
+         "end": 1055426,
+         "start_relative": 35305,
+         "end_relative": 35306,
+         "alt": "A",
+         "ref": "G",
+         "qual": 56.869998931884766,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-202",
+            "exon-39",
+            "exon-36",
+            "exon-3"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-102",
+         "start": 1055603,
+         "end": 1055604,
+         "start_relative": 35483,
+         "end_relative": 35484,
+         "alt": "A",
+         "ref": "G",
+         "qual": 64.91999816894531,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-AGRN-201",
+            "transcript-AGRN-208",
+            "transcript-AGRN-209",
+            "transcript-AGRN-202",
+            "exon-39",
+            "exon-36",
+            "exon-3"
+         ]
+      }
+   ]
+}

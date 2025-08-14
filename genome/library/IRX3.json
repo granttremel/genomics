@@ -1,0 +1,693 @@
+{
+   "name": "IRX3",
+   "type": "gene",
+   "chrom": 16,
+   "start": 54283304,
+   "end": 54286787,
+   "strand": "-",
+   "start_relative": 0,
+   "end_relative": 3483,
+   "gene_id": "ENSG00000177508",
+   "gene_version": 12,
+   "gene_name": "IRX3",
+   "gene_source": "ensembl_havana",
+   "gene_biotype": "protein_coding",
+   "transcripts": {
+      "IRX3-201": {
+         "type": "transcript",
+         "sfid": "transcript-IRX3-201",
+         "start": 54283304,
+         "end": 54286787,
+         "start_relative": 0,
+         "end_relative": 3483,
+         "transcript_name": "IRX3-201",
+         "subfeatures": [
+            "exon-1",
+            "five_prime_utr-1",
+            "exon-1",
+            "intron-7",
+            "variant-4 (tv 0)",
+            "CDS-5",
+            "start_codon-1",
+            "exon-1",
+            "CDS-6",
+            "intron-5",
+            "intron-6",
+            "variant-3 (ts 0)",
+            "exon-2",
+            "exon-2",
+            "CDS-4",
+            "variant-2 (ts 0)",
+            "intron-4",
+            "exon-3",
+            "CDS-3",
+            "intron-3",
+            "variant-1 (ts 0)",
+            "intron-2",
+            "exon-4",
+            "exon-3",
+            "CDS-1",
+            "CDS-2",
+            "stop_codon-2",
+            "three_prime_utr-1",
+            "stop_codon-1",
+            "three_prime_utr-2",
+            "intron-1"
+         ]
+      },
+      "IRX3-203": {
+         "type": "transcript",
+         "sfid": "transcript-IRX3-203",
+         "start": 54284120,
+         "end": 54286724,
+         "start_relative": 816,
+         "end_relative": 3420,
+         "transcript_name": "IRX3-203",
+         "subfeatures": [
+            "exon-1",
+            "intron-7",
+            "variant-4 (tv 0)",
+            "CDS-5",
+            "start_codon-1",
+            "exon-1",
+            "CDS-6",
+            "intron-5",
+            "intron-6",
+            "variant-3 (ts 0)",
+            "exon-2",
+            "exon-2",
+            "CDS-4",
+            "variant-2 (ts 0)",
+            "intron-4",
+            "exon-3",
+            "CDS-3",
+            "intron-3",
+            "variant-1 (ts 0)"
+         ]
+      },
+      "IRX3-202": {
+         "type": "transcript",
+         "sfid": "transcript-IRX3-202",
+         "start": 54283436,
+         "end": 54285855,
+         "start_relative": 132,
+         "end_relative": 2551,
+         "transcript_name": "IRX3-202",
+         "subfeatures": [
+            "exon-1",
+            "CDS-6",
+            "intron-5",
+            "intron-6",
+            "variant-3 (ts 0)",
+            "exon-2",
+            "exon-2",
+            "CDS-4",
+            "variant-2 (ts 0)",
+            "intron-4",
+            "exon-3",
+            "CDS-3",
+            "intron-3",
+            "variant-1 (ts 0)",
+            "intron-2",
+            "exon-3",
+            "CDS-1",
+            "CDS-2",
+            "stop_codon-2",
+            "stop_codon-1",
+            "three_prime_utr-2",
+            "intron-1"
+         ]
+      }
+   },
+   "exons": {
+      "7840493449984966554": {
+         "type": "exon",
+         "sfid": "exon-1",
+         "start": 54285784,
+         "end": 54286787,
+         "start_relative": 2480,
+         "end_relative": 3483,
+         "transcript_name": "IRX3-201",
+         "exon_number": 1,
+         "parents": [
+            "transcript-IRX3-201"
+         ],
+         "subfeatures": [
+            "five_prime_utr-1",
+            "variant-4 (tv 0)",
+            "CDS-5",
+            "start_codon-1",
+            "CDS-6"
+         ]
+      },
+      "405305246589863590": {
+         "type": "exon",
+         "sfid": "exon-1",
+         "start": 54286679,
+         "end": 54286724,
+         "start_relative": 3375,
+         "end_relative": 3420,
+         "transcript_name": "IRX3-203",
+         "exon_number": 1,
+         "parents": [
+            "transcript-IRX3-201",
+            "transcript-IRX3-203"
+         ],
+         "subfeatures": [
+            "CDS-5",
+            "start_codon-1",
+            "CDS-6"
+         ]
+      },
+      "5730440846571926364": {
+         "type": "exon",
+         "sfid": "exon-1",
+         "start": 54285784,
+         "end": 54285855,
+         "start_relative": 2480,
+         "end_relative": 2551,
+         "transcript_name": "IRX3-202",
+         "exon_number": 1,
+         "parents": [
+            "transcript-IRX3-201",
+            "transcript-IRX3-202",
+            "transcript-IRX3-203"
+         ],
+         "subfeatures": [
+            "CDS-5",
+            "start_codon-1",
+            "CDS-6"
+         ]
+      },
+      "-465445635524838754": {
+         "type": "exon",
+         "sfid": "exon-2",
+         "start": 54284120,
+         "end": 54285613,
+         "start_relative": 816,
+         "end_relative": 2309,
+         "transcript_name": "IRX3-203",
+         "exon_number": 2,
+         "parents": [
+            "transcript-IRX3-201",
+            "transcript-IRX3-202",
+            "transcript-IRX3-203"
+         ],
+         "subfeatures": [
+            "CDS-4",
+            "variant-2 (ts 0)",
+            "CDS-3",
+            "variant-1 (ts 0)"
+         ]
+      },
+      "3869148507577123428": {
+         "type": "exon",
+         "sfid": "exon-2",
+         "start": 54284497,
+         "end": 54285613,
+         "start_relative": 1193,
+         "end_relative": 2309,
+         "transcript_name": "IRX3-201",
+         "exon_number": 2,
+         "parents": [
+            "transcript-IRX3-201",
+            "transcript-IRX3-202",
+            "transcript-IRX3-203"
+         ],
+         "subfeatures": [
+            "CDS-4",
+            "variant-2 (ts 0)"
+         ]
+      },
+      "1563344663963428510": {
+         "type": "exon",
+         "sfid": "exon-3",
+         "start": 54284246,
+         "end": 54284312,
+         "start_relative": 942,
+         "end_relative": 1008,
+         "transcript_name": "IRX3-201",
+         "exon_number": 3,
+         "parents": [
+            "transcript-IRX3-201",
+            "transcript-IRX3-202",
+            "transcript-IRX3-203"
+         ],
+         "subfeatures": [
+            "CDS-3",
+            "CDS-1",
+            "stop_codon-1"
+         ]
+      },
+      "-2082608433967330335": {
+         "type": "exon",
+         "sfid": "exon-4",
+         "start": 54283304,
+         "end": 54283740,
+         "start_relative": 0,
+         "end_relative": 436,
+         "transcript_name": "IRX3-201",
+         "exon_number": 4,
+         "parents": [
+            "transcript-IRX3-201"
+         ],
+         "subfeatures": [
+            "CDS-1",
+            "CDS-2",
+            "stop_codon-2",
+            "three_prime_utr-1",
+            "stop_codon-1",
+            "three_prime_utr-2"
+         ]
+      },
+      "-6567910699428573211": {
+         "type": "exon",
+         "sfid": "exon-3",
+         "start": 54283436,
+         "end": 54283740,
+         "start_relative": 132,
+         "end_relative": 436,
+         "transcript_name": "IRX3-202",
+         "exon_number": 3,
+         "parents": [
+            "transcript-IRX3-201",
+            "transcript-IRX3-202"
+         ],
+         "subfeatures": [
+            "CDS-3",
+            "CDS-1",
+            "CDS-2",
+            "stop_codon-2",
+            "stop_codon-1",
+            "three_prime_utr-2"
+         ]
+      }
+   },
+   "proteins": {
+      "ENSP00000463991": {
+         "type": "protein",
+         "sfid": "protein-ENSP00000463991",
+         "start_relative": 0,
+         "end_relative": 0,
+         "protein_id": "ENSP00000463991"
+      },
+      "ENSP00000331608": {
+         "type": "protein",
+         "sfid": "protein-ENSP00000331608",
+         "start_relative": 0,
+         "end_relative": 0,
+         "protein_id": "ENSP00000331608"
+      }
+   },
+   "cds": [
+      {
+         "type": "CDS",
+         "sfid": "CDS-5",
+         "start": 54285784,
+         "end": 54286050,
+         "start_relative": 2480,
+         "end_relative": 2746,
+         "transcript_name": "IRX3-201",
+         "exon_number": 1,
+         "protein_id": "ENSP00000331608",
+         "parents": [
+            "transcript-IRX3-201",
+            "transcript-IRX3-203",
+            "exon-1",
+            "exon-1",
+            "exon-1"
+         ],
+         "subfeatures": [
+            "start_codon-1"
+         ]
+      },
+      {
+         "type": "CDS",
+         "sfid": "CDS-6",
+         "start": 54285784,
+         "end": 54285855,
+         "start_relative": 2480,
+         "end_relative": 2551,
+         "transcript_name": "IRX3-202",
+         "exon_number": 1,
+         "protein_id": "ENSP00000463991",
+         "parents": [
+            "transcript-IRX3-201",
+            "transcript-IRX3-202",
+            "transcript-IRX3-203",
+            "exon-1",
+            "exon-1",
+            "exon-1"
+         ]
+      },
+      {
+         "type": "CDS",
+         "sfid": "CDS-4",
+         "start": 54284497,
+         "end": 54285613,
+         "start_relative": 1193,
+         "end_relative": 2309,
+         "transcript_name": "IRX3-201",
+         "exon_number": 2,
+         "protein_id": "ENSP00000331608",
+         "parents": [
+            "transcript-IRX3-201",
+            "transcript-IRX3-202",
+            "transcript-IRX3-203",
+            "exon-2",
+            "exon-2"
+         ],
+         "subfeatures": [
+            "variant-2 (ts 0)"
+         ]
+      },
+      {
+         "type": "CDS",
+         "sfid": "CDS-3",
+         "start": 54284246,
+         "end": 54284312,
+         "start_relative": 942,
+         "end_relative": 1008,
+         "transcript_name": "IRX3-201",
+         "exon_number": 3,
+         "protein_id": "ENSP00000331608",
+         "parents": [
+            "transcript-IRX3-201",
+            "transcript-IRX3-202",
+            "transcript-IRX3-203",
+            "exon-3",
+            "exon-2",
+            "exon-3"
+         ]
+      },
+      {
+         "type": "CDS",
+         "sfid": "CDS-1",
+         "start": 54283628,
+         "end": 54283740,
+         "start_relative": 324,
+         "end_relative": 436,
+         "transcript_name": "IRX3-202",
+         "exon_number": 3,
+         "protein_id": "ENSP00000463991",
+         "parents": [
+            "transcript-IRX3-201",
+            "transcript-IRX3-202",
+            "exon-4",
+            "exon-3",
+            "exon-3"
+         ],
+         "subfeatures": [
+            "stop_codon-2"
+         ]
+      },
+      {
+         "type": "CDS",
+         "sfid": "CDS-2",
+         "start": 54283689,
+         "end": 54283740,
+         "start_relative": 385,
+         "end_relative": 436,
+         "transcript_name": "IRX3-201",
+         "exon_number": 4,
+         "protein_id": "ENSP00000331608",
+         "parents": [
+            "transcript-IRX3-201",
+            "transcript-IRX3-202",
+            "exon-4",
+            "exon-3"
+         ]
+      }
+   ],
+   "subfeatures": [
+      {
+         "type": "five_prime_utr",
+         "sfid": "five_prime_utr-1",
+         "start": 54286051,
+         "end": 54286787,
+         "start_relative": 2747,
+         "end_relative": 3483,
+         "transcript_name": "IRX3-201",
+         "parents": [
+            "transcript-IRX3-201",
+            "exon-1"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-7",
+         "start": 54285855,
+         "end": 54286679,
+         "start_relative": 2551,
+         "end_relative": 3375,
+         "parents": [
+            "transcript-IRX3-201",
+            "transcript-IRX3-203"
+         ],
+         "subfeatures": [
+            "variant-4 (tv 0)",
+            "start_codon-1"
+         ]
+      },
+      {
+         "type": "start_codon",
+         "sfid": "start_codon-1",
+         "start": 54286048,
+         "end": 54286050,
+         "start_relative": 2744,
+         "end_relative": 2746,
+         "transcript_name": "IRX3-201",
+         "exon_number": 1,
+         "parents": [
+            "transcript-IRX3-201",
+            "exon-1",
+            "transcript-IRX3-203",
+            "exon-1",
+            "intron-7",
+            "CDS-5",
+            "exon-1"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-5",
+         "start": 54285613,
+         "end": 54285784,
+         "start_relative": 2309,
+         "end_relative": 2480,
+         "parents": [
+            "transcript-IRX3-201",
+            "transcript-IRX3-203",
+            "transcript-IRX3-202"
+         ],
+         "subfeatures": [
+            "variant-3 (ts 0)"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-6",
+         "start": 54286787,
+         "end": 54285784,
+         "start_relative": 3483,
+         "end_relative": 2480,
+         "parents": [
+            "transcript-IRX3-201",
+            "transcript-IRX3-203",
+            "transcript-IRX3-202"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-4",
+         "start": 54284312,
+         "end": 54284497,
+         "start_relative": 1008,
+         "end_relative": 1193,
+         "parents": [
+            "transcript-IRX3-201",
+            "transcript-IRX3-203",
+            "transcript-IRX3-202"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-3",
+         "start": 54285613,
+         "end": 54284246,
+         "start_relative": 2309,
+         "end_relative": 942,
+         "parents": [
+            "transcript-IRX3-201",
+            "transcript-IRX3-203",
+            "transcript-IRX3-202"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-2",
+         "start": 54283740,
+         "end": 54284120,
+         "start_relative": 436,
+         "end_relative": 816,
+         "parents": [
+            "transcript-IRX3-201",
+            "transcript-IRX3-202"
+         ]
+      },
+      {
+         "type": "stop_codon",
+         "sfid": "stop_codon-2",
+         "start": 54283686,
+         "end": 54283688,
+         "start_relative": 382,
+         "end_relative": 384,
+         "transcript_name": "IRX3-201",
+         "exon_number": 4,
+         "parents": [
+            "transcript-IRX3-201",
+            "transcript-IRX3-202",
+            "exon-4",
+            "exon-3",
+            "CDS-1"
+         ]
+      },
+      {
+         "type": "three_prime_utr",
+         "sfid": "three_prime_utr-1",
+         "start": 54283304,
+         "end": 54283685,
+         "start_relative": 0,
+         "end_relative": 381,
+         "transcript_name": "IRX3-201",
+         "parents": [
+            "transcript-IRX3-201",
+            "exon-4"
+         ]
+      },
+      {
+         "type": "stop_codon",
+         "sfid": "stop_codon-1",
+         "start": 54283625,
+         "end": 54283627,
+         "start_relative": 321,
+         "end_relative": 323,
+         "transcript_name": "IRX3-202",
+         "exon_number": 3,
+         "parents": [
+            "transcript-IRX3-201",
+            "transcript-IRX3-202",
+            "exon-3",
+            "exon-4",
+            "exon-3"
+         ]
+      },
+      {
+         "type": "three_prime_utr",
+         "sfid": "three_prime_utr-2",
+         "start": 54283436,
+         "end": 54283624,
+         "start_relative": 132,
+         "end_relative": 320,
+         "transcript_name": "IRX3-202",
+         "parents": [
+            "transcript-IRX3-201",
+            "transcript-IRX3-202",
+            "exon-4",
+            "exon-3"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-1",
+         "start": 54283740,
+         "end": 54283436,
+         "start_relative": 436,
+         "end_relative": 132,
+         "parents": [
+            "transcript-IRX3-201",
+            "transcript-IRX3-202"
+         ]
+      }
+   ],
+   "variants": [
+      {
+         "type": "variant",
+         "sfid": "variant-4",
+         "start": 54286081,
+         "end": 54286082,
+         "start_relative": 2777,
+         "end_relative": 2778,
+         "alt": "C",
+         "ref": "G",
+         "qual": 53.7599983215332,
+         "delta": 0,
+         "var_type": "tv",
+         "parents": [
+            "transcript-IRX3-201",
+            "exon-1",
+            "transcript-IRX3-203",
+            "intron-7"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-3",
+         "start": 54285658,
+         "end": 54285659,
+         "start_relative": 2354,
+         "end_relative": 2355,
+         "alt": "G",
+         "ref": "A",
+         "qual": 58.02000045776367,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-IRX3-201",
+            "transcript-IRX3-203",
+            "transcript-IRX3-202",
+            "intron-5"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-2",
+         "start": 54284615,
+         "end": 54284616,
+         "start_relative": 1311,
+         "end_relative": 1312,
+         "alt": "G",
+         "ref": "A",
+         "qual": 53.209999084472656,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-IRX3-201",
+            "transcript-IRX3-203",
+            "transcript-IRX3-202",
+            "exon-2",
+            "exon-2",
+            "CDS-4"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-1",
+         "start": 54284189,
+         "end": 54284190,
+         "start_relative": 885,
+         "end_relative": 886,
+         "alt": "T",
+         "ref": "C",
+         "qual": 46.16999816894531,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-IRX3-201",
+            "transcript-IRX3-203",
+            "transcript-IRX3-202",
+            "exon-2"
+         ]
+      }
+   ]
+}

@@ -1,0 +1,762 @@
+{
+   "name": "KISS1R",
+   "type": "gene",
+   "chrom": 19,
+   "start": 917287,
+   "end": 921005,
+   "strand": "+",
+   "start_relative": 0,
+   "end_relative": 3718,
+   "gene_id": "ENSG00000116014",
+   "gene_version": 10,
+   "gene_name": "KISS1R",
+   "gene_source": "ensembl_havana",
+   "gene_biotype": "protein_coding",
+   "transcripts": {
+      "KISS1R-202": {
+         "type": "transcript",
+         "sfid": "transcript-KISS1R-202",
+         "start": 917287,
+         "end": 919536,
+         "start_relative": 0,
+         "end_relative": 2249,
+         "transcript_name": "KISS1R-202",
+         "subfeatures": [
+            "exon-1",
+            "five_prime_utr-1",
+            "exon-1",
+            "five_prime_utr-2",
+            "exon-1",
+            "CDS-1",
+            "start_codon-1",
+            "intron-1",
+            "intron-2",
+            "intron-3",
+            "variant-1 (ts 0)",
+            "variant-2 (del -4)",
+            "exon-2",
+            "CDS-2",
+            "intron-4",
+            "exon-2",
+            "CDS-4",
+            "intron-5"
+         ]
+      },
+      "KISS1R-201": {
+         "type": "transcript",
+         "sfid": "transcript-KISS1R-201",
+         "start": 917333,
+         "end": 921005,
+         "start_relative": 46,
+         "end_relative": 3718,
+         "transcript_name": "KISS1R-201",
+         "subfeatures": [
+            "exon-1",
+            "five_prime_utr-2",
+            "exon-1",
+            "CDS-1",
+            "start_codon-1",
+            "intron-1",
+            "intron-2",
+            "intron-3",
+            "variant-1 (ts 0)",
+            "variant-2 (del -4)",
+            "exon-2",
+            "CDS-2",
+            "intron-4",
+            "exon-3",
+            "exon-2",
+            "CDS-3",
+            "CDS-4",
+            "intron-6",
+            "intron-5",
+            "exon-4",
+            "CDS-5",
+            "intron-7",
+            "variant-3 (tv 0)",
+            "exon-5",
+            "exon-4",
+            "CDS-6",
+            "CDS-7",
+            "stop_codon-1",
+            "three_prime_utr-1",
+            "variant-4 (tv 0)",
+            "stop_codon-2",
+            "three_prime_utr-2",
+            "intron-8"
+         ]
+      },
+      "KISS1R-203": {
+         "type": "transcript",
+         "sfid": "transcript-KISS1R-203",
+         "start": 917503,
+         "end": 920748,
+         "start_relative": 216,
+         "end_relative": 3461,
+         "transcript_name": "KISS1R-203",
+         "subfeatures": [
+            "exon-1",
+            "CDS-1",
+            "start_codon-1",
+            "intron-1",
+            "intron-2",
+            "intron-3",
+            "variant-1 (ts 0)",
+            "variant-2 (del -4)",
+            "exon-2",
+            "CDS-2",
+            "intron-4",
+            "exon-3",
+            "exon-2",
+            "CDS-3",
+            "CDS-4",
+            "intron-6",
+            "intron-5",
+            "exon-4",
+            "CDS-5",
+            "intron-7",
+            "variant-3 (tv 0)",
+            "exon-4",
+            "CDS-6",
+            "CDS-7",
+            "stop_codon-1",
+            "three_prime_utr-1",
+            "variant-4 (tv 0)",
+            "stop_codon-2",
+            "intron-8"
+         ]
+      }
+   },
+   "exons": {
+      "2714300309210048502": {
+         "type": "exon",
+         "sfid": "exon-1",
+         "start": 917287,
+         "end": 917746,
+         "start_relative": 0,
+         "end_relative": 459,
+         "transcript_name": "KISS1R-202",
+         "exon_number": 1,
+         "parents": [
+            "transcript-KISS1R-202"
+         ],
+         "subfeatures": [
+            "five_prime_utr-1",
+            "five_prime_utr-2",
+            "CDS-1",
+            "start_codon-1"
+         ]
+      },
+      "-5682362219580039445": {
+         "type": "exon",
+         "sfid": "exon-1",
+         "start": 917333,
+         "end": 917746,
+         "start_relative": 46,
+         "end_relative": 459,
+         "transcript_name": "KISS1R-201",
+         "exon_number": 1,
+         "parents": [
+            "transcript-KISS1R-202",
+            "transcript-KISS1R-201"
+         ],
+         "subfeatures": [
+            "five_prime_utr-2",
+            "CDS-1",
+            "start_codon-1"
+         ]
+      },
+      "7932834365493283034": {
+         "type": "exon",
+         "sfid": "exon-1",
+         "start": 917503,
+         "end": 917746,
+         "start_relative": 216,
+         "end_relative": 459,
+         "transcript_name": "KISS1R-203",
+         "exon_number": 1,
+         "parents": [
+            "transcript-KISS1R-202",
+            "transcript-KISS1R-201",
+            "transcript-KISS1R-203"
+         ],
+         "subfeatures": [
+            "CDS-1",
+            "start_codon-1"
+         ]
+      },
+      "8881532439462677675": {
+         "type": "exon",
+         "sfid": "exon-2",
+         "start": 918544,
+         "end": 918668,
+         "start_relative": 1257,
+         "end_relative": 1381,
+         "transcript_name": "KISS1R-201",
+         "exon_number": 2,
+         "parents": [
+            "transcript-KISS1R-202",
+            "transcript-KISS1R-201",
+            "transcript-KISS1R-203"
+         ],
+         "subfeatures": [
+            "CDS-2",
+            "CDS-4"
+         ]
+      },
+      "4529522724805416705": {
+         "type": "exon",
+         "sfid": "exon-3",
+         "start": 919490,
+         "end": 919625,
+         "start_relative": 2203,
+         "end_relative": 2338,
+         "transcript_name": "KISS1R-201",
+         "exon_number": 3,
+         "parents": [
+            "transcript-KISS1R-201",
+            "transcript-KISS1R-203"
+         ],
+         "subfeatures": [
+            "CDS-3",
+            "CDS-4"
+         ]
+      },
+      "-7765992162358839014": {
+         "type": "exon",
+         "sfid": "exon-2",
+         "start": 919490,
+         "end": 919536,
+         "start_relative": 2203,
+         "end_relative": 2249,
+         "transcript_name": "KISS1R-202",
+         "exon_number": 2,
+         "parents": [
+            "transcript-KISS1R-202",
+            "transcript-KISS1R-201",
+            "transcript-KISS1R-203"
+         ],
+         "subfeatures": [
+            "CDS-2",
+            "CDS-4"
+         ]
+      },
+      "-8719899399788721296": {
+         "type": "exon",
+         "sfid": "exon-4",
+         "start": 919874,
+         "end": 920106,
+         "start_relative": 2587,
+         "end_relative": 2819,
+         "transcript_name": "KISS1R-201",
+         "exon_number": 4,
+         "parents": [
+            "transcript-KISS1R-201",
+            "transcript-KISS1R-203"
+         ],
+         "subfeatures": [
+            "CDS-5",
+            "CDS-7",
+            "stop_codon-1"
+         ]
+      },
+      "6165842053973474176": {
+         "type": "exon",
+         "sfid": "exon-5",
+         "start": 920290,
+         "end": 921005,
+         "start_relative": 3003,
+         "end_relative": 3718,
+         "transcript_name": "KISS1R-201",
+         "exon_number": 5,
+         "parents": [
+            "transcript-KISS1R-201"
+         ],
+         "subfeatures": [
+            "CDS-6",
+            "CDS-7",
+            "stop_codon-1",
+            "three_prime_utr-1",
+            "variant-4 (tv 0)",
+            "stop_codon-2",
+            "three_prime_utr-2"
+         ]
+      },
+      "-3347810356391151966": {
+         "type": "exon",
+         "sfid": "exon-4",
+         "start": 920290,
+         "end": 920748,
+         "start_relative": 3003,
+         "end_relative": 3461,
+         "transcript_name": "KISS1R-203",
+         "exon_number": 4,
+         "parents": [
+            "transcript-KISS1R-201",
+            "transcript-KISS1R-203"
+         ],
+         "subfeatures": [
+            "CDS-5",
+            "CDS-6",
+            "CDS-7",
+            "stop_codon-1",
+            "three_prime_utr-1",
+            "variant-4 (tv 0)",
+            "stop_codon-2"
+         ]
+      }
+   },
+   "proteins": {
+      "ENSP00000234371": {
+         "type": "protein",
+         "sfid": "protein-ENSP00000234371",
+         "start_relative": 0,
+         "end_relative": 0,
+         "protein_id": "ENSP00000234371"
+      },
+      "ENSP00000467666": {
+         "type": "protein",
+         "sfid": "protein-ENSP00000467666",
+         "start_relative": 0,
+         "end_relative": 0,
+         "protein_id": "ENSP00000467666"
+      },
+      "ENSP00000475639": {
+         "type": "protein",
+         "sfid": "protein-ENSP00000475639",
+         "start_relative": 0,
+         "end_relative": 0,
+         "protein_id": "ENSP00000475639"
+      }
+   },
+   "cds": [
+      {
+         "type": "CDS",
+         "sfid": "CDS-1",
+         "start": 917503,
+         "end": 917746,
+         "start_relative": 216,
+         "end_relative": 459,
+         "transcript_name": "KISS1R-201",
+         "exon_number": 1,
+         "protein_id": "ENSP00000234371",
+         "parents": [
+            "transcript-KISS1R-202",
+            "transcript-KISS1R-201",
+            "transcript-KISS1R-203",
+            "exon-1",
+            "exon-1",
+            "exon-1"
+         ],
+         "subfeatures": [
+            "start_codon-1"
+         ]
+      },
+      {
+         "type": "CDS",
+         "sfid": "CDS-2",
+         "start": 918544,
+         "end": 918668,
+         "start_relative": 1257,
+         "end_relative": 1381,
+         "transcript_name": "KISS1R-201",
+         "exon_number": 2,
+         "protein_id": "ENSP00000234371",
+         "parents": [
+            "transcript-KISS1R-202",
+            "transcript-KISS1R-201",
+            "transcript-KISS1R-203",
+            "exon-2",
+            "exon-2"
+         ]
+      },
+      {
+         "type": "CDS",
+         "sfid": "CDS-3",
+         "start": 919490,
+         "end": 919625,
+         "start_relative": 2203,
+         "end_relative": 2338,
+         "transcript_name": "KISS1R-201",
+         "exon_number": 3,
+         "protein_id": "ENSP00000234371",
+         "parents": [
+            "transcript-KISS1R-201",
+            "transcript-KISS1R-203",
+            "exon-3"
+         ]
+      },
+      {
+         "type": "CDS",
+         "sfid": "CDS-4",
+         "start": 919490,
+         "end": 919536,
+         "start_relative": 2203,
+         "end_relative": 2249,
+         "transcript_name": "KISS1R-202",
+         "exon_number": 2,
+         "protein_id": "ENSP00000467666",
+         "parents": [
+            "transcript-KISS1R-202",
+            "transcript-KISS1R-201",
+            "transcript-KISS1R-203",
+            "exon-2",
+            "exon-3",
+            "exon-2"
+         ]
+      },
+      {
+         "type": "CDS",
+         "sfid": "CDS-5",
+         "start": 919874,
+         "end": 920106,
+         "start_relative": 2587,
+         "end_relative": 2819,
+         "transcript_name": "KISS1R-201",
+         "exon_number": 4,
+         "protein_id": "ENSP00000234371",
+         "parents": [
+            "transcript-KISS1R-201",
+            "transcript-KISS1R-203",
+            "exon-4",
+            "exon-4"
+         ]
+      },
+      {
+         "type": "CDS",
+         "sfid": "CDS-6",
+         "start": 920290,
+         "end": 920745,
+         "start_relative": 3003,
+         "end_relative": 3458,
+         "transcript_name": "KISS1R-201",
+         "exon_number": 5,
+         "protein_id": "ENSP00000234371",
+         "parents": [
+            "transcript-KISS1R-201",
+            "transcript-KISS1R-203",
+            "exon-5",
+            "exon-4"
+         ],
+         "subfeatures": [
+            "stop_codon-1",
+            "variant-4 (tv 0)"
+         ]
+      },
+      {
+         "type": "CDS",
+         "sfid": "CDS-7",
+         "start": 920290,
+         "end": 920462,
+         "start_relative": 3003,
+         "end_relative": 3175,
+         "transcript_name": "KISS1R-203",
+         "exon_number": 4,
+         "protein_id": "ENSP00000475639",
+         "parents": [
+            "transcript-KISS1R-201",
+            "transcript-KISS1R-203",
+            "exon-4",
+            "exon-5",
+            "exon-4"
+         ]
+      }
+   ],
+   "subfeatures": [
+      {
+         "type": "five_prime_utr",
+         "sfid": "five_prime_utr-1",
+         "start": 917287,
+         "end": 917502,
+         "start_relative": 0,
+         "end_relative": 215,
+         "transcript_name": "KISS1R-202",
+         "parents": [
+            "transcript-KISS1R-202",
+            "exon-1"
+         ]
+      },
+      {
+         "type": "five_prime_utr",
+         "sfid": "five_prime_utr-2",
+         "start": 917333,
+         "end": 917502,
+         "start_relative": 46,
+         "end_relative": 215,
+         "transcript_name": "KISS1R-201",
+         "parents": [
+            "transcript-KISS1R-202",
+            "exon-1",
+            "transcript-KISS1R-201",
+            "exon-1"
+         ]
+      },
+      {
+         "type": "start_codon",
+         "sfid": "start_codon-1",
+         "start": 917503,
+         "end": 917505,
+         "start_relative": 216,
+         "end_relative": 218,
+         "transcript_name": "KISS1R-201",
+         "exon_number": 1,
+         "parents": [
+            "transcript-KISS1R-202",
+            "exon-1",
+            "transcript-KISS1R-201",
+            "exon-1",
+            "transcript-KISS1R-203",
+            "exon-1",
+            "CDS-1"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-1",
+         "start": 917746,
+         "end": 917333,
+         "start_relative": 459,
+         "end_relative": 46,
+         "parents": [
+            "transcript-KISS1R-202",
+            "transcript-KISS1R-201",
+            "transcript-KISS1R-203"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-2",
+         "start": 917746,
+         "end": 917503,
+         "start_relative": 459,
+         "end_relative": 216,
+         "parents": [
+            "transcript-KISS1R-202",
+            "transcript-KISS1R-201",
+            "transcript-KISS1R-203"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-3",
+         "start": 917746,
+         "end": 918544,
+         "start_relative": 459,
+         "end_relative": 1257,
+         "parents": [
+            "transcript-KISS1R-202",
+            "transcript-KISS1R-201",
+            "transcript-KISS1R-203"
+         ],
+         "subfeatures": [
+            "variant-1 (ts 0)",
+            "variant-2 (del -4)"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-4",
+         "start": 918668,
+         "end": 919490,
+         "start_relative": 1381,
+         "end_relative": 2203,
+         "parents": [
+            "transcript-KISS1R-202",
+            "transcript-KISS1R-201",
+            "transcript-KISS1R-203"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-6",
+         "start": 919536,
+         "end": 919874,
+         "start_relative": 2249,
+         "end_relative": 2587,
+         "parents": [
+            "transcript-KISS1R-201",
+            "transcript-KISS1R-203"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-5",
+         "start": 919625,
+         "end": 919490,
+         "start_relative": 2338,
+         "end_relative": 2203,
+         "parents": [
+            "transcript-KISS1R-202",
+            "transcript-KISS1R-201",
+            "transcript-KISS1R-203"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-7",
+         "start": 920106,
+         "end": 920290,
+         "start_relative": 2819,
+         "end_relative": 3003,
+         "parents": [
+            "transcript-KISS1R-201",
+            "transcript-KISS1R-203"
+         ],
+         "subfeatures": [
+            "variant-3 (tv 0)"
+         ]
+      },
+      {
+         "type": "stop_codon",
+         "sfid": "stop_codon-1",
+         "start": 920463,
+         "end": 920465,
+         "start_relative": 3176,
+         "end_relative": 3178,
+         "transcript_name": "KISS1R-203",
+         "exon_number": 4,
+         "parents": [
+            "transcript-KISS1R-201",
+            "transcript-KISS1R-203",
+            "exon-4",
+            "exon-5",
+            "exon-4",
+            "CDS-6"
+         ]
+      },
+      {
+         "type": "three_prime_utr",
+         "sfid": "three_prime_utr-1",
+         "start": 920466,
+         "end": 920748,
+         "start_relative": 3179,
+         "end_relative": 3461,
+         "transcript_name": "KISS1R-203",
+         "parents": [
+            "transcript-KISS1R-201",
+            "transcript-KISS1R-203",
+            "exon-5",
+            "exon-4"
+         ]
+      },
+      {
+         "type": "stop_codon",
+         "sfid": "stop_codon-2",
+         "start": 920746,
+         "end": 920748,
+         "start_relative": 3459,
+         "end_relative": 3461,
+         "transcript_name": "KISS1R-201",
+         "exon_number": 5,
+         "parents": [
+            "transcript-KISS1R-201",
+            "transcript-KISS1R-203",
+            "exon-5",
+            "exon-4"
+         ]
+      },
+      {
+         "type": "three_prime_utr",
+         "sfid": "three_prime_utr-2",
+         "start": 920749,
+         "end": 921005,
+         "start_relative": 3462,
+         "end_relative": 3718,
+         "transcript_name": "KISS1R-201",
+         "parents": [
+            "transcript-KISS1R-201",
+            "exon-5"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-8",
+         "start": 921005,
+         "end": 920290,
+         "start_relative": 3718,
+         "end_relative": 3003,
+         "parents": [
+            "transcript-KISS1R-201",
+            "transcript-KISS1R-203"
+         ]
+      }
+   ],
+   "variants": [
+      {
+         "type": "variant",
+         "sfid": "variant-1",
+         "start": 917873,
+         "end": 917874,
+         "start_relative": 586,
+         "end_relative": 587,
+         "alt": "T",
+         "ref": "C",
+         "qual": 44.75,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-KISS1R-202",
+            "transcript-KISS1R-201",
+            "transcript-KISS1R-203",
+            "intron-3"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-2",
+         "start": 918406,
+         "end": 918411,
+         "start_relative": 1119,
+         "end_relative": 1124,
+         "alt": "G",
+         "ref": "GGGGA",
+         "qual": 43.34000015258789,
+         "delta": -4,
+         "var_type": "del",
+         "parents": [
+            "transcript-KISS1R-202",
+            "transcript-KISS1R-201",
+            "transcript-KISS1R-203",
+            "intron-3"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-3",
+         "start": 920169,
+         "end": 920170,
+         "start_relative": 2882,
+         "end_relative": 2883,
+         "alt": "T",
+         "ref": "G",
+         "qual": 47.54999923706055,
+         "delta": 0,
+         "var_type": "tv",
+         "parents": [
+            "transcript-KISS1R-201",
+            "transcript-KISS1R-203",
+            "intron-7"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-4",
+         "start": 920641,
+         "end": 920642,
+         "start_relative": 3354,
+         "end_relative": 3355,
+         "alt": "A",
+         "ref": "T",
+         "qual": 45.9900016784668,
+         "delta": 0,
+         "var_type": "tv",
+         "parents": [
+            "transcript-KISS1R-201",
+            "transcript-KISS1R-203",
+            "exon-5",
+            "exon-4",
+            "CDS-6"
+         ]
+      }
+   ]
+}

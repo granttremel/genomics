@@ -1,0 +1,1759 @@
+{
+   "name": "PERM1",
+   "type": "gene",
+   "chrom": 1,
+   "start": 975198,
+   "end": 982117,
+   "strand": "-",
+   "start_relative": 0,
+   "end_relative": 6919,
+   "gene_id": "ENSG00000187642",
+   "gene_version": 10,
+   "gene_name": "PERM1",
+   "gene_source": "ensembl_havana",
+   "gene_biotype": "protein_coding",
+   "transcripts": {
+      "PERM1-204": {
+         "type": "transcript",
+         "sfid": "transcript-PERM1-204",
+         "start": 976121,
+         "end": 982117,
+         "start_relative": 923,
+         "end_relative": 6919,
+         "transcript_name": "PERM1-204",
+         "subfeatures": [
+            "exon-1",
+            "five_prime_utr-5",
+            "exon-1",
+            "five_prime_utr-4",
+            "intron-10",
+            "intron-11",
+            "variant-35 (tv 0)",
+            "variant-34 (ts 0)",
+            "exon-2",
+            "exon-2",
+            "five_prime_utr-1",
+            "five_prime_utr-3",
+            "variant-33 (ts 0)",
+            "CDS-5",
+            "start_codon-2",
+            "intron-9",
+            "exon-2",
+            "five_prime_utr-2",
+            "CDS-3",
+            "start_codon-1",
+            "exon-3",
+            "CDS-4",
+            "variant-32 (ts 0)",
+            "variant-31 (ts 0)",
+            "variant-30 (ts 0)",
+            "variant-29 (tv 0)",
+            "variant-28 (tv 0)",
+            "intron-6",
+            "intron-7",
+            "intron-8",
+            "variant-27 (tv 0)",
+            "variant-26 (ts 0)",
+            "variant-25 (del -1)",
+            "variant-24 (tv 0)",
+            "variant-23 (ins 1)",
+            "variant-22 (ts 0)",
+            "variant-21 (tv 0)",
+            "variant-20 (ins 1)",
+            "variant-19 (ts 0)",
+            "variant-18 (ts 0)",
+            "variant-17 (ts 0)",
+            "variant-16 (del -1)",
+            "variant-15 (ts 0)",
+            "variant-14 (ts 0)",
+            "variant-13 (ts 0)",
+            "variant-12 (ts 0)",
+            "variant-11 (ts 0)",
+            "variant-10 (ts 0)",
+            "variant-9 (unknown -1)",
+            "variant-8 (unknown -1)",
+            "variant-7 (del -1)",
+            "variant-6 (del -1)",
+            "variant-5 (del -1)",
+            "variant-4 (ts 0)",
+            "variant-3 (ts 0)",
+            "exon-1",
+            "exon-3",
+            "CDS-2",
+            "intron-4",
+            "intron-5",
+            "exon-4",
+            "CDS-1",
+            "variant-2 (ts 0)",
+            "stop_codon-1",
+            "three_prime_utr-3",
+            "intron-3",
+            "intron-2",
+            "intron-1"
+         ]
+      },
+      "PERM1-202": {
+         "type": "transcript",
+         "sfid": "transcript-PERM1-202",
+         "start": 975198,
+         "end": 982093,
+         "start_relative": 0,
+         "end_relative": 6895,
+         "transcript_name": "PERM1-202",
+         "subfeatures": [
+            "exon-1",
+            "five_prime_utr-4",
+            "intron-10",
+            "intron-11",
+            "variant-35 (tv 0)",
+            "variant-34 (ts 0)",
+            "exon-2",
+            "exon-2",
+            "five_prime_utr-1",
+            "five_prime_utr-3",
+            "variant-33 (ts 0)",
+            "CDS-5",
+            "start_codon-2",
+            "intron-9",
+            "exon-2",
+            "five_prime_utr-2",
+            "CDS-3",
+            "start_codon-1",
+            "exon-3",
+            "CDS-4",
+            "variant-32 (ts 0)",
+            "variant-31 (ts 0)",
+            "variant-30 (ts 0)",
+            "variant-29 (tv 0)",
+            "variant-28 (tv 0)",
+            "intron-6",
+            "intron-7",
+            "intron-8",
+            "variant-27 (tv 0)",
+            "variant-26 (ts 0)",
+            "variant-25 (del -1)",
+            "variant-24 (tv 0)",
+            "variant-23 (ins 1)",
+            "variant-22 (ts 0)",
+            "variant-21 (tv 0)",
+            "variant-20 (ins 1)",
+            "variant-19 (ts 0)",
+            "variant-18 (ts 0)",
+            "variant-17 (ts 0)",
+            "variant-16 (del -1)",
+            "variant-15 (ts 0)",
+            "variant-14 (ts 0)",
+            "variant-13 (ts 0)",
+            "variant-12 (ts 0)",
+            "variant-11 (ts 0)",
+            "variant-10 (ts 0)",
+            "variant-9 (unknown -1)",
+            "variant-8 (unknown -1)",
+            "variant-7 (del -1)",
+            "variant-6 (del -1)",
+            "variant-5 (del -1)",
+            "variant-4 (ts 0)",
+            "variant-3 (ts 0)",
+            "exon-1",
+            "exon-3",
+            "CDS-2",
+            "intron-4",
+            "intron-5",
+            "exon-4",
+            "exon-5",
+            "exon-2",
+            "exon-4",
+            "CDS-1",
+            "variant-2 (ts 0)",
+            "stop_codon-1",
+            "three_prime_utr-1",
+            "three_prime_utr-2",
+            "three_prime_utr-3",
+            "intron-3",
+            "variant-1 (ts 0)",
+            "intron-2",
+            "intron-1"
+         ]
+      },
+      "PERM1-201": {
+         "type": "transcript",
+         "sfid": "transcript-PERM1-201",
+         "start": 975204,
+         "end": 982093,
+         "start_relative": 6,
+         "end_relative": 6895,
+         "transcript_name": "PERM1-201",
+         "subfeatures": [
+            "exon-1",
+            "five_prime_utr-4",
+            "intron-10",
+            "intron-11",
+            "variant-35 (tv 0)",
+            "variant-34 (ts 0)",
+            "exon-2",
+            "exon-2",
+            "five_prime_utr-1",
+            "five_prime_utr-3",
+            "variant-33 (ts 0)",
+            "CDS-5",
+            "start_codon-2",
+            "intron-9",
+            "exon-2",
+            "five_prime_utr-2",
+            "CDS-3",
+            "start_codon-1",
+            "exon-3",
+            "CDS-4",
+            "variant-32 (ts 0)",
+            "variant-31 (ts 0)",
+            "variant-30 (ts 0)",
+            "variant-29 (tv 0)",
+            "variant-28 (tv 0)",
+            "intron-6",
+            "intron-7",
+            "intron-8",
+            "variant-27 (tv 0)",
+            "variant-26 (ts 0)",
+            "variant-25 (del -1)",
+            "variant-24 (tv 0)",
+            "variant-23 (ins 1)",
+            "variant-22 (ts 0)",
+            "variant-21 (tv 0)",
+            "variant-20 (ins 1)",
+            "variant-19 (ts 0)",
+            "variant-18 (ts 0)",
+            "variant-17 (ts 0)",
+            "variant-16 (del -1)",
+            "variant-15 (ts 0)",
+            "variant-14 (ts 0)",
+            "variant-13 (ts 0)",
+            "variant-12 (ts 0)",
+            "variant-11 (ts 0)",
+            "variant-10 (ts 0)",
+            "variant-9 (unknown -1)",
+            "variant-8 (unknown -1)",
+            "variant-7 (del -1)",
+            "variant-6 (del -1)",
+            "variant-5 (del -1)",
+            "variant-4 (ts 0)",
+            "variant-3 (ts 0)",
+            "exon-1",
+            "exon-3",
+            "CDS-2",
+            "intron-4",
+            "intron-5",
+            "exon-5",
+            "exon-2",
+            "exon-4",
+            "CDS-1",
+            "variant-2 (ts 0)",
+            "stop_codon-1",
+            "three_prime_utr-2",
+            "three_prime_utr-3",
+            "intron-3",
+            "variant-1 (ts 0)",
+            "intron-2",
+            "intron-1"
+         ]
+      },
+      "PERM1-203": {
+         "type": "transcript",
+         "sfid": "transcript-PERM1-203",
+         "start": 975205,
+         "end": 976641,
+         "start_relative": 7,
+         "end_relative": 1443,
+         "transcript_name": "PERM1-203",
+         "subfeatures": [
+            "exon-1",
+            "exon-3",
+            "CDS-2",
+            "intron-4",
+            "intron-5",
+            "exon-2",
+            "exon-4",
+            "CDS-1",
+            "variant-2 (ts 0)",
+            "stop_codon-1",
+            "three_prime_utr-3",
+            "intron-3",
+            "variant-1 (ts 0)",
+            "intron-2",
+            "intron-1"
+         ]
+      }
+   },
+   "exons": {
+      "-4938869753471618443": {
+         "type": "exon",
+         "sfid": "exon-1",
+         "start": 982065,
+         "end": 982117,
+         "start_relative": 6867,
+         "end_relative": 6919,
+         "transcript_name": "PERM1-204",
+         "exon_number": 1,
+         "parents": [
+            "transcript-PERM1-204"
+         ],
+         "subfeatures": [
+            "five_prime_utr-5",
+            "five_prime_utr-4"
+         ]
+      },
+      "-2278211677556872349": {
+         "type": "exon",
+         "sfid": "exon-1",
+         "start": 982065,
+         "end": 982093,
+         "start_relative": 6867,
+         "end_relative": 6895,
+         "transcript_name": "PERM1-202",
+         "exon_number": 1,
+         "parents": [
+            "transcript-PERM1-202",
+            "transcript-PERM1-201",
+            "transcript-PERM1-204"
+         ],
+         "subfeatures": [
+            "five_prime_utr-4"
+         ]
+      },
+      "-7247476028554558472": {
+         "type": "exon",
+         "sfid": "exon-2",
+         "start": 978881,
+         "end": 981173,
+         "start_relative": 3683,
+         "end_relative": 5975,
+         "transcript_name": "PERM1-202",
+         "exon_number": 2,
+         "parents": [
+            "transcript-PERM1-202",
+            "transcript-PERM1-201",
+            "transcript-PERM1-204"
+         ],
+         "subfeatures": [
+            "five_prime_utr-1",
+            "five_prime_utr-3",
+            "variant-33 (ts 0)",
+            "CDS-5",
+            "start_codon-2",
+            "five_prime_utr-2",
+            "CDS-3",
+            "start_codon-1",
+            "CDS-4",
+            "variant-32 (ts 0)",
+            "variant-31 (ts 0)",
+            "variant-30 (ts 0)",
+            "variant-29 (tv 0)",
+            "variant-28 (tv 0)"
+         ]
+      },
+      "5979044175816080752": {
+         "type": "exon",
+         "sfid": "exon-2",
+         "start": 981137,
+         "end": 981173,
+         "start_relative": 5939,
+         "end_relative": 5975,
+         "transcript_name": "PERM1-201",
+         "exon_number": 2,
+         "parents": [
+            "transcript-PERM1-202",
+            "transcript-PERM1-201",
+            "transcript-PERM1-204"
+         ],
+         "subfeatures": [
+            "five_prime_utr-3",
+            "variant-33 (ts 0)",
+            "CDS-5",
+            "start_codon-2",
+            "CDS-3",
+            "start_codon-1"
+         ]
+      },
+      "-5833915119003591004": {
+         "type": "exon",
+         "sfid": "exon-2",
+         "start": 978881,
+         "end": 981047,
+         "start_relative": 3683,
+         "end_relative": 5849,
+         "transcript_name": "PERM1-204",
+         "exon_number": 2,
+         "parents": [
+            "transcript-PERM1-202",
+            "transcript-PERM1-201",
+            "transcript-PERM1-204"
+         ],
+         "subfeatures": [
+            "CDS-5",
+            "start_codon-2",
+            "five_prime_utr-2",
+            "CDS-3",
+            "start_codon-1",
+            "CDS-4",
+            "variant-32 (ts 0)",
+            "variant-31 (ts 0)",
+            "variant-30 (ts 0)",
+            "variant-29 (tv 0)",
+            "variant-28 (tv 0)"
+         ]
+      },
+      "-2396574214068704374": {
+         "type": "exon",
+         "sfid": "exon-3",
+         "start": 978881,
+         "end": 980657,
+         "start_relative": 3683,
+         "end_relative": 5459,
+         "transcript_name": "PERM1-201",
+         "exon_number": 3,
+         "parents": [
+            "transcript-PERM1-202",
+            "transcript-PERM1-201",
+            "transcript-PERM1-204"
+         ],
+         "subfeatures": [
+            "CDS-4",
+            "variant-32 (ts 0)",
+            "variant-31 (ts 0)",
+            "variant-30 (ts 0)",
+            "variant-29 (tv 0)",
+            "variant-28 (tv 0)",
+            "CDS-2"
+         ]
+      },
+      "6519651817251842510": {
+         "type": "exon",
+         "sfid": "exon-1",
+         "start": 976499,
+         "end": 976641,
+         "start_relative": 1301,
+         "end_relative": 1443,
+         "transcript_name": "PERM1-203",
+         "exon_number": 1,
+         "parents": [
+            "transcript-PERM1-202",
+            "transcript-PERM1-201",
+            "transcript-PERM1-203",
+            "transcript-PERM1-204"
+         ],
+         "subfeatures": [
+            "CDS-2"
+         ]
+      },
+      "-6711808009021794666": {
+         "type": "exon",
+         "sfid": "exon-3",
+         "start": 976499,
+         "end": 976624,
+         "start_relative": 1301,
+         "end_relative": 1426,
+         "transcript_name": "PERM1-202",
+         "exon_number": 3,
+         "parents": [
+            "transcript-PERM1-202",
+            "transcript-PERM1-201",
+            "transcript-PERM1-203",
+            "transcript-PERM1-204"
+         ],
+         "subfeatures": [
+            "CDS-4",
+            "CDS-2"
+         ]
+      },
+      "54646608566772324": {
+         "type": "exon",
+         "sfid": "exon-4",
+         "start": 975198,
+         "end": 976269,
+         "start_relative": 0,
+         "end_relative": 1071,
+         "transcript_name": "PERM1-202",
+         "exon_number": 4,
+         "parents": [
+            "transcript-PERM1-202"
+         ],
+         "subfeatures": [
+            "CDS-1",
+            "variant-2 (ts 0)",
+            "stop_codon-1",
+            "three_prime_utr-1",
+            "three_prime_utr-2",
+            "three_prime_utr-3",
+            "variant-1 (ts 0)"
+         ]
+      },
+      "-2709456350367163258": {
+         "type": "exon",
+         "sfid": "exon-5",
+         "start": 975204,
+         "end": 976269,
+         "start_relative": 6,
+         "end_relative": 1071,
+         "transcript_name": "PERM1-201",
+         "exon_number": 5,
+         "parents": [
+            "transcript-PERM1-202",
+            "transcript-PERM1-201"
+         ],
+         "subfeatures": [
+            "CDS-1",
+            "variant-2 (ts 0)",
+            "stop_codon-1",
+            "three_prime_utr-2",
+            "three_prime_utr-3",
+            "variant-1 (ts 0)"
+         ]
+      },
+      "-5575476574304504120": {
+         "type": "exon",
+         "sfid": "exon-2",
+         "start": 975205,
+         "end": 976269,
+         "start_relative": 7,
+         "end_relative": 1071,
+         "transcript_name": "PERM1-203",
+         "exon_number": 2,
+         "parents": [
+            "transcript-PERM1-202",
+            "transcript-PERM1-201",
+            "transcript-PERM1-203"
+         ],
+         "subfeatures": [
+            "CDS-5",
+            "start_codon-2",
+            "CDS-3",
+            "start_codon-1",
+            "CDS-1",
+            "variant-2 (ts 0)",
+            "stop_codon-1",
+            "three_prime_utr-3",
+            "variant-1 (ts 0)"
+         ]
+      },
+      "555098168522360380": {
+         "type": "exon",
+         "sfid": "exon-4",
+         "start": 976121,
+         "end": 976269,
+         "start_relative": 923,
+         "end_relative": 1071,
+         "transcript_name": "PERM1-204",
+         "exon_number": 4,
+         "parents": [
+            "transcript-PERM1-202",
+            "transcript-PERM1-201",
+            "transcript-PERM1-203",
+            "transcript-PERM1-204"
+         ],
+         "subfeatures": [
+            "CDS-1",
+            "variant-2 (ts 0)",
+            "stop_codon-1",
+            "three_prime_utr-3"
+         ]
+      }
+   },
+   "proteins": {
+      "ENSP00000414022": {
+         "type": "protein",
+         "sfid": "protein-ENSP00000414022",
+         "start_relative": 0,
+         "end_relative": 0,
+         "protein_id": "ENSP00000414022"
+      },
+      "ENSP00000343864": {
+         "type": "protein",
+         "sfid": "protein-ENSP00000343864",
+         "start_relative": 0,
+         "end_relative": 0,
+         "protein_id": "ENSP00000343864"
+      }
+   },
+   "cds": [
+      {
+         "type": "CDS",
+         "sfid": "CDS-5",
+         "start": 981137,
+         "end": 981166,
+         "start_relative": 5939,
+         "end_relative": 5968,
+         "transcript_name": "PERM1-201",
+         "exon_number": 2,
+         "protein_id": "ENSP00000343864",
+         "parents": [
+            "transcript-PERM1-202",
+            "transcript-PERM1-201",
+            "transcript-PERM1-204",
+            "exon-2",
+            "exon-2",
+            "exon-2",
+            "exon-2"
+         ],
+         "subfeatures": [
+            "start_codon-2"
+         ]
+      },
+      {
+         "type": "CDS",
+         "sfid": "CDS-3",
+         "start": 978881,
+         "end": 981029,
+         "start_relative": 3683,
+         "end_relative": 5831,
+         "transcript_name": "PERM1-202",
+         "exon_number": 2,
+         "protein_id": "ENSP00000414022",
+         "parents": [
+            "transcript-PERM1-202",
+            "transcript-PERM1-201",
+            "transcript-PERM1-204",
+            "exon-2",
+            "exon-2",
+            "exon-2",
+            "exon-2"
+         ],
+         "subfeatures": [
+            "start_codon-1",
+            "variant-32 (ts 0)",
+            "variant-31 (ts 0)",
+            "variant-30 (ts 0)",
+            "variant-29 (tv 0)",
+            "variant-28 (tv 0)"
+         ]
+      },
+      {
+         "type": "CDS",
+         "sfid": "CDS-4",
+         "start": 978881,
+         "end": 980657,
+         "start_relative": 3683,
+         "end_relative": 5459,
+         "transcript_name": "PERM1-201",
+         "exon_number": 3,
+         "protein_id": "ENSP00000343864",
+         "parents": [
+            "transcript-PERM1-202",
+            "transcript-PERM1-201",
+            "transcript-PERM1-204",
+            "exon-3",
+            "exon-2",
+            "exon-3",
+            "exon-2"
+         ],
+         "subfeatures": [
+            "variant-32 (ts 0)",
+            "variant-31 (ts 0)",
+            "variant-30 (ts 0)",
+            "variant-29 (tv 0)",
+            "variant-28 (tv 0)"
+         ]
+      },
+      {
+         "type": "CDS",
+         "sfid": "CDS-2",
+         "start": 976499,
+         "end": 976624,
+         "start_relative": 1301,
+         "end_relative": 1426,
+         "transcript_name": "PERM1-202",
+         "exon_number": 3,
+         "protein_id": "ENSP00000414022",
+         "parents": [
+            "transcript-PERM1-202",
+            "transcript-PERM1-201",
+            "transcript-PERM1-203",
+            "transcript-PERM1-204",
+            "exon-3",
+            "exon-1",
+            "exon-3"
+         ]
+      },
+      {
+         "type": "CDS",
+         "sfid": "CDS-1",
+         "start": 976175,
+         "end": 976269,
+         "start_relative": 977,
+         "end_relative": 1071,
+         "transcript_name": "PERM1-202",
+         "exon_number": 4,
+         "protein_id": "ENSP00000414022",
+         "parents": [
+            "transcript-PERM1-202",
+            "transcript-PERM1-201",
+            "transcript-PERM1-203",
+            "transcript-PERM1-204",
+            "exon-4",
+            "exon-5",
+            "exon-2",
+            "exon-4"
+         ],
+         "subfeatures": [
+            "variant-2 (ts 0)"
+         ]
+      }
+   ],
+   "subfeatures": [
+      {
+         "type": "five_prime_utr",
+         "sfid": "five_prime_utr-5",
+         "start": 982065,
+         "end": 982117,
+         "start_relative": 6867,
+         "end_relative": 6919,
+         "transcript_name": "PERM1-204",
+         "parents": [
+            "transcript-PERM1-204",
+            "exon-1"
+         ]
+      },
+      {
+         "type": "five_prime_utr",
+         "sfid": "five_prime_utr-4",
+         "start": 982065,
+         "end": 982093,
+         "start_relative": 6867,
+         "end_relative": 6895,
+         "transcript_name": "PERM1-202",
+         "parents": [
+            "transcript-PERM1-204",
+            "exon-1",
+            "transcript-PERM1-202",
+            "transcript-PERM1-201",
+            "exon-1"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-10",
+         "start": 981173,
+         "end": 982065,
+         "start_relative": 5975,
+         "end_relative": 6867,
+         "parents": [
+            "transcript-PERM1-204",
+            "transcript-PERM1-202",
+            "transcript-PERM1-201"
+         ],
+         "subfeatures": [
+            "variant-35 (tv 0)",
+            "variant-34 (ts 0)"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-11",
+         "start": 982093,
+         "end": 982065,
+         "start_relative": 6895,
+         "end_relative": 6867,
+         "parents": [
+            "transcript-PERM1-204",
+            "transcript-PERM1-202",
+            "transcript-PERM1-201"
+         ]
+      },
+      {
+         "type": "five_prime_utr",
+         "sfid": "five_prime_utr-1",
+         "start": 981030,
+         "end": 981173,
+         "start_relative": 5832,
+         "end_relative": 5975,
+         "transcript_name": "PERM1-202",
+         "parents": [
+            "transcript-PERM1-204",
+            "transcript-PERM1-202",
+            "transcript-PERM1-201",
+            "exon-2"
+         ]
+      },
+      {
+         "type": "five_prime_utr",
+         "sfid": "five_prime_utr-3",
+         "start": 981167,
+         "end": 981173,
+         "start_relative": 5969,
+         "end_relative": 5975,
+         "transcript_name": "PERM1-201",
+         "parents": [
+            "transcript-PERM1-204",
+            "transcript-PERM1-202",
+            "transcript-PERM1-201",
+            "exon-2",
+            "exon-2"
+         ]
+      },
+      {
+         "type": "start_codon",
+         "sfid": "start_codon-2",
+         "start": 981164,
+         "end": 981166,
+         "start_relative": 5966,
+         "end_relative": 5968,
+         "transcript_name": "PERM1-201",
+         "exon_number": 2,
+         "parents": [
+            "transcript-PERM1-204",
+            "transcript-PERM1-202",
+            "transcript-PERM1-201",
+            "exon-2",
+            "exon-2",
+            "CDS-5",
+            "exon-2",
+            "exon-2"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-9",
+         "start": 981047,
+         "end": 981137,
+         "start_relative": 5849,
+         "end_relative": 5939,
+         "parents": [
+            "transcript-PERM1-204",
+            "transcript-PERM1-202",
+            "transcript-PERM1-201"
+         ]
+      },
+      {
+         "type": "five_prime_utr",
+         "sfid": "five_prime_utr-2",
+         "start": 981030,
+         "end": 981047,
+         "start_relative": 5832,
+         "end_relative": 5849,
+         "transcript_name": "PERM1-204",
+         "parents": [
+            "transcript-PERM1-204",
+            "transcript-PERM1-202",
+            "transcript-PERM1-201",
+            "exon-2",
+            "exon-2"
+         ]
+      },
+      {
+         "type": "start_codon",
+         "sfid": "start_codon-1",
+         "start": 981027,
+         "end": 981029,
+         "start_relative": 5829,
+         "end_relative": 5831,
+         "transcript_name": "PERM1-202",
+         "exon_number": 2,
+         "parents": [
+            "transcript-PERM1-204",
+            "transcript-PERM1-202",
+            "transcript-PERM1-201",
+            "exon-2",
+            "exon-2",
+            "exon-2",
+            "CDS-3",
+            "exon-2"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-6",
+         "start": 976641,
+         "end": 978881,
+         "start_relative": 1443,
+         "end_relative": 3683,
+         "parents": [
+            "transcript-PERM1-204",
+            "transcript-PERM1-202",
+            "transcript-PERM1-201"
+         ],
+         "subfeatures": [
+            "variant-27 (tv 0)",
+            "variant-26 (ts 0)",
+            "variant-25 (del -1)",
+            "variant-24 (tv 0)",
+            "variant-23 (ins 1)",
+            "variant-22 (ts 0)",
+            "variant-21 (tv 0)",
+            "variant-20 (ins 1)",
+            "variant-19 (ts 0)",
+            "variant-18 (ts 0)",
+            "variant-17 (ts 0)",
+            "variant-16 (del -1)",
+            "variant-15 (ts 0)",
+            "variant-14 (ts 0)",
+            "variant-13 (ts 0)",
+            "variant-12 (ts 0)",
+            "variant-11 (ts 0)",
+            "variant-10 (ts 0)",
+            "variant-9 (unknown -1)",
+            "variant-8 (unknown -1)",
+            "variant-7 (del -1)",
+            "variant-6 (del -1)",
+            "variant-5 (del -1)",
+            "variant-4 (ts 0)",
+            "variant-3 (ts 0)"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-7",
+         "start": 981173,
+         "end": 978881,
+         "start_relative": 5975,
+         "end_relative": 3683,
+         "parents": [
+            "transcript-PERM1-204",
+            "transcript-PERM1-202",
+            "transcript-PERM1-201"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-8",
+         "start": 980657,
+         "end": 978881,
+         "start_relative": 5459,
+         "end_relative": 3683,
+         "parents": [
+            "transcript-PERM1-204",
+            "transcript-PERM1-202",
+            "transcript-PERM1-201"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-4",
+         "start": 976269,
+         "end": 976499,
+         "start_relative": 1071,
+         "end_relative": 1301,
+         "parents": [
+            "transcript-PERM1-204",
+            "transcript-PERM1-202",
+            "transcript-PERM1-201",
+            "transcript-PERM1-203"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-5",
+         "start": 976624,
+         "end": 976499,
+         "start_relative": 1426,
+         "end_relative": 1301,
+         "parents": [
+            "transcript-PERM1-204",
+            "transcript-PERM1-202",
+            "transcript-PERM1-201",
+            "transcript-PERM1-203"
+         ]
+      },
+      {
+         "type": "stop_codon",
+         "sfid": "stop_codon-1",
+         "start": 976172,
+         "end": 976174,
+         "start_relative": 974,
+         "end_relative": 976,
+         "transcript_name": "PERM1-202",
+         "exon_number": 4,
+         "parents": [
+            "transcript-PERM1-204",
+            "transcript-PERM1-202",
+            "transcript-PERM1-201",
+            "transcript-PERM1-203",
+            "exon-4",
+            "exon-5",
+            "exon-2",
+            "exon-4"
+         ]
+      },
+      {
+         "type": "three_prime_utr",
+         "sfid": "three_prime_utr-1",
+         "start": 975198,
+         "end": 976171,
+         "start_relative": 0,
+         "end_relative": 973,
+         "transcript_name": "PERM1-202",
+         "parents": [
+            "transcript-PERM1-202",
+            "exon-4"
+         ]
+      },
+      {
+         "type": "three_prime_utr",
+         "sfid": "three_prime_utr-2",
+         "start": 975204,
+         "end": 976171,
+         "start_relative": 6,
+         "end_relative": 973,
+         "transcript_name": "PERM1-201",
+         "parents": [
+            "transcript-PERM1-202",
+            "transcript-PERM1-201",
+            "exon-4",
+            "exon-5"
+         ]
+      },
+      {
+         "type": "three_prime_utr",
+         "sfid": "three_prime_utr-3",
+         "start": 976121,
+         "end": 976171,
+         "start_relative": 923,
+         "end_relative": 973,
+         "transcript_name": "PERM1-204",
+         "parents": [
+            "transcript-PERM1-204",
+            "transcript-PERM1-202",
+            "transcript-PERM1-201",
+            "transcript-PERM1-203",
+            "exon-4",
+            "exon-5",
+            "exon-2",
+            "exon-4"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-3",
+         "start": 976269,
+         "end": 976121,
+         "start_relative": 1071,
+         "end_relative": 923,
+         "parents": [
+            "transcript-PERM1-204",
+            "transcript-PERM1-202",
+            "transcript-PERM1-201",
+            "transcript-PERM1-203"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-2",
+         "start": 976269,
+         "end": 975205,
+         "start_relative": 1071,
+         "end_relative": 7,
+         "parents": [
+            "transcript-PERM1-204",
+            "transcript-PERM1-202",
+            "transcript-PERM1-201",
+            "transcript-PERM1-203"
+         ]
+      },
+      {
+         "type": "intron",
+         "sfid": "intron-1",
+         "start": 976269,
+         "end": 975204,
+         "start_relative": 1071,
+         "end_relative": 6,
+         "parents": [
+            "transcript-PERM1-204",
+            "transcript-PERM1-202",
+            "transcript-PERM1-201",
+            "transcript-PERM1-203"
+         ]
+      }
+   ],
+   "variants": [
+      {
+         "type": "variant",
+         "sfid": "variant-35",
+         "start": 981679,
+         "end": 981680,
+         "start_relative": 6481,
+         "end_relative": 6482,
+         "alt": "G",
+         "ref": "C",
+         "qual": 66.19999694824219,
+         "delta": 0,
+         "var_type": "tv",
+         "parents": [
+            "transcript-PERM1-204",
+            "transcript-PERM1-202",
+            "transcript-PERM1-201",
+            "intron-10"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-34",
+         "start": 981453,
+         "end": 981454,
+         "start_relative": 6255,
+         "end_relative": 6256,
+         "alt": "A",
+         "ref": "G",
+         "qual": 56.88999938964844,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-PERM1-204",
+            "transcript-PERM1-202",
+            "transcript-PERM1-201",
+            "intron-10"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-33",
+         "start": 981168,
+         "end": 981169,
+         "start_relative": 5970,
+         "end_relative": 5971,
+         "alt": "G",
+         "ref": "A",
+         "qual": 64.62000274658203,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-PERM1-204",
+            "transcript-PERM1-202",
+            "transcript-PERM1-201",
+            "exon-2",
+            "exon-2"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-32",
+         "start": 979846,
+         "end": 979847,
+         "start_relative": 4648,
+         "end_relative": 4649,
+         "alt": "G",
+         "ref": "A",
+         "qual": 66.2699966430664,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-PERM1-204",
+            "transcript-PERM1-202",
+            "transcript-PERM1-201",
+            "exon-2",
+            "exon-2",
+            "CDS-3",
+            "exon-3",
+            "CDS-4"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-31",
+         "start": 979559,
+         "end": 979560,
+         "start_relative": 4361,
+         "end_relative": 4362,
+         "alt": "C",
+         "ref": "T",
+         "qual": 61.38999938964844,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-PERM1-204",
+            "transcript-PERM1-202",
+            "transcript-PERM1-201",
+            "exon-2",
+            "exon-2",
+            "CDS-3",
+            "exon-3",
+            "CDS-4"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-30",
+         "start": 979495,
+         "end": 979496,
+         "start_relative": 4297,
+         "end_relative": 4298,
+         "alt": "C",
+         "ref": "T",
+         "qual": 64.11000061035156,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-PERM1-204",
+            "transcript-PERM1-202",
+            "transcript-PERM1-201",
+            "exon-2",
+            "exon-2",
+            "CDS-3",
+            "exon-3",
+            "CDS-4"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-29",
+         "start": 979471,
+         "end": 979472,
+         "start_relative": 4273,
+         "end_relative": 4274,
+         "alt": "C",
+         "ref": "G",
+         "qual": 61.779998779296875,
+         "delta": 0,
+         "var_type": "tv",
+         "parents": [
+            "transcript-PERM1-204",
+            "transcript-PERM1-202",
+            "transcript-PERM1-201",
+            "exon-2",
+            "exon-2",
+            "CDS-3",
+            "exon-3",
+            "CDS-4"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-28",
+         "start": 978952,
+         "end": 978953,
+         "start_relative": 3754,
+         "end_relative": 3755,
+         "alt": "G",
+         "ref": "C",
+         "qual": 58.310001373291016,
+         "delta": 0,
+         "var_type": "tv",
+         "parents": [
+            "transcript-PERM1-204",
+            "transcript-PERM1-202",
+            "transcript-PERM1-201",
+            "exon-2",
+            "exon-2",
+            "CDS-3",
+            "exon-3",
+            "CDS-4"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-27",
+         "start": 978811,
+         "end": 978812,
+         "start_relative": 3613,
+         "end_relative": 3614,
+         "alt": "C",
+         "ref": "G",
+         "qual": 60.38999938964844,
+         "delta": 0,
+         "var_type": "tv",
+         "parents": [
+            "transcript-PERM1-204",
+            "transcript-PERM1-202",
+            "transcript-PERM1-201",
+            "intron-6"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-26",
+         "start": 978508,
+         "end": 978509,
+         "start_relative": 3310,
+         "end_relative": 3311,
+         "alt": "A",
+         "ref": "G",
+         "qual": 60.040000915527344,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-PERM1-204",
+            "transcript-PERM1-202",
+            "transcript-PERM1-201",
+            "intron-6"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-25",
+         "start": 978044,
+         "end": 978046,
+         "start_relative": 2846,
+         "end_relative": 2848,
+         "alt": "C",
+         "ref": "CA",
+         "qual": 28.260000228881836,
+         "delta": -1,
+         "var_type": "del",
+         "parents": [
+            "transcript-PERM1-204",
+            "transcript-PERM1-202",
+            "transcript-PERM1-201",
+            "intron-6"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-24",
+         "start": 977962,
+         "end": 977963,
+         "start_relative": 2764,
+         "end_relative": 2765,
+         "alt": "C",
+         "ref": "G",
+         "qual": 5.119999885559082,
+         "delta": 0,
+         "var_type": "tv",
+         "parents": [
+            "transcript-PERM1-204",
+            "transcript-PERM1-202",
+            "transcript-PERM1-201",
+            "intron-6"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-23",
+         "start": 977934,
+         "end": 977935,
+         "start_relative": 2736,
+         "end_relative": 2737,
+         "alt": "GC",
+         "ref": "G",
+         "qual": 9.029999732971191,
+         "delta": 1,
+         "var_type": "ins",
+         "parents": [
+            "transcript-PERM1-204",
+            "transcript-PERM1-202",
+            "transcript-PERM1-201",
+            "intron-6"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-22",
+         "start": 977723,
+         "end": 977724,
+         "start_relative": 2525,
+         "end_relative": 2526,
+         "alt": "G",
+         "ref": "A",
+         "qual": 5.340000152587891,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-PERM1-204",
+            "transcript-PERM1-202",
+            "transcript-PERM1-201",
+            "intron-6"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-21",
+         "start": 977698,
+         "end": 977699,
+         "start_relative": 2500,
+         "end_relative": 2501,
+         "alt": "C",
+         "ref": "G",
+         "qual": 5.360000133514404,
+         "delta": 0,
+         "var_type": "tv",
+         "parents": [
+            "transcript-PERM1-204",
+            "transcript-PERM1-202",
+            "transcript-PERM1-201",
+            "intron-6"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-20",
+         "start": 977697,
+         "end": 977698,
+         "start_relative": 2499,
+         "end_relative": 2500,
+         "alt": "CA",
+         "ref": "C",
+         "qual": 6.320000171661377,
+         "delta": 1,
+         "var_type": "ins",
+         "parents": [
+            "transcript-PERM1-204",
+            "transcript-PERM1-202",
+            "transcript-PERM1-201",
+            "intron-6"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-19",
+         "start": 977529,
+         "end": 977530,
+         "start_relative": 2331,
+         "end_relative": 2332,
+         "alt": "A",
+         "ref": "G",
+         "qual": 6.389999866485596,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-PERM1-204",
+            "transcript-PERM1-202",
+            "transcript-PERM1-201",
+            "intron-6"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-18",
+         "start": 977433,
+         "end": 977434,
+         "start_relative": 2235,
+         "end_relative": 2236,
+         "alt": "A",
+         "ref": "G",
+         "qual": 5.900000095367432,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-PERM1-204",
+            "transcript-PERM1-202",
+            "transcript-PERM1-201",
+            "intron-6"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-17",
+         "start": 977401,
+         "end": 977402,
+         "start_relative": 2203,
+         "end_relative": 2204,
+         "alt": "A",
+         "ref": "G",
+         "qual": 6.369999885559082,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-PERM1-204",
+            "transcript-PERM1-202",
+            "transcript-PERM1-201",
+            "intron-6"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-16",
+         "start": 977281,
+         "end": 977283,
+         "start_relative": 2083,
+         "end_relative": 2085,
+         "alt": "C",
+         "ref": "CG",
+         "qual": 19.579999923706055,
+         "delta": -1,
+         "var_type": "del",
+         "parents": [
+            "transcript-PERM1-204",
+            "transcript-PERM1-202",
+            "transcript-PERM1-201",
+            "intron-6"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-15",
+         "start": 977279,
+         "end": 977280,
+         "start_relative": 2081,
+         "end_relative": 2082,
+         "alt": "G",
+         "ref": "A",
+         "qual": 14.899999618530273,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-PERM1-204",
+            "transcript-PERM1-202",
+            "transcript-PERM1-201",
+            "intron-6"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-14",
+         "start": 977253,
+         "end": 977254,
+         "start_relative": 2055,
+         "end_relative": 2056,
+         "alt": "A",
+         "ref": "G",
+         "qual": 5.980000019073486,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-PERM1-204",
+            "transcript-PERM1-202",
+            "transcript-PERM1-201",
+            "intron-6"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-13",
+         "start": 977117,
+         "end": 977118,
+         "start_relative": 1919,
+         "end_relative": 1920,
+         "alt": "A",
+         "ref": "G",
+         "qual": 14.949999809265137,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-PERM1-204",
+            "transcript-PERM1-202",
+            "transcript-PERM1-201",
+            "intron-6"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-12",
+         "start": 977086,
+         "end": 977087,
+         "start_relative": 1888,
+         "end_relative": 1889,
+         "alt": "A",
+         "ref": "G",
+         "qual": 5.449999809265137,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-PERM1-204",
+            "transcript-PERM1-202",
+            "transcript-PERM1-201",
+            "intron-6"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-11",
+         "start": 977054,
+         "end": 977055,
+         "start_relative": 1856,
+         "end_relative": 1857,
+         "alt": "A",
+         "ref": "G",
+         "qual": 12.199999809265137,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-PERM1-204",
+            "transcript-PERM1-202",
+            "transcript-PERM1-201",
+            "intron-6"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-10",
+         "start": 977022,
+         "end": 977023,
+         "start_relative": 1824,
+         "end_relative": 1825,
+         "alt": "A",
+         "ref": "G",
+         "qual": 21.559999465942383,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-PERM1-204",
+            "transcript-PERM1-202",
+            "transcript-PERM1-201",
+            "intron-6"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-9",
+         "start": 976905,
+         "end": 976907,
+         "start_relative": 1707,
+         "end_relative": 1709,
+         "alt": "G",
+         "ref": "GC",
+         "qual": 13.470000267028809,
+         "delta": -1,
+         "var_type": "unknown",
+         "parents": [
+            "transcript-PERM1-204",
+            "transcript-PERM1-202",
+            "transcript-PERM1-201",
+            "intron-6"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-8",
+         "start": 976841,
+         "end": 976843,
+         "start_relative": 1643,
+         "end_relative": 1645,
+         "alt": "G",
+         "ref": "GC",
+         "qual": 5.079999923706055,
+         "delta": -1,
+         "var_type": "unknown",
+         "parents": [
+            "transcript-PERM1-204",
+            "transcript-PERM1-202",
+            "transcript-PERM1-201",
+            "intron-6"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-7",
+         "start": 976809,
+         "end": 976811,
+         "start_relative": 1611,
+         "end_relative": 1613,
+         "alt": "G",
+         "ref": "GC",
+         "qual": 7.75,
+         "delta": -1,
+         "var_type": "del",
+         "parents": [
+            "transcript-PERM1-204",
+            "transcript-PERM1-202",
+            "transcript-PERM1-201",
+            "intron-6"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-6",
+         "start": 976777,
+         "end": 976779,
+         "start_relative": 1579,
+         "end_relative": 1581,
+         "alt": "G",
+         "ref": "GC",
+         "qual": 9.890000343322754,
+         "delta": -1,
+         "var_type": "del",
+         "parents": [
+            "transcript-PERM1-204",
+            "transcript-PERM1-202",
+            "transcript-PERM1-201",
+            "intron-6"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-5",
+         "start": 976744,
+         "end": 976746,
+         "start_relative": 1546,
+         "end_relative": 1548,
+         "alt": "C",
+         "ref": "CG",
+         "qual": 12.600000381469727,
+         "delta": -1,
+         "var_type": "del",
+         "parents": [
+            "transcript-PERM1-204",
+            "transcript-PERM1-202",
+            "transcript-PERM1-201",
+            "intron-6"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-4",
+         "start": 976722,
+         "end": 976723,
+         "start_relative": 1524,
+         "end_relative": 1525,
+         "alt": "A",
+         "ref": "G",
+         "qual": 24.479999542236328,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-PERM1-204",
+            "transcript-PERM1-202",
+            "transcript-PERM1-201",
+            "intron-6"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-3",
+         "start": 976668,
+         "end": 976669,
+         "start_relative": 1470,
+         "end_relative": 1471,
+         "alt": "C",
+         "ref": "T",
+         "qual": 53.93000030517578,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-PERM1-204",
+            "transcript-PERM1-202",
+            "transcript-PERM1-201",
+            "intron-6"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-2",
+         "start": 976214,
+         "end": 976215,
+         "start_relative": 1016,
+         "end_relative": 1017,
+         "alt": "G",
+         "ref": "A",
+         "qual": 56.400001525878906,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-PERM1-204",
+            "transcript-PERM1-202",
+            "transcript-PERM1-201",
+            "transcript-PERM1-203",
+            "exon-4",
+            "exon-5",
+            "exon-2",
+            "exon-4",
+            "CDS-1"
+         ]
+      },
+      {
+         "type": "variant",
+         "sfid": "variant-1",
+         "start": 975522,
+         "end": 975523,
+         "start_relative": 324,
+         "end_relative": 325,
+         "alt": "C",
+         "ref": "T",
+         "qual": 63.20000076293945,
+         "delta": 0,
+         "var_type": "ts",
+         "parents": [
+            "transcript-PERM1-202",
+            "transcript-PERM1-201",
+            "transcript-PERM1-203",
+            "exon-4",
+            "exon-5",
+            "exon-2"
+         ]
+      }
+   ]
+}
