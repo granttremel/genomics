@@ -43,11 +43,11 @@ def main():
             print(f"Found {gene_name} on chromosome {chrom} at position {args.position:,}")
         else:
             print(f"Gene '{gene_name}' not found, using default position")
-    gui = int(args.gui[0])==1
+    # gui = int(args.gui[0])==1
     # Start the browser
     
     
-    browse_genome(gm, args.chrom, args.position, args.window, use_gui=gui)
+    browse_genome(gm, args.chrom, args.position, args.window, use_gui=False)
 
 
 if __name__ == "__main__":

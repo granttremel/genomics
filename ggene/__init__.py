@@ -75,12 +75,26 @@ START_CODONS = ['ATG']  # Standard start codon (Methionine)
 ALTERNATIVE_START_CODONS = ['CTG', 'GTG', 'TTG']  # Rare alternative starts
 STOP_CODONS = ['TAA', 'TAG', 'TGA']
 
-aliases_dna = {'Y':'CT',
+aliases_dna = {
+    'Y':'CT',
     'R':'AG',
-    'N':'ATCG'}
-aliases_rna = {'Y':'CU',
+    'N':'ATCG'
+    }
+
+aliases_rna = {
+    'Y':'CU',
     'R':'AG',
-    'N':'AUCG'}
+    'N':'AUCG'
+    }
+
+aliases_rev = {
+    'C':'YN',
+    'T':'YN',
+    'A':'RN',
+    'G':'RN',
+    'U':'YN',
+    }
+
 
 splice_donor = 'GG*GURAGU'
 splice_branch = 'YURAC'
@@ -94,9 +108,9 @@ def reverse_complement(seq, rna = True):
 def complement(seq, rna = True):
     
     if rna:
-        newseq = "".join([COMPLEMENT_MAP_RNA[s] for s in seq])
+        newseq = "".join([COMPLEMENT_MAP_RNA.get(s,s) for s in seq])
     else:
-        newseq = "".join([COMPLEMENT_MAP[s] for s in seq])
+        newseq = "".join([COMPLEMENT_MAP.get(s,s) for s in seq])
     
     return newseq
 

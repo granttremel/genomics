@@ -83,16 +83,6 @@ class GenomeIterator:
         self._sequence_cache = {}
         self._cache_window = 10000  # Cache 10kb windows
         
-        # Buffer for handling indels that extend beyond window
-        self._sequence_buffer = {'ref': '', 'pers': ''}
-        self._buffer_start_pos = start
-        self._coordinate_map_buffer = {}
-        
-        # Track our position in both coordinate systems
-        self._ref_position = start  # Position in reference coordinates
-        self._aligned_position = 0  # Position in aligned coordinates
-        self._last_fetch_end = start - 1  # Track what we've already fetched
-        
         # Preload variants if integrating
         if self.integrate_variants:
             self._preload_variants()
@@ -184,11 +174,11 @@ class GenomeIterator:
         
         return features
     
-    def _get_sequence_window(self, start: int, end: int) -> Tuple[str, str, Dict[int, int]]:
-        """Get reference and personal sequence for a window with alignment.
+    def _get_sequence_window(self, start: int, end: int) -> Tuple[str, str]:
+        """Get reference and personal sequence for a window.
         
         Returns:
-            Tuple of (aligned_reference_sequence, aligned_personal_sequence, coordinate_map)
+            Tuple of (reference_sequence, personal_sequence)
         """
         # Check cache
         cache_key = (start, end)
@@ -198,29 +188,22 @@ class GenomeIterator:
         # Get reference sequence
         ref_seq = self.gm.get_sequence(self.chrom, start, end)
         if not ref_seq:
-            return "", "", {}
+            return "", ""
         
-        # Get aligned sequences if variants are being integrated
+        # Get personal sequence if variants are being integrated
         if self.integrate_variants:
-            # Apply variants to the reference sequence with alignment
-            aligned_ref, aligned_pers, coord_map = self._apply_variants_to_window(ref_seq, start, end)
+            # Apply variants to the reference sequence
+            personal_seq = self._apply_variants_to_window(ref_seq, start, end)
         else:
-            # No variants - sequences are identical, no gaps
-            aligned_ref = ref_seq
-            aligned_pers = ref_seq
-            coord_map = {i: start + i for i in range(len(ref_seq))}
+            personal_seq = ref_seq
         
         # Cache the result
-        self._sequence_cache[cache_key] = (aligned_ref, aligned_pers, coord_map)
+        self._sequence_cache[cache_key] = (ref_seq, personal_seq)
         
-        return aligned_ref, aligned_pers, coord_map
+        return ref_seq, personal_seq
     
-    def _apply_variants_to_window(self, ref_seq: str, start: int, end: int) -> Tuple[str, str, Dict[int, int]]:
-        """Apply variants to a reference sequence window with gap alignment.
-        
-        This method maintains a dual coordinate system:
-        - Reference coordinates: original genomic positions
-        - Aligned coordinates: positions after gap insertion for indels
+    def _apply_variants_to_window(self, ref_seq: str, start: int, end: int) -> str:
+        """Apply variants to a reference sequence window.
         
         Args:
             ref_seq: Reference sequence
@@ -228,9 +211,11 @@ class GenomeIterator:
             end: Genomic end position
             
         Returns:
-            Tuple of (aligned_ref_seq, aligned_pers_seq, coordinate_map)
-            where coordinate_map maps aligned positions to reference positions
+            Personalized sequence with variants applied
         """
+        # Convert to list for easier manipulation
+        seq_list = list(ref_seq)
+        
         # Get variants in this window
         variants_in_window = []
         for pos in range(start, end + 1):
@@ -240,203 +225,62 @@ class GenomeIterator:
         # Sort by position
         variants_in_window.sort(key=lambda v: v.POS)
         
-        # Build aligned sequences with gaps
-        aligned_ref = []
-        aligned_pers = []
-        coordinate_map = {}  # Maps aligned position -> reference position
+        # Track position offset due to indels
+        offset = 0
         
-        ref_idx = 0  # Position in original reference sequence
-        aligned_idx = 0  # Position in aligned sequence
-        
-        for ref_pos in range(start, end + 1):
-            # Check if there's a variant at this position
-            variant_at_pos = None
-            for var in variants_in_window:
-                if var.POS == ref_pos:
-                    variant_at_pos = var
-                    break
-            
-            if variant_at_pos and variant_at_pos.ALT:
-                ref_allele = variant_at_pos.REF
-                alt_allele = variant_at_pos.ALT[0]
+        for variant in variants_in_window:
+            # Skip if variant doesn't have alt allele
+            if not variant.ALT:
+                continue
                 
+            # Get the first alt allele (assuming diploid, homozygous or we take first)
+            alt_allele = variant.ALT[0]
+            ref_allele = variant.REF
+            
+            # Calculate position in sequence (0-based)
+            seq_pos = variant.POS - start + offset
+            
+            # Validate position
+            if seq_pos < 0 or seq_pos >= len(seq_list):
+                continue
+            
+            # Apply variant
+            try:
                 if len(ref_allele) == len(alt_allele):
-                    # SNP - no gaps needed
+                    # SNP - simple substitution
                     for i in range(len(ref_allele)):
-                        if ref_idx + i < len(ref_seq):
-                            aligned_ref.append(ref_seq[ref_idx + i])
-                            aligned_pers.append(alt_allele[i] if i < len(alt_allele) else 'N')
-                            coordinate_map[aligned_idx] = ref_pos + i
-                            aligned_idx += 1
-                    ref_idx += len(ref_allele)
-                    
-                elif len(ref_allele) > len(alt_allele):
-                    # Deletion - add gaps to personal sequence
-                    # First, add the alt bases
-                    for i in range(len(alt_allele)):
-                        if ref_idx < len(ref_seq):
-                            aligned_ref.append(ref_seq[ref_idx])
-                            aligned_pers.append(alt_allele[i])
-                            coordinate_map[aligned_idx] = ref_pos
-                            aligned_idx += 1
-                            ref_idx += 1
-                    
-                    # Then add gaps for deleted bases
-                    for i in range(len(ref_allele) - len(alt_allele)):
-                        if ref_idx < len(ref_seq):
-                            aligned_ref.append(ref_seq[ref_idx])
-                            aligned_pers.append('-')
-                            coordinate_map[aligned_idx] = ref_pos + len(alt_allele) + i
-                            aligned_idx += 1
-                            ref_idx += 1
+                        if seq_pos + i < len(seq_list):
+                            seq_list[seq_pos + i] = alt_allele[i]
                             
-                else:
-                    # Insertion - add gaps to reference sequence
-                    # First, add the bases that replace the ref
-                    for i in range(len(ref_allele)):
-                        if ref_idx < len(ref_seq):
-                            aligned_ref.append(ref_seq[ref_idx])
-                            aligned_pers.append(alt_allele[i])
-                            coordinate_map[aligned_idx] = ref_pos
-                            aligned_idx += 1
-                            ref_idx += 1
+                elif len(ref_allele) > len(alt_allele):
+                    # Deletion
+                    del_length = len(ref_allele) - len(alt_allele)
+                    # Replace ref with alt
+                    for i in range(len(alt_allele)):
+                        if seq_pos + i < len(seq_list):
+                            seq_list[seq_pos + i] = alt_allele[i]
+                    # Delete extra bases
+                    for _ in range(del_length):
+                        if seq_pos + len(alt_allele) < len(seq_list):
+                            del seq_list[seq_pos + len(alt_allele)]
+                    offset -= del_length
                     
-                    # Then add gaps for inserted bases
-                    for i in range(len(ref_allele), len(alt_allele)):
-                        aligned_ref.append('-')
-                        aligned_pers.append(alt_allele[i])
-                        # Inserted bases map to the position of the insertion
-                        coordinate_map[aligned_idx] = ref_pos
-                        aligned_idx += 1
-                        
-            else:
-                # No variant at this position
-                if ref_idx < len(ref_seq):
-                    base = ref_seq[ref_idx]
-                    aligned_ref.append(base)
-                    aligned_pers.append(base)
-                    coordinate_map[aligned_idx] = ref_pos
-                    aligned_idx += 1
-                    ref_idx += 1
-        
-        return ''.join(aligned_ref), ''.join(aligned_pers), coordinate_map
-    
-    def _get_aligned_window_with_buffer(self) -> Tuple[str, str, int]:
-        """Get exactly window_size aligned bases using buffering.
-        
-        This method maintains a buffer to handle cases where indels cause
-        the aligned sequence to be longer than the reference sequence.
-        
-        Returns:
-            Tuple of (aligned_ref_window, aligned_pers_window, bases_consumed_from_ref)
-            where bases_consumed_from_ref tells us how far to advance in reference coords
-        """
-        # Check if we have enough in the buffer
-        if len(self._sequence_buffer['ref']) >= self.window_size:
-            # Extract window from buffer
-            window_ref = self._sequence_buffer['ref'][:self.window_size]
-            window_pers = self._sequence_buffer['pers'][:self.window_size]
-            
-            # Calculate how many reference bases this window represents
-            # Count non-gap bases in the reference portion we're returning
-            ref_bases_in_window = sum(1 for base in window_ref[:self.stride] if base != '-')
-            
-            # Keep remainder in buffer
-            self._sequence_buffer['ref'] = self._sequence_buffer['ref'][self.stride:]
-            self._sequence_buffer['pers'] = self._sequence_buffer['pers'][self.stride:]
-            
-            return window_ref, window_pers, ref_bases_in_window
-        
-        # Need to fetch more sequence
-        # Start from where we left off
-        fetch_start = self._last_fetch_end + 1
-        
-        # Keep fetching until we have enough aligned sequence
-        while len(self._sequence_buffer['ref']) < self.window_size:
-            # Calculate fetch size based on what we need
-            # Fetch at least enough to likely fill the buffer
-            fetch_size = max(self.window_size * 2, 100)
-            fetch_end = fetch_start + fetch_size - 1
-            
-            # Don't fetch beyond the end
-            if self.end and fetch_end > self.end:
-                fetch_end = self.end
-            
-            # Don't re-fetch what we already have
-            if fetch_start > fetch_end:
-                break
-            
-            # Get aligned sequences for this chunk
-            aligned_ref, aligned_pers, coord_map = self._get_sequence_window(fetch_start, fetch_end)
-            
-            if not aligned_ref:
-                # No more sequence available
-                if self._sequence_buffer['ref']:
-                    # Return what we have
-                    window_ref = self._sequence_buffer['ref']
-                    window_pers = self._sequence_buffer['pers']
-                    ref_bases = sum(1 for base in window_ref if base != '-')
-                    self._sequence_buffer['ref'] = ''
-                    self._sequence_buffer['pers'] = ''
-                    return window_ref, window_pers, ref_bases
                 else:
-                    return '', '', 0
-            
-            # Add to buffer
-            self._sequence_buffer['ref'] += aligned_ref
-            self._sequence_buffer['pers'] += aligned_pers
-            
-            # Update coordinate mapping
-            for aligned_pos, ref_pos in coord_map.items():
-                self._coordinate_map_buffer[len(self._sequence_buffer['ref']) - len(aligned_ref) + aligned_pos] = ref_pos
-            
-            # Update where we fetched to
-            self._last_fetch_end = fetch_end
-            
-            # Move to next chunk if we still need more
-            fetch_start = fetch_end + 1
-            
-            # Check if we've hit the end
-            if self.end and fetch_start > self.end:
-                break
-        
-        # Extract exactly window_size from buffer (or what we have)
-        if len(self._sequence_buffer['ref']) >= self.window_size:
-            window_ref = self._sequence_buffer['ref'][:self.window_size]
-            window_pers = self._sequence_buffer['pers'][:self.window_size]
-            
-            # Calculate reference bases consumed for stride
-            ref_bases_in_stride = 0
-            bases_counted = 0
-            for i, base in enumerate(self._sequence_buffer['ref']):
-                if bases_counted >= self.stride:
-                    break
-                if base != '-':
-                    ref_bases_in_stride += 1
-                bases_counted += 1
-            
-            # Keep remainder in buffer for next iteration  
-            self._sequence_buffer['ref'] = self._sequence_buffer['ref'][self.stride:]
-            self._sequence_buffer['pers'] = self._sequence_buffer['pers'][self.stride:]
-            
-            # Update coordinate map buffer
-            new_coord_map = {}
-            for pos in range(len(self._sequence_buffer['ref'])):
-                if pos + self.stride in self._coordinate_map_buffer:
-                    new_coord_map[pos] = self._coordinate_map_buffer[pos + self.stride]
-            self._coordinate_map_buffer = new_coord_map
-            
-            return window_ref, window_pers, ref_bases_in_stride
-        else:
-            # Not enough sequence, return what we have
-            window_ref = self._sequence_buffer['ref']
-            window_pers = self._sequence_buffer['pers']
-            ref_bases = sum(1 for base in window_ref if base != '-')
-            self._sequence_buffer['ref'] = ''
-            self._sequence_buffer['pers'] = ''
-            self._coordinate_map_buffer = {}
-            
-            return window_ref, window_pers, ref_bases
+                    # Insertion
+                    ins_length = len(alt_allele) - len(ref_allele)
+                    # Replace ref bases
+                    for i in range(len(ref_allele)):
+                        if seq_pos + i < len(seq_list):
+                            seq_list[seq_pos + i] = alt_allele[i]
+                    # Insert additional bases
+                    for i in range(len(ref_allele), len(alt_allele)):
+                        seq_list.insert(seq_pos + i, alt_allele[i])
+                    offset += ins_length
+                    
+            except Exception as e:
+                logger.debug(f"Failed to apply variant at {variant.POS}: {e}")
+                
+        return ''.join(seq_list)
     
     def __iter__(self) -> Iterator[Union[GenomicPosition, Tuple[str, str, List[Any]]]]:
         """Iterate over genomic positions."""
@@ -455,20 +299,18 @@ class GenomeIterator:
             if self.track_features:
                 self._preload_features()
         
-        # Use buffering system to handle indels properly
-        # We need to ensure we get exactly window_size aligned bases
-        aligned_ref, aligned_pers, ref_bases_consumed = self._get_aligned_window_with_buffer()
+        # Get sequence window
+        window_end = self.current_pos + self.window_size - 1
+ 
+        ref_seq, personal_seq = self._get_sequence_window(self.current_pos, window_end)
+
         
-        if not aligned_ref:
+        if not ref_seq:
             # Can't get sequence, advance and try again
             self.current_pos += self.stride
             if self.end and self.current_pos > self.end:
                 raise StopIteration
             return self.__next__()
-        
-        # Calculate the actual genomic end position for feature fetching
-        # This is approximate since indels can affect the actual coverage
-        window_end = self.current_pos + self.window_size - 1
         
         # Get all features that overlap with the window
         features = []
@@ -515,24 +357,18 @@ class GenomeIterator:
             result = GenomicPosition(
                 chrom=self.chrom,
                 position=self.current_pos,
-                reference_base=aligned_ref[0] if aligned_ref else 'N',
-                personal_base=aligned_pers[0] if aligned_pers else 'N',
+                reference_base=ref_seq[0] if ref_seq else 'N',
+                personal_base=personal_seq[0] if personal_seq else 'N',
                 features=features,
                 variants=variants,
                 quality_scores=quality_scores
             )
         else:
-            # Window mode - return tuple of (aligned_ref, aligned_pers, features)
-            result = (aligned_ref, aligned_pers, features)
+            # Window mode - return tuple of (ref_seq, personal_seq, features)
+            result = (ref_seq, personal_seq, features)
         
-        # Advance position based on how many reference bases were consumed
-        # This ensures we don't skip over insertions
-        if ref_bases_consumed > 0:
-            self.current_pos += ref_bases_consumed
-        else:
-            # If we're in a pure insertion (all gaps in reference), 
-            # we stay at the same reference position but advance the buffer
-            pass
+        # Advance position
+        self.current_pos += self.stride
         
         return result
     
@@ -543,11 +379,6 @@ class GenomeIterator:
             position: Genomic position to jump to (1-based)
         """
         self.current_pos = position
-        
-        # Reset buffer state
-        self._sequence_buffer = {'ref': '', 'pers': ''}
-        self._last_fetch_end = position - 1
-        self._coordinate_map_buffer = {}
         
         # Reload caches for new position
         if self.integrate_variants:

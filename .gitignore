@@ -8,7 +8,8 @@ gene
 genenv
 analysis/*
 *.egg-info
-ggene/__pycache__/
+ggene/__pycache__/*
+*__pycache__*
 out/*
 *.gz
 */__pycache__

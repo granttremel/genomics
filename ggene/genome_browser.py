@@ -85,6 +85,12 @@ class InteractiveGenomeBrowser:
         self._current_features={}
         self._gene_cache=""
         
+        self.patterns={
+            "splice_donor":"GGGU[AG]AGU",
+            "splice_branch":"[CU]U[AG]AC",
+            "splice_acceptor":"[CU][AUCG]CAGG"
+        }
+        
         # Feature display order (based on hierarchy)
         self.feature_hierarchy = [
             'gene', 'transcript', 'exon', 'intron', 
@@ -414,21 +420,27 @@ class InteractiveGenomeBrowser:
     def _display_sequences(self, ref_seq: str, personal_seq: str, features: List[Dict[str, Any]] = None):
         """Display reference and personal sequences with variant highlighting.
         
+        Note: Sequences are already aligned with gaps from GenomeIterator.
+        
         Args:
-            ref_seq: Reference sequence
-            personal_seq: Personal sequence with variants
+            ref_seq: Aligned reference sequence (may contain gaps '-')
+            personal_seq: Aligned personal sequence (may contain gaps '-')
             features: Features in current window for codon highlighting
         """
         if not ref_seq or not personal_seq:
             return
         
-        # Align sequences with gaps for indels
-        if features:
-            aligned_ref, aligned_pers, variant_positions = self._align_sequences_with_gaps(ref_seq, personal_seq, features)
-        else:
-            aligned_ref = ref_seq
-            aligned_pers = personal_seq
-            variant_positions = [ref_seq[i] != personal_seq[i] for i in range(min(len(ref_seq), len(personal_seq)))]
+        # Sequences are already aligned from GenomeIterator
+        aligned_ref = ref_seq
+        aligned_pers = personal_seq
+        
+        # Detect variant positions (including gaps)
+        variant_positions = []
+        for i in range(min(len(aligned_ref), len(aligned_pers))):
+            # A position is a variant if bases differ or if there's a gap
+            is_variant = (aligned_ref[i] != aligned_pers[i] or 
+                         aligned_ref[i] == '-' or aligned_pers[i] == '-')
+            variant_positions.append(is_variant)
         
         # Find start and stop codons in features
         start_codons = []
