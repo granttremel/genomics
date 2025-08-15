@@ -14,7 +14,7 @@ import json
 import logging
 logger = logging.getLogger(__name__)
 
-from . import DEFAULT_VCF_PATH,DEFAULT_GTF_PATH,DEFAULT_FASTA_PATH,DEFAULT_LIBRARY
+from . import DEFAULT_VCF_PATH,DEFAULT_GTF_PATH,DEFAULT_FASTA_PATH,DEFAULT_LIBRARY, reverse_complement, to_rna, to_dna, is_rna, is_dna
 from . import shorten_variant
 from . import utils
 from .genemap import GeneMap
@@ -425,7 +425,8 @@ class GenomeManager:
     def get_feature_sequence(self, feature: Feature, 
                            upstream: int = 0, 
                            downstream: int = 0,
-                           personal: bool = True) -> Optional[str]:
+                           personal: bool = True,
+                           as_rna = False) -> Optional[str]:
         """Get sequence for a feature with optional flanking regions.
         
         Args:
@@ -451,11 +452,17 @@ class GenomeManager:
             
         if not personal:
             return reference_seq
-            
+        
         # Apply personal variants
-        return self._apply_variants_to_sequence(
-            reference_seq, feature, start, end, upstream, downstream
-        )
+        personal_seq = self._apply_variants_to_sequence(reference_seq, feature, start, end, upstream, downstream)
+        
+        if feature.strand == '-':
+            personal_seq = reverse_complement(personal_seq)
+            
+        if as_rna:
+            personal_seq = to_rna(personal_seq)
+        
+        return personal_seq
     
     def probe_sequence_forward(self, chrom: Union[str, int], start: int, 
                               predicate: Callable[[str], bool], 

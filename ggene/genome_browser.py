@@ -12,6 +12,8 @@ from dataclasses import dataclass
 import logging
 
 from ggene import CODON_TABLE_DNA, CODON_TABLE_RNA, COMPLEMENT_MAP, COMPLEMENT_MAP_RNA, to_rna, complement, reverse_complement
+from ggene.features import Gene, Feature
+
 
 if TYPE_CHECKING:
     from .genomemanager import GenomeManager
@@ -63,7 +65,30 @@ class BrowserState:
     show_reverse_strand: bool = False
     show_rna: bool = False
     feature_types: Optional[List[str]] = None
+    
+class MotifAnnotationLayer:
+    """Live motif detection for genome browser."""
 
+    def __init__(self):
+        self.fast_cache = {}  # Cache recent windows
+        self.background_model = None  # For significance testing
+
+    def annotate_window(self, seq, pos, features):
+        """Return motifs as feature-like objects."""
+        motifs = []
+
+        # Quick patterns (every window)
+        for pattern_motif in self.pattern_motifs:
+            if hit := pattern_motif.find_in_window(seq):
+                motifs.append(self._to_feature(hit, pos))
+
+        # Statistical (sample occasionally)  
+        if pos % 100 == 0:
+            gc = self.gc_content(seq)
+            if gc > 0.7:  # CpG island threshold
+                motifs.append(Feature(type='cpg_island'))
+
+        return motifs
 
 class InteractiveGenomeBrowser:
     """Interactive terminal-based genome browser."""
@@ -195,13 +220,24 @@ class InteractiveGenomeBrowser:
             elif key == 't':
                 self._translate_transcript()
                 # self.gm.ribo.translate_transcript()
+            elif key == 'ctrl_right':  # Ctrl+Right: Next gene
+                self._jump_to_next_gene()
+            elif key == 'ctrl_left':   # Ctrl+Left: Previous gene  
+                self._jump_to_prev_gene()
+            elif key == 'ctrl_up':     # Ctrl+Up: Save state
+                self._save_state()
+            elif key == 'ctrl_down':   # Ctrl+Down: Load state
+                self._load_state()
         
         self._cleanup()
     
     def _display_current_view(self):
         """Display the current genomic view."""
-        # Clear previous display
+        # Clear previous display and ensure consistent height
         print('\033[2J\033[H')  # Clear screen and move to top
+        
+        # Track line count to maintain 24-line height
+        lines_used = 0
         
         # Header with mode indicators
         mode_indicators = []
@@ -260,9 +296,16 @@ class InteractiveGenomeBrowser:
             if self.state.show_features and features:
                 self._display_features(features)
             
-            # Navigation hints
-            print("\n" + "-" * 80)
-            print(f"{Colors.DIM}[←/→: move | ↑/↓: jump | g: goto | f: features | a: amino acids | ?: help | q: quit]{Colors.RESET}")
+            # Count actual lines used so far
+            lines_used = 15  # Approximate count from header, sequences, features, etc.
+            
+            # Navigation hints at fixed position (line 24)
+            remaining_lines = 24 - lines_used
+            if remaining_lines > 0:
+                print("\n" * remaining_lines, end="")
+            
+            print("-" * 80)
+            print(f"{Colors.DIM}[←/→: move | Ctrl+←/→: gene | ↑/↓: jump | g: goto | Ctrl+↑: save | Ctrl+↓: load | ?: help | q: quit]{Colors.RESET}")
             
         except StopIteration:
             print(f"{Colors.DIM}No sequence data available at this position{Colors.RESET}")
@@ -450,13 +493,46 @@ class InteractiveGenomeBrowser:
             for feature in features:
                 ftype = feature.get('feature')
                 if ftype == 'start_codon':
-                    codon_start = max(0, feature.get('start', 0) - window_start)
-                    codon_end = min(len(aligned_ref), feature.get('end', 0) - window_start + 1)
-                    start_codons.append((codon_start, codon_end))
+                    # Calculate raw positions relative to window
+                    raw_start = max(0, feature.get('start', 0) - window_start)
+                    raw_end = min(len(aligned_ref), feature.get('end', 0) - window_start + 1)
+                    
+                    # Apply strand-aware rendering
+                    if self.state.show_reverse_strand:
+                        # Reflect positions across window center
+                        display_start = self.state.window_size - raw_end
+                        display_end = self.state.window_size - raw_start
+                    else:
+                        display_start = raw_start
+                        display_end = raw_end
+                    
+                    # Ensure positions are within bounds
+                    display_start = max(0, min(display_start, len(aligned_ref)))
+                    display_end = max(0, min(display_end, len(aligned_ref)))
+                    
+                    if display_start < display_end:
+                        start_codons.append((display_start, display_end))
+                        
                 elif ftype == 'stop_codon':
-                    codon_start = max(0, feature.get('start', 0) - window_start)
-                    codon_end = min(len(aligned_ref), feature.get('end', 0) - window_start + 1)
-                    stop_codons.append((codon_start, codon_end))
+                    # Calculate raw positions relative to window
+                    raw_start = max(0, feature.get('start', 0) - window_start)
+                    raw_end = min(len(aligned_ref), feature.get('end', 0) - window_start + 1)
+                    
+                    # Apply strand-aware rendering
+                    if self.state.show_reverse_strand:
+                        # Reflect positions across window center
+                        display_start = self.state.window_size - raw_end
+                        display_end = self.state.window_size - raw_start
+                    else:
+                        display_start = raw_start
+                        display_end = raw_end
+                    
+                    # Ensure positions are within bounds
+                    display_start = max(0, min(display_start, len(aligned_ref)))
+                    display_end = max(0, min(display_end, len(aligned_ref)))
+                    
+                    if display_start < display_end:
+                        stop_codons.append((display_start, display_end))
         
         # Calculate position labels
         start_pos = self.state.position
@@ -609,8 +685,9 @@ class InteractiveGenomeBrowser:
                 # Only display if feature overlaps with window
                 # Check if the feature overlaps with the visible window at all
                 if feat_end >= window_start and feat_start <= window_start + self.state.window_size - 1:
-                    # Create feature bar
-                    bar = " " * 9  # Indent to align with sequences
+                    # Create feature bar with type label
+                    type_label = f"{ftype[:7]:>7}"
+                    bar = f"{type_label}: "  # 9 chars total
                     
                     for i in range(self.state.window_size):
                         # Check if this position is within the feature
@@ -695,7 +772,7 @@ class InteractiveGenomeBrowser:
                     print(f"    {var_start}: {ref}→{alt} ({var_type}, Q={qual:.1f})")
     
     def _format_compressed_label(self, ftype: str, features: List[Dict[str, Any]]) -> str:
-        """Format a compressed label for multiple features.
+        """Format a compressed label for multiple features with advanced compression.
         
         Args:
             ftype: Feature type
@@ -707,31 +784,78 @@ class InteractiveGenomeBrowser:
         if len(features) == 1:
             return self._format_single_feature_label(features[0])
         
-        # Compress multiple features
+        # Check if all features span the full window - compress heavily if so
+        window_start = self.state.position
+        window_end = window_start + self.state.window_size - 1
+        all_span_window = all(
+            f.get('start', 0) <= window_start and f.get('end', 0) >= window_end
+            for f in features
+        )
+        
+        if all_span_window and len(features) >= 5:
+            # Heavy compression for fully spanning features
+            if ftype == 'transcript':
+                # Extract transcript suffixes and compress
+                suffixes = []
+                for f in features:
+                    info = f.get('info', {})
+                    name = info.get('transcript_name', info.get('transcript_id', '?'))
+                    if '-' in name:
+                        suffixes.append(name.split('-')[-1])
+                    else:
+                        suffixes.append(name)
+                
+                # Try to find patterns like 001, 002, 003...
+                numeric_suffixes = [s for s in suffixes if s.isdigit()]
+                if len(numeric_suffixes) >= 3:
+                    sorted_nums = sorted(numeric_suffixes, key=int)
+                    if len(sorted_nums) >= 5:
+                        return f"{sorted_nums[0]}-{sorted_nums[-1]}({len(features)})"
+                
+                # Fallback to first few + count
+                unique_suffixes = sorted(set(suffixes))[:3]
+                return f"{'|'.join(unique_suffixes)}+{len(features)-len(unique_suffixes)}"
+            
+            elif ftype == 'exon':
+                nums = [str(f.get('info', {}).get('exon_number', '?')) for f in features]
+                numeric_nums = [n for n in nums if n.isdigit()]
+                if len(numeric_nums) >= 3:
+                    sorted_nums = sorted(numeric_nums, key=int)
+                    return f"ex{sorted_nums[0]}-{sorted_nums[-1]}"
+                return f"exons({len(features)})"
+            
+            else:
+                return f"{ftype}({len(features)})"
+        
+        # Normal compression for smaller sets or partial spans
         if ftype == 'gene':
-            names = [f.get('info', {}).get('name', '?') for f in features]
-            return '/'.join(set(names))[:30]
+            names = [f.get('info', {}).get('gene_name', '?') for f in features]
+            unique_names = sorted(set(names))
+            if len(unique_names) > 3:
+                return f"{unique_names[0]}/+{len(unique_names)-1}"
+            return '/'.join(unique_names)[:25]
+            
         elif ftype == 'transcript':
             names = []
             for f in features:
                 info = f.get('info', {})
                 name = info.get('transcript_name', info.get('transcript_id', '?'))
-                # Extract just the suffix if format is GENE-001
                 if '-' in name:
                     names.append(name.split('-')[-1])
                 else:
                     names.append(name)
-            # Get unique names and join
             unique_names = sorted(set(names))
-            if len(unique_names) > 3:
-                return f"txs({len(unique_names)})"
-            return '/'.join(unique_names)[:30]
+            if len(unique_names) > 4:
+                return f"{unique_names[0]}/+{len(unique_names)-1}"
+            return '/'.join(unique_names)[:25]
+            
         elif ftype == 'exon':
             nums = [str(f.get('info', {}).get('exon_number', '?')) for f in features]
             unique_nums = sorted(set(nums), key=lambda x: int(x) if x.isdigit() else 0)
-            if len(unique_nums) > 3:
-                return f"exons({len(unique_nums)})"
-            return f"exon {'/'.join(unique_nums)}"
+            if len(unique_nums) > 4:
+                return f"ex{unique_nums[0]}-{unique_nums[-1]}"
+            return f"ex{'/'.join(unique_nums)}"
+            
         elif ftype == 'CDS':
             return f"CDS({len(features)})" if len(features) > 1 else "CDS"
         else:
@@ -853,28 +977,39 @@ class InteractiveGenomeBrowser:
             gene_name = info.get('gene_name', 'Unknown')
             print(f"\n{Colors.BOLD}AA Translation (CDS - {gene_name}):{Colors.RESET}")
             
-            # Show position alignment (account for gaps in display)
-            position_line = " " * 9
-            gap_adjust = 0
-            for i in range(adj_start):
-                if i < len(ref_seq) and ref_seq[i] == '-':
-                    gap_adjust += 1
-                position_line += "   "  # Three spaces for non-CDS positions
+            # Calculate proper amino acid positioning for current strand
+            if self.state.show_reverse_strand:
+                # For reverse strand, amino acids should be positioned from right
+                # adj_start and adj_end are already calculated relative to the window
+                display_adj_start = self.state.window_size - adj_end
+                display_adj_end = self.state.window_size - adj_start
+            else:
+                # For forward strand, use positions as calculated
+                display_adj_start = adj_start
+                display_adj_end = adj_end
             
-            # Position indicators for codons
-            aa_ruler = position_line
+            # Ensure display positions are within bounds
+            display_adj_start = max(0, min(display_adj_start, self.state.window_size))
+            display_adj_end = max(0, min(display_adj_end, self.state.window_size))
+            
+            # Calculate leading spaces to align with sequence display (no 3x multiplication!)
+            leading_spaces = display_adj_start
+            
+            # Position indicators for codons (align with actual sequence positions)
+            aa_ruler = " " * 9  # Match sequence labels
+            aa_ruler += " " * leading_spaces
             for i in range(len(ref_aa)):
                 aa_ruler += f"{i%10}  "
             print(aa_ruler)
             
-            # Reference amino acids
-            ref_aa_display = f"Ref AA:  {' ' * ((adj_start + gap_adjust) * 3)}"
+            # Reference amino acids (properly aligned)
+            ref_aa_display = f"Ref AA:  {' ' * leading_spaces}"
             for aa in ref_aa:
                 ref_aa_display += f"{aa}  "
             print(f"{Colors.DIM}{ref_aa_display}{Colors.RESET}")
             
             # Personal amino acids with change highlighting
-            pers_aa_display = f"Pers AA: {' ' * ((adj_start + gap_adjust) * 3)}"
+            pers_aa_display = f"Pers AA: {' ' * leading_spaces}"
             for i, (ref_a, pers_a) in enumerate(zip(ref_aa, pers_aa)):
                 if ref_a != pers_a:
                     # Missense mutation
@@ -891,13 +1026,22 @@ class InteractiveGenomeBrowser:
                     pers_aa_display += f"{pers_a}  "
             print(pers_aa_display)
             
-            # Show CDS boundaries with bars
+            # Show CDS boundaries with bars (strand-aware)
             boundary_line = " " * 9
+            
+            # Calculate display positions for CDS boundaries
+            if self.state.show_reverse_strand:
+                display_cds_start = self.state.window_size - window_cds_end
+                display_cds_end = self.state.window_size - window_cds_start
+            else:
+                display_cds_start = window_cds_start
+                display_cds_end = window_cds_end
+                
             for i in range(self.state.window_size):
-                if i >= window_cds_start and i < window_cds_end:
-                    if i == window_cds_start:
+                if i >= display_cds_start and i < display_cds_end:
+                    if i == display_cds_start:
                         boundary_line += "|"
-                    elif i == window_cds_end - 1:
+                    elif i == display_cds_end - 1:
                         boundary_line += "|"
                     else:
                         boundary_line += "-"
@@ -1188,31 +1332,39 @@ class InteractiveGenomeBrowser:
         print("Genome Browser Help")
         print("=" * 60)
         print("Navigation:")
-        print("  → / l     : Move forward by stride")
-        print("  ← / h     : Move backward by stride")
-        print("  ↑ / k     : Jump forward (10x stride)")
-        print("  ↓ / j     : Jump backward (10x stride)")
-        print("  Space/Enter: Move forward by stride")
-        print("  g         : Go to position or gene")
-        print("  n         : Jump to next feature")
-        print("  p         : Jump to previous feature")
+        print("  → / l       : Move forward by stride")
+        print("  ← / h       : Move backward by stride")
+        print("  ↑ / k       : Jump forward (10x stride)")
+        print("  ↓ / j       : Jump backward (10x stride)")
+        print("  Ctrl+→      : Jump to next gene (fast)")
+        print("  Ctrl+←      : Jump to previous gene (fast)")
+        print("  Space/Enter : Move forward by stride")
+        print("  g           : Go to position or gene")
+        print("  n           : Jump to next feature (interactive)")
+        print("  p           : Jump to previous feature (interactive)")
+        print("\nState Management:")
+        print("  Ctrl+↑      : Save current state")
+        print("  Ctrl+↓      : Load saved state")
         print("\nDisplay:")
-        print("  f         : Toggle feature display")
-        print("  a         : Toggle amino acid translation")
-        print("  r         : Toggle RNA mode (T→U)")
-        print("  -         : Toggle reverse strand")
-        print("  w         : Change window size")
-        print("  s         : Change stride")
-        print("  i         : Show position info")
+        print("  f           : Toggle feature display")
+        print("  a           : Toggle amino acid translation")
+        print("  r           : Toggle RNA mode (T→U)")
+        print("  -           : Toggle reverse strand (reflects codons & AAs)")
+        print("  w           : Change window size")
+        print("  s           : Change stride")
+        print("  i           : Show position info")
         print("\nColors:")
-        print(f"  {Colors.SNP}Red{Colors.RESET}      : SNPs")
-        print(f"  {Colors.INSERTION}Green{Colors.RESET}    : Insertions")
-        print(f"  {Colors.DELETION}Yellow{Colors.RESET}   : Deletions")
-        print(f"  {Colors.GENE}Blue{Colors.RESET}     : Genes")
-        print(f"  {Colors.EXON}Cyan{Colors.RESET}     : Exons")
+        print(f"  {Colors.SNP}Red{Colors.RESET}        : SNPs / Stop codons")
+        print(f"  {Colors.INSERTION}Green{Colors.RESET}      : Insertions / Start codons")
+        print(f"  {Colors.DELETION}Yellow{Colors.RESET}     : Deletions / Missense mutations")
+        print(f"  {Colors.GENE}Blue{Colors.RESET}       : Genes")
+        print(f"  {Colors.EXON}Cyan{Colors.RESET}       : Exons")
+        print("\nFeature Labels:")
+        print("  Left side shows feature types with smart compression")
+        print("  Multiple features: ex1/2/3, GENE1/+2, 001-015(25)")
         print("\nOther:")
-        print("  ?         : Show this help")
-        print("  q         : Quit")
+        print("  ?           : Show this help")
+        print("  q           : Quit")
         print("=" * 60)
         input("Press Enter to continue...")
     
@@ -1224,13 +1376,111 @@ class InteractiveGenomeBrowser:
             tty.setraw(sys.stdin.fileno())
             key = sys.stdin.read(1)
             
-            # Check for escape sequences (arrow keys)
+            # Check for escape sequences (arrow keys and ctrl combinations)
             if key == '\x1b':
-                key += sys.stdin.read(2)
+                next_chars = sys.stdin.read(2)
+                key += next_chars
+                
+                # Check for Ctrl+Arrow combinations
+                if next_chars == '[1':
+                    # Read the next character to identify Ctrl+Arrow
+                    extra = sys.stdin.read(2)
+                    if extra == ';5':
+                        final = sys.stdin.read(1)
+                        if final == 'C':  # Ctrl+Right
+                            return 'ctrl_right'
+                        elif final == 'D':  # Ctrl+Left  
+                            return 'ctrl_left'
+                        elif final == 'A':  # Ctrl+Up
+                            return 'ctrl_up'
+                        elif final == 'B':  # Ctrl+Down
+                            return 'ctrl_down'
+                    key += extra
             
             return key
         finally:
             termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+    
+    def _jump_to_next_gene(self):
+        """Quick jump to next gene using Ctrl+Right."""
+        result = self.gm.find_next_feature(
+            self.state.chrom, 
+            self.state.position,
+            'gene'
+        )
+        
+        if result:
+            self.state.position = result['start']
+    
+    def _jump_to_prev_gene(self):
+        """Quick jump to previous gene using Ctrl+Left."""
+        result = self.gm.find_prev_feature(
+            self.state.chrom,
+            self.state.position,
+            'gene'
+        )
+        
+        if result:
+            self.state.position = result['start']
+    
+    def _save_state(self):
+        """Save current browser state."""
+        import json
+        
+        state_data = {
+            'chrom': self.state.chrom,
+            'position': self.state.position,
+            'window_size': self.state.window_size,
+            'stride': self.state.stride,
+            'show_features': self.state.show_features,
+            'show_amino_acids': self.state.show_amino_acids,
+            'show_reverse_strand': self.state.show_reverse_strand,
+            'show_rna': self.state.show_rna,
+            'timestamp': __import__('time').time()
+        }
+        
+        # Save to .genome_browser_state.json in working directory
+        state_file = '.genome_browser_state.json'
+        try:
+            with open(state_file, 'w') as f:
+                json.dump(state_data, f, indent=2)
+            # Brief status message without disrupting display
+            print(f"\\033[s\\033[25;1H{Colors.DIM}State saved{Colors.RESET}\\033[u", end="", flush=True)
+            __import__('time').sleep(0.5)
+        except Exception as e:
+            print(f"\\033[s\\033[25;1H{Colors.SNP}Save failed: {e}{Colors.RESET}\\033[u", end="", flush=True)
+            __import__('time').sleep(1)
+    
+    def _load_state(self):
+        """Load previously saved browser state."""
+        import json
+        import os
+        
+        state_file = '.genome_browser_state.json'
+        if not os.path.exists(state_file):
+            print(f"\\033[s\\033[25;1H{Colors.DIM}No saved state found{Colors.RESET}\\033[u", end="", flush=True)
+            __import__('time').sleep(0.5)
+            return
+        
+        try:
+            with open(state_file, 'r') as f:
+                state_data = json.load(f)
+            
+            # Restore state
+            self.state.chrom = state_data['chrom']
+            self.state.position = state_data['position']
+            self.state.window_size = state_data['window_size']
+            self.state.stride = state_data['stride']
+            self.state.show_features = state_data['show_features']
+            self.state.show_amino_acids = state_data['show_amino_acids']
+            self.state.show_reverse_strand = state_data['show_reverse_strand']
+            self.state.show_rna = state_data['show_rna']
+            
+            print(f"\\033[s\\033[25;1H{Colors.DIM}State loaded{Colors.RESET}\\033[u", end="", flush=True)
+            __import__('time').sleep(0.5)
+        except Exception as e:
+            print(f"\\033[s\\033[25;1H{Colors.SNP}Load failed: {e}{Colors.RESET}\\033[u", end="", flush=True)
+            __import__('time').sleep(1)
     
     def _cleanup(self):
         """Clean up before exiting."""

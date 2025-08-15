@@ -277,7 +277,7 @@ class Ribosome:
                     started = True
             
             # Get sequence for this CDS segment
-            seq = sequence_generator(cds, personal=personal)
+            seq = sequence_generator(cds, personal=personal, as_rna = True)
             if not seq:
                 logger.warning(f"Could not get sequence for CDS segment {cds.start}-{cds.end}")
                 continue
@@ -340,6 +340,7 @@ class Ribosome:
                     protein_parts.append('*')
             else:
                 # Translate codon
+                
                 aa = CODON_TABLE_DNA.get(codon, 'X')
                 protein_parts.append(aa)
         

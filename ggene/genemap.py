@@ -225,7 +225,7 @@ class GeneMap:
         except:
             return
     
-    def fetch_all(self, chrom, start, end, features = 'gene'):
+    def fetch_all(self, chrom, start, end, features = ['gene']):
         
         gen = self.fetch(chrom, start, end, features = features)
         out = []

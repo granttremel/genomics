@@ -16,16 +16,17 @@ import re
 import pyranges as pr
 
 
-__all__ = ['logger', 'DEFAULT_VCF_PATH', 'DEFAULT_GTF_PATH', 'COMPLEMENT_MAP', 'Feature', 'Gene','shorten_variant']
+__all__ = ['logger', 'DATA_DIR','DEFAULT_VCF_PATH', 'DEFAULT_GTF_PATH', 'COMPLEMENT_MAP', 'Feature', 'Gene','shorten_variant']
 
 # Configure logging
 logger = logging.getLogger(__name__)
 
 # Constants
-DEFAULT_VCF_PATH = "./genome/gt_vcf.gz"
+DATA_DIR = "./data"
+DEFAULT_VCF_PATH = "./data/gt_vcf.gz"
 DEFAULT_GTF_PATH = "./data/GRCh38_sorted.gtf.gz"
 DEFAULT_FASTA_PATH = "./data/Homo_sapiens.GRCh38.dna.primary_assembly.fa.gz"
-DEFAULT_LIBRARY = "./genome/library"
+DEFAULT_LIBRARY = "./genome/data/library"
 
 INFO_TAGS = (
     'AF1', 'DP', 'DP4', 'FQ', 'MQ', 'PC2', 'PCHI1', 
@@ -110,7 +111,7 @@ def complement(seq, rna = True):
     if rna:
         newseq = "".join([COMPLEMENT_MAP_RNA.get(s,s) for s in seq])
     else:
-        newseq = "".join([COMPLEMENT_MAP.get(s,s) for s in seq])
+        newseq = "".join([COMPLEMENT_MAP.get(s,s) for s in  seq])
     
     return newseq
 
@@ -216,6 +217,46 @@ def shorten_variant(var: Any, keys: Optional[List[str]] = None) -> Dict[str, Any
     return out_dict
 
                
-    
+class Motif:
+
+    _counter = {}
+
+    def __init__(self, name, chrom, start, end, score):
+        self.type="motif"
+        self.name = name
+        ind = self._counter.get(name,0)
+        self._counter[name] = ind + 1
+        self.sfid=f'{name}-{ind}'
+        self.chrom=chrom
+        self.start=start
+        self.end=end
+        self.relative_start = 0
+        self.relative_end = self.end - self.start
+        
+        self.score=score
+        
+        self.parent_gene=None
+        self.parents=[]
+        
+    def set_parent_gene(self, parent_gene):
+        self.parent_gene=parent_gene
+        
+    def set_parent(self, feature):
+        if not feature in self.parents:
+            self.parents.append(feature)
+            
+    def refer_to(self, reference):
+        self.start_relative = self.start - reference.start
+        self.end_relative = self.end - reference.start
+    def __repr__(self) -> str:
+        """String representation of the feature."""
+        
+        parts=[f"id={self.sfid}"]
+        parts.append(f"{self.chrom}:{self.start}-{self.end}")
+        parts.append(f"score={self.score}")
+            
+        content = ','.join(parts)
+        return f'{type(self).__name__}({content})'
+
 # End of module
 
