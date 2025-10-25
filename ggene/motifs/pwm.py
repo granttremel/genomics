@@ -135,3 +135,12 @@ class PWM:
                 hits.append((i, score, subseq, relative_score))
         
         return hits
+    
+    def find_instances(self, seq: str, threshold: float = 0.8) -> List[Tuple[int, int, float]]:
+        """Find instances compatible with BaseMotif interface.
+        
+        Returns:
+            List of (start, end, score) tuples
+        """
+        hits = self.scan_sequence(seq, threshold)
+        return [(pos, pos + self.length, score) for pos, score, _, _ in hits]

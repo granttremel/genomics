@@ -1,5 +1,5 @@
 
-from motifs.motif import BaseMotif
+from .motif import BaseMotif
 
 class StructuralMotif(BaseMotif):
     """Detect structural features like G-quadruplexes, Z-DNA"""

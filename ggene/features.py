@@ -34,8 +34,19 @@ def variant_to_dict(variant, gene_name, chrom, strand):
         "qual": variant.QUAL,
         "delta": delta,
         "var_type": getattr(variant, 'var_subtype', ''),
-        "genotype": str(variant.genotype) if hasattr(variant, 'genotype') else ''
+        "genotype": variant.gt_bases[0]
+        # "genotype": str(variant.genotype) if hasattr(variant, 'genotype') else ''
     }
+    if variant.num_het > 0:
+        zyg = "heterozygous"
+    elif variant.num_hom_alt > 0:
+        zyg = "homozygous alt"
+    elif variant.num_hom_ref > 0:
+        zyg = "homozygous ref"
+    else:
+        zyg = ""
+    variant_dict["zygosity"] = zyg
+    
     return variant_dict
 
 def order(feature_type):

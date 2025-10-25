@@ -13,6 +13,7 @@ import sys
 import json
 import logging
 logger = logging.getLogger(__name__)
+logger.setLevel("CRITICAL")
 
 from . import DEFAULT_VCF_PATH,DEFAULT_GTF_PATH,DEFAULT_FASTA_PATH,DEFAULT_LIBRARY, reverse_complement, to_rna, to_dna, is_rna, is_dna
 from . import shorten_variant
@@ -22,6 +23,8 @@ from .features import Gene, Feature
 from .translate import Ribosome
 from .genome_iterator import GenomeIterator, FeatureExtractor
 from .genome_browser import InteractiveGenomeBrowser
+from .unified_stream import UnifiedGenomeAnnotations, GTFStream, VCFStream, UnifiedFeature
+from ggene.motifs import MotifDetector, PatternMotif, RepeatMotif
 
 class GenomeManager:
     """Main class for managing genomic data including VCF and GTF files."""
@@ -45,7 +48,30 @@ class GenomeManager:
         try:
             self.vcf = VCF(vcf_path)
             self.library_path = library_path
+            
+            # Keep old GeneMap for backward compatibility
             self.gene_map = GeneMap(gtf_path=gtf_path)
+            
+            # Initialize new unified annotation system with sequence streaming
+            self.annotations = UnifiedGenomeAnnotations(
+                fasta_path=ref_path if ref_path and os.path.exists(ref_path) else None,
+                vcf_path=vcf_path if vcf_path and os.path.exists(vcf_path) else None
+            )
+            
+            # Add GTF annotations
+            if gtf_path and os.path.exists(gtf_path):
+                self.annotations.add_gtf(gtf_path, "genes")
+                logger.info(f"Added GTF annotations: {gtf_path}")
+            
+            # Add VCF annotations separately for annotation track
+            if vcf_path and os.path.exists(vcf_path):
+                self.annotations.add_vcf(vcf_path, "variants")
+                logger.info(f"Added VCF annotations: {vcf_path}")
+            
+            # Initialize motif detector
+            self.motif_detector = MotifDetector()
+            self._setup_default_motifs()
+            
             self.ribo = Ribosome()
             self.genes: Dict[str, 'Gene'] = {}
             
@@ -70,6 +96,96 @@ class GenomeManager:
         except Exception as e:
             logger.error(f"Failed to initialize GenomeManager: {e}")
             raise
+    
+    def _setup_default_motifs(self):
+        """Setup default motifs for detection."""
+        # Add splice site motifs
+        splice_donor = PatternMotif("splice_donor", "GT[AG]AGT", lambda x: 1.0)
+        splice_acceptor = PatternMotif("splice_acceptor", "[CT]{10,}[ATGC]CAG", lambda x: 1.0)
+        
+        self.motif_detector.add_motif(splice_donor)
+        self.motif_detector.add_motif(splice_acceptor)
+        
+        # Add more motifs as needed
+        logger.info("Initialized default motifs")
+    
+    def add_annotation_source(self, name: str, filepath: str, source_type: str = "bed"):
+        """Add a new annotation source to the unified system.
+        
+        Args:
+            name: Name for this annotation source
+            filepath: Path to the annotation file
+            source_type: Type of file (bed, gff, vcf, etc.)
+        """
+        if source_type.lower() == "bed":
+            from .unified_stream import BEDStream
+            self.annotations.add_source(name, BEDStream(filepath))
+        elif source_type.lower() in ["gff", "gtf"]:
+            self.annotations.add_gtf(filepath, name)
+        elif source_type.lower() == "vcf":
+            self.annotations.add_vcf(filepath, name)
+        else:
+            raise ValueError(f"Unknown source type: {source_type}")
+        
+        logger.info(f"Added annotation source '{name}' from {filepath}")
+    
+    def get_all_annotations(self, chrom: str, start: int, end: int,
+                           include_motifs: bool = True) -> List[UnifiedFeature]:
+        """Get all annotations for a region including motifs.
+        
+        Args:
+            chrom: Chromosome
+            start: Start position (1-based)
+            end: End position (1-based)
+            include_motifs: Whether to scan for motifs
+            
+        Returns:
+            List of UnifiedFeature objects
+        """
+        # Get annotations from databases
+        annotations = self.annotations.query_range(chrom, start, end)
+        
+        # Scan for motifs if requested
+        if include_motifs:
+            seq = self.get_sequence(chrom, start, end)
+            if seq:
+                motif_features = self.scan_motifs(seq, chrom, start)
+                annotations.extend(motif_features)
+        
+        return sorted(annotations)
+    
+    def scan_motifs(self, sequence: str, chrom: str, start_pos: int) -> List[UnifiedFeature]:
+        """Scan a sequence for motifs.
+        
+        Args:
+            sequence: DNA sequence to scan
+            chrom: Chromosome name
+            start_pos: Genomic start position of the sequence
+            
+        Returns:
+            List of UnifiedFeature objects for found motifs
+        """
+        features = []
+        
+        for motif_name, motif in self.motif_detector.motifs.items():
+            # Find instances of this motif
+            instances = motif.find_instances(sequence)
+            if instances:
+                for motif_start, motif_end, score in instances:
+                    features.append(UnifiedFeature(
+                        chrom=chrom,
+                        start=start_pos + motif_start,
+                        end=start_pos + motif_end - 1,
+                        feature_type="motif",
+                        source="MotifDetector",
+                        score=score,
+                        name=motif_name,
+                        attributes={
+                            'sequence': sequence[motif_start:motif_end]
+                        }
+                    ))
+        
+        return features
     
     def find_and_assemble_genes(self, genes):
         outgenes = []
@@ -105,7 +221,10 @@ class GenomeManager:
             return None
         
         try:
-            variants = self.vcf(self._make_index(chrom, _gene['start'], _gene['end']))
+            idx = self._make_index(chrom, _gene['start'], _gene['end'])
+            # variants = self.vcf(idx)
+            variants = self.annotations.streams["variants"].vcf(idx)
+            print(idx)
             filtered_variants = [v for v in variants if v.QUAL > min_qual]
             gene_data['variant'] = filtered_variants
         except Exception as e:
@@ -399,28 +518,36 @@ class GenomeManager:
     def get_sequence(self, chrom: Union[str, int], start: int, end: int) -> Optional[str]:
         """Get genomic sequence for a region.
         
+        Now uses unified streaming system for sequence access.
+        
         Args:
             chrom: Chromosome identifier
             start: Start position (1-based)
             end: End position (1-based, inclusive)
             
         Returns:
-            Sequence string or None if FASTA not available
+            Sequence string or None if not available
         """
-        if not self.ref:
-            logger.warning("No FASTA file loaded")
-            return None
-            
-        try:
-            # Convert to string and ensure proper format
-            chrom_str = self.chr_frm.format(chrom=chrom)
-                
-            # pysam uses 0-based coordinates
-            sequence = self.ref.fetch(chrom_str, start - 1, end)
-            return sequence
-        except Exception as e:
-            logger.error(f"Failed to fetch sequence: {e}")
-            return None
+        # Use unified streaming system if available
+        if self.annotations and self.annotations.sequence_stream:
+            chrom_str = str(chrom)
+            return self.annotations.get_sequence(chrom_str, start, end)
+        
+        # Fallback to direct FASTA access if available
+        if self.ref:
+            try:
+                # Convert to string and ensure proper format
+                chrom_str = self.chr_frm.format(chrom=chrom)
+                    
+                # pysam uses 0-based coordinates
+                sequence = self.ref.fetch(chrom_str, start - 1, end)
+                return sequence
+            except Exception as e:
+                logger.error(f"Failed to fetch sequence: {e}")
+                return None
+        
+        logger.warning("No sequence source available")
+        return None
     
     def get_feature_sequence(self, feature: Feature, 
                            upstream: int = 0, 
@@ -428,6 +555,8 @@ class GenomeManager:
                            personal: bool = True,
                            as_rna = False) -> Optional[str]:
         """Get sequence for a feature with optional flanking regions.
+        
+        Now uses unified streaming system with integrated variant application.
         
         Args:
             feature: Feature object
@@ -444,25 +573,36 @@ class GenomeManager:
             
         start = max(1, feature.start - upstream)
         end = feature.end + downstream
+        chrom_str = str(feature.chrom)
         
-        # Get reference sequence
-        reference_seq = self.get_sequence(feature.chrom, start, end)
-        if not reference_seq:
+        # Use unified streaming system if available
+        if self.annotations and self.annotations.sequence_stream:
+            if personal:
+                seq = self.annotations.get_personal_sequence(chrom_str, start, end)
+            else:
+                seq = self.annotations.get_sequence(chrom_str, start, end)
+        else:
+            # Fallback to old method
+            reference_seq = self.get_sequence(feature.chrom, start, end)
+            if not reference_seq:
+                return None
+                
+            if personal:
+                seq = self._apply_variants_to_sequence(reference_seq, feature, start, end, upstream, downstream)
+            else:
+                seq = reference_seq
+        
+        if not seq:
             return None
             
-        if not personal:
-            return reference_seq
-        
-        # Apply personal variants
-        personal_seq = self._apply_variants_to_sequence(reference_seq, feature, start, end, upstream, downstream)
-        
+        # Apply strand and RNA conversion if needed
         if feature.strand == '-':
-            personal_seq = reverse_complement(personal_seq)
+            seq = reverse_complement(seq)
             
         if as_rna:
-            personal_seq = to_rna(personal_seq)
+            seq = to_rna(seq)
         
-        return personal_seq
+        return seq
     
     def probe_sequence_forward(self, chrom: Union[str, int], start: int, 
                               predicate: Callable[[str], bool], 
@@ -482,8 +622,9 @@ class GenomeManager:
         Returns:
             Tuple of (position, matching_sequence) or None if not found
         """
-        if not self.ref:
-            logger.warning("No FASTA file loaded")
+        # Check if we have a sequence source
+        if not (self.annotations and self.annotations.sequence_stream) and not self.ref:
+            logger.warning("No sequence source available")
             return None
             
         try:
@@ -514,8 +655,9 @@ class GenomeManager:
         Returns:
             Tuple of (position, matching_sequence) or None if not found
         """
-        if not self.ref:
-            logger.warning("No FASTA file loaded")
+        # Check if we have a sequence source
+        if not (self.annotations and self.annotations.sequence_stream) and not self.ref:
+            logger.warning("No sequence source available")
             return None
             
         try:
@@ -765,6 +907,30 @@ class GenomeManager:
                 unique_variants.append(variant)
                 
         return unique_variants
+    
+    def get_aligned_sequences(self, chrom: Union[str, int], start: int, end: int) -> Tuple[str, str, List[Tuple[int, int]]]:
+        """Get aligned reference and personal sequences with gaps for visualization.
+        
+        Uses unified streaming system for gap-aligned sequences needed by genome browser.
+        
+        Args:
+            chrom: Chromosome
+            start: Start position (1-based)
+            end: End position (1-based, inclusive)
+            
+        Returns:
+            Tuple of (aligned_ref, aligned_pers, variant_list)
+            where variant_list contains tuples of (position, delta)
+        """
+        chrom_str = str(chrom)
+        
+        if self.annotations and self.annotations.sequence_stream:
+            return self.annotations.get_aligned_sequences(chrom_str, start, end)
+        
+        # Fallback to simple sequences without alignment
+        ref = self.get_sequence(chrom, start, end)
+        pers = ref  # No variants available
+        return ref or "", pers or "", []
     
     def get_sequence_comparison(self, feature: Feature,
                                upstream: int = 0,
@@ -1092,22 +1258,60 @@ class GenomeManager:
                                 include_types: Optional[List[str]] = None) -> List[Any]:
         """Get features at a specific genomic position.
         
+        Now uses unified annotation system for richer annotations.
+        
         Args:
             chrom: Chromosome
             position: Genomic position (1-based)  
             exclude_types: List of feature types to exclude
+            include_types: List of feature types to include
             
         Returns:
             List of features at the position
         """
-        features = self.gene_map.get_feature(chrom, position)
+        # Use unified annotations for more comprehensive results
+        unified_features = self.annotations.query_point(str(chrom), position)
+        
+        # Convert to old Feature format for backward compatibility
+        features = []
+        for uf in unified_features:
+            # Apply filters
+            if exclude_types and uf.feature_type in exclude_types:
+                continue
+            if include_types and uf.feature_type not in include_types:
+                continue
+                
+            # Convert UnifiedFeature to dict-like format expected by old code
+            feature_dict = {
+                'feature': uf.feature_type,
+                'start': uf.start,
+                'end': uf.end,
+                'chrom': uf.chrom,
+                'strand': uf.strand,
+                'info': uf.attributes.copy()
+            }
+            if uf.name:
+                feature_dict['info']['name'] = uf.name
+                feature_dict['info']['gene_name'] = uf.name
+            features.append(feature_dict)
+        
+        # Also get from old gene_map for complete backward compatibility
+        old_features = self.gene_map.get_feature(chrom, position)
         
         if exclude_types:
-            features = [f for f in features 
+            old_features = [f for f in old_features 
                        if f.get('feature') not in exclude_types]
         if include_types:
-            features = [f for f in features 
+            old_features = [f for f in old_features 
                         if f.get('feature') in include_types]
+        
+        # Merge, avoiding duplicates
+        seen = set()
+        for f in old_features:
+            key = (f.get('start'), f.get('end'), f.get('feature'))
+            if key not in seen:
+                features.append(f)
+                seen.add(key)
         
         return features
     

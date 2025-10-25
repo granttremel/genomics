@@ -1,5 +1,5 @@
 
-from motifs.motif import BaseMotif
+from .motif import BaseMotif
 
 class MLMotif(BaseMotif):
     """Use trained models for complex pattern recognition"""

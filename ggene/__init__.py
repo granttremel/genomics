@@ -26,7 +26,7 @@ DATA_DIR = "./data"
 DEFAULT_VCF_PATH = "./data/gt_vcf.gz"
 DEFAULT_GTF_PATH = "./data/GRCh38_sorted.gtf.gz"
 DEFAULT_FASTA_PATH = "./data/Homo_sapiens.GRCh38.dna.primary_assembly.fa.gz"
-DEFAULT_LIBRARY = "./genome/data/library"
+DEFAULT_LIBRARY = "./data/library"
 
 INFO_TAGS = (
     'AF1', 'DP', 'DP4', 'FQ', 'MQ', 'PC2', 'PCHI1', 

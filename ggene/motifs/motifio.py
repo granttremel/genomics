@@ -1,5 +1,4 @@
 
-from motifs.motif import BaseMotif
 
 class MotifIO:
     """Import/export motifs from standard formats"""

@@ -4,6 +4,8 @@ from abc import ABC, abstractmethod
 import numpy as np
 import re
 
+from .motifio import MotifIO
+
 def calculate_significance(self, seq, motif_score):
       """Calculate p-value for motif occurrence"""
       # Shuffle sequence to create null distribution
@@ -14,6 +16,7 @@ class MotifDetector:
 
     def __init__(self):
         self.motifs={}
+        self.io = MotifIO()
     
     def add_motif(self, motif):
         self.motifs[motif.name]=motif

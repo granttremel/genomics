@@ -54,36 +54,68 @@ def write_gene_data(name, chrom):
 # c,res = geneman.gene_map.find_gene('HTR2A')
 
 interesting_genes = [
-    ('HTR2A',13),
-    ('HTR2B',2),
-    ('HTR2C','X'),
-    ('SLC6A4',17),
-    ('FTO',16),
-    ('IRX3',16),
-    ('KISS1R',19),
-    ('AKNAD1',1)
+    # ('HTR2A',13),
+    # ('HTR2B',2),
+    # ('HTR2C','X'),
+    # ('SLC6A4',17),
+    # ('FTO',16),
+    # ('IRX3',16),
+    # ('KISS1R',19),
+    # ('AKNAD1',1)
     ]
-# interesting_gene = 'HTR2C'
-# for g,c in interesting_genes:
-#     gene = geneman.assemble_gene(g,c)
 
 d,ba = ggene.make_splice_re()
 logger.info(d)
 logger.info(ba)
 
-gene = geneman.assemble_gene(*interesting_genes[3])
+for ig in interesting_genes:
+    gene = geneman.assemble_gene(*ig)
+    
+    raw_var = list(geneman.annotations.streams["variants"].vcf(geneman._make_index(2, 184913700, 184913701)))[0]
 
-first_tx = gene.transcripts[next(iter(gene.transcripts.keys()))]
+var_data = [
+    (6, 32205216), # NOTCH4
+]
 
-seq = geneman.get_feature_sequence(first_tx, personal = True)
+for chr, pos in var_data:
+    
+    raw_vars = list(geneman.annotations.streams["variants"].vcf(geneman._make_index(2, 184913700, 184913701)))[0]
 
-for sf in first_tx.subfeatures:
-    if sf.type == "start_codon":
-        sfstart = sf.start - first_tx.start
-        sfend = sf.end - first_tx.start
-        subseq = seq[sfstart-3:sfend+3]
-        logger.info(subseq)
-        logger.info(ggene.complement(subseq))
+# vars = gene.variants
+
+# rs4680 = vars[81]
+# print(rs4680)
+
+raw_var = list(geneman.annotations.streams["variants"].vcf(geneman._make_index(2, 184913700, 184913701)))[0]
+
+atts = dir(raw_var)
+
+for a in atts:
+    if a.startswith('_'):
+        continue
+    v = getattr(raw_var, a)
+    print(a, v)
+
+# for k in raw_var.INFO:
+#     print(k, raw_var.INFO[k])
+
+# print(raw_var[0].__dict__)
+
+
+# print(rs4680)
+
+
+# first_tx = gene.transcripts[next(iter(gene.transcripts.keys()))]
+
+# seq = geneman.get_feature_sequence(first_tx, personal = True)
+
+# for sf in first_tx.subfeatures:
+#     if sf.type == "start_codon":
+#         sfstart = sf.start - first_tx.start
+#         sfend = sf.end - first_tx.start
+#         subseq = seq[sfstart-3:sfend+3]
+#         logger.info(subseq)
+#         logger.info(ggene.complement(subseq))
 
 # nbs = len(seq)
 # if gene.strand == '-':

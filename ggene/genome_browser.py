@@ -19,12 +19,14 @@ if TYPE_CHECKING:
     from .genomemanager import GenomeManager
 
 logger = logging.getLogger(__name__)
+logger.setLevel("CRITICAL")
 
 # ANSI color codes
 class Colors:
     RESET = '\033[0m'
     BOLD = '\033[1m'
     DIM = '\033[2m'
+    UNDERLINE = '\033[4m'
     
     # Variant colors
     SNP = '\033[91m'        # Red for SNPs
@@ -37,6 +39,13 @@ class Colors:
     EXON = '\033[96m'        # Cyan
     CDS = '\033[93m'         # Yellow
     UTR = '\033[90m'         # Gray
+    
+    # Motif colors (for underlines)
+    MOTIF_SPLICE = '\033[91m'    # Red for splice sites
+    MOTIF_TATA = '\033[95m'      # Magenta for TATA box
+    MOTIF_CPG = '\033[92m'       # Green for CpG islands
+    MOTIF_POLYA = '\033[94m'     # Blue for polyA signals
+    MOTIF_DEFAULT = '\033[96m'   # Cyan for other motifs
     
     # Navigation
     POSITION = '\033[97m'    # White
@@ -120,7 +129,9 @@ class InteractiveGenomeBrowser:
         self.feature_hierarchy = [
             'gene', 'transcript', 'exon', 'intron', 
             'CDS', 'five_prime_utr', 'three_prime_utr',
-            'start_codon', 'stop_codon', 'variant'
+            'start_codon', 'stop_codon', 
+            'tf_binding', 'motif', 'splice_donor', 'splice_acceptor',
+            'repeat', 'chip_peak', 'variant'
         ]
     
     def start(self, chrom: Union[str, int], position: int = 1,
@@ -257,20 +268,56 @@ class InteractiveGenomeBrowser:
         print("-" * 80)
         
         # Get sequences
-        from .genome_iterator import GenomeIterator
-        
-        iterator = GenomeIterator(
+        from ggene.genome_iterator_v2 import UnifiedGenomeIterator
+
+        iterator = UnifiedGenomeIterator(
             self.gm,
             self.state.chrom,
             self.state.position,
-            self.state.position + self.state.window_size - 1,
-            window_size=self.state.window_size,
+            window_size = self.state.window_size,
+            stride = self.state.stride,
             integrate_variants=True,
-            track_features=True
+            track_features = True,
+            feature_types=[]
+            
         )
         
         try:
-            ref_seq, personal_seq, features = next(iterator)
+            window = iterator.get_window_at(self.state.position)
+            ref_seq, personal_seq, features = window.ref_seq, window.alt_seq, window.features
+            variant_features = window.variant_features if window.variant_features else []
+            variant_deltas = window.variant_deltas  # For coordinate tracking
+            # logger.debug(f"Variant features: {variant_features}")
+            # logger.debug(f"Variant deltas: {variant_deltas}")
+            
+            # Add detected motifs to features list
+            if window.motifs:
+                logger.debug(f"Adding {len(window.motifs)} detected motifs to features")
+                # Convert motif dicts to feature-like objects
+                for motif in window.motifs:
+                    features.append({
+                        'feature': 'motif',
+                        'feature_type': 'motif',
+                        'start': motif['start'],
+                        'end': motif['end'],
+                        'strand': '+',
+                        'info': {
+                            'name': motif['name'],
+                            'score': motif.get('score', 0),
+                            'sequence': motif.get('sequence', '')
+                        },
+                        'source': 'motif_detector'
+                    })
+            
+            # Get additional annotations from unified system
+            if hasattr(self.gm, 'annotations'):
+                unified_features = self.gm.get_all_annotations(
+                    str(self.state.chrom),
+                    self.state.position,
+                    self.state.position + self.state.window_size - 1,
+                    include_motifs=True
+                )
+                features = unified_features
             
             self._cache_current_gene(features)
             
@@ -294,7 +341,7 @@ class InteractiveGenomeBrowser:
             
             # Display features
             if self.state.show_features and features:
-                self._display_features(features)
+                self._display_features(features, variant_features)
             
             # Count actual lines used so far
             lines_used = 15  # Approximate count from header, sequences, features, etc.
@@ -319,14 +366,15 @@ class InteractiveGenomeBrowser:
             self._current_features.append(f)
     
     def _cache_current_gene(self, features):
-        for f in features:
-            if f['feature']=="gene":
-                if 'gene_name' in f:
-                    self._gene_cache=f['gene_name']
-                    return
-                elif 'gene_name' in f['info']:
-                    self._gene_cache=f['info']['gene_name']
-                    return
+        if features:
+            for f in features:
+                if f.feature_type=="gene":
+                    if 'gene_name' in f.attributes:
+                        self._gene_cache=f.get('gene_name')
+                        return
+                    elif 'info' in f.attributes:
+                        self._gene_cache = f.attributes.get('info').get('gene_name',"?")
+                        return 
                 
         self._gene_cache=""
         
@@ -352,14 +400,14 @@ class InteractiveGenomeBrowser:
             Tuple of (aligned_ref, aligned_pers, variant_positions)
         """
         # Find variant features to identify indels
-        variant_features = [f for f in features if f.get('feature') == 'variant']
+        variant_features = [f for f in features if f.feature_type == 'variant']
         
         # Create a list of indel events in the window
         indels = []
         window_start = self.state.position
         
         for var in variant_features:
-            var_start = var.get('start', 0)
+            var_start = var.start
             ref = var.get('ref', '')
             alt = var.get('alt', '')
             
@@ -470,6 +518,8 @@ class InteractiveGenomeBrowser:
             personal_seq: Aligned personal sequence (may contain gaps '-')
             features: Features in current window for codon highlighting
         """
+        # Extract motifs from features for underline display
+        motifs = [f for f in features if f.get('feature_type') == 'motif' or f.get('feature') == 'motif'] if features else []
         if not ref_seq or not personal_seq:
             return
         
@@ -491,11 +541,11 @@ class InteractiveGenomeBrowser:
         if features:
             window_start = self.state.position
             for feature in features:
-                ftype = feature.get('feature')
+                ftype = feature.feature_type
                 if ftype == 'start_codon':
                     # Calculate raw positions relative to window
-                    raw_start = max(0, feature.get('start', 0) - window_start)
-                    raw_end = min(len(aligned_ref), feature.get('end', 0) - window_start + 1)
+                    raw_start = max(0, feature.start - window_start)
+                    raw_end = min(len(aligned_ref), feature.end - window_start + 1)
                     
                     # Apply strand-aware rendering
                     if self.state.show_reverse_strand:
@@ -515,8 +565,8 @@ class InteractiveGenomeBrowser:
                         
                 elif ftype == 'stop_codon':
                     # Calculate raw positions relative to window
-                    raw_start = max(0, feature.get('start', 0) - window_start)
-                    raw_end = min(len(aligned_ref), feature.get('end', 0) - window_start + 1)
+                    raw_start = max(0, feature.start - window_start)
+                    raw_end = min(len(aligned_ref), feature.end - window_start + 1)
                     
                     # Apply strand-aware rendering
                     if self.state.show_reverse_strand:
@@ -613,6 +663,50 @@ class InteractiveGenomeBrowser:
         
         print(personal_display)
         
+        # Motif underline with strand indicators
+        if motifs:
+            
+            motif_line = "         "
+            motif_colors = "         "
+            
+            for i in range(len(aligned_ref)):
+                # Check if position is in any motif
+                motif_found = None
+                for motif in motifs:
+                    window_start = self.state.position
+                    motif_start = max(0, motif['start'] - window_start)
+                    motif_end = min(len(aligned_ref), motif['end'] - window_start)
+                    
+                    if motif_start <= i < motif_end:
+                        motif_found = motif
+                        break
+                
+                if motif_found:
+                    # Choose color based on motif type
+                    motif_name = motif_found.get('info', {}).get('name', motif_found.get('name', ''))
+                    strand = motif_found.get('strand', '+')
+                    
+                    if 'splice' in motif_name.lower():
+                        color = Colors.MOTIF_SPLICE
+                    elif 'tata' in motif_name.lower():
+                        color = Colors.MOTIF_TATA
+                    elif 'cpg' in motif_name.lower():
+                        color = Colors.MOTIF_CPG
+                    elif 'polya' in motif_name.lower():
+                        color = Colors.MOTIF_POLYA
+                    else:
+                        color = Colors.MOTIF_DEFAULT
+                    
+                    # Show underline with strand indicator at start
+                    if i == motif_start:
+                        motif_line += f"{color}{Colors.UNDERLINE}{'>' if strand == '+' else '<'}{Colors.RESET}"
+                    else:
+                        motif_line += f"{color}{Colors.UNDERLINE}‾{Colors.RESET}"
+                else:
+                    motif_line += " "
+            
+            print(motif_line)
+        
         # Variant indicator line
         variant_line = "         "
         for i in range(len(variant_positions)):
@@ -624,23 +718,33 @@ class InteractiveGenomeBrowser:
         if any(variant_positions):
             print(f"{Colors.DIM}{variant_line}{Colors.RESET}")
     
-    def _display_features(self, features: List[Dict[str, Any]]):
+    def _display_features(self, features: List[Dict[str, Any]], variant_features):
         """Display feature annotations as labeled bars with compression.
         
         Args:
             features: List of features in the current window
+            variant_features: List of variant feature objects
         """
         if not features:
+            logger.debug('no features?')
             return
+        
+        # Separate motifs from other features
+        motifs = []
+        other_features = []
+        for feature in features:
+            ftype = feature.feature_type if hasattr(feature, 'feature_type') else feature.get('feature_type', feature.get('feature'))
+            if ftype == 'motif':
+                motifs.append(feature)
+            else:
+                other_features.append(feature)
         
         print(f"\n{Colors.BOLD}Features:{Colors.RESET}")
         
-
-        
         # Group features by type and extent
         feature_groups = {}
-        for feature in features:
-            ftype = feature.get('feature', 'unknown')
+        for feature in other_features:
+            ftype = feature.feature_type if hasattr(feature, 'feature_type') else feature.get('feature_type', feature.get('feature'))
             # Skip start/stop codons as they're shown differently
             if ftype in ['start_codon', 'stop_codon']:
                 continue
@@ -648,8 +752,8 @@ class InteractiveGenomeBrowser:
                 feature_groups[ftype] = {}
             
             # Group by extent (start and end positions)
-            feat_start = feature.get('start', 0)
-            feat_end = feature.get('end', 0)
+            feat_start = feature.start if hasattr(feature, 'start') else feature.get('start')
+            feat_end = feature.end if hasattr(feature, 'end') else feature.get('end')
             extent_key = (feat_start, feat_end)
             
             if extent_key not in feature_groups[ftype]:
@@ -726,8 +830,8 @@ class InteractiveGenomeBrowser:
                     currstrand = '-' if self.state.show_reverse_strand else '+'
                     if ftype=='gene':
                         feat = feature_groups[ftype][extent_key][0]
-                        if not feat['strand']==currstrand:
-                            labelstr = label + f'({feat['strand']})'
+                        if not feat.strand==currstrand:
+                            labelstr = label + f'({feat.strand})'
                             label=labelstr
                             
                     
@@ -753,23 +857,94 @@ class InteractiveGenomeBrowser:
                     print(f"{color}{bar}{Colors.RESET}")
                     
         # lastly display variants separately with details
-        variant_features = [f for f in features if f.get('feature') == 'variant']
+        # Combine variant features from both sources
+        all_variant_features = []
+        
+        # Add variants from features list (UnifiedFeature objects)
+        all_variant_features.extend([f for f in features if f.feature_type == 'variant'])
+        
+        # Add variants from variant_features list if provided
         if variant_features:
+            all_variant_features.extend(variant_features)
+        
+        # Remove duplicates based on position
+        seen_positions = set()
+        unique_variants = []
+        for var in all_variant_features:
+            if var.start not in seen_positions:
+                unique_variants.append(var)
+                seen_positions.add(var.start)
+        
+        if unique_variants:
             print(f"  {Colors.SNP}Variants:{Colors.RESET}")
-            for var in variant_features:
-                var_start = var.get('start', 0)
-                var_end = var.get('end', 0) 
-                ref = var.get('ref', '')
-                alt = var.get('alt', '')
+            for var in unique_variants:
+                var_start = var.start
+                var_end = var.end
+                
+                # Get ref and alt from attributes
+                attrs = var.attributes if hasattr(var, 'attributes') else var.get('attributes', {})
+                ref = attrs.get('ref', '')
+                alt = attrs.get('alt', [''])[0] if isinstance(attrs.get('alt'), list) else attrs.get('alt', '')
+                qual = attrs.get('qual', var.score if hasattr(var, 'score') else 0)
+                gt = attrs.get("genotype","")
+                zyg = attrs.get("zygosity")
+                
                 ref = self._render_seq(ref)
                 alt = self._render_seq(alt)
                 
-                qual = var.get('qual', 0)
-                
                 # Only show if overlaps with window
                 if var_end >= self.state.position and var_start <= self.state.position + self.state.window_size - 1:
-                    var_type = 'SNP' if len(ref) == len(alt) else '``INDEL'
-                    print(f"    {var_start}: {ref}→{alt} ({var_type}, Q={qual:.1f})")
+                    var_type = 'SNP' if len(ref) == len(alt) else 'INDEL'
+                    print(f"    {var_start}: {ref}→{gt} ({var_type}, Q={qual:.1f}, {zyg})")
+        
+        # Display motifs section
+        if motifs:
+            print(f"\n{Colors.BOLD}Motifs:{Colors.RESET}")
+            
+            # Group motifs by type
+            motif_groups = {}
+            for motif in motifs:
+                motif_info = motif.get('info', {}) if isinstance(motif, dict) else {}
+                motif_name = motif_info.get('name', motif.get('name', 'unknown'))
+                strand = motif.get('strand', '+')
+                
+                if motif_name not in motif_groups:
+                    motif_groups[motif_name] = []
+                motif_groups[motif_name].append(motif)
+            
+            # Display each motif type
+            for motif_type, motif_list in sorted(motif_groups.items()):
+                # Choose color for motif type
+                if 'splice' in motif_type.lower():
+                    color = Colors.MOTIF_SPLICE
+                elif 'tata' in motif_type.lower():
+                    color = Colors.MOTIF_TATA
+                elif 'cpg' in motif_type.lower():
+                    color = Colors.MOTIF_CPG
+                elif 'polya' in motif_type.lower():
+                    color = Colors.MOTIF_POLYA
+                else:
+                    color = Colors.MOTIF_DEFAULT
+                
+                print(f"  {color}{motif_type}:{Colors.RESET}")
+                
+                for motif in motif_list[:5]:  # Show max 5 instances per type
+                    start = motif.get('start')
+                    end = motif.get('end')
+                    strand = motif.get('strand', '+')
+                    score = motif.get('score', motif.get('info', {}).get('score', 0))
+                    seq = motif.get('sequence', motif.get('info', {}).get('sequence', ''))
+                    
+                    # Determine which sequence (ref or personal)
+                    in_window_start = max(0, start - self.state.position)
+                    in_window_end = min(self.state.window_size, end - self.state.position)
+                    
+                    if in_window_start < in_window_end:
+                        strand_symbol = '→' if strand == '+' else '←'
+                        print(f"    {start:,} {strand_symbol} {seq} (score: {score:.2f})")
+                
+                if len(motif_list) > 5:
+                    print(f"    ... and {len(motif_list) - 5} more")
     
     def _format_compressed_label(self, ftype: str, features: List[Dict[str, Any]]) -> str:
         """Format a compressed label for multiple features with advanced compression.
@@ -781,14 +956,14 @@ class InteractiveGenomeBrowser:
         Returns:
             Formatted compressed label string
         """
-        if len(features) == 1:
+        if len(features) <= 5:
             return self._format_single_feature_label(features[0])
         
         # Check if all features span the full window - compress heavily if so
         window_start = self.state.position
         window_end = window_start + self.state.window_size - 1
         all_span_window = all(
-            f.get('start', 0) <= window_start and f.get('end', 0) >= window_end
+            f.start <= window_start and f.end >= window_end
             for f in features
         )
         
@@ -870,13 +1045,15 @@ class InteractiveGenomeBrowser:
         Returns:
             Formatted label string
         """
-        ftype = feature.get('feature', 'unknown')
-        info = feature.get('info', {})
+        ftype = feature.feature_type
+        info = feature.get('attributes', {})
         
         if ftype == 'gene':
-            return info.get('gene_name', 'gene')
+            # return info.get('gene_name', 'gene')
+            return feature.name if feature.name else "?"
         elif ftype == 'transcript':
             name = info.get('transcript_name', info.get('transcript_id', 'transcript'))
+            # name=feature.name
             # Shorten long transcript names
             if len(name) > 20:
                 if '-' in name:
@@ -889,9 +1066,9 @@ class InteractiveGenomeBrowser:
         elif ftype == 'CDS':
             return "CDS"
         elif ftype == 'variant':
-            info = feature.get('info', {})
+            info = feature.attributes
             ref = info.get('ref', '?')
-            alt = info.get('alt', '?')
+            alt = info.get('alt', '?')[0]
             ref = self._render_seq(ref)
             alt = self._render_seq(alt)
             
@@ -920,7 +1097,7 @@ class InteractiveGenomeBrowser:
             features: Features in current window
         """
         # Check if we're in a CDS region
-        cds_features = [f for f in features if f.get('feature') == 'CDS']
+        cds_features = [f for f in features if f.feature_type == 'CDS']
         if not cds_features:
             return
         
@@ -929,9 +1106,9 @@ class InteractiveGenomeBrowser:
         
         # For each CDS, determine reading frame and translate
         for cds in cds_features:
-            cds_start = cds.get('start', 0)
-            cds_end = cds.get('end', 0)
-            strand = cds.get('strand', '+')
+            cds_start = cds.start
+            cds_end = cds.end
+            strand = cds.strand
             
             # Determine the overlap between CDS and window
             overlap_start = max(cds_start, window_start)
@@ -1134,7 +1311,13 @@ class InteractiveGenomeBrowser:
             'three_prime_utr': Colors.UTR,
             'start_codon': Colors.SNP,
             'stop_codon': Colors.SNP,
-            'variant': Colors.DELETION
+            'variant': Colors.DELETION,
+            'motif': Colors.INSERTION,  # Green for motifs
+            'tf_binding': Colors.INSERTION,  # Green for TF binding
+            'splice_donor': Colors.SNP,  # Red for splice sites
+            'splice_acceptor': Colors.SNP,
+            'repeat': Colors.DIM,  # Gray for repeats
+            'chip_peak': Colors.EXON  # Cyan for ChIP peaks
         }
         return color_map.get(ftype, Colors.DIM)
     
@@ -1292,7 +1475,7 @@ class InteractiveGenomeBrowser:
         if features:
             print("\nFeature details:")
             for feature in features:
-                ftype = feature.get('feature', 'unknown')
+                ftype = feature.feature_type
                 info = feature.get('info', {})
                 print(f"  - {ftype}:")
                 

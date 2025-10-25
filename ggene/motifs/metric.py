@@ -1,5 +1,5 @@
 
-from motifs.motif import BaseMotif
+from .motif import BaseMotif
 
 class MetricMotif(BaseMotif):
     
@@ -22,4 +22,4 @@ class MetricMotif(BaseMotif):
         return self.func(seq)
 
 gcfunc = lambda seq: (seq.count('G') + seq.count('C'))/len(seq)
-gcpattern = MetricMotif('gc_content',gcfunc, length=None)
+gcpattern = MetricMotif('gc_content', gcfunc, gcfunc)

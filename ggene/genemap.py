@@ -6,6 +6,21 @@ import logging
 logger = logging.getLogger(__name__)
 from .features import Feature, Gene
 
+def order_chromes(chromes):
+    
+    intchrs = []
+    otherchrs = []
+    
+    for chr in chromes:
+        try:
+            v = int(chr)
+            intchrs.append(chr)
+        except:
+            otherchrs.append(chr)
+            
+    int_srt = sorted(intchrs, key = lambda c:int(c))
+    return int_srt + otherchrs
+
 class GeneMap:
     
     def __init__(self, gtf_path = ''):
@@ -17,7 +32,7 @@ class GeneMap:
         self.tabix = pysam.TabixFile(self.gtf_path)
         
         contigs = self.tabix.contigs
-        self.chromes = [a for a in contigs if len(a) < 4]
+        self.chromes = order_chromes([a for a in contigs if len(a) < 4])
         self.other = [a for a in contigs if len(a) >= 4]
         
         # self.skip_nonsense = True

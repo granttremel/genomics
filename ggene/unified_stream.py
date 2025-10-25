@@ -3,6 +3,9 @@
 This module provides a common interface to stream and merge annotations from
 multiple genomic databases (GTF, VCF, BED, JASPAR, etc.) into a unified
 Feature-based representation.
+
+IMPORTANT: All data files should be bgzipped and tabix-indexed for performance.
+Without indexing, queries will be extremely slow on large files.
 """
 
 import heapq
@@ -13,8 +16,11 @@ import gzip
 import json
 from pathlib import Path
 import logging
+import pysam
+import os
 
 logger = logging.getLogger(__name__)
+logger.setLevel("CRITICAL")
 
 
 @dataclass
@@ -29,9 +35,9 @@ class UnifiedFeature:
     feature_type: str  # gene, variant, motif, repeat, etc.
     source: str  # GTF, VCF, JASPAR, etc.
     score: Optional[float] = None
-    strand: Optional[str] = None
-    name: Optional[str] = None
-    id: Optional[str] = None
+    strand: Optional[str] = ""
+    name: Optional[str] = ""
+    id: Optional[str] = ""
     attributes: Dict[str, Any] = field(default_factory=dict)
     
     def __lt__(self, other):
@@ -41,6 +47,18 @@ class UnifiedFeature:
     def overlaps(self, start: int, end: int) -> bool:
         """Check if feature overlaps with given range."""
         return not (self.end < start or self.start > end)
+    
+    def get(self, att, default=None):
+        if hasattr(self, att):
+            return getattr(self, att)
+        else:
+            return self.attributes.get(att,default)
+    
+    def __getitem__(self, att):
+        if isinstance(att, str):
+            return self.get(att)
+        else:
+            raise IndexError
     
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for JSON serialization."""
@@ -88,11 +106,27 @@ class AnnotationStream(ABC):
 
 
 class GTFStream(AnnotationStream):
-    """Stream GTF/GFF annotations."""
+    """Stream GTF/GFF annotations using indexed access."""
     
     def __init__(self, filepath: str):
         super().__init__("GTF")
         self.filepath = Path(filepath)
+        
+        # Check if file is indexed
+        self.tabix = None
+        if self.filepath.suffix == '.gz':
+            # Check for index file
+            index_file = Path(str(self.filepath) + '.tbi')
+            if index_file.exists():
+                try:
+                    self.tabix = pysam.TabixFile(str(self.filepath))
+                    logger.info(f"Using indexed access for {self.filepath}")
+                except Exception as e:
+                    logger.warning(f"Failed to open tabix index: {e}")
+        
+        if not self.tabix:
+            logger.warning(f"No index found for {self.filepath}. Performance will be slow!")
+            logger.info(f"Create index with: bgzip -c {self.filepath} > {self.filepath}.gz && tabix -p gff {self.filepath}.gz")
         
     def _parse_line(self, line: str) -> Optional[UnifiedFeature]:
         """Parse GTF line."""
@@ -127,9 +161,25 @@ class GTFStream(AnnotationStream):
     def stream(self, chrom: Optional[str] = None,
                start: Optional[int] = None,
                end: Optional[int] = None) -> Iterator[UnifiedFeature]:
-        """Stream GTF features."""
-        open_func = gzip.open if self.filepath.suffix == '.gz' else open
+        """Stream GTF features using indexed access when available."""
         
+        # Use indexed access if available
+        if self.tabix and chrom:
+            try:
+                # Tabix uses 0-based half-open intervals
+                query_start = (start - 1) if start else 0
+                query_end = end if end else 999999999
+                
+                for line in self.tabix.fetch(chrom, query_start, query_end):
+                    feature = self._parse_line(line)
+                    if feature:
+                        yield feature
+                return
+            except Exception as e:
+                logger.debug(f"Tabix fetch failed, falling back to linear scan: {e}")
+        
+        # Fallback to linear scan (slow!)
+        open_func = gzip.open if self.filepath.suffix == '.gz' else open
         with open_func(self.filepath, 'rt') as f:
             for line in f:
                 feature = self._parse_line(line)
@@ -145,11 +195,39 @@ class GTFStream(AnnotationStream):
 
 
 class VCFStream(AnnotationStream):
-    """Stream VCF variant annotations."""
+    """Stream VCF variant annotations using cyvcf2 for efficient indexed access."""
     
     def __init__(self, filepath: str):
         super().__init__("VCF")
         self.filepath = Path(filepath)
+        
+        # Use cyvcf2.VCF which handles indexing internally
+        try:
+            from cyvcf2 import VCF
+            self.vcf = VCF(str(self.filepath))
+            
+            # Check if index exists and set it
+            index_files = [
+                Path(str(self.filepath) + '.tbi'),
+                Path(str(self.filepath) + '.csi')
+            ]
+            for index_file in index_files:
+                if index_file.exists():
+                    try:
+                        self.vcf.set_index(str(index_file))
+                        logger.info(f"Using indexed VCF access for {self.filepath}")
+                    except:
+                        pass  # VCF might auto-detect the index
+                    break
+            else:
+                logger.warning(f"No index found for {self.filepath}. Create with: tabix -p vcf {self.filepath}")
+                
+        except ImportError:
+            logger.error("cyvcf2 not installed. Install with: pip install cyvcf2")
+            self.vcf = None
+        except Exception as e:
+            logger.warning(f"Failed to open VCF with cyvcf2: {e}")
+            self.vcf = None
         
     def _parse_line(self, line: str) -> Optional[UnifiedFeature]:
         """Parse VCF line."""
@@ -200,36 +278,139 @@ class VCFStream(AnnotationStream):
                 'qual': parts[5],
                 'filter': parts[6],
                 'info': info_dict,
-                'variant_types': variant_types
+                'variant_types': variant_types,
+                'genotype': ""
+            }
+        )
+    
+    def _parse_variant(self, variant) -> Optional[UnifiedFeature]:
+        """Parse cyvcf2 Variant object to UnifiedFeature."""
+        # Parse INFO field
+        info_dict = dict(variant.INFO)
+        
+        # Determine variant type
+        ref = variant.REF
+        alts = variant.ALT if variant.ALT else []
+        
+        variant_types = []
+        for alt in alts:
+            if alt is None:
+                continue
+            if len(ref) == len(alt) == 1:
+                variant_types.append('SNP')
+            elif len(ref) > len(alt):
+                variant_types.append('DEL')
+            elif len(ref) < len(alt):
+                variant_types.append('INS')
+            else:
+                variant_types.append('COMPLEX')
+        
+        if variant.num_het > 0:
+            zyg = "heterozygous"
+        elif variant.num_hom_alt > 0:
+            zyg = "homozygous alt"
+        elif variant.num_hom_ref > 0:
+            zyg = "homozygous ref"
+        else:
+            zyg = ""
+        
+        return UnifiedFeature(
+            chrom=variant.CHROM,
+            start=variant.POS,  # VCF is 1-based
+            end=variant.POS + len(ref) - 1,
+            feature_type='variant',
+            source=self.source_name,
+            score=variant.QUAL if variant.QUAL else None,
+            name=variant.ID if variant.ID else None,
+            id=variant.ID if variant.ID else None,
+            attributes={
+                'ref': ref,
+                'alt': alts,
+                'qual': variant.QUAL,
+                'filter': variant.FILTER,
+                'info': info_dict,
+                'variant_types': variant_types,
+                'genotype': variant.gt_bases[0],
+                'zygosity':zyg
             }
         )
     
     def stream(self, chrom: Optional[str] = None,
                start: Optional[int] = None,
                end: Optional[int] = None) -> Iterator[UnifiedFeature]:
-        """Stream VCF features."""
-        open_func = gzip.open if self.filepath.suffix == '.gz' else open
+        """Stream VCF features using cyvcf2's efficient indexed access."""
         
-        with open_func(self.filepath, 'rt') as f:
-            for line in f:
-                feature = self._parse_line(line)
-                if feature:
-                    if chrom and feature.chrom != chrom:
-                        continue
-                    if start and feature.end < start:
-                        continue
-                    if end and feature.start > end:
-                        continue
-                    yield feature
+        # Use cyvcf2's efficient querying
+        if self.vcf and chrom:
+            chrstr = str(chrom)
+            
+            # Try both with and without chr prefix
+            for chrom_format in [f"chr{chrstr}" if not chrstr.startswith('chr') else chrstr,
+                                chrstr.lstrip('chr') if chrstr.startswith('chr') else chrstr]:
+                try:
+                    # Create region string for cyvcf2
+                    if start and end:
+                        region = f"{chrom_format}:{start}-{end}"
+                    elif start:
+                        region = f"{chrom_format}:{start}-"
+                    else:
+                        region = chrom_format
+                    
+                    # Query using cyvcf2's efficient indexed access
+                    found_any = False
+                    for variant in self.vcf(region):
+                        feature = self._parse_variant(variant)
+                        if feature:
+                            found_any = True
+                            yield feature
+                    
+                    if found_any:
+                        return  # Successfully found variants, stop trying
+                except Exception as e:
+                    logger.debug(f"VCF query failed for {region}: {e}")
+                    continue  # Try next format
+        
+        # Fallback to using pysam if cyvcf2 isn't available
+        # This is much slower but works as a backup
+        if not self.vcf:
+            logger.warning("Falling back to slow VCF parsing without cyvcf2")
+            open_func = gzip.open if self.filepath.suffix == '.gz' else open
+            
+            with open_func(self.filepath, 'rt') as f:
+                for line in f:
+                    feature = self._parse_line(line)
+                    if feature:
+                        if chrom and feature.chrom != chrom:
+                            continue
+                        if start and feature.end < start:
+                            continue
+                        if end and feature.start > end:
+                            continue
+                        yield feature
 
 
 class BEDStream(AnnotationStream):
-    """Stream BED format annotations."""
+    """Stream BED format annotations using indexed access."""
     
     def __init__(self, filepath: str, feature_type: str = "region"):
         super().__init__("BED")
         self.filepath = Path(filepath)
         self.feature_type = feature_type
+        
+        # Check if file is indexed
+        self.tabix = None
+        if self.filepath.suffix == '.gz':
+            index_file = Path(str(self.filepath) + '.tbi')
+            if index_file.exists():
+                try:
+                    self.tabix = pysam.TabixFile(str(self.filepath))
+                    logger.info(f"Using indexed access for {self.filepath}")
+                except Exception as e:
+                    logger.warning(f"Failed to open tabix index: {e}")
+        
+        if not self.tabix and self.filepath.suffix == '.gz':
+            logger.warning(f"No index found for {self.filepath}. Performance will be slow!")
+            logger.info(f"Create index with: tabix -p bed {self.filepath}")
         
     def _parse_line(self, line: str) -> Optional[UnifiedFeature]:
         """Parse BED line."""
@@ -375,15 +556,72 @@ class RepeatMaskerStream(AnnotationStream):
 
 
 class UnifiedGenomeAnnotations:
-    """Unified interface for all genomic annotations.
+    """Unified interface for all genomic annotations and sequences.
     
-    Merges multiple annotation streams efficiently using heapq.
+    Merges multiple annotation streams and sequence data efficiently.
     """
     
-    def __init__(self):
+    def __init__(self, fasta_path: Optional[str] = None, vcf_path: Optional[str] = None):
         self.streams = {}
         self.indices = {}  # For fast range queries
+        self.sequence_stream = None
         
+        # Initialize sequence streaming if FASTA provided
+        if fasta_path:
+            self.setup_sequence_stream(fasta_path, vcf_path)
+        
+    def setup_sequence_stream(self, fasta_path: str, vcf_path: Optional[str] = None,
+                            min_qual: float = 5.0):
+        """Setup sequence streaming with optional variant integration.
+        
+        Args:
+            fasta_path: Path to FASTA file
+            vcf_path: Optional path to VCF file for variants
+            min_qual: Minimum quality threshold for variants
+        """
+        from .sequence_stream import FASTAStream, SequenceStreamWithVariants
+        
+        try:
+            fasta_stream = FASTAStream(fasta_path)
+            if vcf_path:
+                self.sequence_stream = SequenceStreamWithVariants(
+                    fasta_stream, vcf_path, min_qual
+                )
+                logger.info(f"Initialized sequence stream with variants from {vcf_path}")
+            else:
+                self.sequence_stream = fasta_stream
+                logger.info(f"Initialized sequence stream from {fasta_path}")
+                
+        except Exception as e:
+            logger.error(f"Failed to setup sequence stream: {e}")
+    
+    def get_sequence(self, chrom: str, start: int, end: int) -> str:
+        """Get reference sequence for a region."""
+        if self.sequence_stream:
+            return self.sequence_stream.get_sequence(chrom, start, end)
+        return ""
+    
+    def get_personal_sequence(self, chrom: str, start: int, end: int) -> str:
+        """Get personalized sequence with variants."""
+        if self.sequence_stream:
+            return self.sequence_stream.get_personal_sequence(chrom, start, end)
+        return ""
+    
+    def get_aligned_sequences(self, chrom: str, start: int, end: int) -> Tuple[str, str, List[Tuple[int, int]]]:
+        """Get aligned sequences with gaps for visualization.
+        
+        Returns:
+            Tuple of (aligned_ref, aligned_pers, variant_list)
+            where variant_list contains tuples of (position, delta)
+        """
+        if self.sequence_stream and hasattr(self.sequence_stream, 'get_sequence_with_alignment'):
+            return self.sequence_stream.get_sequence_with_alignment(chrom, start, end)
+        
+        # Fallback to unaligned with empty variant list
+        ref = self.get_sequence(chrom, start, end)
+        pers = self.get_personal_sequence(chrom, start, end)
+        return ref, pers, []
+    
     def add_source(self, name: str, stream: AnnotationStream):
         """Add an annotation source."""
         self.streams[name] = stream

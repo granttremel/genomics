@@ -1,7 +1,7 @@
 
 import re
 
-from motifs.motif import BaseMotif
+from .motif import BaseMotif
 
 class RepeatMotif(BaseMotif):
     
