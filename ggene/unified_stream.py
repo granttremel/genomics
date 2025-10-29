@@ -18,6 +18,7 @@ from pathlib import Path
 import logging
 import pysam
 import os
+import warnings
 
 logger = logging.getLogger(__name__)
 logger.setLevel("CRITICAL")
@@ -108,6 +109,8 @@ class AnnotationStream(ABC):
 class GTFStream(AnnotationStream):
     """Stream GTF/GFF annotations using indexed access."""
     
+    max_indices = {'1': 248937043, '10': 133778498, '11': 135075908, '12': 133238549, '13': 114346637, '14': 106879812, '15': 101979093, '16': 90222678, '17': 83240391, '18': 80247514, '19': 58599303, '2': 242175634, '20': 64327972, '21': 46691226, '22': 50799123, '3': 198228376, '4': 190195978, '5': 181472430, '6': 170745977, '7': 159233377, '8': 145066516, '9': 138320835, 'MT': 16023, 'X': 156027877, 'Y': 57214397}
+    
     def __init__(self, filepath: str):
         super().__init__("GTF")
         self.filepath = Path(filepath)
@@ -120,6 +123,7 @@ class GTFStream(AnnotationStream):
             if index_file.exists():
                 try:
                     self.tabix = pysam.TabixFile(str(self.filepath))
+                    # self.tabix.
                     logger.info(f"Using indexed access for {self.filepath}")
                 except Exception as e:
                     logger.warning(f"Failed to open tabix index: {e}")
@@ -356,13 +360,15 @@ class VCFStream(AnnotationStream):
                     else:
                         region = chrom_format
                     
-                    # Query using cyvcf2's efficient indexed access
-                    found_any = False
-                    for variant in self.vcf(region):
-                        feature = self._parse_variant(variant)
-                        if feature:
-                            found_any = True
-                            yield feature
+                    
+                    with warnings.catch_warnings(action="ignore"):
+                        # Query using cyvcf2's efficient indexed access
+                        found_any = False
+                        for variant in self.vcf(region):
+                            feature = self._parse_variant(variant)
+                            if feature:
+                                found_any = True
+                                yield feature
                     
                     if found_any:
                         return  # Successfully found variants, stop trying

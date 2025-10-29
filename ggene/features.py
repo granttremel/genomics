@@ -11,7 +11,8 @@ import sys
 
 import logging
 logger = logging.getLogger(__name__)
-logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
+# logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
+logging.basicConfig(stream=None, level=logging.CRITICAL)
 from . import utils
 
 
@@ -184,6 +185,33 @@ class Feature:
         
         return False
     
+    def get_features_at(self, start, end=None, relative = False, strict = True, root=True):
+        
+        if relative:
+            start = start + self.start
+        if not end:
+            end = start + 1
+            strict = False
+        
+        feats = set()
+        feats.add(self)        
+        for sf in self.subfeatures:
+            
+            if strict:
+                cond = (sf.start >= start and sf.end <= end) # contained within
+            else:
+                cond = (sf.start <= end and sf.end >= start) # overlaps
+            
+            if cond:    
+                subfeats = sf.get_features_at(start, relative=False, root = False)
+                for sf in subfeats:
+                    feats.add(self)
+        
+        if root:
+            feats = list(sorted(list(feats), key = lambda f:f.start))
+        
+        return feats
+        
     def order(self):
         return order(self.type)
     
@@ -540,7 +568,7 @@ class Gene(Feature):
         
         return None 
     
-    def get_feature(self, type, pf = None) -> Feature:
+    def get_feature(self, type, pf = None, **kwargs) -> Feature:
         
         if type == "gene":
             return self
@@ -556,7 +584,7 @@ class Gene(Feature):
         else:
             checklist = self.subfeatures
             
-        out = list()
+        out = set()
         
         if pf is None:
             pf = lambda i,v: True
@@ -567,8 +595,21 @@ class Gene(Feature):
             
             if not pf(i, sf):
                 continue
-                
-            out.append(sf)
+            
+            skip = False
+            for k, v in kwargs.items():
+                if not hasattr(sf, k):
+                    skip = True
+                    break
+                if not getattr(sf, k) == v:
+                    skip = True
+                    break
+            if skip:
+                continue
+            
+            out.add(sf)
+        
+        out = list(sorted(list(out), key = lambda sf:sf.start))
         
         return out
 

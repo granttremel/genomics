@@ -15,7 +15,8 @@ import logging
 logger = logging.getLogger(__name__)
 logger.setLevel("CRITICAL")
 
-from . import DEFAULT_VCF_PATH,DEFAULT_GTF_PATH,DEFAULT_FASTA_PATH,DEFAULT_LIBRARY, reverse_complement, to_rna, to_dna, is_rna, is_dna
+from . import DEFAULT_VCF_PATH, DEFAULT_GTF_PATH, DEFAULT_FASTA_PATH, DEFAULT_LIBRARY
+from . import COMPLEMENT_MAP, reverse_complement, to_rna, to_dna, is_rna, is_dna
 from . import shorten_variant
 from . import utils
 from .genemap import GeneMap
@@ -102,9 +103,33 @@ class GenomeManager:
         # Add splice site motifs
         splice_donor = PatternMotif("splice_donor", "GT[AG]AGT", lambda x: 1.0)
         splice_acceptor = PatternMotif("splice_acceptor", "[CT]{10,}[ATGC]CAG", lambda x: 1.0)
+        tata = PatternMotif("tata", "TATA[AT]A[AT]", lambda x: 1.0)
+        caat = PatternMotif("caat", "GGCCAATCT", lambda x: 1.0)
+        idk = PatternMotif("idk", "TTTT[ACG]{5,25}TTTT", lambda x: 1.0)
+        hh = PatternMotif("hammerhead", "[TC][TC][AG][AG]GCCGTTACCT[AG]CAGCTGATGAGCTCCAA[AG]AAGAGCGAAACC[ATGC][AG][ATGC][TC]AGGTCCTG[TC]AGTA[TC]TGGC[TC][ATGC][AG]", lambda x:1.0)
+        hh_stem1 = PatternMotif("hammerhead_stem1", "[CT]{2}[AG]{2}GCCG", lambda x:1.0)
+        hh_stem2 = PatternMotif("hammerhead_stem2", "CT[AG]CAG", lambda x:1.0)
+        hh_big_loop = PatternMotif("hammerhead_big_loop", "GCUGAUGAG[ATGC]{12,20}CGAAAA[ATGC]{9,14}TCC", lambda x:1.0)
+        srp_alu_sl1 = PatternMotif("SRP_Alu_stemloop1", "GCC[GC]GGC[GC]CG[ATGC]{6,12}CG[AT]GCC[AT]", lambda x:1.0)
+        srp_alu_sl2 = PatternMotif("SRP_Alu_stemloop2", "GTCCC[ATGC]{8,16}GGGAG", lambda x:1.0)
+        srp_alu_stem1 = PatternMotif("SRP_Alu_stem1", "CGGGCGCG", lambda x:1.0)
+        srp_alu_stem2 = PatternMotif("SRP_Alu_stem2", "GGCTGAGGCTGGA", lambda x:1.0)
+        srp_alu_stem3 = PatternMotif("SRP_Alu_stem3", "CTGGGCTGTAGTG[ATGC]GCTAT[ATGC]C", lambda x:1.0)
         
-        self.motif_detector.add_motif(splice_donor)
-        self.motif_detector.add_motif(splice_acceptor)
+        # self.motif_detector.add_motif(splice_donor)
+        # self.motif_detector.add_motif(splice_acceptor)
+        # self.motif_detector.add_motif(tata)
+        # self.motif_detector.add_motif(caat)
+        # self.motif_detector.add_motif(idk)
+        # self.motif_detector.add_motif(hh)
+        # self.motif_detector.add_motif(hh_stem1)
+        # self.motif_detector.add_motif(hh_stem2)
+        # self.motif_detector.add_motif(hh_big_loop)
+        self.motif_detector.add_motif(srp_alu_sl1)
+        self.motif_detector.add_motif(srp_alu_sl2)
+        # self.motif_detector.add_motif(srp_alu_stem1)
+        self.motif_detector.add_motif(srp_alu_stem2)
+        self.motif_detector.add_motif(srp_alu_stem3)
         
         # Add more motifs as needed
         logger.info("Initialized default motifs")
@@ -603,6 +628,37 @@ class GenomeManager:
             seq = to_rna(seq)
         
         return seq
+    
+    def convolve(self, seq1, seq2):
+        
+        seq_len = min(len(seq1), len(seq2))
+        seq1, seq2 = seq1[:seq_len], seq2[seq_len]
+        
+        start = seq_len // 2
+        ips = []
+        comp_ips = []
+        
+        for t in range(-start, start):
+            
+            sslen = seq_len - abs(t)
+            seq1t = seq1[max(t, 0):max(t, 0) + sslen]
+            seq2t = seq2[max(-t, 0):max(-t, 0) + sslen]
+            summ = 0
+            csumm = 0
+            
+            for sa, sb in zip(seq1t, seq2t):
+                
+                csb = COMPLEMENT_MAP.get(sb)
+                
+                if sa == sb:
+                    summ +=1
+                elif sa == csb:
+                    csumm += 1
+                
+            ips.append(summ)
+            comp_ips.append(csumm)
+        
+        return summ, csumm
     
     def probe_sequence_forward(self, chrom: Union[str, int], start: int, 
                               predicate: Callable[[str], bool], 

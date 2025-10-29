@@ -146,7 +146,8 @@ class UnifiedGenomeIterator:
         self._motif_cache = {}  # Cache detected motifs by position
         self._motif_detector = None
         if detect_motifs:
-            self._setup_motif_detection()
+            self._motif_detector = self.gm.motif_detector
+            # self._setup_motif_detection()
         
         # Preload initial buffer
         self._preload_buffer()

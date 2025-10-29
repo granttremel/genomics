@@ -21,10 +21,12 @@ def main():
                        help='Add flag to use gui, otherwise use terminal')
     parser.add_argument('--position', '-p', type=int, default=1000000,
                        help='Starting position (default: 1000000)')
-    parser.add_argument('--window', '-w', type=int, default=160,
+    parser.add_argument('--window', '-w', type=int, default=240,
                        help='Window size in base pairs (default: 80)')
     parser.add_argument('--gene', '-g', type=str,
                        help='Jump to a specific gene (overrides position)')
+    parser.add_argument('--debug', '-d', action="store_true",
+                       help='debug')
     
     args = parser.parse_args()
     
@@ -47,7 +49,7 @@ def main():
     # Start the browser
     
     
-    browse_genome(gm, args.chrom, args.position, args.window, use_gui=False)
+    browse_genome(gm, args.chrom, args.position, args.window, debug = args.debug, use_gui=False)
 
 
 if __name__ == "__main__":

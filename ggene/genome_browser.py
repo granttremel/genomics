@@ -135,7 +135,7 @@ class InteractiveGenomeBrowser:
         ]
     
     def start(self, chrom: Union[str, int], position: int = 1,
-             window_size: int = 160, stride: int = 40):
+             window_size: int = 240, stride: int = 40):
         """Start the interactive browser.
         
         Args:
@@ -278,7 +278,7 @@ class InteractiveGenomeBrowser:
             stride = self.state.stride,
             integrate_variants=True,
             track_features = True,
-            feature_types=[]
+            feature_types=["gene","exon","CDS","motif"]
             
         )
         
@@ -520,6 +520,10 @@ class InteractiveGenomeBrowser:
         """
         # Extract motifs from features for underline display
         motifs = [f for f in features if f.get('feature_type') == 'motif' or f.get('feature') == 'motif'] if features else []
+        
+        if motifs:
+            logger.debug(f"displaying {len(motifs)} detected motifs")
+            logger.debug(f"motifs: {motifs}")
         if not ref_seq or not personal_seq:
             return
         
@@ -538,6 +542,7 @@ class InteractiveGenomeBrowser:
         # Find start and stop codons in features
         start_codons = []
         stop_codons = []
+        disp_motifs = []
         if features:
             window_start = self.state.position
             for feature in features:
@@ -583,6 +588,26 @@ class InteractiveGenomeBrowser:
                     
                     if display_start < display_end:
                         stop_codons.append((display_start, display_end))
+                elif ftype == 'motif':
+                    # Calculate raw positions relative to window
+                    raw_start = max(0, feature.start - window_start)
+                    raw_end = min(len(aligned_ref), feature.end - window_start + 1)
+                    
+                    # Apply strand-aware rendering
+                    if self.state.show_reverse_strand:
+                        # Reflect positions across window center
+                        display_start = self.state.window_size - raw_end
+                        display_end = self.state.window_size - raw_start
+                    else:
+                        display_start = raw_start
+                        display_end = raw_end
+                    
+                    # Ensure positions are within bounds
+                    display_start = max(0, min(display_start, len(aligned_ref)))
+                    display_end = max(0, min(display_end, len(aligned_ref)))
+                    
+                    if display_start < display_end:
+                        disp_motifs.append((display_start, display_end))
         
         # Calculate position labels
         start_pos = self.state.position
@@ -626,6 +651,7 @@ class InteractiveGenomeBrowser:
             # Check if in start/stop codon
             in_start = any(start <= i < end for start, end in start_codons)
             in_stop = any(start <= i < end for start, end in stop_codons)
+            in_motif = any(start <= i < end for start, end in disp_motifs)
             
             if base == '-':
                 ref_display += f"{Colors.DIM}-{Colors.RESET}"
@@ -633,6 +659,8 @@ class InteractiveGenomeBrowser:
                 ref_display += f"{Colors.INSERTION}{base}{Colors.RESET}"
             elif in_stop:
                 ref_display += f"{Colors.SNP}{base}{Colors.RESET}"
+            elif in_motif:
+                ref_display += f"{Colors.EXON}{base}{Colors.RESET}"
             else:
                 ref_display += base
         print(ref_display)
@@ -647,6 +675,7 @@ class InteractiveGenomeBrowser:
             # Check if in start/stop codon
             in_start = any(start <= i < end for start, end in start_codons)
             in_stop = any(start <= i < end for start, end in stop_codons)
+            in_motif = any(start <= i < end for start, end in disp_motifs)
             
             if pers_base == '-':
                 personal_display += f"{Colors.DIM}-{Colors.RESET}"
@@ -658,6 +687,8 @@ class InteractiveGenomeBrowser:
                 personal_display += f"{Colors.INSERTION}{pers_base}{Colors.RESET}"
             elif in_stop:
                 personal_display += f"{Colors.SNP}{pers_base}{Colors.RESET}"
+            elif in_motif:
+                personal_display += f"{Colors.EXON}{pers_base}{Colors.RESET}"
             else:
                 personal_display += pers_base
         
@@ -729,11 +760,15 @@ class InteractiveGenomeBrowser:
             logger.debug('no features?')
             return
         
+        feature_types = ["gene","exon","CDS","motif"]
+        
         # Separate motifs from other features
         motifs = []
         other_features = []
         for feature in features:
             ftype = feature.feature_type if hasattr(feature, 'feature_type') else feature.get('feature_type', feature.get('feature'))
+            if not ftype in feature_types:
+                continue
             if ftype == 'motif':
                 motifs.append(feature)
             else:
@@ -871,6 +906,8 @@ class InteractiveGenomeBrowser:
         seen_positions = set()
         unique_variants = []
         for var in all_variant_features:
+            if not var.feature_type in feature_types:
+                continue
             if var.start not in seen_positions:
                 unique_variants.append(var)
                 seen_positions.add(var.start)
@@ -1312,7 +1349,7 @@ class InteractiveGenomeBrowser:
             'start_codon': Colors.SNP,
             'stop_codon': Colors.SNP,
             'variant': Colors.DELETION,
-            'motif': Colors.INSERTION,  # Green for motifs
+            'motif': Colors.EXON,  # Green for motifs
             'tf_binding': Colors.INSERTION,  # Green for TF binding
             'splice_donor': Colors.SNP,  # Red for splice sites
             'splice_acceptor': Colors.SNP,
@@ -1433,7 +1470,7 @@ class InteractiveGenomeBrowser:
         print("\n" + "-" * 40)
         try:
             new_size = int(input(f"Enter new window size (current: {self.state.window_size}): "))
-            if 10 <= new_size <= 200:
+            if 10 <= new_size <= 400:
                 self.state.window_size = new_size
             else:
                 print("Window size must be between 10 and 200")
@@ -1674,7 +1711,8 @@ class InteractiveGenomeBrowser:
 def browse_genome(genome_manager: 'GenomeManager', 
                   chrom: Union[str, int] = 1,
                   position: int = 1000000,
-                  window_size: int = 80,
+                  window_size: int = 240,
+                  debug=False,
                   use_gui: bool = False):
     """Convenience function to start the genome browser.
     
@@ -1685,6 +1723,9 @@ def browse_genome(genome_manager: 'GenomeManager',
         window_size: Initial window size
         use_gui: If True, launch the PyQt GUI version instead of terminal version
     """
+    if debug:
+        logger.setLevel("DEBUG")
+    
     if use_gui:
         try:
             from .genome_browser_gui import launch_genome_browser

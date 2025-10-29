@@ -42,7 +42,19 @@ def main():
     genes = [
         # 'C2orf80',
         # 'STMN3',
-        "Metazoa_SRP"
+        # "Metazoa_SRP"
+        # "HH9",
+        # "HH10"
+        # "CLOCK",
+        # "ARNTL",
+        # "BMAL1",
+        # "BDNF",
+        # "ACE2",
+        # "TIMELESS",
+        # "PER3"
+        "GPR1",
+        "GPR21",
+        "GPR99"
     ]
     
     gene_idx = [

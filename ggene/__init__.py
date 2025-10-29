@@ -72,8 +72,8 @@ def is_dna(seq):
 
 CODON_TABLE_RNA = {to_rna(k):v for k,v in CODON_TABLE_DNA.items()}
 
-START_CODONS = ['ATG']  # Standard start codon (Methionine)
-ALTERNATIVE_START_CODONS = ['CTG', 'GTG', 'TTG']  # Rare alternative starts
+START_CODONS = ['ATG']  # Standard start codon (Methionine) = AUG
+ALTERNATIVE_START_CODONS = ['CTG', 'GTG', 'TTG']  # Rare alternative starts = CUG, GUG, UUG
 STOP_CODONS = ['TAA', 'TAG', 'TGA']
 
 aliases_dna = {
@@ -96,6 +96,19 @@ aliases_rev = {
     'U':'YN',
     }
 
+ALIASES = {
+    'R': '[AG]',   # puRine
+    'Y': '[CT]',   # pYrimidine  
+    'S': '[GC]',   # Strong (3 H bonds)
+    'W': '[AT]',   # Weak (2 H bonds)
+    'K': '[GT]',   # Keto
+    'M': '[AC]',   # aMino
+    'B': '[CGT]',  # not A
+    'D': '[AGT]',  # not C
+    'H': '[ACT]',  # not G
+    'V': '[ACG]',  # not T
+    'N': '[ACGT]', # aNy
+}
 
 splice_donor = 'GG*GURAGU'
 splice_branch = 'YURAC'

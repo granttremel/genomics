@@ -1,6 +1,488 @@
 
+from typing import List
+
+import random
+
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
+
+from ggene.seqs import find_subsequence, find_subsequences
+
+SCALE = " ▁▂▃▄▅▆▇█"
+
+SCALE_H = " ▏▎▍▌▋▊▉█"
+OTHER={
+    "upper_half":"▀",
+    "upper_eighth":"▔",
+    "right_half":"▐",
+    "right_eighth":"▕",
+    "light":"░",
+    "medium":"▒",
+    "dark":"▓",
+    "misc":"▖▗▘▙▚▛▜▝▞▟"
+}
+
+RESET = '\033[0m'
+
+color_names = ["black","red","green","yellow","blue","magenta","cyan","white"]
+color_ints = range(len(color_names))
+
+class Color:
+    def __init__(self, text, background, effect):
+        self.text = self.get_color(text, background = False)
+        self.background = self.get_color(background, background = True)
+        self.effect = self.get_effect(effect)
+    
+    def set(self, spec, bright = False, background = False, effect = False):
+        if background:
+            self.set_background(spec, bright=bright)
+        else:
+            self.set_text(spec, bright=bright)
+        
+        if effect:
+            self.set_effect(spec)
+    
+    def as_tuple(self):
+        return (self.text, self.background, self.effect)
+    
+    def set_text(self, text_spec, bright=False):
+        self.text = self.get_color(text_spec, bright=bright, background = False)
+        
+    def set_background(self, background_spec, bright=False):
+        self.text = self.get_color(background_spec, bright=bright, background = True)
+        
+    def set_effect(self, effect_spec):
+        self.effect = self.get_effect(effect_spec)
+        
+    @staticmethod
+    def get_color(color_spec, bright=False, background = False):
+        
+        cc = 0
+        if isinstance(color_spec, str) and color_spec:
+            cc = color_ints[color_names.index(color_spec)]
+        elif isinstance(color_spec, int):
+            cc = color_spec
+        
+        # if bright:
+        #     cc += 8
+        bgc = "38;5;"
+        if background:
+            bgc = "48;5;"
+        
+        # return f'\x1b[{bgc}{cc}m'
+        return '\x1b[' + str(bgc) + str(cc) + 'm'
+
+    @staticmethod
+    def get_effect(effect_spec):
+        if effect_spec == "bold":
+            return "\x1b[1m"
+        elif effect_spec == "dim":
+            return "\x1b[2m"
+        elif effect_spec == "underline":
+            return "\x1b[4m"
+        elif effect_spec == "blink":
+            return "\x1b[5m"
+        elif effect_spec == "reverse":
+            return "\x1b[7m"
+        return ""
+    
+    def __str__(self):
+        return str(self.effect) + str(self.background) + str(self.text)
+    
+    @classmethod
+    def from_specs(cls, text_spec = "", text_bright = False, bg_spec = "", bg_bright = False, effect_spec = ""):
+        out = cls("","","")
+        out.set_text(text_spec, bright = text_bright)
+        out.set_background(bg_spec, bright=bg_bright)
+        out.set_effect(effect_spec)
+        return out
+
+RESET = '\033[0m'
+
+CS = Color.from_specs(text_spec=250, text_bright = True, effect_spec ="")
+CD = Color.from_specs(text_spec="yellow", effect_spec ="")
+CL = Color.from_specs(text_spec="cyan",effect_spec ="")
+CB = Color.from_specs(text_spec="blue",effect_spec ="")
+CC = Color.from_specs(text_spec="cyan",effect_spec ="")
+
+def set_colors(tail=None, dyad=None, loop=None, seq=None, cseq=None, bright=False, background = False, effect = None):
+    
+    global CS, CD, CL, CB, CC
+    
+    if tail:
+        CS.set(tail, bright=bright, background = background, effect = effect)
+    if dyad:
+        CD.set(dyad, bright=bright, background = background, effect = effect)
+    if loop:
+        CL.set(loop, bright=bright, background = background, effect = effect)
+    if seq:
+        CB.set(seq, bright=bright, background = background, effect = effect)
+    if cseq:
+        CC.set(cseq, bright=bright, background = background, effect = effect)
+
+set_colors(seq = 174, cseq = 66, background = True)
+
+def get_fgbg(fg_color, bg_color):
+    fg = f"\x1b[38;5;{fg_color}m"
+    bg = f"\x1b[48;5;{bg_color}m"
+    return fg, bg
+
+
+def scalar_to_text_8b(scalars, minval = None, maxval = None, fg_color = 212, bg_color = 7, flip = False):
+    return scalar_to_text_nb(scalars, minval = minval, maxval = maxval, fg_color = fg_color, bg_color = bg_color, bit_depth = 8, flip = flip)
+
+def scalar_to_text_16b(scalars, minval = None, maxval = None, fg_color = 212, bg_color = 7, flip = False):
+    return scalar_to_text_nb(scalars, minval = minval, maxval = maxval, fg_color = fg_color, bg_color = bg_color, bit_depth = 16, flip = flip)
+
+def scalar_to_text_nb(scalars, minval = None, maxval = None, fg_color = 7, bg_color = 212, bit_depth = 24, flip = False, effect = None):
+    
+    if flip:
+        bg, fg = get_fgbg(bg_color, fg_color)
+    else:
+        fg, bg = get_fgbg(fg_color, bg_color)
+    
+    eff = ""
+    if effect:
+        eff += str(effect)
+    
+    base_bit_depth = len(SCALE) - 1
+    if not bit_depth % base_bit_depth == 0:
+        return ["no"]
+    
+    nrows = bit_depth // base_bit_depth
+    nvals = base_bit_depth * nrows
+    
+    rows = [[fg+bg+eff] for r in range(nrows)]
+    rows[1].append("\x1b[0;G")
+    
+    bit_ranges = [base_bit_depth*i for i in range(nrows)]
+    
+    if not minval:
+        minval = min(scalars)
+    if not maxval:
+        maxval = max(scalars)
+    rng = (maxval - minval)/1
+    c = (minval+ maxval)/2
+    
+    # of = 0
+    # swap = False
+    for s in scalars:
+        sv = int(nvals*((s - c)/rng)) + bit_depth // 2
+        
+        # d = (sv - sv % bit_depth) // bit_depth
+        # if d!=of:
+        #     fg_color, bg_color = bg_color, fg_color
+        #     bg, fg = get_fgbg(bg_color, fg_color)
+        #     swap = True
+        # of = d
+        # sv = sv % bit_depth
+            
+        for row, bit_range in zip(rows, bit_ranges):
+            if sv < bit_range:
+                sym = SCALE[0]
+            elif sv >= bit_range + base_bit_depth:
+                sym = SCALE[-1]
+            else:
+                ssv = sv % base_bit_depth
+                sym = SCALE[ssv]
+            # if swap:
+            #     row.append(RESET + fg + bg)
+            row.append(sym)
+        # swap = False
+    
+    outstrs= []
+    for row in rows[::-1]:
+        row.append(RESET)
+        outstrs.append("".join(row))
+    if flip:
+        return flip_scalar_text(outstrs)
+    else:
+        return outstrs
+
+def scalar_to_text_nbh(scalars, minval = None, maxval = None, fg_color = 7, bg_color = 212, bit_depth = 24, flip = False, effect = None):
+    
+    len_sc = len(scalars)
+    
+    if flip:
+        fg = f"\x1b[48;5;{fg_color}m"
+        bg = f"\x1b[38;5;{bg_color}m"
+    else:
+        fg = f"\x1b[38;5;{fg_color}m"
+        bg = f"\x1b[48;5;{bg_color}m"
+    
+    eff = ""
+    if effect:
+        eff += str(effect)
+    
+    base_bit_depth = len(SCALE_H) - 1
+    if not bit_depth % base_bit_depth == 0:
+        return ["no"]
+    
+    ncols = bit_depth // base_bit_depth
+    nvals = base_bit_depth * ncols
+    
+    rows = [[fg+bg+eff] for r in range(len_sc)]
+    
+    bit_ranges = [base_bit_depth*i for i in range(ncols)]
+    
+    if not minval:
+        minval = min(scalars)
+    if not maxval:
+        maxval = max(scalars)
+    rng = (maxval - minval)/1
+    c = (minval+ maxval)/2
+    
+    for s, row in zip(scalars, rows):
+        sv = int(nvals*(s - c)/rng) + bit_depth // 2
+        for bit_range in bit_ranges:
+            if sv < bit_range:
+                sym = SCALE_H[0]
+            elif sv >= bit_range + base_bit_depth:
+                sym = SCALE_H[-1]
+            else:
+                ssv = sv % base_bit_depth
+                sym = SCALE_H[ssv]
+            row.append(sym)
+    
+    outstrs= []
+    for row in rows:
+        row.append(RESET)
+        outstrs.append("".join(row))
+    if flip:
+        return hflip_scalar_text(outstrs)
+    else:
+        return outstrs
+
+def flip_scalar_text(sctext):
+    
+    nsyms = len(SCALE)
+    scale_inv = {SCALE[i]:SCALE[nsyms-i-1] for i in range(nsyms)}
+    
+    out = []
+    for row in sctext[::-1]:
+        newrow = []
+        for sym in row:
+            newrow.append(scale_inv.get(sym, sym))
+        out.append("".join(newrow))
+    return out
+
+def hflip_scalar_text(sctext):
+    
+    nsyms = len(SCALE_H)
+    scale_inv = {SCALE_H[i]:SCALE_H[nsyms-i-1] for i in range(nsyms)}
+    
+    out = []
+    for row in sctext[::-1]:
+        newrow = []
+        for sym in row:
+            newrow.append(scale_inv.get(sym, sym))
+        out.append("".join(newrow))
+    return out
+
+def highlight_subsequences(subseqs, colors, delimit = ""):
+    
+    if isinstance(colors[0], int):
+        colors = [f"\x1b[38;5;{c}m" for c in colors]
+    
+    lastcolor = colors[0]
+    out = [colors[0]]
+    for ss, c in zip(subseqs, colors):
+        if c == lastcolor:
+            pass
+        else:
+            out.append(RESET)
+            if delimit:
+                out.append(delimit)
+            out.append(c)
+            lastcolor = c
+        out.append(ss)
+    out.append(RESET)
+    return "".join(out)
+
+def make_start_ends(feature_name, feature_positions, feature_length, starts = {}, ends = {}):
+    
+    for p in feature_positions:
+        if not p in starts:
+            starts[p] = []
+        starts[p].append(feature_name)
+        
+        end_pos = p + feature_length
+        if not end_pos in ends:
+            ends[end_pos] = []
+        ends[end_pos].append(feature_name)
+    
+    return starts, ends
+
+def make_key(features, colors):
+    
+    parts = ["key:"]
+    for f in features:
+        cf = colors.get(f)
+        cstr = f"\x1b[38;5;{cf}m"
+        fstr = "".join([cstr, f, RESET])
+        parts.append(fstr)
+    
+    return " ".join(parts)
+    
+def highlight_features(seq, features, feature_starts, feature_ends, colors = {}):
+    """
+    feature_starts: Dict:feature -> List[feature_start_pos]
+    feature_ends: Dict:feature -> List[feature_end_pos]
+    """
+    # Build the colored string
+    
+    baseline_color = 240
+    bc = f"\x1b[38;5;{baseline_color}m"
+    
+    result = []
+    active_seqs = []  # Currently active sequences
+    current_color = 0
+    last_ansi = bc
+    
+    for s in features:
+        if not s in colors:
+            colors[s] = random.randint(20, 230)
+    
+    key = make_key(features, colors)
+    
+    result.append(bc)  # Start with baseline color
+
+    for i in range(len(seq)):
+        if i in feature_ends:
+            for s in feature_ends[i]:
+                if s in active_seqs:
+                    active_seqs.remove(s)
+
+        if i in feature_starts:
+            for s in feature_starts[i]:
+                if s not in active_seqs:
+                    active_seqs.append(s)
+
+        if not active_seqs:
+            current_color = baseline_color
+        elif len(active_seqs) == 1:
+            current_color = colors[active_seqs[0]]
+        elif len(active_seqs) == 2:
+            color_sum = sum(colors[s] for s in active_seqs)
+            current_color = 20 + (color_sum % 211)
+        else:
+            current_color = 255
+
+        ansi = f"\x1b[38;5;{current_color}m"
+
+        if ansi != last_ansi:
+            result.append(ansi)
+            last_ansi = ansi
+
+        result.append(seq[i])
+
+    result.append(RESET)
+
+    print(" ".join(result))
+    print(key)
+
+def highlight_sequence(seq, subseq, colors = {}):
+    
+    starts = {}  # position -> list of sequences starting there
+    ends = {}    # position -> list of sequences ending there
+    
+    if not subseq in colors:
+        colors[subseq] = random.randint(20, 230)
+
+    start_pos = find_subsequence(seq, subseq)
+    starts, ends = make_start_ends(subseq, start_pos, len(subseq), starts=starts, ends = ends)
+
+    highlight_features(seq, [subseq], starts, ends)
+    pass
+
+def highlight_sequences(seq:str, subseqs:List[str], do_rc = False, min_len = 5, colors={}):
+
+    starts = {}  # position -> list of sequences starting there
+    ends = {}    # position -> list of sequences ending there
+    
+    for s in subseqs:
+        if not s in colors:
+            colors[s] = random.randint(20, 230)
+
+    start_pos = find_subsequences(seq, subseqs, do_rc = do_rc)
+    for s in subseqs:
+        if len(s) < min_len:
+            continue
+
+        starts, ends = make_start_ends(s, start_pos[s], len(s), starts=starts, ends = ends)
+
+    highlight_features(seq, subseqs, starts, ends)
+
+    
+def highlight_sequences_in_frame(seq:str, subseqs:List[str], frame_start, min_len = 5):
+    
+    starts = {}  # position -> list of sequences starting there
+    ends = {}    # position -> list of sequences ending there
+
+    # Baseline color - a visible gray (color 240 is a nice medium gray)
+    baseline_color = 240
+    bc = f"\x1b[38;5;{baseline_color}m"
+    
+    colors = {}
+    for s in subseqs:
+        colors[s] = random.randint(20, 230)
+
+    # Find all occurrences of each subsequence
+    for s in subseqs:
+        if len(s) < min_len:
+            continue
+        
+        seq_pos = find_subsequence(seq, s, frame_start = frame_start)
+        for p in seq_pos:
+            if not p in starts:
+                starts[p] = []
+            starts[p].append(s)
+        
+            end_pos = p + len(s)
+            if not end_pos in ends:
+                ends[end_pos] = []
+            ends[end_pos].append(s)
+
+    # Build the colored string
+    result = []
+    active_seqs = []  # Currently active sequences
+    current_color = 0
+    last_ansi = bc
+
+    result.append(bc)  # Start with baseline color
+
+    for i in range(len(seq)):
+        if i in ends:
+            for s in ends[i]:
+                if s in active_seqs:
+                    active_seqs.remove(s)
+
+        if i in starts:
+            for s in starts[i]:
+                if s not in active_seqs:
+                    active_seqs.append(s)
+
+        if not active_seqs:
+            current_color = baseline_color
+        elif len(active_seqs) == 1:
+            current_color = colors[active_seqs[0]]
+        elif len(active_seqs) == 2:
+            color_sum = sum(colors[s] for s in active_seqs)
+            current_color = 20 + (color_sum % 211)
+        else:
+            current_color = 255
+
+        ansi = f"\x1b[38;5;{current_color}m"
+
+        if ansi != last_ansi:
+            result.append(ansi)
+            last_ansi = ansi
+
+        result.append(seq[i])
+
+    result.append(RESET)
+
+    print("".join(result))
 
 
 
