@@ -388,6 +388,14 @@ class InteractiveGenomeBrowser:
         lines_used += n + 1
         all_lines, n = self._get_display_lines(suppress = True)
         lines_used += n
+        
+        dlines = []
+        if self._ref_cache1:
+            dlines = self.get_data_lines(self._ref_cache1, self._ref_cache1, bit_depth = 16, threshs = [0.45])
+            dlines2 = self.get_data_lines(self._ref_cache1, self._ref_cache1, bit_depth = 8, threshs = [0.45], scale = 8)
+            dlines.append("\n")
+            dlines.extend(dlines2)
+            lines_used += len(dlines)
         # Navigation hints at fixed position (line 24)
         footer = self.get_footer_lines(lines_used, footer_pos = 24, suppress= True)
         
@@ -403,7 +411,8 @@ class InteractiveGenomeBrowser:
         print('\n'.join(seq1))
         print('\n'.join(ext1))
         
-        flines = all_lines.get("features", [])
+        print("\n".join(dlines))
+        
         print("\n".join(all_lines.get("features", [])))
         
         print("\n".join(footer))
@@ -426,7 +435,10 @@ class InteractiveGenomeBrowser:
         
         dlines = []
         if self._ref_cache1 and self._ref_cache2:
-            dlines = self.get_data_lines(self._ref_cache1, self._ref_cache2)
+            dlines = self.get_data_lines(self._ref_cache1, self._ref_cache2, threshs = [0.45])
+            lines_used += len(dlines)
+            
+            dlines = self.get_data_lines(self._ref_cache1, self._ref_cache2, threshs = [0.45], scale = 8)
             lines_used += len(dlines)
         # Navigation hints at fixed position (line 24)
         footer = self.get_footer_lines(lines_used, footer_pos = 32, suppress= True)
@@ -457,35 +469,80 @@ class InteractiveGenomeBrowser:
         
         print("\n".join(footer))
         
-    def get_data_lines(self, seq1, seq2, threshs = None):
+    def get_data_lines(self, seq1:str, seq2, show_stats = True, threshs = None, bit_depth = 32, scale = None):
+        
+        vars = [i for i, s in enumerate(seq1) if s=='-']
+        seq1_nv = seq1.replace("-","")
+        seq2_nv = seq1.replace("-","")
         
         bg, fg = draw.get_color_scheme("test")
         rcfg = fg - 12
+        if scale is None:
+            scale = len(seq1)//2
+            fill = 0.25
+            maxval = None
+        else:
+            fill = 0.25
+            maxval = None
+            # maxval = 2*fill
                 
-        conv_res, rc_conv_res = seqs.convolve(seq1, seq2, fill = 0.25)
+        conv_res, rc_conv_res = seqs.convolve(seq1_nv, seq2_nv, fill = fill, scale = scale)
         
-        data1 = draw.scalar_to_text_16b(conv_res, fg_color = fg, bg_color = bg)
-        data2 = draw.scalar_to_text_16b(rc_conv_res, fg_color = rcfg, bg_color = bg, flip = True)
+        data1 = draw.scalar_to_text_nb(conv_res, minval = 0, maxval =maxval, fg_color = fg, bg_color = bg, bit_depth = bit_depth)
+        data2 = draw.scalar_to_text_nb(rc_conv_res, minval = 0, maxval = maxval, fg_color = rcfg, bg_color = bg, flip = True, bit_depth = bit_depth)
         
-        pre2 = f"{Colors.BOLD}Corr:    {Colors.RESET}"
-        rcpre1 = f"{Colors.BOLD}RCCorr:  {Colors.RESET}"
+        dn1 = "Corr"
+        dn2 = "RCCorr"
+        pre2 = f"{Colors.BOLD}{dn1}:    {Colors.RESET}"
+        rcpre1 = f"{Colors.BOLD}{dn2}:  {Colors.RESET}"
         blank = "         "
+        prefix1 = [blank] * (len(data1)-1) + [pre2]
+        prefix2 = [rcpre1] + [blank] * (len(data2)-1) 
         
-        outlines = [blank+data1[0], pre2+data1[1], rcpre1+ data2[0], blank+data2[1]]
+        outlines = []
+        for p, d in zip(prefix1, data1):
+            dv = list(d)
+            for iv in vars[::-1]:
+                dv.insert(iv, '-')
+            dvstr = "".join(dv)
+            outlines.append(p+dvstr)
+        for p, d in zip(prefix2, data2):
+            dv = list(d)
+            for iv in vars[::-1]:
+                dv.insert(iv, '-')
+            dvstr = "".join(dv)
+            outlines.append(p+dvstr)
+        
+        if show_stats:
+            outlines.append("{:<10}{:<10}{:<10}{:<10}{:<10}".format(*["","Mean", "SD", "Min", "Max"]))
+            outlines.append(f"{dn1:<10}{np.mean(conv_res):<10.2g}{np.std(conv_res):<10.2g}{min(conv_res):<10.2g}{max(conv_res):<10.2g}")
+            outlines.append(f"{dn2:<10}{np.mean(rc_conv_res):<10.2g}{np.std(rc_conv_res):<10.2g}{min(rc_conv_res):<10.2g}{max(rc_conv_res):<10.2g}")
         
         if threshs:
-            t = threshs[0]
-            t1pos = np.argmax(data1)
-            t1val = data1[t1pos]
-            if abs(t1val) > t:
-                  do_threshs = True
-                  minidx = max(0, t1seq - 8)
-                  maxidx = max(0, t1seq + 8 + 1)
-                  t1seq = seq1[minidx:maxidx]
-                  
-            t2pos = np.argmax(data1)
-        
+            tlines = []
+            
+            tres1 = self.get_threshold_lines(conv_res, dn1, seq1, threshs)
+            tlines.extend(tres1)
+            tres2 = self.get_threshold_lines(rc_conv_res, dn2, seq2, threshs)
+            tlines.extend(tres2)
+            
+            if len(tlines) > 0:
+                outlines.append(f"{Colors.BOLD}Threshs: {Colors.RESET}")
+                outlines.extend(tlines)
+            
         return outlines
+    
+    def get_threshold_lines(self, data, data_name, seq, threshs):
+        tlines = []
+        t = threshs[0]
+        tpos = np.argmax(data)
+        tval = data[tpos]
+        if abs(tval) > t:
+            minidx = max(0, tpos - 8)
+            maxidx = max(0, tpos + 8 + 1)
+            tseq = seq[minidx:maxidx]
+            tlines.append(f"{data_name} met threshold {t:0.2g} with {tval:0.2f} at {tpos}, seq {tseq}")
+        return tlines
     
     def get_header_lines(self, second = False, suppress =False):
         
@@ -569,8 +626,6 @@ class InteractiveGenomeBrowser:
             ref_seq, personal_seq, features = window.ref_seq, window.alt_seq, window.features
             variant_features = window.variant_features if window.variant_features else []
             variant_deltas = window.variant_deltas  # For coordinate tracking
-            # logger.debug(f"Variant features: {variant_features}")
-            # logger.debug(f"Variant deltas: {variant_deltas}")
             
             # Add detected motifs to features list
             if window.motifs:
@@ -902,6 +957,7 @@ class InteractiveGenomeBrowser:
         else:
             state = self.state
         
+        currstrand = '-' if state.show_reverse_strand else '+'
         # Extract motifs from features for underline display
         motifs = [f for f in features if f.get('feature_type') == 'motif' or f.get('feature') == 'motif'] if features else []
         
@@ -1132,11 +1188,14 @@ class InteractiveGenomeBrowser:
                     else:
                         color = Colors.MOTIF_DEFAULT
                     
+                    
                     # Show underline with strand indicator at start
-                    if i == motif_start:
-                        motif_line += f"{color}{Colors.UNDERLINE}{'>' if strand == '+' else '<'}{Colors.RESET}"
+                    if i == motif_end and currstrand == strand:
+                        motif_line += f"{color}>{Colors.RESET}"
+                    if i == motif_start and currstrand!=strand:
+                        motif_line += f"{color}<{Colors.RESET}"
                     else:
-                        motif_line += f"{color}{Colors.UNDERLINE}‾{Colors.RESET}"
+                        motif_line += f"{color}={Colors.RESET}"
                 else:
                     motif_line += " "
             
@@ -1219,6 +1278,7 @@ class InteractiveGenomeBrowser:
         # Display features in hierarchical order
         window_start = state.position
         
+        currstrand = '-' if state.show_reverse_strand else '+'
         for ftype in self.feature_hierarchy:
             if ftype not in feature_groups:
                 continue
@@ -1283,7 +1343,6 @@ class InteractiveGenomeBrowser:
                     # Create compressed label for multiple features
                     label = self._format_compressed_label(ftype, extent_features)
                     
-                    currstrand = '-' if state.show_reverse_strand else '+'
                     if ftype=='gene':
                         feat = feature_groups[ftype][extent_key][0]
                         if not feat.strand==currstrand:
@@ -2077,6 +2136,8 @@ class InteractiveGenomeBrowser:
                         suffix = 'up'
                     elif final == 'B':  # Ctrl+Right
                         suffix = 'down'
+                    elif final in "c":
+                        suffix = final
                     
                     logger.debug(f"suffix {suffix} from final {repr(final)}")
                     if prefix and suffix:
@@ -2205,4 +2266,5 @@ def browse_genome(genome_manager: 'GenomeManager',
             browser.start(chrom, position, window_size)
     else:
         browser = InteractiveGenomeBrowser(genome_manager, debug = debug)
-        browser.start(chrom, position, window_size, show_second = True)
+        # browser.start(chrom, position, window_size, show_second = True)
+        browser.start(chrom, position, window_size)

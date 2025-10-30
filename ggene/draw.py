@@ -184,9 +184,9 @@ def scalar_to_text_nb(scalars, minval = None, maxval = None, fg_color = 7, bg_co
     
     bit_ranges = [base_bit_depth*i for i in range(nrows)]
     
-    if not minval:
+    if minval is None:
         minval = min(scalars)
-    if not maxval:
+    if maxval is None:
         maxval = max(scalars)
     rng = (maxval - minval)/1
     c = (minval+ maxval)/2

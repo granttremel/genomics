@@ -241,7 +241,7 @@ def normalize_sequence(seq):
     #     return seq
     
 
-def convolve(seq1, seq2, comparison_func = None, fill = 0):
+def convolve(seq1, seq2, comparison_func = None, fill = 0, scale = None):
     
     if not comparison_func:
         cmp = lambda x, y:x==y
@@ -252,37 +252,47 @@ def convolve(seq1, seq2, comparison_func = None, fill = 0):
     seq1, seq2 = seq1[:seq_len], seq2[:seq_len]
     rcseq2 = reverse_complement(seq2)
     
-    start = seq_len // 2
+    # if not max_shift:
+    max_shift = seq_len//2
+    
+    
     ips = []
     comp_ips = []
     n = 0
-    for t in range(-start, start + 1):
+    for t in range(-max_shift, max_shift + 1):
         
         sslen = seq_len - abs(t)
+        if scale is None:
+            sc = sslen
+        else:
+            sc = scale
+        
         s1start = max(t, 0)
-        seq1t = seq1[s1start:s1start + sslen]
+        s1c = s1start + sslen//2
+        seq1t = seq1[s1c - sc//2:s1c+sc//2]
         s2start = max(-t, 0)
-        seq2t = seq2[s2start:s2start + sslen]
-        rcseq2t = rcseq2[s2start:s2start + sslen]
+        s2c = s2start + sslen//2
+        seq2t = seq2[s2c - sc//2:s2c+sc//2]
+        rcseq2t = rcseq2[s2c - sc//2:s2c+sc//2]
         
         summ = 0
         csumm = 0
         for sa, sb, rcsb in zip(seq1t, seq2t, rcseq2t):
             
-            # csb = COMPLEMENT_MAP.get(sb)
             if not sa in vocab or not sb in vocab:
                 continue
             
             if cmp(sa, sb):
-                summ += 1/sslen
+                summ += 1/sc
             elif cmp(sa, rcsb):
-                csumm += 1/sslen
+                csumm += 1/sc
         
         if t == 0:
             ips.append(fill)
+            comp_ips.append(fill)
         else:
             ips.append(summ)
-        comp_ips.append(csumm)
+            comp_ips.append(csumm)
         n+=1
     
     return ips, comp_ips
