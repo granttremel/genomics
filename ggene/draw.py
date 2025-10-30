@@ -19,7 +19,7 @@ OTHER={
     "light":"░",
     "medium":"▒",
     "dark":"▓",
-    "misc":"▖▗▘▙▚▛▜▝▞▟"
+    "misc":"▖▗▘▙▚▛▜▝▞▟◐◑◒◓◔◕"
 }
 
 RESET = '\033[0m'
@@ -141,19 +141,24 @@ def scalar_to_text_nb(scalars, minval = None, maxval = None, fg_color = 7, bg_co
     else:
         fg, bg = get_fgbg(fg_color, bg_color)
     
+    add_border = False
     eff = ""
     if effect:
-        eff += str(effect)
+        if effect == "border":
+            add_border = True
+        else:
+            eff += str(effect)
+    
     
     base_bit_depth = len(SCALE) - 1
     if not bit_depth % base_bit_depth == 0:
         return ["no"]
     
     nrows = bit_depth // base_bit_depth
+    ncols = len(scalars)
     nvals = base_bit_depth * nrows
     
     rows = [[fg+bg+eff] for r in range(nrows)]
-    rows[1].append("\x1b[0;G")
     
     bit_ranges = [base_bit_depth*i for i in range(nrows)]
     
@@ -164,18 +169,8 @@ def scalar_to_text_nb(scalars, minval = None, maxval = None, fg_color = 7, bg_co
     rng = (maxval - minval)/1
     c = (minval+ maxval)/2
     
-    # of = 0
-    # swap = False
     for s in scalars:
         sv = int(nvals*((s - c)/rng)) + bit_depth // 2
-        
-        # d = (sv - sv % bit_depth) // bit_depth
-        # if d!=of:
-        #     fg_color, bg_color = bg_color, fg_color
-        #     bg, fg = get_fgbg(bg_color, fg_color)
-        #     swap = True
-        # of = d
-        # sv = sv % bit_depth
             
         for row, bit_range in zip(rows, bit_ranges):
             if sv < bit_range:
@@ -185,19 +180,110 @@ def scalar_to_text_nb(scalars, minval = None, maxval = None, fg_color = 7, bg_co
             else:
                 ssv = sv % base_bit_depth
                 sym = SCALE[ssv]
-            # if swap:
-            #     row.append(RESET + fg + bg)
             row.append(sym)
-        # swap = False
+    
+    brdc = "\x1b[38;5;6m"
+    outstrs= []
+    for row in rows[::-1]:
+        if add_border:
+            row.insert(0, brdc + OTHER.get("right_eighth",""))
+            row.append(brdc + SCALE_H[1])
+        row.append(RESET)
+        outstrs.append("".join(row))
+    
+    if add_border:
+        outstrs.insert(0, " " + SCALE[1]*ncols + " ")
+        outstrs.append(f"{brdc} " + OTHER.get("upper_eighth","")*ncols + f" {RESET}")
+        
+    if flip:
+        return flip_scalar_text(outstrs)
+    else:
+        return outstrs
+
+def scalar_to_text_mid(scalars, minval = None, maxval = None, fg_color = 7, bg_color = 212,  effect = None):
+    
+    bit_depth = 16
+    
+    ifg, ibg = get_fgbg(fg_color, bg_color)
+    bg, fg = get_fgbg(bg_color, fg_color)
+    
+    eff = ""
+    if effect:
+        eff += str(effect)
+    
+    
+    base_bit_depth = len(SCALE) - 1
+    if not bit_depth % base_bit_depth == 0:
+        return ["no"]
+    
+    nrows = bit_depth // base_bit_depth
+    ncols = len(scalars)
+    nvals = base_bit_depth * nrows
+    
+    rows = [[fg+bg+eff],[ifg+ibg+eff]]
+    
+    bit_ranges = [base_bit_depth*i - bit_depth/2 for i in range(nrows)]
+    
+    if not minval:
+        minval = min(scalars)
+    if not maxval:
+        maxval = max(scalars)
+    rng = (maxval - minval)/1
+    c = (minval+ maxval)/2
+    
+    neg = False
+    for s in scalars:
+        sv = int(nvals*((s - c)/rng))
+        
+        if sv < 0 and not neg:
+            neg = True
+            # row.append(RESET+ibg+ifg)
+        elif sv >= 0 and neg:
+            neg = False
+            # row.append(RESET + bg + fg)
+        
+        for row, bit_range in zip(rows, bit_ranges):
+            if sv < bit_range:
+                sym = SCALE[0]
+            elif sv >= bit_range + base_bit_depth:
+                sym = SCALE[-1]
+            else:
+                ssv = sv % base_bit_depth
+                sym = SCALE[ssv]
+            row.append(sym)
     
     outstrs= []
     for row in rows[::-1]:
         row.append(RESET)
         outstrs.append("".join(row))
-    if flip:
-        return flip_scalar_text(outstrs)
-    else:
-        return outstrs
+        
+    return outstrs
+
+def plot_adjacent(seqa, seqb):
+    bit_depth = 16
+    qseqa = quantize(seqa, bit_depth, mid=True)
+    qseqb = quantize(seqb, bit_depth, mid=True)
+    
+    min_offset = 0
+    for a, b in zip(qseqa, qseqb):
+        off = a-b
+        if off < min_offset:
+            min_offset = off
+    min_offset -= 1
+    eff_bit_depth = bit_depth - min_offset
+    
+    
+    return qseqa, [b+min_offset for b in qseqb], min_offset, eff_bit_depth
+
+def quantize(data, bit_depth, maxval=None, minval=None, mid = False):
+    if not maxval:
+        maxval = max(data)
+    if not minval:
+        minval = min(data)
+    rng = maxval-minval
+    c = (minval+maxval)/2
+    off = 0 if mid else 0.5
+    return [int(bit_depth * (((d-c)/rng) + off)) for d in data]
 
 def scalar_to_text_nbh(scalars, minval = None, maxval = None, fg_color = 7, bg_color = 212, bit_depth = 24, flip = False, effect = None):
     
@@ -247,7 +333,11 @@ def scalar_to_text_nbh(scalars, minval = None, maxval = None, fg_color = 7, bg_c
     outstrs= []
     for row in rows:
         row.append(RESET)
-        outstrs.append("".join(row))
+        border_row = ["▁" if r in SCALE else r for r in row]
+        outstrs.append("".join(row) + "\033[1G")
+        outstrs.append("".join(border_row))
+        print(outstrs[-1])
+        
     if flip:
         return hflip_scalar_text(outstrs)
     else:
@@ -265,6 +355,18 @@ def flip_scalar_text(sctext):
             newrow.append(scale_inv.get(sym, sym))
         out.append("".join(newrow))
     return out
+
+def clean_scalar_text(sctext):
+    if isinstance(sctext, str):
+        sctext = [sctext]
+    elif not isinstance(sctext, list):
+        sctext = list(sctext)
+    
+    outrows = []
+    for row in sctext:
+        newrow = [t for t in row if t in SCALE]
+        outrows.append("".join(newrow))
+    return outrows
 
 def hflip_scalar_text(sctext):
     
@@ -324,7 +426,7 @@ def make_key(features, colors):
     
     return " ".join(parts)
     
-def highlight_features(seq, features, feature_starts, feature_ends, colors = {}):
+def highlight_features(seq, features, feature_starts, feature_ends, colors = {}, show_key = True):
     """
     feature_starts: Dict:feature -> List[feature_start_pos]
     feature_ends: Dict:feature -> List[feature_end_pos]
@@ -378,8 +480,9 @@ def highlight_features(seq, features, feature_starts, feature_ends, colors = {})
 
     result.append(RESET)
 
-    print(" ".join(result))
-    print(key)
+    print("".join(result))
+    if show_key:
+        print(key)
 
 def highlight_sequence(seq, subseq, colors = {}):
     

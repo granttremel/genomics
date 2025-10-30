@@ -4,7 +4,8 @@
 import sys
 sys.path.insert(0, '/home/gront/Documents/python/genomics-prj')
 
-from ggene import DEFAULT_FASTA_PATH, DEFAULT_GTF_PATH, DEFAULT_VCF_PATH
+from ggene import get_paths
+DEFAULT_VCF_PATH, DEFAULT_GTF_PATH, DEFAULT_FASTA_PATH, DEFAULT_LIBRARY = get_paths()
 from ggene.unified_stream import UnifiedGenomeAnnotations
 from ggene.genomemanager import GenomeManager
 import os

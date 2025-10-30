@@ -7,6 +7,8 @@ data/*.out
 data/*vcf
 data/*
 
+
+
 .venv
 out/*
 analysis/*
@@ -21,3 +23,5 @@ analysis/*
 *312.pyc
 
 */__pycache__/*
+
+__pycache__/*

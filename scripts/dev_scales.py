@@ -69,6 +69,9 @@ def get_random_sequence(seq_len, minval = 0, maxval = 100, var = 1, bias = 0, ni
     return rand_seq_sc
 
 def get_color_scheme(name):
+    """
+    returns bg, fg
+    """
     if name == "gray":
         return 244, 236
     elif name == "blue":
@@ -124,14 +127,27 @@ def find_nice_colors(seq_len = 256):
 
 def looks_cool(seq_len = 128, num_bias = 20, bias_range = 1.0):
     
+    import os
+    with open("./test.txt", "w") as f:
+        f.write("")
+    
     for i in range(num_bias):
         b = bias_range*(i/num_bias - 0.5)
         rseq = get_random_sequence(seq_len, bias = b)
         print()
         
-        f, s = scalar_to_text_16b(rseq)
-        print(f)
-        print(s)
+        res = scalar_to_text_16b(rseq)
+        for r in res:
+            print(r)
+        
+        rclean = draw.clean_scalar_text(res)
+        rclfull = "\n".join(rclean)
+        
+        with open("./test.txt", "a") as f:
+            f.write(rclfull)
+            # for r in rclean:
+            #     f.write(r + "\n")
+            f.write("\n\n")
 
 def test_nb(seq_len = 256):
     
@@ -348,7 +364,7 @@ def test_flip(bd = 16):
     _bc = bc
     
     # effects = [1, 2, 3, 4, 5, 6, 9, 51, 52, 53, 90, 100] * 10
-    effects = range(0, 50)
+    effects = range(0, 10)
     
     for eff in effects:
         # effect = f"\x1b[{eff}m"
@@ -443,22 +459,70 @@ def scan_for_repeats(gm, chr, start, step):
         start+=step
         
 
+def test_border(ntests = 5, bd = 16):
+    
+    bc, fc = get_color_scheme("test")
+    _bc = bc
+    
+    for eff in range(ntests):
+        
+        fc = random.randint(20, 230)
+        
+        seq = get_random_sequence(256, var = 16, bias = 0.1)
+        res = draw.scalar_to_text_nb(seq, fg_color = fc, bg_color = bc, flip= False, bit_depth = bd, effect = "")
+        for r in res:
+            print(r)
+        print()
+        
+        rseq = seq
+        res = draw.scalar_to_text_nb(rseq, fg_color = fc, bg_color = bc, flip= False, bit_depth = bd, effect="border")
+        for r in res:
+            print(r)
+        print()
+
+def test_mid(ntests = 5):
+    bc, fc = get_color_scheme("test")
+    _bc = bc
+    
+    for eff in range(ntests):
+        
+        fc = random.randint(20, 230)
+        
+        seq = get_random_sequence(256, var = 16, bias = 0.1)
+        res = draw.scalar_to_text_nb(seq, fg_color = fc, bg_color = bc, flip= False, bit_depth=16, effect = "")
+        for r in res:
+            print(r)
+        print()
+        
+        rseq = seq
+        res = draw.scalar_to_text_mid(rseq, fg_color = fc, bg_color = bc)
+        for r in res:
+            print(r)
+        print()
+
+    
+        
+def reveal_escapes(sctext):
+    for r in sctext:
+        print(repr(r))
+    print()
+        
 def main():
     pass    
     
-    # seqs.set_vocab("ATGC")
-    seqs.set_vocab("■□▼▽")
+    seqs.set_vocab("ATGC")
+    # seqs.set_vocab("■□▼▽")
     print(seqs.vocab, seqs.COMPLEMENT_MAP)
 
     bc, fc = get_color_scheme("test")
 
-    gm = load_genome()
+    # gm = load_genome()
     
     chr = 2
     seq_center = 1124574
     seq_len = 1024
     
-    scan_for_repeats(gm, chr, seq_center, 1024)
+    # scan_for_repeats(gm, chr, seq_center, 1024)
     
     # seq = get_natural_seq(gm, seq_len = seq_len)
     # seq = get_hammerhead()
@@ -474,8 +538,33 @@ def main():
     # test_ansi()
     # test_hor()
     # test_overflow()
+    # test_border(5)
     
+    # test_mid(5)
     
+    bc, fc = get_color_scheme("test")
+    
+    seqa = get_random_sequence(16)
+    seqb = get_random_sequence(16)
+    seqa, seqboff, off, ebd = draw.plot_adjacent(seqa, seqb)
+    
+    print(f"offset: {off}, effective bit depth: {ebd} vs {2*16}")
+    print(" ".join(str(a) for a in seqa))
+    print(" ".join(str(b) for b in seqboff))
+    print(" ".join(str(a+b) for a,b in zip(seqa,seqboff)))
+    
+    resa = draw.scalar_to_text_mid(seqa, fg_color = fc, bg_color = bc)
+    for r in resa:
+        print(r)
+    resb = draw.scalar_to_text_mid(seqb, fg_color = fc, bg_color = bc)
+    for r in resb:
+        print(r)
+    
+    # qseq = draw.quantize(seq, 16)
+    # mseq = draw.quantize(seq, 16, mid=True)
+    # print(" ".join(format(s, "0.1f") for s in seq))
+    # print(" ".join(str(q) for q in qseq))
+    # print(" ".join(str(m) for m in mseq))
     # pyrpur = {"AG":"R", "UC":"Y"}
     # yrcmp = lambda x, y: pyrpur.get(x) == pyrpur.get(y)
     
@@ -488,7 +577,11 @@ def main():
     
     # find_nice_colors()
     
-    # looks_cool(bias_range = 0.5)
+    # looks_cool()
+    
+    # with open("./test.txt") as f:
+    #     for i,line in enumerate(f):
+    #         print(i,line)
 
     # test_nb()
     

@@ -15,7 +15,8 @@ import logging
 logger = logging.getLogger(__name__)
 logger.setLevel("CRITICAL")
 
-from . import DEFAULT_VCF_PATH, DEFAULT_GTF_PATH, DEFAULT_FASTA_PATH, DEFAULT_LIBRARY
+from . import get_paths
+DEFAULT_VCF_PATH, DEFAULT_GTF_PATH, DEFAULT_FASTA_PATH, DEFAULT_LIBRARY = get_paths()
 from . import COMPLEMENT_MAP, reverse_complement, to_rna, to_dna, is_rna, is_dna
 from . import shorten_variant
 from . import utils

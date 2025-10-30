@@ -14,19 +14,31 @@ import numpy as np
 import pysam
 import re
 import pyranges as pr
+import yaml
+from pathlib import Path
 
+from .features import Feature, Gene
 
 __all__ = ['logger', 'DATA_DIR','DEFAULT_VCF_PATH', 'DEFAULT_GTF_PATH', 'COMPLEMENT_MAP', 'Feature', 'Gene','shorten_variant']
 
 # Configure logging
 logger = logging.getLogger(__name__)
 
+CONFIG_PATH = "./local.yaml" if os.path.exists("./local.yaml") else "./default.yaml"
+
+cfg = {}
+with open(CONFIG_PATH) as f:
+    cfg = yaml.safe_load(f)
+
 # Constants
-DATA_DIR = "./data"
-DEFAULT_VCF_PATH = "./data/gt_vcf.gz"
-DEFAULT_GTF_PATH = "./data/GRCh38_sorted.gtf.gz"
-DEFAULT_FASTA_PATH = "./data/Homo_sapiens.GRCh38.dna.primary_assembly.fa.gz"
-DEFAULT_LIBRARY = "./data/library"
+DATA_DIR = Path(cfg.get("data_dir"))
+DEFAULT_VCF_PATH = DATA_DIR / "gt_vcf.gz"
+DEFAULT_GTF_PATH = DATA_DIR / "GRCh38_sorted.gtf.gz"
+DEFAULT_FASTA_PATH = DATA_DIR / "Homo_sapiens.GRCh38.dna.primary_assembly.fa.gz"
+DEFAULT_LIBRARY = DATA_DIR / "library"
+
+def get_paths():
+    return str(DEFAULT_VCF_PATH), str(DEFAULT_GTF_PATH), str(DEFAULT_FASTA_PATH), str(DEFAULT_LIBRARY)
 
 INFO_TAGS = (
     'AF1', 'DP', 'DP4', 'FQ', 'MQ', 'PC2', 'PCHI1', 
