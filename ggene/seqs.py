@@ -99,6 +99,27 @@ def consensus_to_re(seq, err = 0):
     
     return "".join(outstr)
 
+def reverse_complement_re(pattern):
+    plist = list(pattern)
+    rcp = []
+    
+    in_grp = False
+    grp = []
+    for c in plist:
+        if c == '[':
+            in_grp = True
+        elif c == ']':
+            in_grp = False
+            new_grp_bs = [v for v in vocab if not v in grp]
+            rcp.append(f"[{"".join(new_grp_bs)}]")
+            grp = []
+        else:
+            if in_grp:
+                grp.append(c)
+            else:
+                rcp.append(c)
+    return "".join(rcp)
+
 def compare_sequences(s1: str, s2: str, err_tol: Optional[int] = None) -> int:
     """Helper to compare two sequences and count mismatches."""
     if len(s1) < len(s2):
@@ -220,6 +241,118 @@ def normalize_sequence(seq):
     #     return seq
     
 
+def convolve(seq1, seq2, comparison_func = None, fill = 0):
+    
+    if not comparison_func:
+        cmp = lambda x, y:x==y
+    else:
+        cmp = comparison_func
+    
+    seq_len = min(len(seq1), len(seq2))
+    seq1, seq2 = seq1[:seq_len], seq2[:seq_len]
+    rcseq2 = reverse_complement(seq2)
+    
+    start = seq_len // 2
+    ips = []
+    comp_ips = []
+    n = 0
+    for t in range(-start, start + 1):
+        
+        sslen = seq_len - abs(t)
+        s1start = max(t, 0)
+        seq1t = seq1[s1start:s1start + sslen]
+        s2start = max(-t, 0)
+        seq2t = seq2[s2start:s2start + sslen]
+        rcseq2t = rcseq2[s2start:s2start + sslen]
+        
+        summ = 0
+        csumm = 0
+        for sa, sb, rcsb in zip(seq1t, seq2t, rcseq2t):
+            
+            # csb = COMPLEMENT_MAP.get(sb)
+            if not sa in vocab or not sb in vocab:
+                continue
+            
+            if cmp(sa, sb):
+                summ += 1/sslen
+            elif cmp(sa, rcsb):
+                csumm += 1/sslen
+        
+        if t == 0:
+            ips.append(fill)
+        else:
+            ips.append(summ)
+        comp_ips.append(csumm)
+        n+=1
+    
+    return ips, comp_ips
+
+def convolve_longest_subseq(seq1, seq2):
+    
+    seq_len = min(len(seq1), len(seq2))
+    seq1, seq2 = seq1[:seq_len], seq2[:seq_len]
+    
+    start = seq_len // 2
+    runs = []
+    inds = []
+    found = set()
+    
+    for i,t in enumerate(range(-start, start+1)):
+        
+        sslen = seq_len - abs(t)
+        s1start = max(t, 0)
+        seq1t = seq1[s1start:s1start + sslen]
+        s2start = max(-t, 0)
+        seq2t = seq2[s2start:s2start + sslen]
+        
+        max_run = 0
+        max_run_end = -1
+        max_run_shift = -1
+        run = 0
+        for j, (sa, sb) in enumerate(zip(seq1t, seq2t)):
+            
+            if sa==sb:
+                run += 1
+            else:
+                run = 0
+                
+            if run > max_run:
+                max_run = run
+                max_run_end = j + s1start
+                max_run_shift = t
+        
+        if t == 0:
+            runs.append(0)
+        else:
+            runs.append(max_run)
+        s1sp = max_run_end - max_run + 1
+        s2sp = s1sp - max_run_shift
+        if (s1sp, s2sp) in found:
+            inds.append((-1, -1))
+            continue
+        else:
+            found.add((s1sp, s2sp))
+            found.add((s2sp, s1sp))
+            
+            newind = (max_run_end - max_run + 1, max_run_shift)
+            inds.append(newind)
+    
+    return runs, inds
+
+def convolve_generator(seq1, seq2):
+    
+    seq_len = min(len(seq1), len(seq2))
+    seq1, seq2 = seq1[:seq_len], seq2[:seq_len]
+    
+    start = seq_len // 2
+    
+    for t in range(-start, start):
+        
+        sslen = seq_len - abs(t)
+        seq1t = seq1[max(t, 0):max(t, 0) + sslen]
+        seq2t = seq2[max(-t, 0):max(-t, 0) + sslen]
+        yield seq1t, seq2t
+    
 def frequency_rank(seqs, proc = [], min_len = 3, topk = None, do_rc = False, err_tol = 0):
     max_n = 0
     max_seq = ""

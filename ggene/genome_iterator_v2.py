@@ -12,9 +12,11 @@ import logging
 from typing import Dict, List, Optional, Tuple, Union, Iterator, Any
 from dataclasses import dataclass, field
 import numpy as np
+import reprlib
 
 logger = logging.getLogger(__name__)
 logger.setLevel("CRITICAL")
+# logger.setLevel(logging.DEBUG)
 
 @dataclass
 class CoordinateState:
@@ -381,14 +383,17 @@ class UnifiedGenomeIterator:
     def _extract_window(self, window_start_ref: int, window_end_ref: int) -> GenomeWindow:
         """Extract a window from the buffer."""
         # Check if we need to reload buffer
+        logger.debug(f"buffer offsets before: {self._buffer_start}, {self._buffer_end}")
         if window_end_ref > self._buffer_end:
             self._buffer_start = window_start_ref - self.PRELOAD_BUFFER
             self._buffer_end = window_end_ref + self.SEQUENCE_CACHE_SIZE
             self._preload_buffer()
+        logger.debug(f"window and consts: {window_start_ref}, {window_end_ref}, {self.PRELOAD_BUFFER}, {self.SEQUENCE_CACHE_SIZE}")
         
         # Calculate position in buffer
         buffer_offset_start = window_start_ref - max(1, self._buffer_start)
         buffer_offset_end = window_end_ref - max(1, self._buffer_start)
+        logger.debug(f"buffer offsets after: {buffer_offset_start}, {buffer_offset_end}, {self._buffer_start}, {self._buffer_end}")
         
         # Account for gaps from variants
         # Count variants before and in window
@@ -407,6 +412,11 @@ class UnifiedGenomeIterator:
         # Extract sequences (with gaps)
         ref_seq = self._ref_buffer[adjusted_start:adjusted_end] if self._ref_buffer else ""
         alt_seq = self._alt_buffer[adjusted_start:adjusted_end] if self._alt_buffer else ""
+        
+        logger.debug(f"extracted seqs with {len(ref_seq)} bases from {adjusted_start}-{adjusted_end}")
+        if ref_seq:
+            logger.debug(f"ref: {ref_seq[:32]}")
+        logger.debug(f"has buffer?: {bool(self._ref_buffer)}, {bool(self._alt_buffer)}")
         
         # Get features
         features = self._get_features_in_window(window_start_ref, window_end_ref)
@@ -491,7 +501,6 @@ class UnifiedGenomeIterator:
             )
     
     def get_window_at(self, position):
-        
         return self._extract_window(position, position + self.window_size)
         
     
@@ -539,3 +548,8 @@ class UnifiedGenomeIterator:
             'display': self.coords.display_pos,
             'cumulative_delta': self._cumulative_delta
         }
+
+    def __repr__(self):
+        safe_attrs = {k: v for k, v in self.__dict__.items() 
+                    if isinstance(v, (int, float, str, bool, type(None)))}
+        return f"{self.__class__.__name__}({reprlib.repr(safe_attrs)})"

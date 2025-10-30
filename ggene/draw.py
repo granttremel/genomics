@@ -122,6 +122,28 @@ def set_colors(tail=None, dyad=None, loop=None, seq=None, cseq=None, bright=Fals
 
 set_colors(seq = 174, cseq = 66, background = True)
 
+def get_color_scheme(name):
+    """
+    returns bg, fg
+    """
+    if name == "gray":
+        return 244, 236
+    elif name == "blue":
+        return 17, 38
+    elif name == "foggy":
+        return 36, 67
+    elif name == "dusty":
+        return 188, 138
+    elif name == "ruddy":
+        return 179, 131
+    elif name == "icy":
+        return 146, 225
+    elif name == "vscode":
+        return 234, 131
+    elif name == "test":
+        return 234, 65
+    else:
+        return 0,1
 def get_fgbg(fg_color, bg_color):
     fg = f"\x1b[38;5;{fg_color}m"
     bg = f"\x1b[48;5;{bg_color}m"

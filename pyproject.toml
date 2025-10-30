@@ -35,3 +35,6 @@ exclude = ["tests*", "docs*"]
 [tool.setuptools.package-data]
 ggene = ["*.json", "data/*"]
 
+
+[tool.pyright]
+typeCheckingMode = "off"

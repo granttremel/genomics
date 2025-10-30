@@ -17,11 +17,6 @@ gene
 genenv
 analysis/*
 *.egg-info
-/ggene/__pycache__
-*__pycache__*
-*/__pycache__
 *312.pyc
 
-*/__pycache__/*
-
-__pycache__/*
+**/*/__pycache__
