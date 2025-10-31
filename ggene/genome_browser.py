@@ -14,7 +14,8 @@ import numpy as np
 
 from ggene import CODON_TABLE_DNA, CODON_TABLE_RNA, COMPLEMENT_MAP, COMPLEMENT_MAP_RNA, to_rna, complement, reverse_complement
 from ggene.features import Gene, Feature
-from ggene import draw, seqs
+from ggene import seqs, draw
+from ggene.genome_iterator_v2 import UnifiedGenomeIteratorfrom ggene import draw, seqs
 from ggene.unified_stream import UnifiedFeature
 from ggene.genome_iterator_v2 import UnifiedGenomeIterator
 
@@ -153,13 +154,9 @@ class InteractiveGenomeBrowser:
         self._ref_cache1 = self._ref_cache2 = self._alt_cache1 = self._alt_cache2 = ""
         self._current_features={}
         self._gene_cache=""
-        self._gene_cache2=""
         
-        self.patterns={
-            "splice_donor":"GGGU[AG]AGU",
-            "splice_branch":"[CU]U[AG]AC",
-            "splice_acceptor":"[CU][AUCG]CAGG"
-        }
+        
+        self.data = ["autocorrelation"]
         
         # Feature display order (based on hierarchy)
         self.feature_hierarchy = [
@@ -169,6 +166,8 @@ class InteractiveGenomeBrowser:
             'tf_binding', 'motif', 'splice_donor', 'splice_acceptor',
             'repeat', 'chip_peak', 'variant'
         ]
+        
+        self.arrows = draw.get_arrow("default", 5, "-") # L, R
     
     def start(self, chrom: Union[str, int], position: int = 1,
              window_size: int = 240, stride: int = 40, show_second = False):
@@ -189,7 +188,17 @@ class InteractiveGenomeBrowser:
         )
         if show_second:
             self.state2 = self.state.copy()
-        
+        self.iterator = UnifiedGenomeIterator(
+            self.gm,
+            self.state.chrom,
+            self.state.position,
+            window_size = self.state.window_size,
+            stride = self.state.stride,
+            integrate_variants=True,
+            track_features = True,
+            feature_types=["gene","exon","CDS","motif"]
+            
+        )
         # Clear screen
         if not self.debug:
             os.system('clear' if os.name == 'posix' else 'cls')
@@ -336,22 +345,22 @@ class InteractiveGenomeBrowser:
         
         self.state.show_second= self.state2.show_second = True
     
-    def update_iterator(self):
+    # def update_iterator(self):
         
-        iters = [self.iterator]
-        states = [self.state]
-        if self.state.show_second:
-            iters.append(self.iterator2)
-            states.append(self.state2)
+    #     iters = [self.iterator]
+    #     states = [self.state]
+    #     if self.state.show_second:
+    #         iters.append(self.iterator2)
+    #         states.append(self.state2)
         
-        for iterator, state in zip(iters, states):
-            iterator.start = state.position
-            iterator.end = state.position + state.window_size
-            iterator.window_size = state.window_size
-            iterator.stride = state.stride
-            iterator._preload_buffer()
+    #     for iterator, state in zip(iters, states):
+    #         iterator.start = state.position
+    #         iterator.end = state.position + state.window_size
+    #         iterator.window_size = state.window_size
+    #         iterator.stride = state.stride
+    #         iterator._preload_buffer()
         
-            logger.debug(f"iterator updated: {repr(iterator)}")
+    #         logger.debug(f"iterator updated: {repr(iterator)}")
     
     def _update_iterator(self):
         
@@ -672,6 +681,10 @@ class InteractiveGenomeBrowser:
             # Display sequences with codon highlighting
             self._display_sequences(ref_seq, personal_seq, features)
             
+            # scalar data
+            data_results = self.calculate_data(self.data, personal_seq)
+            self._display_data(self.data, data_results, window.variant_features)
+            
             # Display amino acid translation if in CDS
             if self.state.show_amino_acids:
                 self._display_amino_acid_changes(ref_seq, personal_seq, features)
@@ -827,120 +840,35 @@ class InteractiveGenomeBrowser:
         
         subprocess.run(["firefox",self.wiki.format(name=self._gene_cache)])
     
-    def _align_sequences_with_gaps(self, ref_seq: str, personal_seq: str, features):
-        """Align reference and personal sequences by inserting gaps at indel positions.
+    def calculate_data(self, data, seq):
         
-        Returns:
-            Tuple of (aligned_ref, aligned_pers, variant_positions)
-        """
-        # Find variant features to identify indels
-        variant_features = [f for f in features if f.feature_type == 'variant']
+        data_res = []
+        if "autocorrelation" in data:
+            res, rcres = seqs.convolve(seq, seq, fill = 0.25)
+            data_res.append([res, rcres])
         
-        # Create a list of indel events in the window
-        indels = []
-        window_start = self.state.position
+        return data_res
+    
+    def _display_data(self, data, data_results, variants, bit_depth = 8):
+        bc, fc = draw.get_color_scheme("test")
         
-        for var in variant_features:
-            var_start = var.start
-            ref = var.get('ref', '')
-            alt = var.get('alt', '')
+        for d, res in zip(data, data_results):
             
-            # Calculate position in our window (0-based)
-            window_pos = var_start - window_start
+            if not isinstance(res, list):
+                res = [res]
             
-            # Only process if the variant starts within our window
-            if 0 <= window_pos < len(ref_seq):
-                if len(ref) != len(alt):
-                    indels.append({
-                        'pos': window_pos,
-                        'ref_len': len(ref),
-                        'alt_len': len(alt),
-                        'ref': ref,
-                        'alt': alt
-                    })
-        
-        # Sort indels by position
-        indels.sort(key=lambda x: x['pos'])
-        
-        # Build aligned sequences with gaps
-        aligned_ref = []
-        aligned_pers = []
-        variant_positions = []  # Track where variants are for coloring
-        
-        ref_idx = 0
-        pers_idx = 0
-        
-        for i in range(len(ref_seq)):
-            # Check if we're at an indel position
-            current_indel = None
-            for indel in indels:
-                if indel['pos'] == i:
-                    current_indel = indel
-                    break
-            
-            if current_indel:
-                ref_len = current_indel['ref_len']
-                alt_len = current_indel['alt_len']
                 
-                if alt_len > ref_len:
-                    # Insertion - add gaps to reference
-                    for j in range(ref_len):
-                        aligned_ref.append(ref_seq[ref_idx] if ref_idx < len(ref_seq) else 'N')
-                        aligned_pers.append(personal_seq[pers_idx] if pers_idx < len(personal_seq) else 'N')
-                        variant_positions.append(True)
-                        ref_idx += 1
-                        pers_idx += 1
-                    
-                    # Add the inserted bases with gaps in reference
-                    for j in range(alt_len - ref_len):
-                        aligned_ref.append('-')
-                        aligned_pers.append(personal_seq[pers_idx] if pers_idx < len(personal_seq) else 'N')
-                        variant_positions.append(True)
-                        pers_idx += 1
-                        
-                elif ref_len > alt_len:
-                    # Deletion - add gaps to personal  
-                    for j in range(alt_len):
-                        aligned_ref.append(ref_seq[ref_idx] if ref_idx < len(ref_seq) else 'N')
-                        aligned_pers.append(personal_seq[pers_idx] if pers_idx < len(personal_seq) else 'N')
-                        variant_positions.append(True)
-                        ref_idx += 1
-                        pers_idx += 1
-                    
-                    # Add the deleted bases with gaps in personal
-                    for j in range(ref_len - alt_len):
-                        aligned_ref.append(ref_seq[ref_idx] if ref_idx < len(ref_seq) else 'N')
-                        aligned_pers.append('-')
-                        variant_positions.append(True)
-                        ref_idx += 1
-                        
-                else:
-                    # SNP - just add both
-                    aligned_ref.append(ref_seq[ref_idx] if ref_idx < len(ref_seq) else 'N')
-                    aligned_pers.append(personal_seq[pers_idx] if pers_idx < len(personal_seq) else 'N')
-                    variant_positions.append(ref_seq[ref_idx] != personal_seq[pers_idx])
-                    ref_idx += 1
-                    pers_idx += 1
-            else:
-                # No indel at this position
-                if ref_idx < len(ref_seq) and pers_idx < len(personal_seq):
-                    aligned_ref.append(ref_seq[ref_idx])
-                    aligned_pers.append(personal_seq[pers_idx])
-                    variant_positions.append(ref_seq[ref_idx] != personal_seq[pers_idx])
-                    ref_idx += 1
-                    pers_idx += 1
-                elif ref_idx < len(ref_seq):
-                    aligned_ref.append(ref_seq[ref_idx])
-                    aligned_pers.append('-')
-                    variant_positions.append(True)
-                    ref_idx += 1
-                elif pers_idx < len(personal_seq):
-                    aligned_ref.append('-')
-                    aligned_pers.append(personal_seq[pers_idx])
-                    variant_positions.append(True)
-                    pers_idx += 1
-        
-        return ''.join(aligned_ref), ''.join(aligned_pers), variant_positions
+            data_disp = f"{Colors.BOLD}{d[:7]}: {Colors.RESET}"
+            for i, eachres in enumerate(res):
+                
+                data_render = draw.scalar_to_text_16b(eachres, fg_color = fc, bg_color = bc, flip = i%2)
+                for r in data_render:
+                    data_render_algn = self.iterator.annotations.sequence_stream.apply_variants_to_sequence(r, variants, self.state.position, substitution = " ")
+                    data_disp += "".join(data_render_algn)
+                    print(data_disp)
+                    data_disp = "         "
+                print()
+            
     
     def _display_sequences(self, ref_seq: str, personal_seq: str, features= None, second = False, suppress = False):
         """Display reference and personal sequences with variant highlighting.
@@ -973,6 +901,10 @@ class InteractiveGenomeBrowser:
         # Sequences are already aligned from GenomeIterator
         aligned_ref = ref_seq
         aligned_pers = personal_seq
+        
+        # data_results = []
+        # if self.data:
+        #     data_results = self.calculate_data(self.data, aligned_pers)
         
         # Detect variant positions (including gaps)
         variant_positions = []
@@ -1153,11 +1085,17 @@ class InteractiveGenomeBrowser:
         lines["seq"] = slines
         n+= len(slines)
         
+
+        
+        marker_line = ["         "]
+        offset = len(marker_line)
+        la, ra = self.arrows
+        stem = '-'
         extras  = []
         # Motif underline with strand indicators
-        if motifs:
+        if motifs or True:
             
-            motif_line = "         "
+            # marker_line = "         "
             motif_colors = "         "
             
             for i in range(len(aligned_ref)):
@@ -1189,38 +1127,37 @@ class InteractiveGenomeBrowser:
                         color = Colors.MOTIF_DEFAULT
                     
                     
-                    # Show underline with strand indicator at start
-                    if i == motif_end and currstrand == strand:
-                        motif_line += f"{color}>{Colors.RESET}"
-                    if i == motif_start and currstrand!=strand:
-                        motif_line += f"{color}<{Colors.RESET}"
+                    if i == motif_start:
+                        marker_line.append(f"{color}{ra if strand == '+' else la}{Colors.RESET}")
                     else:
-                        motif_line += f"{color}={Colors.RESET}"
+                        marker_line.append(f"{color}{stem}{Colors.RESET}")
+                    
                 else:
-                    motif_line += " "
+                    marker_line.append(" ")
             
             if not suppress:
-                print(motif_line)
-            extras.append(motif_line)
+                print(marker_line)
+            extras.append(marker_line)
         
         # Variant indicator line
-        variant_line = "         "
-        for i in range(len(variant_positions)):
+        for i in range(offset, len(variant_positions)):
             if variant_positions[i]:
-                variant_line += "*"
-            else:
-                variant_line += " "
+                marker_line[i] = f"{Colors.DIM}*{Colors.RESET}"
+            # else:
+            #     marker_line += " "
         
-        if any(variant_positions):
-            if not suppress:
-                print(f"{Colors.DIM}{variant_line}{Colors.RESET}")
-            extras.append(f"{Colors.DIM}{variant_line}{Colors.RESET}")
-        lines["extras"] = extras
-        n+=len(extras)
+        # if any(variant_positions):
+        #     if not suppress:
+        #         print(f"{Colors.DIM}{variant_line}{Colors.RESET}")
+        #     extras.append(f"{Colors.DIM}{variant_line}{Colors.RESET}")
+        # lines["extras"] = extras
+        # n+=len(extras)
         
         return lines, n
     
-    def _display_features(self, features, variant_features, second = False, suppress = False):
+    
+    
+    def _display_features(self, features: List[Dict[str, Any]], variant_features, second=False, suppress = False):
         """Display feature annotations as labeled bars with compression.
         
         Args:

@@ -22,8 +22,66 @@ OTHER={
     "misc":"▖▗▘▙▚▛▜▝▞▟◐◑◒◓◔◕"
 }
 
+arrows = {
+        "default":[
+            (0X21BD, '↽'), #          ↽-----          -----↽
+            (0X21C0, '⇀'), #          ⇀-----          -----⇀
+        ],
+    
+        "extra":[     
+            (0X27F5, '⟵'), #          ⟵-----          -----⟵
+            (0X27F6, '⟶'), #          ⟶-----          -----⟶
+            (0X21FD, '⇽'), #          ⇽-----          -----⇽
+            (0X21FE, '⇾'), #          ⇾-----          -----⇾
+            (0X21E6, '⇦'), #          ⇦-----          -----⇦
+            (0X21E8, '⇨'), #          ⇨-----          -----⇨
+            (0X21E0, '⇠'), #          ⇠-----          -----⇠
+            (0X21E2, '⇢'), #          ⇢-----          -----⇢
+            (0X21D0, '⇐'), #          ⇐-----          -----⇐
+            (0X21D2, '⇒'), #          ⇒-----          -----⇒
+            (0X21C0, '⇀'), #          ⇀-----          -----⇀
+            (0X21C1, '⇁'), #          ⇁-----          -----⇁
+            (0X21C0, '⇀'), #          ⇀-----          -----⇀
+            (0X21BD, '↽'), #          ↽-----          -----↽
+            (0X21BC, '↼'), #          ↼-----          -----↼
+            (0X2190, '←'), #          ←-----          -----←
+            (0X2192, '→'), #          →-----          -----→
+               
+               
+            
+            (0X293A, '⤺'), #          ⤺-----          -----⤺
+            (0X293A, '⤺'), #          ⤺-----          -----⤺
+            (0X293B, '⤻'), #          ⤻-----          -----⤻
+            (0X293C, '⤼'), #          ⤼-----          -----⤼
+            (0X293D, '⤽'), #          ⤽-----          -----⤽
+            (0X21B6, '↶'), #          ↶-----          -----↶
+            (0X21B7, '↷'), #          ↷-----          -----↷
+            (0X219C, '↜'), #          ↜-----          -----↜
+            (0X219D, '↝'), #          ↝-----          -----↝
+        ]
+}
+
 RESET = '\033[0m'
 
+# https://www.calculators.org/math/html-arrows.php so many arrows.....
+_arrows = "".join(chr(i) for i in range(0x2933, 0x2941 + 1))
+_arrows2 = "".join(chr(i) for i in range(0x2962, 0x2965+1)) + str(chr(0x2970))
+_arrows3 = "".join(chr(i) for i in range(0x2794, 0x27B2+1)) + str(chr(0x27BE)) # these symbols are cool in the right font
+_arrows4 = "⤏⤎⤍⤌⟿⟾⟽⟹⟶⟵"
+
+def get_arrow(name, stem_len, stem_char = '-'):
+    """"
+    returns L, R
+    """
+    left_d, right_d = arrows.get(name, arrows.get("default"))
+    left_h, right_h = left_d[1], right_d[1]
+    if stem_len < 1:
+        return left_h, right_h
+    left_f = left_h + stem_len * stem_char
+    right_f = stem_len * stem_char + right_h
+    
+    return left_f, right_f
+    
 color_names = ["black","red","green","yellow","blue","magenta","cyan","white"]
 color_ints = range(len(color_names))
 
@@ -149,6 +207,30 @@ def get_fgbg(fg_color, bg_color):
     bg = f"\x1b[48;5;{bg_color}m"
     return fg, bg
 
+def get_color_scheme(name):
+    """
+    returns bg, fg
+    """
+    if name == "gray":
+        return 244, 236
+    elif name == "blue":
+        return 17, 38
+    elif name == "foggy":
+        return 36, 67
+    elif name == "dusty":
+        return 188, 138
+    elif name == "ruddy":
+        return 179, 131
+    elif name == "icy":
+        return 146, 225
+    elif name == "vscode":
+        return 234, 131
+    elif name == "test":
+        return 234, 65
+    else:
+        return 0,1
+    
+
 
 def scalar_to_text_8b(scalars, minval = None, maxval = None, fg_color = 212, bg_color = 7, flip = False):
     return scalar_to_text_nb(scalars, minval = minval, maxval = maxval, fg_color = fg_color, bg_color = bg_color, bit_depth = 8, flip = flip)
@@ -222,7 +304,7 @@ def scalar_to_text_nb(scalars, minval = None, maxval = None, fg_color = 7, bg_co
     else:
         return outstrs
 
-def scalar_to_text_mid(scalars, minval = None, maxval = None, fg_color = 7, bg_color = 212,  effect = None):
+def scalar_to_text_mid(scalars, center = None, rng = None, fg_color = 7, bg_color = 212,  effect = None):
     
     bit_depth = 16
     
@@ -246,23 +328,24 @@ def scalar_to_text_mid(scalars, minval = None, maxval = None, fg_color = 7, bg_c
     
     bit_ranges = [base_bit_depth*i - bit_depth/2 for i in range(nrows)]
     
-    if not minval:
+    if not center:
+        c = 0
+    else:
+        c = center
+    
+    if not rng:
         minval = min(scalars)
-    if not maxval:
-        maxval = max(scalars)
-    rng = (maxval - minval)/1
-    c = (minval+ maxval)/2
+        maxval  = max(scalars)
+        rng = 2*max(abs(minval), abs(maxval))
+    minval, maxval = c-rng/2, c+rng/2
     
     neg = False
     for s in scalars:
         sv = int(nvals*((s - c)/rng))
-        
         if sv < 0 and not neg:
             neg = True
-            # row.append(RESET+ibg+ifg)
         elif sv >= 0 and neg:
             neg = False
-            # row.append(RESET + bg + fg)
         
         for row, bit_range in zip(rows, bit_ranges):
             if sv < bit_range:
@@ -520,7 +603,7 @@ def highlight_sequence(seq, subseq, colors = {}):
     highlight_features(seq, [subseq], starts, ends)
     pass
 
-def highlight_sequences(seq:str, subseqs:List[str], do_rc = False, min_len = 5, colors={}):
+def highlight_sequences(seq:str, subseqs:List[str], start_pos = None, do_rc = False, min_len = 5, colors={}, show_key = True):
 
     starts = {}  # position -> list of sequences starting there
     ends = {}    # position -> list of sequences ending there
@@ -528,15 +611,16 @@ def highlight_sequences(seq:str, subseqs:List[str], do_rc = False, min_len = 5, 
     for s in subseqs:
         if not s in colors:
             colors[s] = random.randint(20, 230)
-
-    start_pos = find_subsequences(seq, subseqs, do_rc = do_rc)
+    
+    if not start_pos:
+        start_pos = find_subsequences(seq, subseqs, do_rc = do_rc)
     for s in subseqs:
         if len(s) < min_len:
             continue
 
         starts, ends = make_start_ends(s, start_pos[s], len(s), starts=starts, ends = ends)
 
-    highlight_features(seq, subseqs, starts, ends)
+    highlight_features(seq, subseqs, starts, ends, colors = colors, show_key = show_key)
 
     
 def highlight_sequences_in_frame(seq:str, subseqs:List[str], frame_start, min_len = 5):

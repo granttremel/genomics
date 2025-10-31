@@ -1,5 +1,6 @@
 
 import random
+from statistics import correlation
 import string
 import numpy as np
 import matplotlib.pyplot as plt
@@ -8,12 +9,12 @@ import re
 from ggene import CODON_TABLE_DNA, CODON_TABLE_RNA, splice_donor, splice_branch, splice_acceptor
 from ggene import seqs
 from ggene import draw
-from ggene.draw import scalar_to_text_8b, scalar_to_text_16b, scalar_to_text_nb
-from ggene.seqs import reverse, reverse_complement, COMPLEMENT_MAP
+from ggene.draw import scalar_to_text_8b, scalar_to_text_16b, scalar_to_text_mid, scalar_to_text_nb
+from ggene.seqs import convolve, convolve_longest_subseq, reverse, reverse_complement, COMPLEMENT_MAP
 from ggene.translate import Ribosome
 from ggene.motifs import dyad
 from ggene.motifs import utils
-from ggene.draw import Color
+from ggene.draw import Color, get_color_scheme
 from ggene.motifs.dyad import Dyad, find_all_dyads, frequency_rank_dyads
 from ggene.genomemanager import GenomeManager
 
@@ -51,7 +52,7 @@ def get_test_sequence():
     seq = list(range(-100, 0, 14)) + list(range(0, -50, 10)) + list(range(-50,25,9)) + list(range(25,100,18)) + list(range(100, 50, -19)) + [50]
     return seq
 
-def get_random_sequence(seq_len, minval = 0, maxval = 100, var = 1, bias = 0, nint = 1):
+def get_random_sequence(seq_len, minval = -100, maxval = 100, var = 1, bias = 0, nint = 1):
     
     rand_seq_d = [(2*random.random()-1)*var+bias for i in range(seq_len)]
     
@@ -68,29 +69,7 @@ def get_random_sequence(seq_len, minval = 0, maxval = 100, var = 1, bias = 0, ni
     rand_seq_sc = [tgt_ran*(r-_min)/_ran+minval for r in rand_seq]
     return rand_seq_sc
 
-def get_color_scheme(name):
-    """
-    returns bg, fg
-    """
-    if name == "gray":
-        return 244, 236
-    elif name == "blue":
-        return 17, 38
-    elif name == "foggy":
-        return 36, 67
-    elif name == "dusty":
-        return 188, 138
-    elif name == "ruddy":
-        return 179, 131
-    elif name == "icy":
-        return 146, 225
-    elif name == "vscode":
-        return 234, 131
-    elif name == "test":
-        return 234, 65
-    else:
-        return 0,1
-    
+
 
 def find_nice_colors(seq_len = 256):
     
@@ -162,114 +141,6 @@ def test_nb(seq_len = 256):
         for r in res:
             print(r, "-")
 
-
-def convolve(seq1, seq2, comparison_func = None):
-    
-    if not comparison_func:
-        cmp = lambda x, y:x==y
-    else:
-        cmp = comparison_func
-    
-    seq_len = min(len(seq1), len(seq2))
-    seq1, seq2 = seq1[:seq_len], seq2[:seq_len]
-    
-    start = seq_len // 2
-    ips = []
-    comp_ips = []
-    n = 0
-    for t in range(-start, start + 1):
-        
-        sslen = seq_len - abs(t)
-        s1start = max(t, 0)
-        seq1t = seq1[s1start:s1start + sslen]
-        s2start = max(-t, 0)
-        seq2t = seq2[s2start:s2start + sslen]
-        
-        summ = 0
-        csumm = 0
-        for sa, sb in zip(seq1t, seq2t):
-            
-            csb = seqs.COMPLEMENT_MAP.get(sb)
-            
-            if cmp(sa, sb):
-                summ += 1/sslen
-            elif cmp(sa, csb):
-                csumm += 1/sslen
-        
-        if t == 0:
-            ips.append(0)
-        else:
-            ips.append(summ)
-        comp_ips.append(csumm)
-        n+=1
-    
-    return ips, comp_ips
-
-def convolve_longest_subseq(seq1, seq2):
-    
-    seq_len = min(len(seq1), len(seq2))
-    seq1, seq2 = seq1[:seq_len], seq2[:seq_len]
-    
-    start = seq_len // 2
-    runs = []
-    inds = []
-    found = set()
-    
-    for i,t in enumerate(range(-start, start+1)):
-        
-        sslen = seq_len - abs(t)
-        s1start = max(t, 0)
-        seq1t = seq1[s1start:s1start + sslen]
-        s2start = max(-t, 0)
-        seq2t = seq2[s2start:s2start + sslen]
-        
-        max_run = 0
-        max_run_end = -1
-        max_run_shift = -1
-        run = 0
-        for j, (sa, sb) in enumerate(zip(seq1t, seq2t)):
-            
-            if sa==sb:
-                run += 1
-            else:
-                run = 0
-                
-            if run > max_run:
-                max_run = run
-                max_run_end = j + s1start
-                max_run_shift = t
-        
-        if t == 0:
-            runs.append(0)
-        else:
-            runs.append(max_run)
-        s1sp = max_run_end - max_run + 1
-        s2sp = s1sp - max_run_shift
-        if (s1sp, s2sp) in found:
-            inds.append((-1, -1))
-            continue
-        else:
-            found.add((s1sp, s2sp))
-            found.add((s2sp, s1sp))
-            
-            newind = (max_run_end - max_run + 1, max_run_shift)
-            inds.append(newind)
-    
-    return runs, inds
-
-def convolve_generator(seq1, seq2):
-    
-    seq_len = min(len(seq1), len(seq2))
-    seq1, seq2 = seq1[:seq_len], seq2[:seq_len]
-    
-    start = seq_len // 2
-    
-    for t in range(-start, start):
-        
-        sslen = seq_len - abs(t)
-        seq1t = seq1[max(t, 0):max(t, 0) + sslen]
-        seq2t = seq2[max(-t, 0):max(-t, 0) + sslen]
-        yield seq1t, seq2t
 
 
 
@@ -436,6 +307,21 @@ def test_overflow():
         # fc = bc
         # bc = random.randint(20, 230)
 
+def autocorrelate_sequence(seq):
+    
+    bc, fc = get_color_scheme("test")
+    
+    ip, rcip = convolve(seq, seq)
+    
+    print("Autocorrelation:")
+    res = draw.scalar_to_text_mid(ip, fg_color = fc, bg_color = bc)
+    for r in res:
+        print(r)
+    print("reverse complement:")
+    res = draw.scalar_to_text_mid(rcip, fg_color = fc, bg_color = bc)
+    for r in res:
+        print(r)
+    
 def scan_for_repeats(gm, chr, start, step):
     
     old_vocab = "ATGC"
@@ -500,6 +386,76 @@ def test_mid(ntests = 5):
             print(r)
         print()
 
+def test_arrows(arrows = []):
+    
+    if not arrows:
+        all_arrows = [str(chr(i)) for i in range(0x2190, 0x21FF+1)]
+        all_arrows += [str(chr(i)) for i in range(0x27F0, 0x27FF+1)]
+        all_arrows += [str(chr(i)) for i in range(0x2900, 0x297F+1)]
+        all_arrows += [str(chr(i)) for i in range(0x2794, 0x27BE+1)]
+    else:
+        all_arrows = arrows
+    
+    for i,(hex_code, arr) in enumerate(all_arrows):
+        delimit = 10*" "
+        arrstr = []
+        arrstr.extend(str(i))
+        arrstr.append(   hex(ord(arr)).upper()            )      
+        arrstr.append(f"({hex(ord(arr)).upper()}, '{arr}'), #")
+        arrstr.extend((arr + "-"*5,"-"*5 + arr))
+        print(delimit.join(arrstr))
+        print()
+    pass
+
+def view_seq(gm, chr, c, len):
+    
+    bc, fc = get_color_scheme("test")
+    
+    
+    for i in range(-3, 4):
+        
+        shift = 5*i
+        seq = gm.get_sequence(chr, c-len//2 + shift, c+len//2+shift)
+        ip, rcip = seqs.convolve(seq, seq, fill = 0.25)
+        
+        rule_palindrome(seq, 6)
+        rule_palindrome(seqs.complement(seq), 6)
+        
+        res = draw.scalar_to_text_16b(ip, fg_color = fc, bg_color = bc)
+        for r in res:
+            print(r)
+        
+        res = draw.scalar_to_text_16b(rcip, fg_color = fc, bg_color = bc, flip=True)
+        for r in res:
+            print(r)
+        
+        print(" ".join([format(s, "0.1f") if s>0.05 else "!0.0!" for s in ip]))
+        
+def rule_palindrome(seq, dlen):
+    
+    c = len(seq)//2
+    nrules = (len(seq)//dlen)//2 + 2
+    
+    
+    # cols = [random.randint(20, 230),random.randint(20, 230)]
+    cols = [142, 84]
+    colors = {}
+    subseqs =[]
+    starts = {}
+    for n in range(2,nrules):
+        minidx = c - int(dlen*(n - 0.5))
+        maxidx = c + int(dlen*(n - 0.5))
+        # print(minidx,c, maxidx)
+        s1 = seq[minidx: minidx+dlen]
+        s2 = seq[maxidx-dlen: maxidx]
+        colors[s1] = cols[n%2]
+        colors[s2] = cols[n%2]
+        subseqs.append(s1)
+        subseqs.append(s2)
+        starts[s1] = [minidx]
+        starts[s2] = [maxidx-dlen]
+    
+    draw.highlight_sequences(seq, subseqs, start_pos= starts, colors=colors, show_key=False)
     
         
 def reveal_escapes(sctext):
@@ -516,11 +472,17 @@ def main():
 
     bc, fc = get_color_scheme("test")
 
-    # gm = load_genome()
+    gm = load_genome()
     
+    # chr = 2
+    # seq_center = 1124574
+    # seq_len = 1024
+    
+    # weird place
     chr = 2
-    seq_center = 1124574
-    seq_len = 1024
+    seq_center = 1012063
+    # also seq_center = 1013230
+    seq_len = 256
     
     # scan_for_repeats(gm, chr, seq_center, 1024)
     
@@ -544,21 +506,90 @@ def main():
     
     bc, fc = get_color_scheme("test")
     
-    seqa = get_random_sequence(16)
-    seqb = get_random_sequence(16)
-    seqa, seqboff, off, ebd = draw.plot_adjacent(seqa, seqb)
+    view_seq(gm, chr, seq_center, seq_len)
     
-    print(f"offset: {off}, effective bit depth: {ebd} vs {2*16}")
-    print(" ".join(str(a) for a in seqa))
-    print(" ".join(str(b) for b in seqboff))
-    print(" ".join(str(a+b) for a,b in zip(seqa,seqboff)))
+    # for i in range(10):
     
-    resa = draw.scalar_to_text_mid(seqa, fg_color = fc, bg_color = bc)
-    for r in resa:
-        print(r)
-    resb = draw.scalar_to_text_mid(seqb, fg_color = fc, bg_color = bc)
-    for r in resb:
-        print(r)
+    #     seqa = get_random_sequence(64)
+    #     seqb = get_random_sequence(64)
+    #     resa, qnt = draw.scalar_to_text_mid(seqa, fg_color = fc, bg_color = bc)
+    #     for r in resa:
+    #         print(r)
+    #     print()
+    #     print(" ".join([format(q, "g") for q in qnt]))
+        # resb = draw.scalar_to_text_mid(seqb, fg_color = fc, bg_color = bc)
+        # for r in resb:
+        #     print(r)
+        # print()
+
+        
+        # seqa, seqboff, off, ebd = draw.plot_adjacent(seqa, seqb)
+
+        # print(f"offset: {off}, effective bit depth: {ebd} vs {2*16}")
+        # print(" ".join(str(a) for a in seqa))
+        # print(" ".join(str(b) for b in seqboff))
+        # print(" ".join(str(a+b) for a,b in zip(seqa,seqboff)))
+
+        # resa = draw.scalar_to_text_mid(seqa, fg_color = fc, bg_color = bc)
+        # for r in resa:
+        #     print(r)
+        # print()
+        # resb = draw.scalar_to_text_mid(seqb, fg_color = fc, bg_color = bc)
+        # for r in resb:
+        #     print(r)
+        # print()
+
+    # print(draw._arrows)
+    # print(draw._arrows2)
+    # print(draw._arrows3)
+    
+    # print("⇇=")
+    
+    # test_arrows()
+    
+    good_arrows = [
+        (0X27F5, '⟵'), #          ⟵-----          -----⟵
+        (0X27F6, '⟶'), #          ⟶-----          -----⟶
+        (0X21FD, '⇽'), #          ⇽-----          -----⇽
+        (0X21FE, '⇾'), #          ⇾-----          -----⇾
+        (0X21E6, '⇦'), #          ⇦-----          -----⇦
+        (0X21E8, '⇨'), #          ⇨-----          -----⇨
+        (0X21E0, '⇠'), #          ⇠-----          -----⇠
+        (0X21E2, '⇢'), #          ⇢-----          -----⇢
+        (0X21D0, '⇐'), #          ⇐-----          -----⇐
+        (0X21D2, '⇒'), #          ⇒-----          -----⇒
+        (0X21C0, '⇀'), #          ⇀-----          -----⇀
+        (0X21C1, '⇁'), #          ⇁-----          -----⇁
+        (0X21C0, '⇀'), #          ⇀-----          -----⇀
+        (0X21BD, '↽'), #          ↽-----          -----↽
+        (0X21BC, '↼'), #          ↼-----          -----↼
+        (0X2190, '←'), #          ←-----          -----←
+        (0X2192, '→'), #          →-----          -----→
+        
+    ]
+    
+    might_be_useful = [
+            (0X293A, '⤺'), #          ⤺-----          -----⤺
+            (0X293A, '⤺'), #          ⤺-----          -----⤺
+            (0X293B, '⤻'), #          ⤻-----          -----⤻
+            (0X293C, '⤼'), #          ⤼-----          -----⤼
+            (0X293D, '⤽'), #          ⤽-----          -----⤽
+
+            (0X21B6, '↶'), #          ↶-----          -----↶
+            (0X21B7, '↷'), #          ↷-----          -----↷
+            (0X219C, '↜'), #          ↜-----          -----↜
+            (0X219D, '↝'), #          ↝-----          -----↝
+    ]
+    
+    # print("good")
+    # test_arrows(good_arrows)
+    # print()
+    # print("idk")
+    # test_arrows(might_be_useful)
+    
+    # kinda going with:
+    # (0X21C0, '⇀'), #          ⇀-----          -----⇀
+    # (0X21BD, '↽'), #          ↽-----          -----↽
     
     # qseq = draw.quantize(seq, 16)
     # mseq = draw.quantize(seq, 16, mid=True)

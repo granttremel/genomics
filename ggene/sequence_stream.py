@@ -6,12 +6,18 @@ with optional variant integration from VCF files.
 
 import pysam
 from pathlib import Path
-from typing import Optional, Iterator, List, Tuple, Dict, Any
+from typing import Optional, Iterator, List, Tuple, Dict, Any, Union, TYPE_CHECKING
 import logging
 from dataclasses import dataclass
 from abc import ABC, abstractmethod
 
+from ggene.unified_stream import UnifiedFeature
+
+if TYPE_CHECKING:
+    from ggene.unified_stream import UnifiedFeature
+
 logger = logging.getLogger(__name__)
+# logger.setLevel(logging.DEBUG)
 
 
 @dataclass
@@ -206,7 +212,7 @@ class SequenceStreamWithVariants(BaseSequenceStream):
         return variants
     
     def apply_variants_to_sequence(self, seq: str, variants: List[Any], 
-                                  seq_start: int) -> str:
+                                  seq_start: int,  substitution = "") -> str:
         """Apply variants to a sequence.
         
         Args:
@@ -219,69 +225,92 @@ class SequenceStreamWithVariants(BaseSequenceStream):
         """
         if not variants:
             return seq
-        
-        # Convert to list for manipulation
         seq_list = list(seq)
+        deltas = self.variants_to_deltas(variants)
+        return self._apply_deltas_to_sequence(seq_list, deltas, seq_start, substitution=substitution)
+    
+    def apply_variants_to_data(self, data:List[Any], variants:List[Any], seq_start:int, substitution = ""):
+        deltas = self.variants_to_deltas(variants)
+        data_del = self._apply_deltas_to_sequence(data, deltas, seq_start, substitution=substitution)
+        return data_del
+    
+    def variants_to_deltas(self, variants:List[Any]):
+        if not variants:
+            return []
+        if isinstance(variants[0], UnifiedFeature):
+            return [(v.start, len(v.attributes.get("ref")), len(v.attributes.get("alt")[0]), v.attributes.get("alt")[0]) for v in variants]
+        else:
+            return [(v.POS, len(v.REF), len(v.ALT[0]), v.ALT[0]) for v in variants]
+    
+    def _apply_deltas_to_sequence(self, seq:List[Any], deltas:List[Tuple[int,int,int,Any]], seq_start:int, substitution = ""):
+        """
+        delta of form (start_index, reference_length, alternate_length, substitution)
+        sub overrides substitution
+        """
+        
+        if not deltas:
+            return seq
         
         # Sort variants by position
-        variants.sort(key=lambda v: v.POS)
+        deltas.sort(key=lambda v: v[0])
         
         # Track position offset due to indels
         offset = 0
         
-        for var in variants:
+        for pos, ref_len, alt_len, sub in deltas:
+            
+            if substitution:
+                sub = substitution * alt_len
             # Skip if no alt allele
-            if not var.ALT:
+            if not sub:
                 continue
             
-            # Get first alt allele (assuming homozygous or taking first)
-            alt_allele = var.ALT[0]
-            ref_allele = var.REF
-            
             # Calculate position in sequence (0-based)
-            seq_pos = var.POS - seq_start + offset
+            # seq_pos = d.POS - seq_start + offset
+            seq_pos = pos - seq_start + offset
             
             # Validate position
-            if seq_pos < 0 or seq_pos >= len(seq_list):
+            if seq_pos < 0 or seq_pos >= len(seq):
                 continue
             
             # Apply variant
             try:
-                if len(ref_allele) == len(alt_allele):
+                if ref_len == alt_len:
                     # SNP - simple substitution
-                    for i in range(len(ref_allele)):
-                        if seq_pos + i < len(seq_list):
-                            seq_list[seq_pos + i] = alt_allele[i]
+                    for i in range(ref_len):
+                        if seq_pos + i < len(seq):
+                            seq[seq_pos + i] = sub[i]
                             
-                elif len(ref_allele) > len(alt_allele):
+                elif ref_len > alt_len:
                     # Deletion
-                    del_length = len(ref_allele) - len(alt_allele)
+                    del_length = ref_len - alt_len
                     # Replace ref with alt
-                    for i in range(len(alt_allele)):
-                        if seq_pos + i < len(seq_list):
-                            seq_list[seq_pos + i] = alt_allele[i]
+                    for i in range(alt_len):
+                        if seq_pos + i < len(seq):
+                            seq[seq_pos + i] = sub[i]
                     # Delete extra bases
                     for _ in range(del_length):
-                        if seq_pos + len(alt_allele) < len(seq_list):
-                            del seq_list[seq_pos + len(alt_allele)]
+                        if seq_pos + alt_len < len(seq):
+                            del seq[seq_pos + alt_len]
                     offset -= del_length
                     
                 else:
                     # Insertion
-                    ins_length = len(alt_allele) - len(ref_allele)
+                    ins_length = alt_len - ref_len
                     # Replace ref bases
-                    for i in range(len(ref_allele)):
-                        if seq_pos + i < len(seq_list):
-                            seq_list[seq_pos + i] = alt_allele[i]
+                    for i in range(ref_len):
+                        if seq_pos + i < len(seq):
+                            seq[seq_pos + i] = sub[i]
                     # Insert additional bases
-                    for i in range(len(ref_allele), len(alt_allele)):
-                        seq_list.insert(seq_pos + i, alt_allele[i])
+                    for i in range(ref_len, alt_len):
+                        seq.insert(seq_pos + i, sub[i])
                     offset += ins_length
                     
             except Exception as e:
-                logger.debug(f"Failed to apply variant at {var.POS}: {e}")
+                logger.debug(f"Failed to apply variant at {pos}: {e}")
         
-        return ''.join(seq_list)
+        logger.debug(seq)
+        return seq
     
     def get_personal_sequence(self, chrom: str, start: int, end: int,
                             sample: Optional[str] = None) -> str:
@@ -321,6 +350,7 @@ class SequenceStreamWithVariants(BaseSequenceStream):
             where variant_list contains tuples of (position, delta)
             and delta = len(ALT) - len(REF)
         """
+        fill = '-'
         ref_seq = self.get_sequence(chrom, start, end)
         if not ref_seq:
             return "", "", []
@@ -380,7 +410,7 @@ class SequenceStreamWithVariants(BaseSequenceStream):
                     for i in range(len(ref_allele) - len(alt_allele)):
                         if ref_idx < len(ref_seq):
                             aligned_ref.append(ref_seq[ref_idx])
-                            aligned_pers.append('-')
+                            aligned_pers.append(fill)
                             aligned_idx += 1
                             ref_idx += 1
                             
@@ -395,7 +425,7 @@ class SequenceStreamWithVariants(BaseSequenceStream):
                     
                     # Add gaps for inserted bases
                     for i in range(len(ref_allele), len(alt_allele)):
-                        aligned_ref.append('-')
+                        aligned_ref.append(fill)
                         aligned_pers.append(alt_allele[i])
                         aligned_idx += 1
                         
