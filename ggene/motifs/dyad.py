@@ -5,7 +5,8 @@ import string
 
 from typing import Optional, Tuple, List
 
-from ggene.seqs import reverse_complement, compare_sequences
+from ggene.seqs.bio import reverse_complement
+from ggene.seqs.find import compare_sequences
 
 class Dyad:
 

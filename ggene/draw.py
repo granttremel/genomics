@@ -6,7 +6,7 @@ import random
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 
-from ggene.seqs import find_subsequence, find_subsequences
+from ggene.seqs.find import find_subsequence, find_subsequences
 
 SCALE = " ▁▂▃▄▅▆▇█"
 

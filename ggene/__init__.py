@@ -100,27 +100,7 @@ aliases_rna = {
     'N':'AUCG'
     }
 
-aliases_rev = {
-    'C':'YN',
-    'T':'YN',
-    'A':'RN',
-    'G':'RN',
-    'U':'YN',
-    }
 
-ALIASES = {
-    'R': '[AG]',   # puRine
-    'Y': '[CT]',   # pYrimidine  
-    'S': '[GC]',   # Strong (3 H bonds)
-    'W': '[AT]',   # Weak (2 H bonds)
-    'K': '[GT]',   # Keto
-    'M': '[AC]',   # aMino
-    'B': '[CGT]',  # not A
-    'D': '[AGT]',  # not C
-    'H': '[ACT]',  # not G
-    'V': '[ACG]',  # not T
-    'N': '[ACGT]', # aNy
-}
 
 splice_donor = 'GG*GURAGU'
 splice_branch = 'YURAC'
@@ -140,81 +120,11 @@ def complement(seq, rna = True):
     
     return newseq
 
-def seq_to_ptrn(seq, rna=True):
-    
-    if rna:
-        ref=aliases_rna
-    else:
-        ref=aliases_dna
-    
-    re_comps = []
-    for i in range(len(seq)):
-        
-        b = seq[i]
-        
-        if i+1 < len(seq):
-            if seq[i+1]=='*':
-                re_comps.append('(')
-
-        if b in 'ATCGU':
-            re_comps.append(b)
-        elif b in 'YRN':
-            restr = '|'.join(ref[b])
-            re_comps.append(f'[{restr}]')
-            
-        if i > 0:
-            if seq[i-1]=='*':
-                re_comps.append(')')
-        
-    re_ptrn = ''.join(re_comps)
-    return re_ptrn
-
-def make_re(seq, rna=True):
-    
-    re_ptrn = seq_to_ptrn(seq, rna=rna)
-            
-    return re.compile(re_ptrn)
-
-def make_splice_re(rna=True):
-    
-    donor_ptrn = seq_to_ptrn(splice_donor)
-    branch_ptrn = seq_to_ptrn(splice_branch)
-    acc_ptrn = seq_to_ptrn(splice_acceptor)
-    
-    bracc_ptrn = ''.join((branch_ptrn,'.{20,50}',acc_ptrn))
-    
-    return re.compile(donor_ptrn), re.compile(bracc_ptrn)
-
 
 FEATURE_TYPES = [
     'gene', 'CDS', 'transcript', 'five_prime_utr', 'start_codon',
     'exon', 'stop_codon', 'three_prime_utr', 'variant'
 ]
-
-
-
-def variant_dict_to_array(variant_map: Dict[int, Dict[int, int]]) -> np.ndarray:
-    """Convert variant dictionary to numpy array.
-    
-    Args:
-        variant_map: Nested dictionary with variant counts
-        
-    Returns:
-        2D numpy array with variant data
-    """
-    if not variant_map:
-        return np.array([])
-        
-    max_ref = max(variant_map.keys())
-    max_alt = max(max(alt_dict.keys()) for alt_dict in variant_map.values())
-                
-    var_array = np.zeros((max_ref + 1, max_alt + 1))
-    
-    for ref_len, alt_dict in variant_map.items():
-        for alt_len, count in alt_dict.items():
-            var_array[ref_len, alt_len] = count
-    
-    return var_array
 
 def shorten_variant(var: Any, keys: Optional[List[str]] = None) -> Dict[str, Any]:
     """Extract key variant information into a dictionary.
@@ -240,48 +150,6 @@ def shorten_variant(var: Any, keys: Optional[List[str]] = None) -> Dict[str, Any
             out_dict[key] = getattr(var, key)
     
     return out_dict
-
-               
-class Motif:
-
-    _counter = {}
-
-    def __init__(self, name, chrom, start, end, score):
-        self.type="motif"
-        self.name = name
-        ind = self._counter.get(name,0)
-        self._counter[name] = ind + 1
-        self.sfid=f'{name}-{ind}'
-        self.chrom=chrom
-        self.start=start
-        self.end=end
-        self.relative_start = 0
-        self.relative_end = self.end - self.start
-        
-        self.score=score
-        
-        self.parent_gene=None
-        self.parents=[]
-        
-    def set_parent_gene(self, parent_gene):
-        self.parent_gene=parent_gene
-        
-    def set_parent(self, feature):
-        if not feature in self.parents:
-            self.parents.append(feature)
-            
-    def refer_to(self, reference):
-        self.start_relative = self.start - reference.start
-        self.end_relative = self.end - reference.start
-    def __repr__(self) -> str:
-        """String representation of the feature."""
-        
-        parts=[f"id={self.sfid}"]
-        parts.append(f"{self.chrom}:{self.start}-{self.end}")
-        parts.append(f"score={self.score}")
-            
-        content = ','.join(parts)
-        return f'{type(self).__name__}({content})'
 
 # End of module
 
