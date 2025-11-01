@@ -15,9 +15,8 @@ import numpy as np
 from ggene import CODON_TABLE_DNA, CODON_TABLE_RNA, COMPLEMENT_MAP, COMPLEMENT_MAP_RNA, to_rna, complement, reverse_complement
 from ggene.features import Gene, Feature
 from ggene import seqs, draw
-from ggene.genome_iterator_v2 import UnifiedGenomeIteratorfrom ggene import draw, seqs
-from ggene.unified_stream import UnifiedFeature
 from ggene.genome_iterator_v2 import UnifiedGenomeIterator
+from ggene.unified_stream import UnifiedFeature
 
 if TYPE_CHECKING:
     from .genomemanager import GenomeManager
@@ -151,9 +150,12 @@ class InteractiveGenomeBrowser:
             feature_types=["gene","exon","CDS","motif"]
         )
         
+        self.highlight = ""
+        
         self._ref_cache1 = self._ref_cache2 = self._alt_cache1 = self._alt_cache2 = ""
         self._current_features={}
         self._gene_cache=""
+        self._data_cache = {}
         
         
         self.data = ["autocorrelation"]
@@ -286,6 +288,8 @@ class InteractiveGenomeBrowser:
                 self._change_window_size()
             elif key == 's':  # Change stride
                 self._change_stride()
+            elif key=="h":
+                self._set_highlight()
             elif key == '?':  # Help
                 self._show_help()
             elif key == 'i':  # Show position info
@@ -345,23 +349,6 @@ class InteractiveGenomeBrowser:
         
         self.state.show_second= self.state2.show_second = True
     
-    # def update_iterator(self):
-        
-    #     iters = [self.iterator]
-    #     states = [self.state]
-    #     if self.state.show_second:
-    #         iters.append(self.iterator2)
-    #         states.append(self.state2)
-        
-    #     for iterator, state in zip(iters, states):
-    #         iterator.start = state.position
-    #         iterator.end = state.position + state.window_size
-    #         iterator.window_size = state.window_size
-    #         iterator.stride = state.stride
-    #         iterator._preload_buffer()
-        
-    #         logger.debug(f"iterator updated: {repr(iterator)}")
-    
     def _update_iterator(self):
         
         self.iterator = UnifiedGenomeIterator(
@@ -390,8 +377,6 @@ class InteractiveGenomeBrowser:
         if not self.debug:
             print('\033[2J\033[H')  # Clear screen and move to top
         
-        # self.update_iterator()
-        
         lines_used = 0
         header, n = self.get_header_lines(second = False, suppress = True)
         lines_used += n + 1
@@ -400,13 +385,17 @@ class InteractiveGenomeBrowser:
         
         dlines = []
         if self._ref_cache1:
-            dlines = self.get_data_lines(self._ref_cache1, self._ref_cache1, bit_depth = 16, threshs = [0.45])
-            dlines2 = self.get_data_lines(self._ref_cache1, self._ref_cache1, bit_depth = 8, threshs = [0.45], scale = 8)
+            dlines = self.get_data_lines(self._ref_cache1, self._ref_cache1, bit_depth = 16)
+            dlines32 = self.get_data_lines(self._ref_cache1, self._ref_cache1, bit_depth = 8, scale = 32, show_stats = False)
+            dlines16 = self.get_data_lines(self._ref_cache1, self._ref_cache1, bit_depth = 8, scale = 16, show_stats = False)
+            dlines8 = self.get_data_lines(self._ref_cache1, self._ref_cache1, bit_depth = 8, scale = 8, show_stats = False)
             dlines.append("\n")
-            dlines.extend(dlines2)
+            dlines.extend(dlines32)
+            dlines.extend(dlines16)
+            dlines.extend(dlines8)
             lines_used += len(dlines)
         # Navigation hints at fixed position (line 24)
-        footer = self.get_footer_lines(lines_used, footer_pos = 24, suppress= True)
+        footer = self.get_footer_lines(lines_used, footer_pos = 32, suppress= True)
         
         print("\n".join(header))
         print("-" * 80)
@@ -478,22 +467,25 @@ class InteractiveGenomeBrowser:
         
         print("\n".join(footer))
         
-    def get_data_lines(self, seq1:str, seq2, show_stats = True, threshs = None, bit_depth = 32, scale = None):
+    def get_data_lines(self, seq1:str, seq2, show_stats = True, threshs = None, bit_depth = 32, scale = None, max_extra_lines = 0):
         
         vars = [i for i, s in enumerate(seq1) if s=='-']
         seq1_nv = seq1.replace("-","")
-        seq2_nv = seq1.replace("-","")
+        seq2_nv = seq2.replace("-","")
+        offset1 = len(seq1)  - len(seq1_nv)
+        offset2 = len(seq2)  - len(seq2_nv)
+        
+        logger.debug(vars)
         
         bg, fg = draw.get_color_scheme("test")
         rcfg = fg - 12
         if scale is None:
             scale = len(seq1)//2
             fill = 0.25
-            maxval = None
+            maxval = 0.5
         else:
             fill = 0.25
-            maxval = None
-            # maxval = 2*fill
+            maxval = 1
                 
         conv_res, rc_conv_res = seqs.convolve(seq1_nv, seq2_nv, fill = fill, scale = scale)
         
@@ -512,13 +504,13 @@ class InteractiveGenomeBrowser:
         for p, d in zip(prefix1, data1):
             dv = list(d)
             for iv in vars[::-1]:
-                dv.insert(iv, '-')
+                dv.insert(iv + offset1, ' ')
             dvstr = "".join(dv)
             outlines.append(p+dvstr)
         for p, d in zip(prefix2, data2):
             dv = list(d)
             for iv in vars[::-1]:
-                dv.insert(iv, '-')
+                dv.insert(iv + offset2, draw.SCALE[-1])
             dvstr = "".join(dv)
             outlines.append(p+dvstr)
         
@@ -527,18 +519,19 @@ class InteractiveGenomeBrowser:
             outlines.append(f"{dn1:<10}{np.mean(conv_res):<10.2g}{np.std(conv_res):<10.2g}{min(conv_res):<10.2g}{max(conv_res):<10.2g}")
             outlines.append(f"{dn2:<10}{np.mean(rc_conv_res):<10.2g}{np.std(rc_conv_res):<10.2g}{min(rc_conv_res):<10.2g}{max(rc_conv_res):<10.2g}")
         
+        tlines = []
         if threshs:
-            tlines = []
-            
             tres1 = self.get_threshold_lines(conv_res, dn1, seq1, threshs)
             tlines.extend(tres1)
             tres2 = self.get_threshold_lines(rc_conv_res, dn2, seq2, threshs)
             tlines.extend(tres2)
             
             if len(tlines) > 0:
-                outlines.append(f"{Colors.BOLD}Threshs: {Colors.RESET}")
-                outlines.extend(tlines)
-            
+                tlines = ["\n", f"{Colors.BOLD}Threshs: {Colors.RESET}"] + tlines
+        
+        nspaces = max_extra_lines - len(tlines)
+        tlines.extend(["\n"*nspaces])
+        outlines.extend(tlines)
         return outlines
     
     def get_threshold_lines(self, data, data_name, seq, threshs):
@@ -602,110 +595,6 @@ class InteractiveGenomeBrowser:
         lines.append("-" * 80)
         lines.append(f"{Colors.DIM}[←/→: move | Ctrl+←/→: gene | ↑/↓: jump | g: goto | Ctrl+↑: save | Ctrl+↓: load | ?: help | q: quit]{Colors.RESET}")
         return lines
-    
-    def _display_current_view(self):
-        """Display the current genomic view."""
-        # Clear previous display and ensure consistent height
-        
-        if not self.debug:
-            print('\033[2J\033[H')  # Clear screen and move to top
-        
-        # Track line count to maintain 24-line height
-        lines_used = 0
-        
-        # Header with mode indicators
-        mode_indicators = []
-        if self.state.show_reverse_strand:
-            mode_indicators.append("(-) strand")
-        else:
-            mode_indicators.append("(+) strand")
-        if self.state.show_rna:
-            mode_indicators.append("RNA")
-        else:
-            mode_indicators.append("DNA")
-        
-        print(f"{Colors.BOLD}Chromosome {self.state.chrom} | "
-              f"Position {self.state.position:,} | "
-              f"Window {self.state.window_size}bp | "
-              f"{' | '.join(mode_indicators)}{Colors.RESET}")
-        print("-" * 80)
-        
-        try:
-            window = self.iterator.get_window_at(self.state.position)
-            ref_seq, personal_seq, features = window.ref_seq, window.alt_seq, window.features
-            variant_features = window.variant_features if window.variant_features else []
-            variant_deltas = window.variant_deltas  # For coordinate tracking
-            
-            # Add detected motifs to features list
-            if window.motifs:
-                logger.debug(f"Adding {len(window.motifs)} detected motifs to features")
-                # Convert motif dicts to feature-like objects
-                for motif in window.motifs:
-                    features.append({
-                        'feature': 'motif',
-                        'feature_type': 'motif',
-                        'start': motif['start'],
-                        'end': motif['end'],
-                        'strand': '+',
-                        'info': {
-                            'name': motif['name'],
-                            'score': motif.get('score', 0),
-                            'sequence': motif.get('sequence', '')
-                        },
-                        'source': 'motif_detector'
-                    })
-            
-            # Get additional annotations from unified system
-            if hasattr(self.gm, 'annotations'):
-                unified_features = self.gm.get_all_annotations(
-                    str(self.state.chrom),
-                    self.state.position,
-                    self.state.position + self.state.window_size - 1,
-                    include_motifs=True
-                )
-                features = unified_features
-            
-            self._cache_current_gene(features)
-            
-            # Apply strand and RNA transformations
-            if self.state.show_reverse_strand:
-                ref_seq = reverse_complement(ref_seq, rna=False)
-                personal_seq = reverse_complement(personal_seq, rna=False)
-                # Reverse features positions for display
-                # (features stay the same, just displayed differently)
-            
-            if self.state.show_rna:
-                ref_seq = to_rna(ref_seq)
-                personal_seq = to_rna(personal_seq)
-            
-            # Display sequences with codon highlighting
-            self._display_sequences(ref_seq, personal_seq, features)
-            
-            # scalar data
-            data_results = self.calculate_data(self.data, personal_seq)
-            self._display_data(self.data, data_results, window.variant_features)
-            
-            # Display amino acid translation if in CDS
-            if self.state.show_amino_acids:
-                self._display_amino_acid_changes(ref_seq, personal_seq, features)
-            
-            # Display features
-            if self.state.show_features and features:
-                self._display_features(features, variant_features)
-            
-            # Count actual lines used so far
-            lines_used = 15  # Approximate count from header, sequences, features, etc.
-            
-            # Navigation hints at fixed position (line 24)
-            remaining_lines = 24 - lines_used
-            if remaining_lines > 0:
-                print("\n" * remaining_lines, end="")
-            
-            print("-" * 80)
-            print(f"{Colors.DIM}[←/→: move | Ctrl+←/→: gene | ↑/↓: jump | g: goto | Ctrl+↑: save | Ctrl+↓: load | ?: help | q: quit]{Colors.RESET}")
-            
-        except StopIteration:
-            print(f"{Colors.DIM}No sequence data available at this position{Colors.RESET}")
     
     def get_all_features(self, window, state,  features =[]):
         
@@ -785,7 +674,7 @@ class InteractiveGenomeBrowser:
         
         if not state.show_second:
             if state.show_amino_acids:
-                alines = self._display_amino_acid_changes(ref_seq, personal_seq, features, second = second, suppress = suppress)
+                alines = self._display_amino_acid_changes(ref_seq, personal_seq, features, second = second)
                 all_lines["aa"]=alines
                 nused += len(alines)
         
@@ -1085,8 +974,6 @@ class InteractiveGenomeBrowser:
         lines["seq"] = slines
         n+= len(slines)
         
-
-        
         marker_line = ["         "]
         offset = len(marker_line)
         la, ra = self.arrows
@@ -1096,7 +983,7 @@ class InteractiveGenomeBrowser:
         if motifs or True:
             
             # marker_line = "         "
-            motif_colors = "         "
+            # motif_colors = "         "
             
             for i in range(len(aligned_ref)):
                 # Check if position is in any motif
@@ -1126,6 +1013,7 @@ class InteractiveGenomeBrowser:
                     else:
                         color = Colors.MOTIF_DEFAULT
                     
+                    logger.debug(f"motif: {motif_found}")
                     
                     if i == motif_start:
                         marker_line.append(f"{color}{ra if strand == '+' else la}{Colors.RESET}")
@@ -1135,9 +1023,6 @@ class InteractiveGenomeBrowser:
                 else:
                     marker_line.append(" ")
             
-            if not suppress:
-                print(marker_line)
-            extras.append(marker_line)
         
         # Variant indicator line
         for i in range(offset, len(variant_positions)):
@@ -1146,6 +1031,10 @@ class InteractiveGenomeBrowser:
             # else:
             #     marker_line += " "
         
+        if not suppress:
+            print(marker_line)
+        extras.append("".join(marker_line))
+        lines["extras"] = extras
         # if any(variant_positions):
         #     if not suppress:
         #         print(f"{Colors.DIM}{variant_line}{Colors.RESET}")
@@ -1790,6 +1679,21 @@ class InteractiveGenomeBrowser:
         }
         return color_map.get(ftype, Colors.DIM)
     
+    def bookmark_position(self):
+        
+        bmname = input("name for bookmark:")
+        bmdesc = input("description of bookmark:")
+        
+        data_dict = {}
+        data_dict["state"] = self.state.__dict__
+        data_dict["ref_seq"] = self._ref_cache1
+        data_dict["alt_seq"] = self._alt_cache1
+        
+        
+        
+        
+        pass
+    
     def _move_forward(self, large: bool = False, second = False):
         """Move forward in the genome (considers strand direction)."""
         if second:
@@ -1943,6 +1847,11 @@ class InteractiveGenomeBrowser:
         except ValueError:
             print("Invalid input")
             input("Press Enter to continue...")
+    
+    def _set_highlight(self):
+        ptrn= input("Sequence or pattern:")
+        ptrn_re = seqs.consensus_to_re(ptrn.strip())
+        self.highlight = ptrn_re
     
     def _show_position_info(self):
         """Show detailed information about current position."""
