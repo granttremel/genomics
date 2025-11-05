@@ -4,7 +4,7 @@
 import logging
 import sys
 from ggene.genomemanager import GenomeManager
-from ggene.genome_browser import InteractiveGenomeBrowser
+from ggene.genome_browser_v2 import InteractiveGenomeBrowser
 from ggene.genome_iterator_v2 import UnifiedGenomeIterator
 
 # Setup logging to see debug messages

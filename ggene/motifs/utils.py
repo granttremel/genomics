@@ -4,7 +4,7 @@ from typing import List
 import random
 
 from ggene.seqs.find import find_subsequence, find_subsequences
-from ggene.draw import Color, RESET, CC, CB
+from ggene.draw import Colors, RESET, CC, CB
 
 def print_complements(seq, vocab, color_complement = True):
     

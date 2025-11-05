@@ -1,6 +1,6 @@
 
 from ggene.genomemanager import GenomeManager
-from ggene.genome_browser import browse_genome
+from ggene.genome_browser_v2 import browse_genome
 
 geneman = GenomeManager()
 

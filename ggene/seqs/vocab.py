@@ -7,6 +7,19 @@ VOCAB_RNA = "AUGC"
 
 VOCAB = VOCAB_DNA
 
+"""
+a good vocab would:
+be asymmetric about horizontal axis, so complement is like visually rotating it. also must have 
+two orienations of the character
+visually distinct without being too busy or dense?
+counterpunctal forms
+e.g.:
+V and ^ (if they were more symmetric)
+T and U ironically
+A and W ?
+
+"""
+
 def set_vocab(new_vocab):
     global VOCAB
     new_vocab_unique = list(set(new_vocab))

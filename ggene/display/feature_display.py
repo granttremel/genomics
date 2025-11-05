@@ -34,16 +34,6 @@ class FeatureDisplay:
 
     def render_features(self, features: List, variant_features: List = None,
                         state=None) -> List[str]:
-        """Render features as visual bars with labels.
-
-        Args:
-            features: List of genomic features
-            variant_features: List of variant features (optional)
-            state: Browser state object
-
-        Returns:
-            List of display lines
-        """
         if not features:
             return []
 
@@ -75,21 +65,15 @@ class FeatureDisplay:
             line = self._render_feature_row(row_assignments[row_idx], window_start, state)
             if line:
                 lines.append(line)
-
+        
+        detail = self._render_feature_detail(state, None, features, ["motif"])
+        lines.extend(detail)
+        
         return lines
 
     # would rather order by feature hierarchy.. 
 
     def _group_features_by_extent(self, features: List, window_start: int) -> List[Dict]:
-        """Group overlapping features by their extent.
-
-        Args:
-            features: List of features
-            window_start: Start position of window
-
-        Returns:
-            List of feature groups with metadata
-        """
         # Group features by type and overlapping extent
         type_groups = defaultdict(list)
 
@@ -143,14 +127,6 @@ class FeatureDisplay:
         return grouped
 
     def _assign_features_to_rows(self, feature_groups: List[Dict]) -> List[List[Dict]]:
-        """Assign feature groups to non-overlapping display rows.
-
-        Args:
-            feature_groups: List of feature groups
-
-        Returns:
-            List of rows, each containing non-overlapping feature groups
-        """
         # Sort by priority (hierarchy) and start position
         sorted_groups = sorted(
             feature_groups,
@@ -187,16 +163,6 @@ class FeatureDisplay:
 
     def _render_feature_row(self, feature_groups: List[Dict], window_start: int,
                              state) -> Optional[str]:
-        """Render a single row of features.
-
-        Args:
-            feature_groups: List of feature groups in this row
-            window_start: Start position of window
-            state: Browser state
-
-        Returns:
-            Rendered line string or None
-        """
         if not feature_groups:
             return None
         
@@ -237,16 +203,6 @@ class FeatureDisplay:
 
     def _render_feature_bar(self, buffer: List[str], start: int, end: int,
                              label: str, color: str, ftype: str):
-        """Render a feature bar into the display buffer.
-
-        Args:
-            buffer: Display buffer (modified in place)
-            start: Start position in buffer
-            end: End position in buffer
-            label: Feature label
-            color: ANSI color code
-            ftype: Feature type
-        """
         # Calculate available space
         width = end - start + 1
 
@@ -276,15 +232,6 @@ class FeatureDisplay:
             buffer[end] = f"{color}{right_char}{Colors.RESET}"
 
     def _generate_feature_label(self, feature_group: Dict, available_width: int) -> str:
-        """Generate a label for a feature group.
-
-        Args:
-            feature_group: Feature group dictionary
-            available_width: Available width for label
-
-        Returns:
-            Label string
-        """
         features = feature_group['features']
         ftype = feature_group['type']
 
@@ -306,25 +253,9 @@ class FeatureDisplay:
         return label
 
     def _get_feature_color(self, feature_type: str) -> str:
-        """Get ANSI color code for a feature type.
-
-        Args:
-            feature_type: Type of feature
-
-        Returns:
-            ANSI color code string
-        """
         return Colors.get_feature_color(feature_type)
 
     def _get_feature_type(self, feature) -> str:
-        """Get the type of a feature.
-
-        Args:
-            feature: Feature object
-
-        Returns:
-            Feature type string
-        """
         if hasattr(feature, 'feature_type'):
             return feature.feature_type
         elif hasattr(feature, 'type'):
@@ -332,3 +263,61 @@ class FeatureDisplay:
         elif isinstance(feature, dict):
             return feature.get('feature_type', feature.get('type', 'unknown'))
         return 'unknown'
+    
+    def _render_feature_detail(self, state, window, features, selected_features):
+        
+        detail_lines = []
+        
+        
+        if "motif" in selected_features:
+            motifs = self.feature_processor.filter_by_types(features, ["motif"])
+            mlines = self._render_motif_detail(state, motifs)
+            detail_lines.extend(mlines)
+        return detail_lines
+    
+    def _render_anno_detail(self, ):
+        pass
+    
+    def _render_variant_detail(self, ):
+        
+        pass    
+    def _render_motif_detail(self, state, motifs):
+        lines = []
+        header = self.rstate._get_margin("Motifs:")
+        lines.append(header)
+        
+        # Group motifs by type
+        motif_groups = {}
+        for motif in motifs:
+            motif_info = motif.get('info', {}) if isinstance(motif, dict) else {}
+            motif_name = motif_info.get('name', motif.get('name', 'unknown'))
+            strand = motif.get('strand', '+')
+            
+            if motif_name not in motif_groups:
+                motif_groups[motif_name] = []
+            motif_groups[motif_name].append(motif)
+        
+        # Display each motif type
+        for motif_type, motif_list in sorted(motif_groups.items()):
+            # Choose color for motif type
+            marg = self.rstate._get_margin()
+            lines.append(f"{Colors.MOTIF}{motif_type}{Colors.RESET}")
+            
+            for motif in motif_list[:5]:  # Show max 5 instances per type
+                start = motif.get('start')
+                end = motif.get('end')
+                strand = motif.get('strand', '+')
+                score = motif.get('score', motif.get('info', {}).get('score', 0))
+                seq = motif.get('sequence', motif.get('info', {}).get('sequence', ''))
+                
+                # Determine which sequence (ref or personal)
+                in_window_start = max(0, start - state.position)
+                in_window_end = min(state.window_size, end - state.position)
+                
+                if in_window_start < in_window_end:
+                    strand_symbol = '→' if strand == '+' else '←'
+                    lines.append(f"{marg}{start:,} {strand_symbol} {seq} (score: {score:.2f})")
+            
+            if len(motif_list) > 5:
+                lines.append(f"    ... and {len(motif_list) - 5} more")
+        return lines

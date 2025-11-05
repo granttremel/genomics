@@ -22,6 +22,7 @@ import warnings
 
 logger = logging.getLogger(__name__)
 logger.setLevel("CRITICAL")
+# logger.setLevel(logging.DEBUG)
 
 
 @dataclass
@@ -575,6 +576,7 @@ class UnifiedGenomeAnnotations:
         # Initialize sequence streaming if FASTA provided
         if fasta_path:
             self.setup_sequence_stream(fasta_path, vcf_path)
+            # print("annotations set up sequence stream")
         
     def setup_sequence_stream(self, fasta_path: str, vcf_path: Optional[str] = None,
                             min_qual: float = 5.0):

@@ -1,4 +1,5 @@
 
+import numpy as np
 
 from typing import Optional, Dict, List, Tuple, Any
 from .bio import reverse_complement, get_aliases
@@ -43,13 +44,28 @@ def normalize_sequence(seq):
     # else:
     #     return seq
 
-
-def convolve(seq1, seq2, comparison_func = None, fill = 0, scale = None):
+def bin_data(data, bin_size = 2, bin_func = None):
+    
+    if not bin_func:
+        bin_func = np.mean
+    
+    outdata = []
+    for i in range(0, len(data), bin_size):
+        d = bin_func(data[i:i+bin_size])
+        outdata.append(d)
+    return outdata
+    
+def correlate(seq1, seq2, comparison_func = None, score_func = None, fill = 0, scale = None):
     
     if not comparison_func:
         cmp = lambda x, y:x==y
     else:
         cmp = comparison_func
+    
+    if not score_func:
+        sf = lambda a, b: int(a==b)
+    else:
+        sf = score_func
     
     seq_len = min(len(seq1), len(seq2))
     seq1, seq2 = seq1[:seq_len], seq2[:seq_len]
@@ -70,7 +86,7 @@ def convolve(seq1, seq2, comparison_func = None, fill = 0, scale = None):
         
         s1start = max(t, 0)
         s1c = s1start + sslen//2
-        seq1t = seq1[s1c - sc//2:s1c+sc//2]
+        seq1t = seq1[s1c-sc//2:s1c+sc//2]
         s2start = max(-t, 0)
         s2c = s2start + sslen//2
         seq2t = seq2[s2c - sc//2:s2c+sc//2]
@@ -84,13 +100,13 @@ def convolve(seq1, seq2, comparison_func = None, fill = 0, scale = None):
                 continue
             
             if cmp(sa, sb):
-                summ += 1/sc
+                summ += sf(sa, sb)/sc
             elif cmp(sa, rcsb):
-                csumm += 1/sc
+                csumm += sf(sa, rcsb)/sc
         
         if t == 0:
             ips.append(fill)
-            comp_ips.append(fill)
+            comp_ips.append(fill/2)
         else:
             ips.append(summ)
             comp_ips.append(csumm)
@@ -98,7 +114,12 @@ def convolve(seq1, seq2, comparison_func = None, fill = 0, scale = None):
     
     return ips, comp_ips
 
-def convolve_longest_subseq(seq1, seq2):
+def correlate_longest_subseq(seq1, seq2, comparison_func = None, scale = None):
+    
+    if not comparison_func:
+        cmp = lambda x, y:x==y
+    else:
+        cmp = comparison_func
     
     seq_len = min(len(seq1), len(seq2))
     seq1, seq2 = seq1[:seq_len], seq2[:seq_len]
@@ -106,15 +127,24 @@ def convolve_longest_subseq(seq1, seq2):
     start = seq_len // 2
     runs = []
     inds = []
+    shifts = []
     found = set()
     
     for i,t in enumerate(range(-start, start+1)):
         
         sslen = seq_len - abs(t)
+        
+        if scale is None:
+            sc = sslen//2
+        else:
+            sc = scale//2
+        
         s1start = max(t, 0)
-        seq1t = seq1[s1start:s1start + sslen]
+        s1c = s1start + sslen//2
+        seq1t = seq1[s1c-sc:s1c+sc]
         s2start = max(-t, 0)
-        seq2t = seq2[s2start:s2start + sslen]
+        s2c = s2start + sslen//2
+        seq2t = seq2[s2c-sc:s2c+sc]
         
         max_run = 0
         max_run_end = -1
@@ -122,7 +152,7 @@ def convolve_longest_subseq(seq1, seq2):
         run = 0
         for j, (sa, sb) in enumerate(zip(seq1t, seq2t)):
             
-            if sa==sb:
+            if cmp(sa, sb):
                 run += 1
             else:
                 run = 0
@@ -139,17 +169,30 @@ def convolve_longest_subseq(seq1, seq2):
         s1sp = max_run_end - max_run + 1
         s2sp = s1sp - max_run_shift
         if (s1sp, s2sp) in found:
-            inds.append((-1, -1))
+            inds.append(-1)
+            shifts.append(-1)
             continue
         else:
             found.add((s1sp, s2sp))
             found.add((s2sp, s1sp))
             
-            newind = (max_run_end - max_run + 1, max_run_shift)
-            inds.append(newind)
+            inds.append(max_run_end - max_run + 1)
+            shifts.append(max_run_shift)
     
-    return runs, inds
+    return runs, inds, shifts
 
+# def get_longest_run(seqa, seqb, comparison_func = None):
+#     for j, (sa, sb) in enumerate(zip(seqa, seqb)):
+    
+#         if cmp(sa, sb):
+#             run += 1
+#         else:
+#             run = 0
+            
+#         if run > max_run:
+#             max_run = run
+#             max_run_end = j
+#             max_run_shift = t
 
 def convolve_generator(seq1, seq2):
     

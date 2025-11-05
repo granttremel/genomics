@@ -31,7 +31,7 @@ if TYPE_CHECKING:
     from .genomemanager import GenomeManager
 
 from ggene import CODON_TABLE_DNA, to_rna, complement, reverse_complement
-from .genome_browser import BrowserState, Colors as TermColors
+from .genome_browser_v2 import BrowserState, Colors as TermColors
 from .genome_iterator import GenomeIterator
 
 logger = logging.getLogger(__name__)

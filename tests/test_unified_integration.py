@@ -89,7 +89,7 @@ def test_browser_integration():
     print("\n" + "=" * 60)
     print("Testing browser integration...")
     
-    from ggene.genome_browser import InteractiveGenomeBrowser, BrowserState
+    from ggene.genome_browser_v2 import InteractiveGenomeBrowser, BrowserState
     
     gm = GenomeManager()
     browser = InteractiveGenomeBrowser(gm)

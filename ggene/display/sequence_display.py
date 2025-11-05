@@ -6,6 +6,7 @@ codon annotations, and motif underlining.
 """
 
 from typing import List, Dict, Tuple, Optional, Any
+from ggene import draw
 from ggene.display.colors import Colors
 from ggene.processing.coordinate_mapper import CoordinateMapper, SequenceRenderer
 from ggene.processing.sequence_processor import SequenceProcessor
@@ -79,7 +80,7 @@ class SequenceDisplay:
         # Add reference sequence
         if aligned_ref:
             ref_line = self._render_sequence_line(
-                aligned_ref, variant_positions, codons, motifs,
+                aligned_ref, variant_positions, codons, motifs, [],
                 is_reference=True, label="Ref"
             )
             lines.append(ref_line)
@@ -87,25 +88,13 @@ class SequenceDisplay:
         # Add personal sequence
         if aligned_pers:
             pers_line = self._render_sequence_line(
-                aligned_pers, variant_positions, codons, motifs,
+                aligned_pers, variant_positions, codons, motifs, [],
                 is_reference=False, label="Alt"
             )
             lines.append(pers_line)
 
         marker_row = self._generate_marker_row(variant_positions, motifs, len(aligned_ref))
         lines.append(marker_row)
-        # marker_row = [" "]*self.window_size
-        
-        # # Add variant markers
-        # if variant_positions:
-        #     marker_line = self._generate_variant_markers(variant_positions)
-        #     lines.append(marker_line)
-
-        # # Add motif underlines
-        # if motifs:
-        #     motif_line = self._generate_motif_underlines(motifs, len(aligned_ref))
-        #     if motif_line:
-        #         lines.append(motif_line)
 
         return lines, 2 if aligned_ref and aligned_pers else 1
 
@@ -199,8 +188,8 @@ class SequenceDisplay:
             return (display_start, display_end)
         return None
 
-    def _render_sequence_line(self, seq: str, variant_positions: List[bool],
-                               codons: Dict, motifs: List,
+    def _render_sequence_line(self, seq: str, variants: List[bool],
+                               codons: Dict, motifs: List, highlights, 
                                is_reference: bool, label: str) -> str:
         
         # Build colored sequence
@@ -208,32 +197,43 @@ class SequenceDisplay:
         
         marg = self._get_margin(label)
         
-        for i, base in enumerate(seq):
-            # Check if position is in a codon
-            in_start_codon = any(start <= i < end for start, end in codons.get('start', []))
-            in_stop_codon = any(start <= i < end for start, end in codons.get('stop', []))
-
-            # Apply coloring based on priority
-            if i < len(variant_positions) and variant_positions[i]:
-                # Variant coloring
-                if base == '-':
-                    colored_seq.append(f"{Colors.DELETION}-{Colors.RESET}")
-                elif is_reference and seq[i] != '-':
-                    colored_seq.append(f"{Colors.SNP}{base}{Colors.RESET}")
-                else:
-                    colored_seq.append(f"{Colors.INSERTION}{base}{Colors.RESET}")
-            elif in_start_codon:
-                # Start codon coloring (green background)
-                colored_seq.append(f"{Colors.START_CODON}{base}{Colors.RESET}")
-            elif in_stop_codon:
-                # Stop codon coloring (red background)
-                colored_seq.append(f"{Colors.STOP_CODON}{base}{Colors.RESET}")
-            else:
-                # Normal base
-                colored_seq.append(base)
+        # v_spans = [v.get("")]
+        # start_cd_spans = {(cd.start, cd.end):Colors.START_CODON for cd in codons.items()}
+        # stop_cd_spans = {(cd.start, cd.end):Colors.START_CODON for cd in codons.items()}
+        
+        m_spans = {(m.get("start"), m.get("end")):Colors.MOTIF for m in motifs}
+        
+        col_seq = draw.highlight_sequence_by_span(seq, m_spans)
+        # starts = 
+        
+        # for i, base in enumerate(seq):
+        #     # Check if position is in a codon
+        #     in_start_codon = any(start <= i < end for start, end in codons.get('start', []))
+        #     in_stop_codon = any(start <= i < end for start, end in codons.get('stop', []))
+            
+            
+            
+        #     # Apply coloring based on priority
+        #     if i < len(variant_positions) and variant_positions[i]:
+        #         # Variant coloring
+        #         if base == '-':
+        #             colored_seq.append(f"{Colors.DELETION}-{Colors.RESET}")
+        #         elif is_reference and seq[i] != '-':
+        #             colored_seq.append(f"{Colors.SNP}{base}{Colors.RESET}")
+        #         else:
+        #             colored_seq.append(f"{Colors.INSERTION}{base}{Colors.RESET}")
+        #     elif in_start_codon:
+        #         # Start codon coloring (green background)
+        #         colored_seq.append(f"{Colors.START_CODON}{base}{Colors.RESET}")
+        #     elif in_stop_codon:
+        #         # Stop codon coloring (red background)
+        #         colored_seq.append(f"{Colors.STOP_CODON}{base}{Colors.RESET}")
+        #     else:
+        #         # Normal base
+        #         colored_seq.append(base)
 
         # Format line with label
-        return f"{marg}{''.join(colored_seq)}"
+        return f"{marg}{col_seq}"
 
 
     def _generate_ruler(self, state, aligned_ref):

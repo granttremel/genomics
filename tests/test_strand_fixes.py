@@ -32,7 +32,7 @@ def main():
     print("\nStarting browser at a CDS region...")
     
     # Start browser in a region likely to have CDS features
-    from ggene.genome_browser import InteractiveGenomeBrowser
+    from ggene.genome_browser_v2 import InteractiveGenomeBrowser
     browser = InteractiveGenomeBrowser(gm)
     browser.start(chrom=1, position=1000000, window_size=80)
 

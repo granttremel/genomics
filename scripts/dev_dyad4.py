@@ -9,7 +9,7 @@ from ggene import CODON_TABLE_DNA, CODON_TABLE_RNA, splice_donor, splice_branch,
 from ggene.translate import Ribosome
 from ggene.motifs import dyad
 from ggene.motifs import utils
-from ggene.motifs.utils import Color
+from ggene.motifs.utils import Colors
 from ggene.motifs.dyad import Dyad, find_all_dyads, frequency_rank_dyads, reverse, reverse_complement
 from ggene.genomemanager import GenomeManager
 

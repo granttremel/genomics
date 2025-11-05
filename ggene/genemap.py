@@ -22,7 +22,7 @@ def order_chromes(chromes):
     return int_srt + otherchrs
 
 class GeneMap:
-    
+    max_indices = {'1': 248937043, '10': 133778498, '11': 135075908, '12': 133238549, '13': 114346637, '14': 106879812, '15': 101979093, '16': 90222678, '17': 83240391, '18': 80247514, '19': 58599303, '2': 242175634, '20': 64327972, '21': 46691226, '22': 50799123, '3': 198228376, '4': 190195978, '5': 181472430, '6': 170745977, '7': 159233377, '8': 145066516, '9': 138320835, 'MT': 16023, 'X': 156027877, 'Y': 57214397}
     def __init__(self, gtf_path = ''):
 
         if not gtf_path:
@@ -30,6 +30,7 @@ class GeneMap:
         self.gtf_path = gtf_path
         
         self.tabix = pysam.TabixFile(self.gtf_path)
+        # self.tabix.
         
         contigs = self.tabix.contigs
         self.chromes = order_chromes([a for a in contigs if len(a) < 4])
@@ -107,7 +108,7 @@ class GeneMap:
             logger.info(f'checking chromosome {chrom}')
             r={}
             try:
-                gen = self.fetch(chrom, start = 0, info_field = ('gene_name',name))
+                gen = self.fetch(chrom, start = 0, conds = [('gene_name',name)])
                 for r in gen:
                     if r:
                         found = True
@@ -128,8 +129,7 @@ class GeneMap:
     
     def by_gene_name(self, chrom, gene_name, features = ('gene')):
         
-        inftup = ('gene_name',gene_name)
-        res = [v for v in self.fetch(chrom, 0, features=features, info_field = inftup)]
+        res = [v for v in self.fetch(chrom, 0, features=features, conds = [('gene_name',gene_name)])]
         
         return res
     
@@ -188,42 +188,66 @@ class GeneMap:
         return ct
         
     
-    def fetch(self, chrom, start, end=None, features=('gene',), info_field = tuple()):
+    def fetch(self, chrom, start, end=None, features=('gene',), conds = []):
         chrom = str(chrom)
         if not isinstance(features, tuple):
             features = tuple(features)
         
-        if info_field:
-            k, v = info_field
-            info_cond = f"{k} \"{v}\""
-        else:
-            info_cond = ""
+        # print(f"enter fetch with {chrom}, {start}, {end}, {features}, {conds}")
         
-        if self.only_coding:
-            k,v = ('gene_biotype','protein_coding')
-            cond1 = (k,f"{k} \"{v}\"")
-            k,v = ('transcript_biotype','protein_coding')
-            cond2 = (k,f"{k} \"{v}\"")
-        else:
-            cond1=cond2=""
+        c1 = ('gene_biotype', 'protein_coding')
+        if not c1 in conds:
+            conds.append(c1)
         
+        n = 0
         try:
             for line in self.tabix.fetch(chrom, start, end):
-                fields = line.split('\t')
-                if features and fields[2] not in features:
+                n += 1
+                fields = line.strip().split('\t')
+                
+                lchrom, source, feature, start, end, score, strand, frame, attributes = fields
+                
+                if not chrom==lchrom:
+                    continue 
+                if not feature in features:
                     continue
-                if info_cond and not info_cond in fields[8]:
+                
+                attr_dict = {}
+                for attr in attributes.strip().rstrip(';').split(';'):
+                    attr = attr.strip()
+                    if ' ' in attr:
+                        key, val = attr.split(' ', 1)
+                        attr_dict[key] = val.strip('"')
+                        
+                # if conds:
+                #     good = True
+                #     for k, v in conds:
+                #         if not attr_dict.get(k) == v:
+                #             good = False
+                #             break
+                #     if not good:
+                #         continue
+                
+                if not attr_dict.get("gene_biotype") == "protein_coding":
                     continue
+                
+                if feature=="transcript" and not attr_dict.get("transcript_biotype")=="protein_coding":
+                    continue
+                
                 yield {
-                    'chrom': fields[0],
-                    'feature': fields[2],
-                    'start': int(fields[3]),
-                    'end': int(fields[4]),
-                    'strand': fields[6],
-                    'info': self.parse_info(fields[8])
-                }
+                    'chrom': lchrom,
+                    'feature': feature,
+                    'source':source,
+                    'start': int(start),
+                    'end': int(end),
+                    'score':score,
+                    'strand': strand,
+                    'frame':frame,
+                    'info': attr_dict
+                    }
         except Exception as e:
-            logger.error(f'Exception occurred: {str(e)}')
+            # logger.error(f'Exception occurred: {str(e)}')
+            print(f'Exception occurred: {str(e)}')
             return  # Region not in file
     
     def fetch_raw(self, chrom, start, end=None, features='gene'):

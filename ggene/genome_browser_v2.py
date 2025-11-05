@@ -8,13 +8,15 @@ import tty
 import termios
 import os
 from typing import Dict, List, Optional, Tuple, Union, Any, TYPE_CHECKING
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import logging
 import numpy as np
 
-from ggene import CODON_TABLE_DNA, CODON_TABLE_RNA, COMPLEMENT_MAP, COMPLEMENT_MAP_RNA, to_rna, complement, reverse_complement
-from ggene.features import Gene, Feature
 from ggene import seqs, draw
+from ggene.seqs import vocab as gvc
+from ggene.seqs import bio, find, process
+from ggene.seqs.bio import CODON_TABLE, COMPLEMENT_MAP, to_rna, complement, reverse_complement
+from ggene.features import Gene, Feature
 from ggene.genome_iterator_v2 import UnifiedGenomeIterator
 from ggene.unified_stream import UnifiedFeature
 
@@ -50,8 +52,12 @@ class BrowserState:
     show_amino_acids: bool = False
     show_reverse_strand: bool = False
     show_rna: bool = False
-    feature_types: Optional[List[str]] = None
+    show_data: bool = True
     show_second:bool = False
+    highlight:str = ""
+    feature_types: Optional[List[str]] = None
+    
+    _data_cache:List[Any] = field(default_factory = dict)
     
     def copy(self):
         return type(self)(**self.__dict__)
@@ -94,7 +100,9 @@ class InteractiveGenomeBrowser:
         """
         self.gm = genome_manager
         self.state = BrowserState(1, int(10e6), 128, 20)
+        self.window = None
         self.state2 = BrowserState(1, int(10e6), 128, 20)
+        self.window2 = None
         self.history = []
         self.debug = debug
         if self.debug:
@@ -102,18 +110,12 @@ class InteractiveGenomeBrowser:
         else:
             logger.setLevel(logging.ERROR)
         
-        self.iterator = self.iterator2 = None
         self._update_iterator()
         
-        self.highlight = ""
+        self.render = DisplayRenderer(self.gm, self.state.window_size)
         
-        self._ref_cache1 = self._ref_cache2 = self._alt_cache1 = self._alt_cache2 = ""
         self._current_features={}
         self._gene_cache=""
-        self._data_cache = {}
-        
-        
-        self.data = ["autocorrelation"]
         
         # Feature display order (based on hierarchy)
         self.feature_hierarchy = [
@@ -128,14 +130,7 @@ class InteractiveGenomeBrowser:
     
     def start(self, chrom: Union[str, int], position: int = 1,
              window_size: int = 240, stride: int = 40, show_second = False):
-        """Start the interactive browser.
         
-        Args:
-            chrom: Chromosome to browse
-            position: Starting position
-            window_size: Size of sequence window to display
-            stride: How many bases to move on arrow key
-        """
         self.state = BrowserState(
             chrom=chrom,
             position=position,
@@ -143,7 +138,8 @@ class InteractiveGenomeBrowser:
             stride=stride,
             show_second = show_second,
         )
-        self.state2 = self.state.copy()
+        if show_second:
+            self.state2 = self.state.copy()
         
         # Clear screen
         if not self.debug:
@@ -176,10 +172,8 @@ class InteractiveGenomeBrowser:
         while True:
             # Display current view
             self._update_iterator()
-            if self.state.show_second:
-                self._display_current_view_sec()
-            else:
-                self._display_current_view2()
+            self._update_data()
+            self._display_current_view()
             # Get user input
             key = self._get_key()
             
@@ -222,12 +216,16 @@ class InteractiveGenomeBrowser:
                 self._switch_chromosome(second=True)
             elif key == 'f':  # Toggle features
                 self.state.show_features = not self.state.show_features
+                self.render.update_render_state(show_features = self.state.show_features)
             elif key == 'a':  # Toggle amino acid display
                 self.state.show_amino_acids = not self.state.show_amino_acids
+                self.render.update_render_state(show_amino_acids = self.state.show_amino_acids)
             elif key == 'r':  # Toggle RNA mode
                 self.state.show_rna = not self.state.show_rna
+                self.render.update_render_state(show_rna = self.state.show_rna)
             elif key == '-':  # Toggle reverse strand
                 self.state.show_reverse_strand = not self.state.show_reverse_strand
+                self.render.update_render_state(show_reverse_strand = self.state.show_reverse_strand)
             elif key == 'w':  # Change window size
                 self._change_window_size()
             elif key == 's':  # Change stride
@@ -280,16 +278,7 @@ class InteractiveGenomeBrowser:
             self.state2.chrom = self.state.chrom
         self.state2.position=pos
         
-        self.iterator2 = UnifiedGenomeIterator(
-            self.gm,
-            self.state2.chrom,
-            self.state2.position,
-            window_size = self.state2.window_size,
-            stride = self.state2.stride,
-            integrate_variants=True,
-            track_features = True,
-            feature_types=["gene","exon","CDS","motif"]
-        )
+        self._update_iterator()
         
         self.state.show_second= self.state2.show_second = True
     
@@ -305,178 +294,73 @@ class InteractiveGenomeBrowser:
             track_features = True,
             feature_types=["gene","exon","CDS","motif"]
         )
-        self.iterator2 = UnifiedGenomeIterator(
-            self.gm,
-            self.state2.chrom,
-            self.state2.position,
-            window_size = self.state2.window_size,
-            stride = self.state2.stride,
-            integrate_variants=True,
-            track_features = True,
-            feature_types=["gene","exon","CDS","motif"]
-        )
+        self.window = self.iterator.get_window_at(self.state.position)
+        if self.state.show_second:
+            self.iterator2 = UnifiedGenomeIterator(
+                self.gm,
+                self.state2.chrom,
+                self.state2.position,
+                window_size = self.state2.window_size,
+                stride = self.state2.stride,
+                integrate_variants=True,
+                track_features = True,
+                feature_types=["gene","exon","CDS","motif"]
+            )
+            self.window2 = self.iterator2.get_window_at(self.state2.position)
     
-    def _display_current_view2(self):
+    def _update_data(self):
         
-        if not self.debug:
-            print('\033[2J\033[H')  # Clear screen and move to top
-        
-        lines_used = 0
-        header, n = self.get_header_lines(second = False, suppress = True)
-        lines_used += n + 1
-        all_lines, n = self._get_display_lines(suppress = True)
-        lines_used += n
-        
-        dlines = []
-        if self._ref_cache1:
-            dlines = self.get_data_lines(self._ref_cache1, self._ref_cache1, bit_depth = 16)
-            dlines32 = self.get_data_lines(self._ref_cache1, self._ref_cache1, bit_depth = 8, scale = 32, show_stats = False)
-            dlines16 = self.get_data_lines(self._ref_cache1, self._ref_cache1, bit_depth = 8, scale = 16, show_stats = False)
-            dlines8 = self.get_data_lines(self._ref_cache1, self._ref_cache1, bit_depth = 8, scale = 8, show_stats = False)
-            dlines.append("\n")
-            dlines.extend(dlines32)
-            dlines.extend(dlines16)
-            dlines.extend(dlines8)
-            lines_used += len(dlines)
-        # Navigation hints at fixed position (line 24)
-        footer = self.get_footer_lines(lines_used, footer_pos = 32, suppress= True)
-        
-        print("\n".join(header))
-        print("-" * 80)
-        
-        seqlines1 = all_lines.get("seq",[])
-        ruler = seqlines1.get("ruler",[])
-        seq1 = seqlines1.get("seq",[])
-        ext1 = seqlines1.get("extras",[])
-        
-        print('\n'.join(ruler))
-        print('\n'.join(seq1))
-        print('\n'.join(ext1))
-        
-        print("\n".join(dlines))
-        
-        print("\n".join(all_lines.get("features", [])))
-        
-        print("\n".join(footer))
-    
-    def _display_current_view_sec(self):
-        
-        if not self.debug:
-            print('\033[2J\033[H')  # Clear screen and move to top
-        
-        lines_used = 0
-        header, n1 = self.get_header_lines(suppress = True)
-        header2, n2 = self.get_header_lines(second=True, suppress = True)
-        lines_used += n1+n2+1
-        
-        all_lines, n = self._get_display_lines(suppress = True)
-        lines_used += n
-        
-        all_lines2, n = self._get_display_lines(second=True, suppress=True)
-        lines_used += n
-        
-        dlines = []
-        if self._ref_cache1 and self._ref_cache2:
-            dlines = self.get_data_lines(self._ref_cache1, self._ref_cache2, threshs = [0.45])
-            lines_used += len(dlines)
-            
-            dlines = self.get_data_lines(self._ref_cache1, self._ref_cache2, threshs = [0.45], scale = 8)
-            lines_used += len(dlines)
-        # Navigation hints at fixed position (line 24)
-        footer = self.get_footer_lines(lines_used, footer_pos = 32, suppress= True)
-        
-        print("\n".join(header))
-        print("\n".join(header2))
-        print("-" * 80)
-        
-        seqlines1 = all_lines.get("seq",[])
-        seqlines2 = all_lines2.get("seq",[])
-        ruler = seqlines1.get("ruler",[])
-        seq1 = seqlines1.get("seq",[])
-        seq2 = seqlines2.get("seq",[])
-        ext1 = seqlines1.get("extras",[])
-        ext2 = seqlines2.get("extras",[])
-        
-        print('\n'.join(ruler))
-        print('\n'.join(seq1))
-        print('\n'.join(ext1))
-        print('\n'.join(seq2))
-        print('\n'.join(ext2))
-        
-        print("\n".join(dlines))
-        
-        if all_lines.get("features"):
-            print("\n".join(all_lines.get("features",[])))
-            print("\n".join(all_lines2.get("features",[])))
-        
-        print("\n".join(footer))
-        
-    def get_data_lines(self, seq1:str, seq2, show_stats = True, threshs = None, bit_depth = 32, scale = None, max_extra_lines = 0):
-        
-        vars = [i for i, s in enumerate(seq1) if s=='-']
-        seq1_nv = seq1.replace("-","")
-        seq2_nv = seq2.replace("-","")
-        offset1 = len(seq1)  - len(seq1_nv)
-        offset2 = len(seq2)  - len(seq2_nv)
-        
-        logger.debug(vars)
-        
-        bg, fg = draw.get_color_scheme("test")
-        rcfg = fg - 12
-        if scale is None:
-            scale = len(seq1)//2
-            fill = 0.25
-            maxval = 0.5
+        seqa = self.window.ref_seq
+        if self.state.show_second:
+            seqb = self.window2.ref_seq
         else:
-            fill = 0.25
-            maxval = 1
-                
-        conv_res, rc_conv_res = seqs.convolve(seq1_nv, seq2_nv, fill = fill, scale = scale)
+            seqb = self.window.ref_seq
         
-        data1 = draw.scalar_to_text_nb(conv_res, minval = 0, maxval =maxval, fg_color = fg, bg_color = bg, bit_depth = bit_depth)
-        data2 = draw.scalar_to_text_nb(rc_conv_res, minval = 0, maxval = maxval, fg_color = rcfg, bg_color = bg, flip = True, bit_depth = bit_depth)
+        dks = []
         
-        dn1 = "Corr"
-        dn2 = "RCCorr"
-        pre2 = f"{Colors.BOLD}{dn1}:    {Colors.RESET}"
-        rcpre1 = f"{Colors.BOLD}{dn2}:  {Colors.RESET}"
-        blank = "         "
-        prefix1 = [blank] * (len(data1)-1) + [pre2]
-        prefix2 = [rcpre1] + [blank] * (len(data2)-1) 
+        # scales = [None, 32, 16, 8]
+        scales = [None]
         
-        outlines = []
-        for p, d in zip(prefix1, data1):
-            dv = list(d)
-            for iv in vars[::-1]:
-                dv.insert(iv + offset1, ' ')
-            dvstr = "".join(dv)
-            outlines.append(p+dvstr)
-        for p, d in zip(prefix2, data2):
-            dv = list(d)
-            for iv in vars[::-1]:
-                dv.insert(iv + offset2, draw.SCALE[-1])
-            dvstr = "".join(dv)
-            outlines.append(p+dvstr)
-        
-        if show_stats:
-            outlines.append("{:<10}{:<10}{:<10}{:<10}{:<10}".format(*["","Mean", "SD", "Min", "Max"]))
-            outlines.append(f"{dn1:<10}{np.mean(conv_res):<10.2g}{np.std(conv_res):<10.2g}{min(conv_res):<10.2g}{max(conv_res):<10.2g}")
-            outlines.append(f"{dn2:<10}{np.mean(rc_conv_res):<10.2g}{np.std(rc_conv_res):<10.2g}{min(rc_conv_res):<10.2g}{max(rc_conv_res):<10.2g}")
-        
-        tlines = []
-        if threshs:
-            tres1 = self.get_threshold_lines(conv_res, dn1, seq1, threshs)
-            tlines.extend(tres1)
-            tres2 = self.get_threshold_lines(rc_conv_res, dn2, seq2, threshs)
-            tlines.extend(tres2)
+        for sc in scales:
+            dk1 = "C"
+            if sc is not None:
+                dk1 += str(sc)
+            dk2 = "R" + dk1
+            dks.extend((dk1, dk2))
             
-            if len(tlines) > 0:
-                tlines = ["\n", f"{Colors.BOLD}Threshs: {Colors.RESET}"] + tlines
+            d1, d2 = process.correlate(seqa, seqb, fill = 0.25, scale = sc)
+            
+            self.state._data_cache[dk1] = d1
+            self.state._data_cache[dk2] = d2
         
-        nspaces = max_extra_lines - len(tlines)
-        tlines.extend(["\n"*nspaces])
-        outlines.extend(tlines)
-        return outlines
+        self.render.update_render_state(data_keys = dks)
+        
+    def _display_section(self, section_lines, add_line = True):
+        if not section_lines:
+            return
+        
+        for line in section_lines:
+            print(line)
+        if add_line:
+            print()
+
+    def _display_current_view(self):
+        
+        if not self.debug:
+            print('\033[2J\033[H')  # Clear screen and move to top
+        
+        if self.state.show_second:
+            disp_lines = self.render.render_full_view(self.window, self.state, second_window = self.window2, second_state = self.state2)
+        else:
+            disp_lines = self.render.render_full_view(self.window, self.state)
+        
+        self._display_section(disp_lines.get("header", []))
+        self._display_section(disp_lines.get("sequences", []))
+        self._display_section(disp_lines.get("sequences2", []))
+        self._display_section(disp_lines.get("data", []))
+        self._display_section(disp_lines.get("features", []))
+        self._display_section(disp_lines.get("amino_acids", []))
+        self._display_section(disp_lines.get("footer", []))
     
     def get_threshold_lines(self, data, data_name, seq, threshs):
         tlines = []
@@ -677,7 +561,7 @@ class InteractiveGenomeBrowser:
         
         data_res = []
         if "autocorrelation" in data:
-            res, rcres = seqs.convolve(seq, seq, fill = 0.25)
+            res, rcres = process.correlate(seq, seq, fill = 0.25)
             data_res.append([res, rcres])
         
         return data_res
@@ -1559,7 +1443,7 @@ class InteractiveGenomeBrowser:
         dna_seq = dna_seq.replace('-', '')
         
         # Standard genetic code
-        codon_table = CODON_TABLE_DNA
+        codon_table = CODON_TABLE
         
         amino_acids = []
         for i in range(0, len(dna_seq) - 2, 3):
@@ -1792,10 +1676,14 @@ class InteractiveGenomeBrowser:
             print("Invalid input")
             input("Press Enter to continue...")
     
-    def _set_highlight(self):
+    def _set_highlight(self, second=False):
+        state = self.state
+        if second:
+            state = self.state2
+        
         ptrn= input("Sequence or pattern:")
-        ptrn_re = seqs.consensus_to_re(ptrn.strip())
-        self.highlight = ptrn_re
+        ptrn_re = find.consensus_to_re(ptrn.strip())
+        state.highlight = ptrn_re
     
     def _show_position_info(self):
         """Show detailed information about current position."""
@@ -1852,44 +1740,7 @@ class InteractiveGenomeBrowser:
     
     def _show_help(self):
         """Show help information."""
-        print("\n" + "=" * 60)
-        print("Genome Browser Help")
-        print("=" * 60)
-        print("Navigation:")
-        print("  → / l       : Move forward by stride")
-        print("  ← / h       : Move backward by stride")
-        print("  ↑ / k       : Jump forward (10x stride)")
-        print("  ↓ / j       : Jump backward (10x stride)")
-        print("  Ctrl+→      : Jump to next gene (fast)")
-        print("  Ctrl+←      : Jump to previous gene (fast)")
-        print("  Space/Enter : Move forward by stride")
-        print("  g           : Go to position or gene")
-        print("  n           : Jump to next feature (interactive)")
-        print("  p           : Jump to previous feature (interactive)")
-        print("\nState Management:")
-        print("  Ctrl+↑      : Save current state")
-        print("  Ctrl+↓      : Load saved state")
-        print("\nDisplay:")
-        print("  f           : Toggle feature display")
-        print("  a           : Toggle amino acid translation")
-        print("  r           : Toggle RNA mode (T→U)")
-        print("  -           : Toggle reverse strand (reflects codons & AAs)")
-        print("  w           : Change window size")
-        print("  s           : Change stride")
-        print("  i           : Show position info")
-        print("\nColors:")
-        print(f"  {Colors.SNP}Red{Colors.RESET}        : SNPs / Stop codons")
-        print(f"  {Colors.INSERTION}Green{Colors.RESET}      : Insertions / Start codons")
-        print(f"  {Colors.DELETION}Yellow{Colors.RESET}     : Deletions / Missense mutations")
-        print(f"  {Colors.GENE}Blue{Colors.RESET}       : Genes")
-        print(f"  {Colors.EXON}Cyan{Colors.RESET}       : Exons")
-        print("\nFeature Labels:")
-        print("  Left side shows feature types with smart compression")
-        print("  Multiple features: ex1/2/3, GENE1/+2, 001-015(25)")
-        print("\nOther:")
-        print("  ?           : Show this help")
-        print("  q           : Quit")
-        print("=" * 60)
+        print(self.render.render_help())
         input("Press Enter to continue...")
     
     def _get_key(self):

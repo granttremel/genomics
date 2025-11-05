@@ -9,7 +9,7 @@ from ggene import CODON_TABLE_DNA, CODON_TABLE_RNA, splice_donor, splice_branch,
 from ggene.translate import Ribosome
 from ggene.motifs import dyad
 from ggene.motifs import utils
-from ggene.motifs.utils import Color
+from ggene.motifs.utils import Colors
 from ggene.motifs.dyad import Dyad, find_all_dyads, frequency_rank_dyads, reverse, reverse_complement
 from ggene.genomemanager import GenomeManager
 
@@ -18,11 +18,11 @@ dna_bases = "ATGC"
 
 RESET = '\033[0m'
 
-CS = Color.from_specs(text_spec=250, text_bright = True, effect_spec ="")
-CD = Color.from_specs(text_spec="yellow", effect_spec ="")
-CL = Color.from_specs(text_spec="cyan",effect_spec ="")
-CB = Color.from_specs(text_spec="blue",effect_spec ="")
-CC = Color.from_specs(text_spec="cyan",effect_spec ="")
+CS = Colors.from_specs(text_spec=250, text_bright = True, effect_spec ="")
+CD = Colors.from_specs(text_spec="yellow", effect_spec ="")
+CL = Colors.from_specs(text_spec="cyan",effect_spec ="")
+CB = Colors.from_specs(text_spec="blue",effect_spec ="")
+CC = Colors.from_specs(text_spec="cyan",effect_spec ="")
 
 def set_colors(tail=None, dyad=None, loop=None, seq=None, cseq=None, bright=False, background = False, effect = None):
     

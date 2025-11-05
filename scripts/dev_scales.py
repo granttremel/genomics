@@ -14,7 +14,7 @@ from ggene.seqs import convolve, convolve_longest_subseq, reverse, reverse_compl
 from ggene.translate import Ribosome
 from ggene.motifs import dyad
 from ggene.motifs import utils
-from ggene.draw import Color, get_color_scheme
+from ggene.draw import Colors, get_color_scheme
 from ggene.motifs.dyad import Dyad, find_all_dyads, frequency_rank_dyads
 from ggene.genomemanager import GenomeManager
 

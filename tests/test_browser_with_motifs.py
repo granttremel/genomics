@@ -2,7 +2,7 @@
 """Test the genome browser with motif detection display."""
 
 from ggene.genomemanager import GenomeManager
-from ggene.genome_browser import InteractiveGenomeBrowser
+from ggene.genome_browser_v2 import InteractiveGenomeBrowser
 
 def main():
     print("Starting genome browser with motif detection...")

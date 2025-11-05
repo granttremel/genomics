@@ -5,7 +5,7 @@ import sys
 sys.path.insert(0, '/home/gront/Documents/python/genomics-prj')
 
 from ggene.genomemanager import GenomeManager
-from ggene.genome_browser import InteractiveGenomeBrowser
+from ggene.genome_browser_v2 import InteractiveGenomeBrowser
 
 def test_browser_variants():
     """Quick test to see if variants display in browser."""
@@ -20,7 +20,7 @@ def test_browser_variants():
     browser = InteractiveGenomeBrowser(gm)
     
     # Set up state for testing (without starting interactive mode)
-    from ggene.genome_browser import BrowserState
+    from ggene.genome_browser_v2 import BrowserState
     browser.state = BrowserState(
         chrom=1,
         position=204195200,

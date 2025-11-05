@@ -7,7 +7,8 @@ import sys
 import argparse
 import logging
 from ggene.genomemanager import GenomeManager
-from ggene.genome_browser import browse_genome
+from ggene.genome_browser import browse_genome as browse_genome_v1
+from ggene.genome_browser_v2 import browse_genome as browse_genome_v2
 
 logging.basicConfig(level=logging.WARNING)  # Keep it quiet for browsing
 import os
@@ -27,6 +28,8 @@ def main():
                        help='Jump to a specific gene (overrides position)')
     parser.add_argument('--debug', '-d', action="store_true",
                        help='debug')
+    parser.add_argument('--old', '-o', action="store_true",
+                       help='do version 1')
     
     args = parser.parse_args()
     
@@ -48,8 +51,10 @@ def main():
     # gui = int(args.gui[0])==1
     # Start the browser
     
-    
-    browse_genome(gm, args.chrom, args.position, args.window, debug = args.debug, use_gui=False)
+    if args.old:
+        browse_genome_v1(gm, args.chrom, args.position, args.window, debug = args.debug, use_gui=False)
+    else:
+        browse_genome_v2(gm, args.chrom, args.position, args.window, debug = args.debug, use_gui=False)
 
 
 if __name__ == "__main__":

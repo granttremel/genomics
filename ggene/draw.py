@@ -1,7 +1,8 @@
 
 from typing import List
-
+import math
 import random
+import numpy as np
 
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
@@ -14,13 +15,29 @@ SCALE_H = " ▏▎▍▌▋▊▉█"
 OTHER={
     "upper_half":"▀",
     "upper_eighth":"▔",
+    "lower_eighth":"▁",
     "right_half":"▐",
+    "left_eighth":"▏",
     "right_eighth":"▕",
     "light":"░",
     "medium":"▒",
     "dark":"▓",
     "misc":"▖▗▘▙▚▛▜▝▞▟◐◑◒◓◔◕"
 }
+
+marker = "╵"
+
+leftright = "▗▖"
+# leftright = "⌋⌊"
+# leftright = "⌋⌊"
+# leftright = "⌟⌞"
+# leftright = ".."
+# leftright = "❳❲"
+# leftright = "◿◺"
+# leftright = "◢◣"
+# leftright= "◅▻"
+# leftright= "◁▷"
+# leftright = "⎦⎣"
 
 arrows = {
         "default":[
@@ -69,6 +86,30 @@ _arrows2 = "".join(chr(i) for i in range(0x2962, 0x2965+1)) + str(chr(0x2970))
 _arrows3 = "".join(chr(i) for i in range(0x2794, 0x27B2+1)) + str(chr(0x27BE)) # these symbols are cool in the right font
 _arrows4 = "⤏⤎⤍⤌⟿⟾⟽⟹⟶⟵"
 
+_symbols = [
+    "♣","♥","⚆","⚇","⚈","⚉","⚔","⚝",
+    "⚲","⚴","⛢","⚵","⚶","⚷","⚸","⚱","","","","","","","",
+    "⚺","⚻","",
+    "⚔","","","","","","","","","","","","","","","",
+    "⍎","⍏","⍕","⍖","⍗","⍙","⍚","⍜","⍢","⍦","⍱","⍲","⎈","⎉","⎊","⎋",
+    "⎌","⎍","⎏","⎐","⎑","⎒","⏀","⏁","⏂","⏃","⏄","⏅","⏚","","","",
+    
+    "⚙","⚛","☀","☼","☉","☸", # for proteins? idk
+    "⌖","⌘","⌗","⌾","⎮","","","","","",
+    "◐","◑","◒","◓","◸","◹","◺","◿","","","","","","","","",
+    "◐","◑","◒","◓","◸","◹","◺","◿","","","","","","","","",
+    
+]
+
+_curves = [
+    "⎡","⎢","⎣","","","","","","","","","","","","","",
+    
+    
+]
+
+_protein_metavocab = "".join(["☉","☼","⚙","⚛","❁","✾"])
+# _protein_metavocab = "".join(["◉","◎","◴","◵","◶","◷"])
+
 def get_arrow(name, stem_len, stem_char = '-'):
     """"
     returns L, R
@@ -85,11 +126,45 @@ def get_arrow(name, stem_len, stem_char = '-'):
 color_names = ["black","red","green","yellow","blue","magenta","cyan","white"]
 color_ints = range(len(color_names))
 
-class Color:
-    def __init__(self, text, background, effect):
-        self.text = self.get_color(text, background = False)
-        self.background = self.get_color(background, background = True)
-        self.effect = self.get_effect(effect)
+class Colors:
+    
+    standard = range(8)
+    high_intensity = range(8, 16)
+    colors = range(16, 232)
+    grays = range(232,256)
+    
+    RESET = '\033[0m'
+    BOLD = '\033[1m'
+    DIM = '\033[2m'
+    UNDERLINE = '\033[4m'
+
+    # Variant colors
+    SNP = '\033[91m'        # Red for SNPs
+    INSERTION = '\033[92m'   # Green for insertions
+    DELETION = '\033[93m'    # Yellow for deletions
+
+    # Feature colors
+    GENE = '\033[94m'        # Blue
+    TRANSCRIPT = '\033[95m'  # Magenta
+    EXON = '\033[96m'        # Cyan
+    CDS = '\033[93m'         # Yellow
+    UTR = '\033[90m'         # Gray
+    
+    START_CODON = '\x1b[35m'
+    STOP_CODON = '\x1b[35m'
+
+    # Motif colors (for underlines)
+    MOTIF = '\033[96m'   # Cyan for other motifs
+    HIGHLIGHT = '\x1b[148m' # goldish
+    
+    # Navigation
+    POSITION = '\033[97m'    # White
+    
+    def __init__(self):
+        
+        self.text = self.get_color(45, background = False)
+        self.background = self.get_color(234, background = True)
+        self.effect = self.get_effect(0)
     
     def set(self, spec, bright = False, background = False, effect = False):
         if background:
@@ -112,8 +187,7 @@ class Color:
     def set_effect(self, effect_spec):
         self.effect = self.get_effect(effect_spec)
         
-    @staticmethod
-    def get_color(color_spec, bright=False, background = False):
+    def get_color(self, color_spec, bright=False, background = False):
         
         cc = 0
         if isinstance(color_spec, str) and color_spec:
@@ -121,8 +195,6 @@ class Color:
         elif isinstance(color_spec, int):
             cc = color_spec
         
-        # if bright:
-        #     cc += 8
         bgc = "38;5;"
         if background:
             bgc = "48;5;"
@@ -130,8 +202,36 @@ class Color:
         # return f'\x1b[{bgc}{cc}m'
         return '\x1b[' + str(bgc) + str(cc) + 'm'
 
-    @staticmethod
-    def get_effect(effect_spec):
+    def _get_color_scale(self, start, end, num_values, dx, minval, maxval):
+        
+        d1 = dx*dx
+        d2 = dx
+        if isinstance(start, int):
+            start -= minval
+            end -= minval
+            start_vec = [start // d2, (start - (start // dx))%d2, start % d1] # all dims on [0, 6)
+            end_vec = [end // d1, (end - (end // dx))%d2, end % d1]
+        else:
+            start_vec = [s - minval for s in start]
+            end_vec = [e - minval for e in end]
+
+        delta = [(e-s)/num_values for s,e in zip(start_vec, end_vec)]
+        
+        col_vecs = [[int(round(s+n*d)) for s, d in zip(start_vec, delta)] for n in range(num_values+1)]
+        cols = [min(maxval, max(minval,sum([d1*cv[0] + d2*cv[1] + cv[2]]) + minval)) for cv in col_vecs]
+        cols = [cols[i] for i in range(len(cols)) if i==0 or cols[i-1]!=cols[i]]
+        return cols
+
+    def get_color_scale(self, start, end, num_values):
+        return self._get_color_scale(start, end, num_values, 6, self.colors[0], self.colors[-1])
+
+    def get_color_scale_16b(self, startrgb, endrgb, num_values):
+        d = 40 #?
+        mincol = (2**16 - d**3)//2
+        maxcol = 2**16 - mincol
+        return self._get_color_scale(startrgb, endrgb, num_values, d, mincol,maxcol)
+    
+    def get_effect(self, effect_spec):
         if effect_spec == "bold":
             return "\x1b[1m"
         elif effect_spec == "dim":
@@ -149,7 +249,7 @@ class Color:
     
     @classmethod
     def from_specs(cls, text_spec = "", text_bright = False, bg_spec = "", bg_bright = False, effect_spec = ""):
-        out = cls("","","")
+        out = cls()
         out.set_text(text_spec, bright = text_bright)
         out.set_background(bg_spec, bright=bg_bright)
         out.set_effect(effect_spec)
@@ -157,11 +257,11 @@ class Color:
 
 RESET = '\033[0m'
 
-CS = Color.from_specs(text_spec=250, text_bright = True, effect_spec ="")
-CD = Color.from_specs(text_spec="yellow", effect_spec ="")
-CL = Color.from_specs(text_spec="cyan",effect_spec ="")
-CB = Color.from_specs(text_spec="blue",effect_spec ="")
-CC = Color.from_specs(text_spec="cyan",effect_spec ="")
+CS = Colors.from_specs(text_spec=250, text_bright = True, effect_spec ="")
+CD = Colors.from_specs(text_spec="yellow", effect_spec ="")
+CL = Colors.from_specs(text_spec="cyan",effect_spec ="")
+CB = Colors.from_specs(text_spec="blue",effect_spec ="")
+CC = Colors.from_specs(text_spec="cyan",effect_spec ="")
 
 def set_colors(tail=None, dyad=None, loop=None, seq=None, cseq=None, bright=False, background = False, effect = None):
     
@@ -202,43 +302,32 @@ def get_color_scheme(name):
         return 234, 65
     else:
         return 0,1
+    
 def get_fgbg(fg_color, bg_color):
     fg = f"\x1b[38;5;{fg_color}m"
     bg = f"\x1b[48;5;{bg_color}m"
     return fg, bg
 
-def get_color_scheme(name):
-    """
-    returns bg, fg
-    """
-    if name == "gray":
-        return 244, 236
-    elif name == "blue":
-        return 17, 38
-    elif name == "foggy":
-        return 36, 67
-    elif name == "dusty":
-        return 188, 138
-    elif name == "ruddy":
-        return 179, 131
-    elif name == "icy":
-        return 146, 225
-    elif name == "vscode":
-        return 234, 131
-    elif name == "test":
-        return 234, 65
-    else:
-        return 0,1
-    
 
-
-def scalar_to_text_8b(scalars, minval = None, maxval = None, fg_color = 212, bg_color = 7, flip = False):
+def scalar_to_text_8b(scalars, minval = None, maxval = None, fg_color = 53, bg_color = 234, flip = False):
     return scalar_to_text_nb(scalars, minval = minval, maxval = maxval, fg_color = fg_color, bg_color = bg_color, bit_depth = 8, flip = flip)
 
-def scalar_to_text_16b(scalars, minval = None, maxval = None, fg_color = 212, bg_color = 7, flip = False):
+def scalar_to_text_16b(scalars, minval = None, maxval = None, fg_color = 53, bg_color = 234, flip = False):
     return scalar_to_text_nb(scalars, minval = minval, maxval = maxval, fg_color = fg_color, bg_color = bg_color, bit_depth = 16, flip = flip)
 
-def scalar_to_text_nb(scalars, minval = None, maxval = None, fg_color = 7, bg_color = 212, bit_depth = 24, flip = False, effect = None):
+def scalar_to_text_nb(scalars, minval = None, maxval = None, fg_color = 53, bg_color = 234, bit_depth = 24, flip = False, effect = None, add_range = False, **kwargs):
+    """
+    ok hear me out: plot two quantities together by putting the larger "behind" the smaller using bg. e.g.:
+    wait this doesn't work, two idp quantities cant share the same cell
+    {bg0fg0}██{bg=fg2 fg0}█
+    
+    okay how about: denser labels using longer lines, like
+        ▁▃▂▂█▅
+       1╯││││╰6
+        4╯││╰12   
+         2╯╰3
+    
+    """
     
     if flip:
         bg, fg = get_fgbg(bg_color, fg_color)
@@ -272,6 +361,9 @@ def scalar_to_text_nb(scalars, minval = None, maxval = None, fg_color = 7, bg_co
         maxval = max(scalars)
     rng = (maxval - minval)/1
     c = (minval+ maxval)/2
+    if rng == 0:
+        return [fg+bg+eff + SCALE[-1] + RESET]
+
     
     for s in scalars:
         sv = int(nvals*((s - c)/rng)) + bit_depth // 2
@@ -298,13 +390,26 @@ def scalar_to_text_nb(scalars, minval = None, maxval = None, fg_color = 7, bg_co
     if add_border:
         outstrs.insert(0, " " + SCALE[1]*ncols + " ")
         outstrs.append(f"{brdc} " + OTHER.get("upper_eighth","")*ncols + f" {RESET}")
+    
+    if add_range:
+        # hilo = "⎴⎵"
+        # hilo = "⏋⏌"
+        ran_fstr = kwargs.get("range_fstr", "0.2f")
+        hilo = "⌝⌟"
+        hi, lo = list(hilo)
+        hi, lo = (lo, hi) if flip else (hi, lo)
+        minstr = format(minval, ran_fstr)
+        maxstr = format(maxval, ran_fstr)
+        outstrs[0] += hi + maxstr
+        if bit_depth > 8:
+            outstrs[-1] += lo + minstr
         
     if flip:
-        return flip_scalar_text(outstrs)
-    else:
-        return outstrs
+        outstrs = flip_scalar_text(outstrs)
+    
+    return outstrs
 
-def scalar_to_text_mid(scalars, center = None, rng = None, fg_color = 7, bg_color = 212,  effect = None):
+def scalar_to_text_mid(scalars, center = None, rng = None, fg_color = 53, bg_color = 234,  effect = None):
     
     bit_depth = 16
     
@@ -364,6 +469,187 @@ def scalar_to_text_mid(scalars, center = None, rng = None, fg_color = 7, bg_colo
         
     return outstrs
 
+def add_ruler(sctxt, xmin, xmax, genomic = False, **kwargs):
+    num_cols = sum(1 for s in sctxt[0] if s in SCALE)
+    ran = (xmax - xmin)
+    num_labels = kwargs.get("num_labels", 5)
+    ticks = kwargs.get("ticks", 5)
+    minor_ticks = kwargs.get("minor_ticks", num_cols)
+    lbl_delta = ran / (num_labels - 1)
+    if kwargs.get("fstr"):
+        fmtr = kwargs.get("fstr")
+    elif genomic:
+        nexp = np.log10(xmax)
+        if nexp > 6:
+            div = 1e6
+            unit = "M"
+        elif nexp > 3:
+            div = 1e3
+            unit = "k"
+        else:
+            div = 1
+            unit = "b" 
+        fmtr = lambda x: format(x/div,".1f") + unit 
+    elif any(abs(x)>1e5 for x in [xmin, xmax]):
+        fmtr = "0.2e"
+    elif any(abs(x) < 1e-5 for x in [xmin, xmax, lbl_delta]):
+        fmtr = "0.2e"
+    elif all(int(x)==x for x in [xmin, xmax, lbl_delta]):
+        fmtr = ".0g"
+    else:
+        fmtr = "0.1f"
+    
+    ruler, dists = make_ruler(xmin, xmax, num_cols, num_labels = num_labels, ticks = ticks, minor_ticks = minor_ticks, formatter = fmtr)
+    sctxt.append(ruler)
+
+    return sctxt, dists
+
+def make_ruler(xmin, xmax, num_cols, num_labels = 5, ticks = 5, minor_ticks = 5, formatter = "0.2g"):
+    
+    xran = xmax - xmin
+    
+    num_labels = max(2, num_labels)
+    
+    if isinstance(formatter, str):
+        frmstr = formatter
+        formatter = lambda s: format(s, frmstr)
+    
+    label_dist_c = round(num_cols / (num_labels - 1))
+    if ticks < 1:
+        tick_dist_c = num_cols + 1
+    else:
+        tick_dist_c = round(num_cols / ticks / (num_labels - 1))
+    
+    if minor_ticks < 1:    
+        minor_tick_dist_c = num_cols + 1
+    else:
+        minor_tick_dist_c = max(1, round(num_cols / minor_ticks / max(1,ticks) / (num_labels - 1)))
+    
+    label_dist = xran * label_dist_c / num_cols
+    tick_dist = xran * tick_dist_c / num_cols
+    minor_tick_dist = xran * minor_tick_dist_c / num_cols
+    
+    bfr = ""
+    if tick_dist_c < 2 or minor_tick_dist_c < 2:
+        bfr = ""
+    
+    lbl = "╰"
+    rlbl = "╯"
+    tck = "╵"
+    mtck = "'"
+    
+    final_lbl = bfr + formatter(xmax) + rlbl
+    final_lbl_pos = num_cols - len(final_lbl)
+    
+    ruler = []
+    nc = 0
+    while nc < num_cols + 1:
+        
+        if nc == final_lbl_pos:
+            ruler.append(final_lbl)
+            break
+        elif nc%label_dist_c == 0:
+            labelpos = nc*xran/num_cols + xmin
+            labelstr = lbl + formatter(labelpos) + bfr
+            ruler.append(labelstr)
+            nc += len(labelstr)
+            continue
+        elif nc%tick_dist_c == 0:
+            ruler.append(tck)
+            nc+= 1
+            continue
+        elif nc%minor_tick_dist_c == 0:
+            ruler.append(mtck)
+            nc+= 1
+            continue
+        else:
+            ruler.append(" ")
+            nc += 1
+    
+    return "".join(ruler), (label_dist, tick_dist, minor_tick_dist)
+
+def scalar_plot_distribution(dist_dict, key_order = [], bit_depth = 8, labels = False, labelfmt = "", edges = False, **kwargs):
+    
+    if not key_order:
+        key_order = sorted(dist_dict.keys())
+    scalars = [dist_dict[ks] for ks in key_order]
+    
+    _ = kwargs.pop("minval",None)
+    sctxt = scalar_to_text_nb(scalars, bit_depth = bit_depth, minval = 0, **kwargs)
+    
+    if edges:
+        clr = "\x1b[38;5;240m"
+        lft, rgt = list(leftright)
+        crgt = "{}{}{}".format(clr, rgt, RESET)
+        clft = "{}{}{}".format(clr, lft, RESET)
+        
+        for i in range(len(sctxt)):
+            sctxt[i] = clft + sctxt[i] + crgt
+    
+    if labels:
+        if not labelfmt:
+            labelfmtr = lambda a:str(a)[0].upper()
+        else:
+            labelfmtr = lambda a:format(a,labelfmt)
+        lbls = [labelfmtr(k) for k in key_order]
+        sctxt.append(lbls)
+    
+    return sctxt
+
+def scalar_plot_2d_distribution(dist_dict, key_order = [], min_color = 231, max_color = 76, num_colors = 9):
+    
+    if not key_order:
+        key_order = sorted(dist_dict.keys())
+    
+    chscale = [" ", OTHER.get("light"), OTHER.get("medium"), OTHER.get("dark"), SCALE[-1]]
+    
+    print(chscale)
+    print(OTHER)
+    
+    rst = "\x1b[0m"
+    colfrm = "\x1b[38;5;{col}m"
+    bgcol = '\x1b[48;5;232m'
+    
+    num_keys = len(key_order)
+    minval = min([min(a for a in d.values()) for d in dist_dict.values()])
+    maxval = max([max(a for a in d.values()) for d in dist_dict.values()])
+    ran = maxval - minval
+    
+    cscale = Colors().get_color_scale(min_color, max_color, num_colors)
+    num_colors = len(cscale)
+    return []
+    rows = []
+    for nx in range(num_keys):
+        kx = key_order[nx]
+        row = [bgcol]
+        for ny in range(num_keys):
+            ky = key_order[ny]
+            v = dist_dict[kx][ky]
+            
+            vqt = max(0, min(3*num_colors-1, int(3*num_colors*((v - minval) / ran))))
+            
+            charind = vqt // num_colors
+            colind = vqt % (len(cscale) - 1)
+            
+            char = chscale[charind]
+            c = cscale[colind]
+            
+            col = colfrm.format(col=c)
+            vstr = f"{col}{char}{char}{rst}"
+            row.append(vstr)
+            
+        row.append(rst)
+        rows.append("".join(row))
+    
+    return rows
+    
+def scrub_ansi(line):
+    
+    import re
+    ansi_re = re.compile(r"\x1b(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
+    newline = ansi_re.sub("", line)
+    return newline
+    
 def plot_adjacent(seqa, seqb):
     bit_depth = 16
     qseqa = quantize(seqa, bit_depth, mid=True)
@@ -531,7 +817,7 @@ def make_key(features, colors):
     
     return " ".join(parts)
     
-def highlight_features(seq, features, feature_starts, feature_ends, colors = {}, show_key = True):
+def highlight_features(seq, features, feature_starts, feature_ends, colors = {}, show_key = True, suppress = True):
     """
     feature_starts: Dict:feature -> List[feature_start_pos]
     feature_ends: Dict:feature -> List[feature_end_pos]
@@ -584,12 +870,13 @@ def highlight_features(seq, features, feature_starts, feature_ends, colors = {},
         result.append(seq[i])
 
     result.append(RESET)
+    if not suppress:
+        print("".join(result))
+        if show_key:
+            print(key)
+    return result, key
 
-    print("".join(result))
-    if show_key:
-        print(key)
-
-def highlight_sequence(seq, subseq, colors = {}):
+def highlight_sequence(seq, subseq, colors = {}, suppress = True):
     
     starts = {}  # position -> list of sequences starting there
     ends = {}    # position -> list of sequences ending there
@@ -600,10 +887,9 @@ def highlight_sequence(seq, subseq, colors = {}):
     start_pos = find_subsequence(seq, subseq)
     starts, ends = make_start_ends(subseq, start_pos, len(subseq), starts=starts, ends = ends)
 
-    highlight_features(seq, [subseq], starts, ends)
-    pass
+    return highlight_features(seq, [subseq], starts, ends, suppress = suppress)
 
-def highlight_sequences(seq:str, subseqs:List[str], start_pos = None, do_rc = False, min_len = 5, colors={}, show_key = True):
+def highlight_sequences(seq:str, subseqs:List[str], start_pos = None, do_rc = False, min_len = 5, colors={}, show_key = True, suppress = True):
 
     starts = {}  # position -> list of sequences starting there
     ends = {}    # position -> list of sequences ending there
@@ -620,7 +906,7 @@ def highlight_sequences(seq:str, subseqs:List[str], start_pos = None, do_rc = Fa
 
         starts, ends = make_start_ends(s, start_pos[s], len(s), starts=starts, ends = ends)
 
-    highlight_features(seq, subseqs, starts, ends, colors = colors, show_key = show_key)
+    highlight_features(seq, subseqs, starts, ends, colors = colors, show_key = show_key, suppress = suppress)
 
     
 def highlight_sequences_in_frame(seq:str, subseqs:List[str], frame_start, min_len = 5):
@@ -693,6 +979,37 @@ def highlight_sequences_in_frame(seq:str, subseqs:List[str], frame_start, min_le
 
     print("".join(result))
 
+def highlight_sequence_by_span(seq, span_colors = {}, default_color = '\033[97m'):
+    # span is (start, stop):color
+    
+    spans = sorted(span_colors.keys(), key=lambda k:k[0])
+    ccurr = default_color
+    colored_seq = []
+    for i, b in enumerate(seq):
+        
+        in_span = False
+        for st, sp in spans:
+            c = span_colors[(st, sp)]
+            if i>sp:
+                continue
+            elif i<st:
+                break
+            
+            if i>=st and i<sp:
+                in_span = True
+                new_c = c
+                if new_c == ccurr:
+                    continue
+                else:
+                    colored_seq.append(new_c)
+                    ccurr = new_c
+        
+        if not in_span:
+            colored_seq.append(default_color)
+        
+        colored_seq.append(b)
+    colored_seq.append(RESET)
+    return "".join(colored_seq)
 
 
 def draw_gene_structure(gene_features, gene_name, strand):

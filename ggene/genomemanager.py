@@ -14,6 +14,7 @@ import json
 import logging
 logger = logging.getLogger(__name__)
 logger.setLevel("CRITICAL")
+# logger.setLevel(logging.DEBUG)
 
 from . import get_paths
 DEFAULT_VCF_PATH, DEFAULT_GTF_PATH, DEFAULT_FASTA_PATH, DEFAULT_LIBRARY = get_paths()
@@ -24,9 +25,18 @@ from .genemap import GeneMap
 from .features import Gene, Feature
 from .translate import Ribosome
 from .genome_iterator import GenomeIterator, FeatureExtractor
-from .genome_browser import InteractiveGenomeBrowser
+from .genome_browser_v2 import InteractiveGenomeBrowser
 from .unified_stream import UnifiedGenomeAnnotations, GTFStream, VCFStream, UnifiedFeature
 from ggene.motifs import MotifDetector, PatternMotif, RepeatMotif
+
+"""
+interesting places (chr, pos)
+
+(12, 2446120), # deletion in microsatellite in intron (CACNA1C)
+(13, 86039060), # insertion in msat TGCC in intergenic + nearby T->G
+^ this whole area is patterny
+
+"""
 
 class GenomeManager:
     """Main class for managing genomic data including VCF and GTF files."""
@@ -53,6 +63,8 @@ class GenomeManager:
             
             # Keep old GeneMap for backward compatibility
             self.gene_map = GeneMap(gtf_path=gtf_path)
+            
+            # print(f"loading sequence from {DEFAULT_FASTA_PATH} (exists = {os.path.exists(DEFAULT_FASTA_PATH)})")
             
             # Initialize new unified annotation system with sequence streaming
             self.annotations = UnifiedGenomeAnnotations(
@@ -541,7 +553,7 @@ class GenomeManager:
             
         return long_dels, long_inserts
     
-    def get_sequence(self, chrom: Union[str, int], start: int, end: int) -> Optional[str]:
+    def get_sequence(self, chrom: Union[str, int], start: int, end: int, frame = 0) -> Optional[str]:
         """Get genomic sequence for a region.
         
         Now uses unified streaming system for sequence access.
@@ -557,7 +569,7 @@ class GenomeManager:
         # Use unified streaming system if available
         if self.annotations and self.annotations.sequence_stream:
             chrom_str = str(chrom)
-            return self.annotations.get_sequence(chrom_str, start, end)
+            return self.annotations.get_sequence(chrom_str, start+frame, end+frame)
         
         # Fallback to direct FASTA access if available
         if self.ref:

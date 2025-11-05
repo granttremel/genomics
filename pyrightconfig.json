@@ -1,0 +1,24 @@
+{
+    "exclude": [
+        "**/__pycache__",
+        "**/*.egg_info",
+        "**/.venv",
+        "**/archive"
+    ],
+    "reportCallIssue": false,
+    "reportArgumentType": false,
+    "reportAttributeAccessIssue": false,
+    "reportOptionalMemberAccess": false,
+    "reportAssignmentType": false,
+    "reportPossiblyUnboundVariable": false,
+    "reportOptionalCall": false,
+    "reportOptionalContextManager": false,
+    "reportOptionalIterable": false,
+    "reportOptionalOperand": false,
+    "reportOptionalSubscript": false,
+    "reportRedeclaration": false,
+    "reportGeneralTypeIssues": false,
+    "reportIndexIssue": false,
+    "reportReturnType": false,
+    "reportOperatorIssue": false,
+}
