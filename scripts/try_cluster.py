@@ -480,6 +480,23 @@ def main():
     
     # return
     
+    test_chr = 13
+    
+    max_disp = 256
+    chunksz = int(32e3)
+    start = int(16e6)
+    length = None
+    ran = gm.gene_map.max_indices[str(test_chr)] - start
+    num_chunks = ran//chunksz
+    
+    
+    # gm.display_chromosomal_quantity(test_chr, "cpg", chunksz = chunksz, start = start, max_disp = max_disp, length = length)
+    gm.display_chromosomal_quantity(test_chr, "genes", chunksz = chunksz, start = start, max_disp = max_disp, length = length)
+    gm.display_chromosomal_quantity(test_chr, "penta_repeats", chunksz = chunksz, start = start, max_disp = max_disp, length = length)
+    
+    
+    return
+    
     test_chr = "X"
     
     hdr,cddata_chr11 = load_codon_frequency_data(test_chr)
@@ -585,12 +602,6 @@ def main():
     genedata_lbl = [[gn] + list(gd) for gn, gd in zip(gene_names, genedata)]
     
     print(tabulate(genedata_lbl[:20], headers = hdrs))
-    
-    max_disp = 256
-    chunksz = int(32e3)
-    start = int(16e6)
-    ran = gm.gene_map.max_indices[str(test_chr)] - start
-    num_chunks = ran//chunksz
     
     
     def seq_cpg(seq, feats):

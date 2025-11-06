@@ -18,7 +18,10 @@ logger.setLevel("CRITICAL")
 
 from . import get_paths
 DEFAULT_VCF_PATH, DEFAULT_GTF_PATH, DEFAULT_FASTA_PATH, DEFAULT_LIBRARY = get_paths()
-from . import COMPLEMENT_MAP, reverse_complement, to_rna, to_dna, is_rna, is_dna
+# from . import COMPLEMENT_MAP, reverse_complement, to_rna, to_dna, is_rna, is_dna
+from .seqs.bio import reverse_complement, to_rna, to_dna, is_rna, is_dna, COMPLEMENT_MAP
+from .seqs.lambdas import lambda_map
+from . import draw
 from . import shorten_variant
 from . import utils
 from .genemap import GeneMap
@@ -552,6 +555,79 @@ class GenomeManager:
             logger.error(f"Failed to find long variants: {e}")
             
         return long_dels, long_inserts
+    
+    def get_chromosomal_quantity(self, chr, seq_spec_or_fn, chunksz = 10e6, start = 1e6, length = None):
+        
+        seq_fn = None
+        if isinstance(seq_spec_or_fn, str):
+            seq_fn = lambda_map.get(seq_spec_or_fn)
+        elif callable(seq_spec_or_fn):
+            seq_fn = seq_spec_or_fn
+            
+        if not seq_fn:
+            return None, None
+        
+        chrmax = self.gene_map.max_indices.get(str(chr))
+        if not length:
+            length = int(chrmax - start)
+        num_chunks = int(length//chunksz)
+        step = chunksz
+        starts = []
+        qts = []
+        
+        chrstr = str(chr)
+        
+        for n in range(num_chunks):
+            end = start + step
+            seq = self.get_sequence(chrstr, start, end)
+            ufeats = self.get_all_annotations(chrstr, start, end)
+            feats = [uf.to_dict() for uf in ufeats]
+            if len(seq) < 1:
+                start = end
+                continue
+            qt = seq_fn(seq, feats )
+            starts.append(start)
+            qts.append(qt)
+            start = end
+        return qts, starts
+
+    def display_chromosomal_quantity(self, chr, seq_spec, chunksz = 10e6, start = 1e6, max_disp = 256, length = None):
+        
+        qts, starts = self.get_chromosomal_quantity(chr, seq_spec, chunksz=chunksz, start = start, length = length)
+        
+        if qts is not None:
+            qt_name = seq_spec
+        else:
+            return
+        
+        # print(f"{qt_name} range: {min(qts):0.2f}-{max(qts):0.2f}")
+        
+        if not length:
+            length = self.gene_map.max_indices[str(chr)] - start
+        
+        num_chunks = length//chunksz
+        num_disp_chunks = max(1, int(num_chunks // max_disp))
+        
+        minval = 0
+        maxval = max(qts)
+        
+        print(num_chunks, num_disp_chunks, start, length, chunksz)
+        
+        print(f"{qt_name} for chr{chr}")
+        for i in range(num_disp_chunks):
+            seq_ran = length // (num_disp_chunks)
+            seq_start = start + i*seq_ran
+            
+            gcs_crop = qts[i*max_disp:(i+1)*max_disp]
+            if len(gcs_crop) == 0:
+                break
+            
+            gc_bars = draw.scalar_to_text_nb(gcs_crop, minval = minval, maxval = maxval, bit_depth = 24, add_range = True)
+            gc_bars, dists = draw.add_ruler(gc_bars, seq_start, seq_start + seq_ran, num_labels = 10, ticks = 2, minor_ticks = 5, genomic = True)
+            print(f"Section {i+1} | {seq_start/1e6:.1f}M - {(seq_start+seq_ran)/1e6:.1f}M (major = {dists[1]/1e3:2.0f}k, minor = {dists[2]/1e3:2.0f}k)")
+            for r in gc_bars:
+                print(r)
+            print()
     
     def get_sequence(self, chrom: Union[str, int], start: int, end: int, frame = 0) -> Optional[str]:
         """Get genomic sequence for a region.
