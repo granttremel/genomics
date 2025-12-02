@@ -1,22 +1,13 @@
-data/*.gz
-data/*.tbi
-data/*.fai
-data/*.gzi
-data/*.out
-*.gz
-data/*vcf
-data/*
-
-
-
-.venv
+**/data/*
+**/genome
+**/.venv
 out/*
 analysis/*
 
 gene
-genenv
-analysis/*
-*.egg-info
-*312.pyc
+**/genenv
+**/*.egg-info
+**/__pycache__
 
-**/*/__pycache__
+**/local.yaml
+
