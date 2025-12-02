@@ -353,11 +353,23 @@ def main():
     
     # chrs = [7]
     
-    from ggene.unified_stream import RepeatMaskerStream
+    from ggene.unified_stream import RepeatMaskerStream, BEDStream
     from ggene.sequence_stream import FASTAStream
     
-    rpts = FASTAStream("./data/repeatmasker/hg38.fa.out.gz")
+    # rpts = BEDStream("./data/repeatmasker/repeats.sorted.bed")
+    rpts = BEDStream("./data/repeatmasker/repeats.sorted.bed.gz")
+    # rpts = BEDStream("./data/repeatmasker/repeats.bed")
     print(rpts)
+    print(rpts.tabix)
+    print(rpts.tabix.contigs)
+    
+    for rpt in rpts.tabix.fetch("chr2", start = 25160800):
+        print(rpt)
+        input()
+    
+    # for rpt in rpts.stream("1", 204.1e6):
+    #     print(rpt)
+    #     input()
     
     # gm.annotations.add_repeatmasker("./data/repeatmasker/hg38.fa.out.gz")
     # rpt_annos = gm.annotations.streams.get("repeats")

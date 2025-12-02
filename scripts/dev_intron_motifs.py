@@ -12,7 +12,7 @@ from ggene.genomemanager import GenomeManager
 from ggene import draw
 from ggene.scalar_plot import ScalarPlot
 from ggene.translate import Ribosome
-from ggene.seqs import bio, process, find, align, heal
+from ggene.seqs import bio, process, find, align, heal, compare
 from ggene.seqs.bio import ALIASES, ALIASES_REV
 
 @dataclass
@@ -88,9 +88,12 @@ base_score = {
 def load_genome():
     return GenomeManager()
 
-def get_intron_seq(gm, nchr, exon1, exon2):
+def get_intron_seq(gm, nchr, exon1, exon2, personal = False):
     
-    intron_seq = gm.get_sequence(nchr, exon1.get("end"), exon2.get("start"))
+    if personal:
+        intron_seq = gm.annotations.get_personal_sequence(nchr, exon1.get("end"), exon2.get("start"))
+    else:
+        intron_seq = gm.annotations.get_sequence(nchr, exon1.get("end"), exon2.get("start"))
     
     if exon1.get("strand") == "-":
         intron_seq = bio.reverse_complement(intron_seq)
@@ -131,17 +134,18 @@ def get_gene_by_name(gm, nchr, gene_name):
             nf+=1
             continue
         else:
+            feat = g
             break
         
     return feat, nf
 
-def get_intron(gm:GenomeManager, nchr, gene_index, exon_index):
+def get_intron(gm:GenomeManager, nchr, gene_index, exon_index, personal = False):
     
     gene, ng = get_gene_by_index(gm, nchr, gene_index)
-    exon1, nintr = get_feature_by_index(gm, nchr, exon_index, feature_type = "exon")
-    exon2, nintr = get_feature_by_index(gm, nchr, exon_index + 1, feature_type = "exon")
+    exon1, nintr = get_feature_by_index(gm, nchr, exon_index, start = gene.get("start"), feature_type = "exon")
+    exon2, nintr = get_feature_by_index(gm, nchr, exon_index + 1,start = gene.get("start"), feature_type = "exon")
     
-    intron_seq = get_intron_seq(gm, nchr, exon1, exon2)
+    intron_seq = get_intron_seq(gm, nchr, exon1, exon2, personal = personal)
     intrdat = IntronData(gene, ng, exon1, nintr, exon2, intron_seq)
     
     # if len(intrdat.seq) < 1:
@@ -630,10 +634,26 @@ def main():
     #     print(b.to_tuple())
     #     print()
     
-    compare_gene_introns(gm, 20, max_num = 8, 
-                        gene_index = 1200,
-                        # gene_name = "KISS1"
-                    )
+    g, ng = get_gene_by_name(gm, 2, "POMC")
+    
+    print(g, ng)
+    
+    intr = get_intron(gm, 1, 1739, 0)
+    intr_pers = get_intron(gm, 1, 1739, 0, personal = True)
+    # print(intr)
+    
+    print("reference")
+    compare.compare_sequences(intr.seq, intr.seq)
+    print("personal")
+    compare.compare_sequences(intr_pers.seq, intr_pers.seq)
+    
+    print("cross")
+    compare.compare_sequences(intr.seq, intr_pers.seq)
+    # compare_introns(intr.seq, intr.seq)
+    # compare_gene_introns(gm, 1, max_num = 8, 
+    #                     gene_index = 1739,
+    #                     # gene_name = "KISS1"
+    #                 )
     
     
     interesting_pairs = [

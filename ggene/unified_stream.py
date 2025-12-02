@@ -410,6 +410,7 @@ class BEDStream(AnnotationStream):
             index_file = Path(str(self.filepath) + '.tbi')
             if index_file.exists():
                 try:
+                    print("doing tabix")
                     self.tabix = pysam.TabixFile(str(self.filepath))
                     logger.info(f"Using indexed access for {self.filepath}")
                 except Exception as e:
@@ -429,18 +430,20 @@ class BEDStream(AnnotationStream):
             return None
         
         return UnifiedFeature(
-            chrom=parts[0],
+            chrom=parts[0].removeprefix("chr"),
             start=int(parts[1]) + 1,  # BED is 0-based
             end=int(parts[2]),
             feature_type=self.feature_type,
             source=self.source_name,
             name=parts[3] if len(parts) > 3 else None,
-            score=float(parts[4]) if len(parts) > 4 else None,
+            score = 0,
             strand=parts[5] if len(parts) > 5 else None,
             attributes={
-                'thickStart': int(parts[6]) if len(parts) > 6 else None,
-                'thickEnd': int(parts[7]) if len(parts) > 7 else None,
-                'itemRgb': parts[8] if len(parts) > 8 else None
+                'motif': parts[4],
+                'type':parts[5]
+                # 'thickStart': int(parts[6]) if len(parts) > 6 else None,
+                # 'thickEnd': int(parts[7]) if len(parts) > 7 else None,
+                # 'itemRgb': parts[8] if len(parts) > 8 else None
             }
         )
     

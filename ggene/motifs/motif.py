@@ -115,7 +115,7 @@ default_motifs = {
     "E_box":"CAGCTG|CACGTG",
     
     "AU_rich":"ATTTA",
-    "Shine-Dalgarno":"AGGAGGT",
+    # "Shine-Dalgarno":"AGGAGGT", # prokaryotes and archaea ... 
     "Kozak":"ACCATGG",
     
     "hammerhead":"YYRRGCCGTTACCTRCAGCTGATGAGCTCCAARAAGAGCGAAACCNRNYAGGTCCTGYAGTAYTGGCYNR",
@@ -164,7 +164,14 @@ default_motifs = {
 motif_classes = {
     "splice":["splice_donor","splice_acceptor"],
     
-    "promoter":["TATA_box","CAAT_box","E_box", "AU_rich","Shine-Dalgarno","Kozak"],
+    "promoter":[
+        "TATA_box",
+        "CAAT_box",
+        "E_box", 
+        "AU_rich",
+        # "Shine-Dalgarno",
+        "Kozak"
+    ],
     
     "hammerhead":["hammerhead","hammerhead_stem1","hammerhead_stem2","hammerhead_big_loop"],
     
