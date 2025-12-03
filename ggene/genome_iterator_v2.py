@@ -9,10 +9,19 @@ This module provides an iterator over genomic positions with:
 """
 
 import logging
-from typing import Dict, List, Optional, Tuple, Union, Iterator, Any
+from typing import Dict, List, Optional, Tuple, Union, Iterator, Any, TYPE_CHECKING
 from dataclasses import dataclass, field
 import numpy as np
 import reprlib
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
+
+from ggene.seqs.bio import reverse_complement
+from ggene.unified_stream import UnifiedFeature
+
+if TYPE_CHECKING:
+    from .genomemanager import GenomeManager
+    from .unified_stream import UnifiedGenomeAnnotations
 
 logger = logging.getLogger(__name__)
 logger.setLevel("CRITICAL")
@@ -114,8 +123,8 @@ class UnifiedGenomeIterator:
             feature_types: Specific feature types to track
             detect_motifs: Whether to detect motifs in sequences
         """
-        self.gm = genome_manager
-        self.annotations = genome_manager.annotations
+        self.gm:'GenomeManager' = genome_manager
+        self.annotations:'UnifiedGenomeAnnotations' = genome_manager.annotations
         self.chrom = str(chrom)
         self.start = start
         self.end = end
@@ -134,8 +143,9 @@ class UnifiedGenomeIterator:
         )
         
         # Buffered sequences and variants
-        self._buffer_start = start - self.PRELOAD_BUFFER
-        self._buffer_end = start + self.SEQUENCE_CACHE_SIZE
+        # self._buffer_start = start - self.PRELOAD_BUFFER
+        self._buffer_start = start - self.SEQUENCE_CACHE_SIZE//2
+        self._buffer_end = start + window_size + self.SEQUENCE_CACHE_SIZE//2
         self._ref_buffer = ""
         self._alt_buffer = ""
         self._variant_list = []  # List of (position, delta) tuples
@@ -149,66 +159,18 @@ class UnifiedGenomeIterator:
         self._motif_detector = None
         if detect_motifs:
             self._motif_detector = self.gm.motif_detector
+
             # self._setup_motif_detection()
-        
+
+        # Async preloading infrastructure
+        self._executor = ThreadPoolExecutor(max_workers=1)
+        self._preload_future = None
+        self._next_buffer_start = None
+        self._next_buffer_end = None
+        self._is_preloading = False
+
         # Preload initial buffer
         self._preload_buffer()
-    
-    def _setup_motif_detection(self) -> None:
-        """Setup motif detector with default motifs."""
-        try:
-            from ggene.motifs.motif import MotifDetector
-            from ggene.motifs.pattern import PatternMotif
-            
-            self._motif_detector = MotifDetector()
-            
-            # Add common splice site motifs (compile with IGNORECASE)
-            import re
-            splice_donor = PatternMotif(
-                "splice_donor", 
-                re.compile(r"GT[AG]AGT", re.IGNORECASE),  # GT(A/G)AGT
-                lambda x: 1.0
-            )
-            splice_acceptor = PatternMotif(
-                "splice_acceptor",
-                re.compile(r"[CT]{10,}[ATGC]CAG", re.IGNORECASE),  # Pyrimidine tract + CAG
-                lambda x: 1.0
-            )
-            
-            # Add TATA box motif
-            tata_box = PatternMotif(
-                "TATA_box",
-                re.compile(r"TATA[AT]A[AT]", re.IGNORECASE),
-                lambda x: 1.0
-            )
-            
-            # Add CpG island pattern (simplified)
-            cpg_pattern = PatternMotif(
-                "CpG_island",
-                re.compile(r"(CG){5,}", re.IGNORECASE),  # At least 5 CG dinucleotides
-                lambda x: len(x) / 2  # Score by number of CG repeats
-            )
-            
-            # Add poly-A signal
-            polya_signal = PatternMotif(
-                "polyA_signal",
-                re.compile(r"AATAAA|ATTAAA", re.IGNORECASE),
-                lambda x: 1.0
-            )
-            
-            # Add motifs to detector
-            self._motif_detector.add_motif(splice_donor)
-            self._motif_detector.add_motif(splice_acceptor)
-            self._motif_detector.add_motif(tata_box)
-            self._motif_detector.add_motif(cpg_pattern)
-            self._motif_detector.add_motif(polya_signal)
-            
-            logger.debug(f"Initialized motif detector with {len(self._motif_detector.motifs)} motifs")
-            
-        except ImportError:
-            logger.warning("Motif modules not available, disabling motif detection")
-            self.detect_motifs = False
-            self._motif_detector = None
     
     def _scan_buffer_for_motifs(self, seq: str, buffer_start: int) -> Dict[int, List]:
         """Scan a buffer sequence for motifs and cache results.
@@ -225,85 +187,49 @@ class UnifiedGenomeIterator:
         
         motif_results = {}
         
-        # Helper function to get reverse complement
-        def reverse_complement_seq(s):
-            complement = {'A': 'T', 'T': 'A', 'C': 'G', 'G': 'C',
-                         'a': 't', 't': 'a', 'c': 'g', 'g': 'c',
-                         'N': 'N', 'n': 'n'}
-            return ''.join(complement.get(base, base) for base in s[::-1])
+        strand = "+"
         
-        # Scan forward strand
-        for motif_name, motif in self._motif_detector.motifs.items():
-            try:
-                instances = motif.find_instances(seq)
-                
-                for start, end, score in instances:
-                    # Convert to genomic coordinates
-                    genomic_start = buffer_start + start
-                    genomic_end = buffer_start + end
+        all_insts = self._motif_detector.identify(seq)
+        
+        for motif_name, instances in all_insts.items():
+            if instances:
+                for motif_start, motif_end, score, is_rc in instances:
                     
-                    # Create motif feature object
-                    motif_feature = {
-                        'type': 'motif',
-                        'name': motif_name,
-                        'start': genomic_start,
-                        'end': genomic_end,
-                        'score': score,
-                        'sequence': seq[start:end],
-                        'strand': '+'  # Forward strand
-                    }
+                    genomic_start = buffer_start + motif_start
                     
-                    # Add to cache by position
-                    if genomic_start not in motif_results:
+                    if not genomic_start in motif_results:
                         motif_results[genomic_start] = []
-                    motif_results[genomic_start].append(motif_feature)
                     
-            except Exception as e:
-                logger.debug(f"Failed to scan for motif {motif_name}: {e}")
-        
-        # Scan reverse complement strand
-        rev_seq = reverse_complement_seq(seq)
-        for motif_name, motif in self._motif_detector.motifs.items():
-            try:
-                instances = motif.find_instances(rev_seq)
-                
-                for start, end, score in instances:
-                    # Convert positions - reverse strand positions need adjustment
-                    # Position on reverse strand maps to original sequence
-                    rev_start = len(seq) - end
-                    rev_end = len(seq) - start
+                    mseq = seq[motif_start:motif_end]
+                    mtfstrand = strand
+                    if is_rc:
+                        # mseq = reverse_complement(mseq)
+                        mtfstrand = '-' if mtfstrand == '+' else '+'
                     
-                    # Convert to genomic coordinates
-                    genomic_start = buffer_start + rev_start
-                    genomic_end = buffer_start + rev_end
-                    
-                    # Create motif feature object
-                    motif_feature = {
-                        'type': 'motif',
-                        'name': motif_name,
-                        'start': genomic_start,
-                        'end': genomic_end,
-                        'score': score,
-                        'sequence': seq[rev_start:rev_end],  # Original sequence at this position
-                        'strand': '-'  # Reverse strand
-                    }
-                    
-                    # Add to cache by position
-                    if genomic_start not in motif_results:
-                        motif_results[genomic_start] = []
-                    motif_results[genomic_start].append(motif_feature)
-                    
-            except Exception as e:
-                logger.debug(f"Failed to scan reverse strand for motif {motif_name}: {e}")
-        
+                    motif_results[genomic_start].append(UnifiedFeature(
+                        chrom=self.chrom,
+                        start=buffer_start + motif_start,
+                        end=buffer_start + motif_end - 1,
+                        feature_type="motif",
+                        source="MotifDetector",
+                        score=score,
+                        strand=mtfstrand,
+                        name=motif_name,
+                        attributes={
+                            'sequence': mseq,
+                            'is_rc':is_rc,
+                            'caller':'iterator',
+                        }
+                    ))
+
         return motif_results
     
     def _preload_buffer(self) -> None:
-        """Preload sequence and variant buffer, and scan for motifs."""
+        """Preload sequence and variant buffer, and scan for motifs (synchronous version for initial load)."""
         # Ensure buffer boundaries
         buffer_start = max(1, self._buffer_start)
         buffer_end = self._buffer_end
-        
+
         if self.integrate_variants and self.annotations.sequence_stream:
             # Get aligned sequences with variant information
             aligned_ref, aligned_alt, variant_list = self.annotations.get_aligned_sequences(
@@ -312,10 +238,10 @@ class UnifiedGenomeIterator:
             self._ref_buffer = aligned_ref
             self._alt_buffer = aligned_alt
             self._variant_list = variant_list
-            
+
             # Calculate cumulative delta up to current position
             self._cumulative_delta = sum(
-                delta for pos, delta in variant_list 
+                delta for pos, delta in variant_list
                 if pos < self.coords.ref_pos
             )
         else:
@@ -325,7 +251,7 @@ class UnifiedGenomeIterator:
             self._alt_buffer = ref_seq
             self._variant_list = []
             self._cumulative_delta = 0
-        
+
         # Scan for motifs if enabled
         if self.detect_motifs and self._ref_buffer:
             # Get clean sequence without gaps for motif scanning
@@ -335,9 +261,88 @@ class UnifiedGenomeIterator:
                 # Update cache with new motif results
                 self._motif_cache.update(motif_results)
                 logger.debug(f"Found {len(motif_results)} motif positions in buffer")
-        
+
         logger.debug(f"Preloaded buffer {buffer_start}-{buffer_end}: "
                     f"{len(self._ref_buffer)} ref bases, {len(self._variant_list)} variants")
+
+    def _load_buffer_async_worker(self, buffer_start: int, buffer_end: int) -> Tuple[str, str, List, int]:
+        """Worker function that runs in thread pool to load buffer data."""
+        buffer_start = max(1, buffer_start)
+
+        if self.integrate_variants and self.annotations.sequence_stream:
+            # Get aligned sequences with variant information
+            aligned_ref, aligned_alt, variant_list = self.annotations.get_aligned_sequences(
+                self.chrom, buffer_start, buffer_end
+            )
+
+            # Calculate cumulative delta
+            cumulative_delta = sum(
+                delta for pos, delta in variant_list
+                if pos < self.coords.ref_pos
+            )
+        else:
+            # No variants - just get reference
+            ref_seq = self.annotations.get_sequence(self.chrom, buffer_start, buffer_end)
+            aligned_ref = ref_seq
+            aligned_alt = ref_seq
+            variant_list = []
+            cumulative_delta = 0
+
+        # Scan for motifs if enabled
+        motif_cache = {}
+        if self.detect_motifs and aligned_ref:
+            # Get clean sequence without gaps for motif scanning
+            clean_seq = aligned_ref.replace('-', '')
+            if clean_seq:
+                motif_cache = self._scan_buffer_for_motifs(clean_seq, buffer_start)
+                logger.debug(f"Found {len(motif_cache)} motif positions in async buffer")
+
+        logger.debug(f"Async preloaded buffer {buffer_start}-{buffer_end}: "
+                    f"{len(aligned_ref)} ref bases, {len(variant_list)} variants")
+
+        return aligned_ref, aligned_alt, variant_list, cumulative_delta, motif_cache
+
+    def _start_async_preload(self, buffer_start: int, buffer_end: int) -> None:
+        """Start asynchronously preloading the next buffer in the background."""
+        if self._is_preloading:
+            logger.debug("Already preloading, skipping")
+            return
+
+        self._is_preloading = True
+        self._next_buffer_start = buffer_start
+        self._next_buffer_end = buffer_end
+
+        logger.debug(f"Starting async preload for {buffer_start}-{buffer_end}")
+        self._preload_future = self._executor.submit(
+            self._load_buffer_async_worker, buffer_start, buffer_end
+        )
+
+    def _wait_for_preload(self) -> None:
+        """Wait for async preload to complete and update buffers."""
+        if not self._is_preloading or self._preload_future is None:
+            return
+
+        try:
+            # Wait for the preload to complete and get results
+            aligned_ref, aligned_alt, variant_list, cumulative_delta, motif_cache = self._preload_future.result()
+
+            # Update the buffer state
+            self._buffer_start = self._next_buffer_start
+            self._buffer_end = self._next_buffer_end
+            self._ref_buffer = aligned_ref
+            self._alt_buffer = aligned_alt
+            self._variant_list = variant_list
+            self._cumulative_delta = cumulative_delta
+
+            # Update motif cache
+            self._motif_cache.update(motif_cache)
+
+            logger.debug(f"Async preload completed and applied")
+        finally:
+            self._is_preloading = False
+            self._preload_future = None
+            self._next_buffer_start = None
+            self._next_buffer_end = None
     
     def _get_features_in_window(self, start: int, end: int) -> List[Any]:
         """Get features in a genomic window."""
@@ -384,10 +389,42 @@ class UnifiedGenomeIterator:
         """Extract a window from the buffer."""
         # Check if we need to reload buffer
         logger.debug(f"buffer offsets before: {self._buffer_start}, {self._buffer_end}")
-        if window_end_ref > self._buffer_end:
-            self._buffer_start = window_start_ref - self.PRELOAD_BUFFER
-            self._buffer_end = window_end_ref + self.SEQUENCE_CACHE_SIZE
-            self._preload_buffer()
+
+        # Check if the window extends beyond current buffer (either direction)
+        if window_end_ref > self._buffer_end or window_start_ref < self._buffer_start:
+            # If we have a preload in progress for this region, wait for it
+            if self._is_preloading and self._next_buffer_start is not None:
+                if window_start_ref >= self._next_buffer_start and window_end_ref <= self._next_buffer_end:
+                    logger.debug("Using async preloaded buffer")
+                    self._wait_for_preload()
+                else:
+                    # Wrong region, need to reload synchronously
+                    direction = "backward" if window_start_ref < self._buffer_start else "forward"
+                    logger.debug(f"Preload was for wrong region, reloading synchronously ({direction})")
+                    # self._buffer_start = window_start_ref - self.PRELOAD_BUFFER
+                    self._buffer_start = window_start_ref - self.SEQUENCE_CACHE_SIZE//2
+                    self._buffer_end = window_end_ref + self.SEQUENCE_CACHE_SIZE//2
+                    self._preload_buffer()
+            else:
+                # No preload in progress, load synchronously
+                direction = "backward" if window_start_ref < self._buffer_start else "forward"
+                logger.debug(f"No async preload available, loading synchronously ({direction})")
+                # self._buffer_start = window_start_ref - self.PRELOAD_BUFFER
+                self._buffer_start = window_start_ref - self.SEQUENCE_CACHE_SIZE//2
+                self._buffer_end = window_end_ref + self.SEQUENCE_CACHE_SIZE//2
+                self._preload_buffer()
+
+        # Predictively start loading the next buffer if we're getting close to the end
+        # Start async preload when we're 75% through the current buffer
+        buffer_usage_fwd = (window_end_ref - self._buffer_start) / (self._buffer_end - self._buffer_start)
+        buffer_usage_rev = (window_start_ref - self._buffer_start) / (self._buffer_end - self._buffer_start)
+        if (buffer_usage_fwd > 0.9 or buffer_usage_rev < 0.1) and not self._is_preloading:
+            # next_buffer_start = window_end_ref - self.PRELOAD_BUFFER
+            next_buffer_start = window_start_ref - self.SEQUENCE_CACHE_SIZE//2
+            next_buffer_end = window_end_ref + self.SEQUENCE_CACHE_SIZE//2
+            logger.debug(f"Predictively starting async preload (buffer usage: {buffer_usage_fwd:.1%})")
+            self._start_async_preload(next_buffer_start, next_buffer_end)
+
         logger.debug(f"window and consts: {window_start_ref}, {window_end_ref}, {self.PRELOAD_BUFFER}, {self.SEQUENCE_CACHE_SIZE}")
         
         # Calculate position in buffer
@@ -502,8 +539,90 @@ class UnifiedGenomeIterator:
     
     def get_window_at(self, position):
         return self._extract_window(position, position + self.window_size)
-        
-    
+
+    def step(self, delta: int) -> None:
+        """Move the iterator position by delta bases.
+
+        This is optimized for sequential navigation and cooperates with
+        the async buffer preloading system.
+
+        Args:
+            delta: Number of bases to move (positive = forward, negative = backward)
+        """
+        new_position = max(1, self.start + delta)
+        self.start = new_position
+
+        # Update coordinate state
+        self.coords.ref_pos = new_position
+
+        # Update alt_pos based on variants encountered
+        variants_passed = [(p, d) for p, d in self._variant_list if p < new_position]
+        self.coords.alt_pos = new_position + sum(d for _, d in variants_passed)
+        self.coords.display_pos = self._calculate_display_coordinate(
+            new_position, self.coords.alt_pos
+        )
+
+        logger.debug(f"Stepped by {delta} to position {new_position}")
+
+    def update_position(self, new_position: int) -> None:
+        """Update the iterator to a new position without jumping.
+
+        This is similar to step() but takes an absolute position instead of a delta.
+        Optimized for sequential navigation and preserves async preloading benefits.
+
+        Args:
+            new_position: New absolute position (1-based)
+        """
+        new_position = max(1, new_position)
+        self.start = new_position
+
+        # Update coordinate state
+        self.coords.ref_pos = new_position
+
+        # Update alt_pos based on variants encountered
+        variants_passed = [(p, d) for p, d in self._variant_list if p < new_position]
+        self.coords.alt_pos = new_position + sum(d for _, d in variants_passed)
+        self.coords.display_pos = self._calculate_display_coordinate(
+            new_position, self.coords.alt_pos
+        )
+
+        logger.debug(f"Updated position to {new_position}")
+
+    def update_chromosome(self, new_chrom: Union[str, int], new_position: int = None) -> None:
+        """Update the iterator to a new chromosome and optionally a new position.
+
+        This requires reloading buffers since we're changing chromosomes.
+
+        Args:
+            new_chrom: New chromosome to navigate to
+            new_position: Optional new position (defaults to current position or 1)
+        """
+        # Cancel any ongoing preload
+        if self._is_preloading:
+            logger.debug("Canceling async preload due to chromosome change")
+            self._is_preloading = False
+            self._preload_future = None
+
+        self.chrom = str(new_chrom)
+        self.start = max(1, new_position if new_position is not None else self.start)
+
+        # Reset coordinate state
+        self.coords.ref_pos = self.start
+        self.coords.alt_pos = self.start
+        self.coords.display_pos = self.start
+
+        # Clear caches
+        self._feature_cache = {}
+        self._motif_cache = {}
+
+        # Reload buffer for new chromosome
+        self._buffer_start = self.start - self.PRELOAD_BUFFER
+        self._buffer_end = self.start + self.SEQUENCE_CACHE_SIZE
+        self._preload_buffer()
+
+        logger.debug(f"Updated chromosome to {new_chrom} at position {self.start}")
+
+
     def jump_to(self, position: int, coord_system: str = 'ref') -> None:
         """Jump to a specific position in the genome.
         
@@ -536,6 +655,13 @@ class UnifiedGenomeIterator:
         
         # Reload buffer if needed
         if self.coords.ref_pos < self._buffer_start or self.coords.ref_pos > self._buffer_end:
+            # Cancel any ongoing preload since we're jumping
+            if self._is_preloading:
+                logger.debug("Canceling async preload due to jump")
+                # Don't wait for it, just mark as not preloading
+                self._is_preloading = False
+                self._preload_future = None
+
             self._buffer_start = self.coords.ref_pos - self.PRELOAD_BUFFER
             self._buffer_end = self.coords.ref_pos + self.SEQUENCE_CACHE_SIZE
             self._preload_buffer()
@@ -549,7 +675,18 @@ class UnifiedGenomeIterator:
             'cumulative_delta': self._cumulative_delta
         }
 
+    def cleanup(self):
+        """Clean up resources (thread pool, etc.)."""
+        if self._executor:
+            logger.debug("Shutting down thread pool executor")
+            self._executor.shutdown(wait=False)
+            self._executor = None
+
+    def __del__(self):
+        """Cleanup when iterator is destroyed."""
+        self.cleanup()
+
     def __repr__(self):
-        safe_attrs = {k: v for k, v in self.__dict__.items() 
+        safe_attrs = {k: v for k, v in self.__dict__.items()
                     if isinstance(v, (int, float, str, bool, type(None)))}
         return f"{self.__class__.__name__}({reprlib.repr(safe_attrs)})"

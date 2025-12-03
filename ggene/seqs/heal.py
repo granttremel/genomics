@@ -133,3 +133,31 @@ class Healer:
         
         return locs, mods
             
+
+def get_mutation_spectrum(seqa, seqb, mutation_spec = {},  b_is_rc = False, allowed_mutations = 'RYSWKM'):
+    
+    cons = bio.merge(seqa, seqb)
+    rccons = bio.merge(seqa, bio.complement(seqb))
+    
+    ms = {k:mutation_spec.get(k, 0) for k in allowed_mutations}
+    
+    for i,b in enumerate(cons):
+        
+        if b in VOCAB:
+            continue
+        
+        real_b = b
+        # if b_is_rc:
+        #     real_b = rccons[i]
+        # else:
+        #     real_b = b
+        
+        if b in ms:
+            ms[real_b] += 1
+        
+        for k in allowed_mutations:
+            v = bio.ALIASES.get(k)
+            if b in v and not k == 'N':
+                ms[real_b] += 1
+    
+    return ms

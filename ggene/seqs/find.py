@@ -2,9 +2,10 @@
 import numpy as np
 import math
 import itertools
+import string
 
 from typing import Optional, Dict, List, Tuple, Any
-from .bio import reverse_complement, get_aliases, get_minimal_alias
+from .bio import reverse_complement, COMPLEMENT_MAP, get_aliases, get_minimal_alias
 from .vocab import VOCAB
 from .process import correlate_longest_subseq
 import random
@@ -12,18 +13,159 @@ import random
 def consensus_to_re(seq, err = 0):
     
     ia, iar = get_aliases()
+    
+    re_open = "{[("
+    re_close = "}])"
+    re_syntactic = "\\?*+|" + re_open + re_close + string.digits
+    
+    enclosed = 0
     outstr = []
     for s in seq:
-        if s in VOCAB:
+        if s in re_open:
+            enclosed +=1
+        elif s in re_close and enclosed > 0:
+            enclosed -= 1
+            
+        if enclosed > 0:
+            ias = alias_to_set(s, ia, default = s)
+            outstr.append(ias)
+        elif s in VOCAB or s in re_syntactic:
             outstr.append(s)
         elif s in ia:
-            outstr.append(f'[{ia.get(s)}]')
+            ias = alias_to_set(s, ia, default = s)
+            outstr.append(ias)
         else:
             outstr.append(".")
     
     return "".join(outstr)
 
+def alias_to_set(alias, aliases, default = None, do_rc = False):
+    
+    if do_rc:
+        alias = COMPLEMENT_MAP.get(alias, alias)
+    
+    if alias in aliases:
+        re_set = aliases.get(alias, default)
+        return f"[{re_set}]"
+    else:
+        return default
 
+# !!!BAD!!! needs work
+def reverse_complement_consensus(consensus):
+    
+    ia, iar = get_aliases()
+    
+    re_open = "[("
+    re_close = "])"
+    
+    mod_open = "{"
+    mod_chars = "{},?+" + string.digits
+    
+    re_syntactic = "\\?*+|." + re_open + re_close + mod_chars
+        
+    enclosed = 0
+    in_mod = False
+    outstr = []
+    mod_arg = []
+    mod = []
+    for s in consensus:
+        
+        print(f"outstr {"".join(outstr)}, adding {s}")
+        
+        buffer = mod if in_mod else mod_arg # init buffer
+        
+        if s in re_open:
+            enclosed +=1
+        elif s in re_close and enclosed > 0:
+            enclosed -= 1
+        
+        if enclosed == 0 and not in_mod:
+            outstr.append("".join(mod_arg))
+            mod_arg = []
+        
+        if s in mod_open and not in_mod:
+            in_mod = True # enter modifier, start adding to mod buffer
+            buffer = mod
+            print(f"entering modifier with mod_arg {"".join(mod_arg)}, mod {"".join(mod)}, enclosed {enclosed}")
+            
+        elif s not in mod_chars and in_mod:
+            print(f"exiting modifier with mod_arg {"".join(mod_arg)}, mod {"".join(mod)}, enclosed {enclosed}")
+            in_mod = False
+            outstr.append("".join(mod_arg + mod))
+            print(f"pushed {outstr[-1]} to output")
+            buffer = mod_arg
+            
+        if enclosed > 0:
+            cs = COMPLEMENT_MAP.get(s, s) # chars in enclosed may be nucleotides
+            buffer.append(cs)
+        elif s in VOCAB:
+            cs = COMPLEMENT_MAP.get(s, s)
+            buffer.append(cs)
+        elif s in re_syntactic:
+            buffer.append(s)
+    
+    outstr.append("".join(buffer))
+    
+    return "".join(reversed(outstr))
+
+# !!!BAD!!! needs work
+def reverse_complement_re2(pattern):
+    
+    ia, iar = get_aliases()
+    
+    re_open = "[("
+    re_close = "])"
+    
+    mod_open = "{"
+    mod_chars = "{},?+" + string.digits
+    
+    re_syntactic = "\\?*+|." + re_open + re_close + mod_chars
+        
+    enclosed = 0
+    in_mod = False
+    outstr = []
+    mod_arg = []
+    mod = []
+    for s in pattern:
+        
+        print(f"outstr {"".join(outstr)}, adding {s}")
+        
+        if s in re_open:
+            enclosed +=1
+        elif s in re_close and enclosed > 0:
+            enclosed -= 1
+            
+        if mod_arg and enclosed == 0 and not in_mod:
+            outstr.append("".join(mod_arg)) # mod_arg buffer pushed and cleared
+            print(f"clearing and pushing mod_arg {"".join(mod_arg)} with mod {"".join(mod)}, enclosed {enclosed}")
+            mod_arg = []
+        
+        tgt = mod_arg # by default new chars are mod_arg
+        if s in mod_open and not in_mod:
+            in_mod = True # enter modifier, start adding to mod buffer
+            tgt = mod
+            print(f"entering modifier with mod_arg {"".join(mod_arg)}, mod {"".join(mod)}, enclosed {enclosed}")
+        elif s not in mod_chars and in_mod:
+            print(f"exiting modifier with mod_arg {"".join(mod_arg)}, mod {"".join(mod)}, enclosed {enclosed}")
+            in_mod = False
+            outstr.append("".join(mod_arg + mod))
+            print(f"pushed {outstr[-1]} to output")
+            tgt = mod_arg
+            
+        if enclosed > 0:
+            cs = COMPLEMENT_MAP.get(s, s) # chars in enclosed may be nucleotides
+            tgt.append(cs)
+        elif s in VOCAB:
+            cs = COMPLEMENT_MAP.get(s, s)
+            tgt.append(cs)
+        elif s in re_syntactic:
+            tgt.append(s)
+    
+    outstr.append("".join(tgt))
+    
+    return "".join(reversed(outstr))
+
+# !!!BAD!!! needs work
 def reverse_complement_re(pattern):
     plist = list(pattern)
     rcp = []
@@ -45,18 +187,23 @@ def reverse_complement_re(pattern):
                 rcp.append(c)
     return "".join(rcp)
 
-
-def compare_sequences(s1: str, s2: str, err_tol: Optional[int] = None, allow_alias = False) -> int:
+def compare_sequences(s1: str, s2: str, err_tol: Optional[int] = None, wobble_tol = None, allow_alias = False) -> int:
     """Helper to compare two sequences and count mismatches."""
     if len(s1) < len(s2):
         return len(s1)
     
     if err_tol is None:
         err_tol = len(s1)
+    if wobble_tol is None:
+        # wobble_tol = len(s1)
+        allow_wobble = False
+    else:
+        allow_wobble = True
 
     ia, iar = get_aliases(VOCAB)
     
     nerr = 0
+    nwob = 0
     for a, b in zip(s1, s2):
         if a == b:
             pass
@@ -64,12 +211,43 @@ def compare_sequences(s1: str, s2: str, err_tol: Optional[int] = None, allow_ali
             pass
         elif allow_alias and b in ia and a in ia[b]:
             pass
+        elif allow_wobble and a+b in ["TG","GT"]:
+                nwob += 1
+        elif allow_wobble and a+b in ["AG","GA"]:
+                nwob += 1
+        elif allow_wobble and a+b in ["AC","CA"]:
+                nwob += 1
         else:
             nerr += 1
+            
         if nerr > err_tol:
             return nerr
+        if allow_wobble and nwob > wobble_tol:
+            return nwob
+        
     return nerr
 
+def count_matching(s1: str, s2: str, err_tol: Optional[int] = None) -> int:
+    """Helper to compare two sequences and count mismatches."""
+    # if len(s1) < len(s2):
+    #     return len(s1)
+    
+    if err_tol is None:
+        err_tol = len(s1)
+    
+    match = 0
+    nerr = 0
+    for a, b in zip(s1, s2):
+        if a == b:
+            match += 1
+            pass
+        else:
+            nerr += 1
+            
+        if nerr > err_tol:
+            break
+        
+    return match, nerr
 
 def find_subsequence(seq, subseq, frame_start = -1):
     starts = []

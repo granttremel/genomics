@@ -30,7 +30,8 @@ class Colors:
     STOP_CODON = '\x1b[35m'
 
     # Motif colors (for underlines)
-    MOTIF = '\033[96m'   # Cyan for other motifs
+    MOTIF = '\033[38;5;110m'   # Cyan for other motifs
+    RCMOTIF = '\x1b[38;5;106m'
     HIGHLIGHT = '\x1b[148m' # goldish
     
     # Navigation

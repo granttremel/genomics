@@ -116,37 +116,12 @@ class GenomeManager:
     
     def _setup_default_motifs(self):
         """Setup default motifs for detection."""
-        # Add splice site motifs
-        splice_donor = PatternMotif("splice_donor", "GT[AG]AGT", lambda x: 1.0)
-        splice_acceptor = PatternMotif("splice_acceptor", "[CT]{10,}[ATGC]CAG", lambda x: 1.0)
-        tata = PatternMotif("tata", "TATA[AT]A[AT]", lambda x: 1.0)
-        caat = PatternMotif("caat", "GGCCAATCT", lambda x: 1.0)
-        idk = PatternMotif("idk", "TTTT[ACG]{5,25}TTTT", lambda x: 1.0)
-        hh = PatternMotif("hammerhead", "[TC][TC][AG][AG]GCCGTTACCT[AG]CAGCTGATGAGCTCCAA[AG]AAGAGCGAAACC[ATGC][AG][ATGC][TC]AGGTCCTG[TC]AGTA[TC]TGGC[TC][ATGC][AG]", lambda x:1.0)
-        hh_stem1 = PatternMotif("hammerhead_stem1", "[CT]{2}[AG]{2}GCCG", lambda x:1.0)
-        hh_stem2 = PatternMotif("hammerhead_stem2", "CT[AG]CAG", lambda x:1.0)
-        hh_big_loop = PatternMotif("hammerhead_big_loop", "GCUGAUGAG[ATGC]{12,20}CGAAAA[ATGC]{9,14}TCC", lambda x:1.0)
-        srp_alu_sl1 = PatternMotif("SRP_Alu_stemloop1", "GCC[GC]GGC[GC]CG[ATGC]{6,12}CG[AT]GCC[AT]", lambda x:1.0)
-        srp_alu_sl2 = PatternMotif("SRP_Alu_stemloop2", "GTCCC[ATGC]{8,16}GGGAG", lambda x:1.0)
-        srp_alu_stem1 = PatternMotif("SRP_Alu_stem1", "CGGGCGCG", lambda x:1.0)
-        srp_alu_stem2 = PatternMotif("SRP_Alu_stem2", "GGCTGAGGCTGGA", lambda x:1.0)
-        srp_alu_stem3 = PatternMotif("SRP_Alu_stem3", "CTGGGCTGTAGTG[ATGC]GCTAT[ATGC]C", lambda x:1.0)
         
-        # self.motif_detector.add_motif(splice_donor)
-        # self.motif_detector.add_motif(splice_acceptor)
-        # self.motif_detector.add_motif(tata)
-        # self.motif_detector.add_motif(caat)
-        # self.motif_detector.add_motif(idk)
-        # self.motif_detector.add_motif(hh)
-        # self.motif_detector.add_motif(hh_stem1)
-        # self.motif_detector.add_motif(hh_stem2)
-        # self.motif_detector.add_motif(hh_big_loop)
-        self.motif_detector.add_motif(srp_alu_sl1)
-        self.motif_detector.add_motif(srp_alu_sl2)
-        # self.motif_detector.add_motif(srp_alu_stem1)
-        self.motif_detector.add_motif(srp_alu_stem2)
-        self.motif_detector.add_motif(srp_alu_stem3)
-        
+        # self.motif_detector.setup_default_motifs()
+        self.motif_detector.setup_default_motifs(class_names = ["splice","promoter"])
+        # self.motif_detector.setup_default_motifs(class_names = ["hammerhead", "SRP", "pseudoknot","msat"])
+        # self.motif_detector.setup_default_motifs(class_names = ["SRP_S"])
+
         # Add more motifs as needed
         logger.info("Initialized default motifs")
     
@@ -195,7 +170,7 @@ class GenomeManager:
         
         return sorted(annotations)
     
-    def scan_motifs(self, sequence: str, chrom: str, start_pos: int) -> List[UnifiedFeature]:
+    def scan_motifs(self, sequence: str, chrom: str, start_pos: int, strand = '+') -> List[UnifiedFeature]:
         """Scan a sequence for motifs.
         
         Args:
@@ -208,11 +183,18 @@ class GenomeManager:
         """
         features = []
         
-        for motif_name, motif in self.motif_detector.motifs.items():
-            # Find instances of this motif
-            instances = motif.find_instances(sequence)
+        all_insts = self.motif_detector.identify(sequence)
+        
+        for motif_name, instances in all_insts.items():
             if instances:
-                for motif_start, motif_end, score in instances:
+                for motif_start, motif_end, score, is_rc in instances:
+                    
+                    mseq = sequence[motif_start:motif_end]
+                    mtfstrand = strand
+                    if is_rc:
+                        mseq = reverse_complement(mseq)
+                        mtfstrand = '-' if mtfstrand == '+' else '+'
+                    
                     features.append(UnifiedFeature(
                         chrom=chrom,
                         start=start_pos + motif_start,
@@ -220,9 +202,12 @@ class GenomeManager:
                         feature_type="motif",
                         source="MotifDetector",
                         score=score,
+                        strand=mtfstrand,
                         name=motif_name,
                         attributes={
-                            'sequence': sequence[motif_start:motif_end]
+                            'sequence': mseq,
+                            'is_rc':is_rc,
+                            'caller':'GenomeManager'
                         }
                     ))
         
@@ -556,15 +541,18 @@ class GenomeManager:
             
         return long_dels, long_inserts
     
-    def get_chromosomal_quantity(self, chr, seq_spec_or_fn, chunksz = 10e6, start = 1e6, length = None):
+    def get_chromosomal_quantities(self, chr, seq_specs, chunksz = 10e6, start = 1e6, length = None):
         
-        seq_fn = None
-        if isinstance(seq_spec_or_fn, str):
-            seq_fn = lambda_map.get(seq_spec_or_fn)
-        elif callable(seq_spec_or_fn):
-            seq_fn = seq_spec_or_fn
+        seq_fns = []
+        for seq_spec in seq_specs:
+            if isinstance(seq_spec, str):
+                seq_fn = lambda_map.get(seq_spec)
+                seq_fns.append(seq_fn)
+            elif callable(seq_spec):
+                seq_fn = seq_spec
+                seq_fns.append(seq_fn)
             
-        if not seq_fn:
+        if not seq_fns:
             return None, None
         
         chrmax = self.gene_map.max_indices.get(str(chr))
@@ -572,8 +560,8 @@ class GenomeManager:
             length = int(chrmax - start)
         num_chunks = int(length//chunksz)
         step = chunksz
-        starts = []
-        qts = []
+        starts = [[] for qt in seq_fns]
+        qts = [[] for qt in seq_fns]
         
         chrstr = str(chr)
         
@@ -585,25 +573,74 @@ class GenomeManager:
             if len(seq) < 1:
                 start = end
                 continue
-            qt = seq_fn(seq, feats )
-            starts.append(start)
-            qts.append(qt)
+            for i,seq_fn in enumerate(seq_fns):
+                qt = seq_fn(seq, feats)
+                starts[i].append(start)
+                qts[i].append(qt)
             start = end
         return qts, starts
 
+    def get_chromosomal_quantity(self, chr, seq_spec, chunksz = 10e6, start = 1e6, length = None):
+        qts, starts = self.get_chromosomal_quantities(chr, [seq_spec], chunksz = chunksz, start = start, length = length)
+        return qts[0], starts[0]
+        
     def display_chromosomal_quantity(self, chr, seq_spec, chunksz = 10e6, start = 1e6, max_disp = 256, length = None):
+        
+        if not length:
+            length = self.gene_map.max_indices[str(chr)] - start
         
         qts, starts = self.get_chromosomal_quantity(chr, seq_spec, chunksz=chunksz, start = start, length = length)
         
         if qts is not None:
-            qt_name = seq_spec
+            qt_name = str(seq_spec)
         else:
             return
         
-        # print(f"{qt_name} range: {min(qts):0.2f}-{max(qts):0.2f}")
+        lines = self.get_chrom_quantity_lines(chr, qts, qt_name, chunksz = chunksz, start = start, max_disp = max_disp, length = length, suppress = False)
+        
+        return lines
+    
+    def display_chromosomal_quantities(self, chr, seq_specs, chunksz = 10e6, start = 1e6, max_disp = 256, length = None):
         
         if not length:
             length = self.gene_map.max_indices[str(chr)] - start
+        
+        fg_colors = []
+        
+        qts, starts = self.get_chromosomal_quantities(chr, seq_specs, chunksz=chunksz, start = start, length = length)
+        qt_names = [str(seq_spec) for seq_spec in seq_specs]
+        # qt_name_str = " | ".join([""] + qt_names)
+        num_qts = len(qts)
+        
+        all_lines=[]
+        
+        nice_colors = [65,65-12,173,169,60,131,55,138,91]
+        qt_names_col = []
+        for n in range(len(seq_specs)):
+            qt_names_col.append(f"\x1b[38;5;{nice_colors[n]}m{qt_names[n]}\x1b[0m")
+            
+            do_flip = bool(n%2)
+            lines = self.get_chrom_quantity_lines(chr, qts[n], qt_names[n], chunksz=chunksz, start=start, max_disp=max_disp, length=length, suppress = True, flip = do_flip, fg_color = nice_colors[n])
+            all_lines.append(lines[1:])
+        
+        
+        qt_name_str = f" |  [{", ".join(qt_names_col)}]"
+        num_chunks = length//chunksz
+        num_disp_chunks = max(1, int(num_chunks // max_disp))
+        lines_per_disp = 6
+        
+        for nsect in range(num_disp_chunks):
+            for nqt in range(num_qts):
+                if nqt == 0:
+                    print(all_lines[nqt][nsect*lines_per_disp] + qt_name_str)
+                for nl in range(1, 4):
+                    print(all_lines[nqt][nsect*lines_per_disp + nl])
+                if nqt == num_qts-1:
+                    print(all_lines[nqt][nsect*lines_per_disp + 4])
+                    print()
+            
+    
+    def get_chrom_quantity_lines(self, chr,  qts, qt_name, chunksz = 10e6, start = 1e6, max_disp = 256, length = None, suppress = False, **kwargs):
         
         num_chunks = length//chunksz
         num_disp_chunks = max(1, int(num_chunks // max_disp))
@@ -611,9 +648,8 @@ class GenomeManager:
         minval = 0
         maxval = max(qts)
         
-        print(num_chunks, num_disp_chunks, start, length, chunksz)
-        
-        print(f"{qt_name} for chr{chr}")
+        lines = []
+        lines.append(f"{qt_name} for chr{chr}")
         for i in range(num_disp_chunks):
             seq_ran = length // (num_disp_chunks)
             seq_start = start + i*seq_ran
@@ -622,12 +658,16 @@ class GenomeManager:
             if len(gcs_crop) == 0:
                 break
             
-            gc_bars = draw.scalar_to_text_nb(gcs_crop, minval = minval, maxval = maxval, bit_depth = 24, add_range = True)
+            gc_bars = draw.scalar_to_text_nb(gcs_crop, minval = minval, maxval = maxval, bit_depth = 24, add_range = True, **kwargs)
             gc_bars, dists = draw.add_ruler(gc_bars, seq_start, seq_start + seq_ran, num_labels = 10, ticks = 2, minor_ticks = 5, genomic = True)
-            print(f"Section {i+1} | {seq_start/1e6:.1f}M - {(seq_start+seq_ran)/1e6:.1f}M (major = {dists[1]/1e3:2.0f}k, minor = {dists[2]/1e3:2.0f}k)")
-            for r in gc_bars:
-                print(r)
-            print()
+            lines.append(f"Section {i+1} | {seq_start/1e6:.1f}M - {(seq_start+seq_ran)/1e6:.1f}M (major = {dists[1]/1e3:2.0f}k, minor = {dists[2]/1e3:2.0f}k)")
+            lines.extend(gc_bars)
+            lines.append("\n")
+        
+        if not suppress:
+            for line in lines:
+                print(line)
+        return lines
     
     def get_sequence(self, chrom: Union[str, int], start: int, end: int, frame = 0) -> Optional[str]:
         """Get genomic sequence for a region.

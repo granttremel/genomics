@@ -7,6 +7,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 
+from ggene.seqs.bio import reverse_complement, complement
 from ggene.seqs.find import find_subsequence, find_subsequences
 
 SCALE = " ▁▂▃▄▅▆▇█"
@@ -24,6 +25,9 @@ OTHER={
     "dark":"▓",
     "misc":"▖▗▘▙▚▛▜▝▞▟◐◑◒◓◔◕"
 }
+
+BOX = " ╵╶└╷│┌├╴┘─┴┐┤┬┼"
+_box = "⊢⊣⊤⊥"
 
 marker = "╵"
 
@@ -155,7 +159,7 @@ class Colors:
 
     # Motif colors (for underlines)
     MOTIF = '\033[96m'   # Cyan for other motifs
-    HIGHLIGHT = '\x1b[148m' # goldish
+    HIGHLIGHT = '\x1b[38;5;148m' # goldish
     
     # Navigation
     POSITION = '\033[97m'    # White
@@ -231,6 +235,19 @@ class Colors:
         maxcol = 2**16 - mincol
         return self._get_color_scale(startrgb, endrgb, num_values, d, mincol,maxcol)
     
+    def get_color_scale_24b(self, startrgb, endrgb, num_values):
+        
+        color_scale = []
+        
+        for n in range(num_values):
+            cn = []
+            for cs, ce in zip(startrgb, endrgb):
+                col = min(255, max(0, round(n * (ce - cs) / num_values + cs)))
+                cn.append(col)
+            color_scale.append(cn)
+        
+        return color_scale
+
     def get_effect(self, effect_spec):
         if effect_spec == "bold":
             return "\x1b[1m"
@@ -302,7 +319,42 @@ def get_color_scheme(name):
         return 234, 65
     else:
         return 0,1
+
+
+def get_color_scheme_24b(name):
     
+    if name == "gray":
+        return [63,36,97], [255,92,131]
+    elif name == "coolwarm":
+        return [26,158,229], [250,144,50]
+    elif name == "sweet":
+        return [63,36,97], [255,92,131]
+    elif name == "lava":
+        return [28,55,57], [196,55,57] 
+    elif name == "energy":
+        return [36,71,122], [245,178,37]
+    elif name == "deep":
+        return [20,34,78], [180,34,78]
+    elif name == "terra":
+        return [19,118,83], [244,143,35]
+    elif name == "vscode":
+        return [28,28,28], [28,28,28]
+
+def get_ansi_color(col, bg = False):
+    
+    if bg:
+        opt = 48
+    else:
+        opt = 38
+    
+    if isinstance(col, list):
+        r,g,b = col
+        code = f"\x1b[{opt};2;{r};{g};{b}m"
+    else:
+        code = f"\x1b[{opt};5;{col}m"
+    
+    return code
+
 def get_fgbg(fg_color, bg_color):
     fg = f"\x1b[38;5;{fg_color}m"
     bg = f"\x1b[48;5;{bg_color}m"
@@ -469,179 +521,537 @@ def scalar_to_text_mid(scalars, center = None, rng = None, fg_color = 53, bg_col
         
     return outstrs
 
-def add_ruler(sctxt, xmin, xmax, genomic = False, **kwargs):
-    num_cols = sum(1 for s in sctxt[0] if s in SCALE)
-    ran = (xmax - xmin)
-    num_labels = kwargs.get("num_labels", 5)
-    ticks = kwargs.get("ticks", 5)
-    minor_ticks = kwargs.get("minor_ticks", num_cols)
-    lbl_delta = ran / (num_labels - 1)
-    if kwargs.get("fstr"):
-        fmtr = kwargs.get("fstr")
-    elif genomic:
-        nexp = np.log10(xmax)
+def _get_nice_number(x, round_down=False):
+    """Get a 'nice' number close to x (1, 2, 5, 10, 20, 50, 100, etc.)"""
+    if x == 0:
+        return 0
+
+    exp = np.floor(np.log10(abs(x)))
+    frac = abs(x) / (10 ** exp)
+
+    if round_down:
+        if frac < 1.5:
+            nice_frac = 1
+        elif frac < 3:
+            nice_frac = 2
+        elif frac < 7:
+            nice_frac = 5
+        else:
+            nice_frac = 10
+    else:
+        if frac <= 1:
+            nice_frac = 1
+        elif frac <= 2:
+            nice_frac = 2
+        elif frac <= 5:
+            nice_frac = 5
+        else:
+            nice_frac = 10
+
+    return nice_frac * (10 ** exp) * (1 if x >= 0 else -1)
+
+
+def _estimate_label_width(value, formatter):
+    """Estimate the width of a formatted label."""
+    if isinstance(formatter, str):
+        test_str = format(value, formatter)
+    else:
+        test_str = formatter(value)
+    # Add 1 for the tick marker
+    return len(test_str) + 1
+
+
+def _auto_ruler_params(xmin, xmax, num_cols, genomic=False):
+    """
+    Automatically determine optimal ruler parameters.
+
+    Heuristics:
+    - One label per 25 columns max, minimum 3 labels per plot
+    - One tick per 5 columns max, minimum one tick per label
+    - One minor tick per column max, no more than 5 minor ticks before tick/label
+    - If ticks every 3 columns or fewer, use minor tick symbol and omit minor ticks
+
+    Returns: (num_labels, ticks_per_label, minor_ticks_per_tick, formatter)
+    """
+    xran = xmax - xmin
+
+    # Determine formatter first
+    if genomic:
+        nexp = np.log10(max(abs(xmax), abs(xmin), 1))
         if nexp > 6:
             div = 1e6
             unit = "M"
+            decimals = 1 if xran/1e6 < 10 else 0
         elif nexp > 3:
             div = 1e3
             unit = "k"
+            decimals = 1 if xran/1e3 < 10 else 0
         else:
             div = 1
-            unit = "b" 
-        fmtr = lambda x: format(x/div,".1f") + unit 
-    elif any(abs(x)>1e5 for x in [xmin, xmax]):
-        fmtr = "0.2e"
-    elif any(abs(x) < 1e-5 for x in [xmin, xmax, lbl_delta]):
-        fmtr = "0.2e"
-    elif all(int(x)==x for x in [xmin, xmax, lbl_delta]):
-        fmtr = ".0g"
+            unit = "b"
+            decimals = 0
+        fmtr = lambda x: format(x/div, f".{decimals}f") + unit
     else:
-        fmtr = "0.1f"
-    
-    ruler, dists = make_ruler(xmin, xmax, num_cols, num_labels = num_labels, ticks = ticks, minor_ticks = minor_ticks, formatter = fmtr)
+        # Smart format selection
+        if abs(xran) > 1e5:
+            fmtr = ".2e"
+        elif abs(xran) < 1e-3:
+            fmtr = ".2e"
+        else:
+            # Determine decimal places based on range
+            if xran >= 100:
+                decimals = 0
+            elif xran >= 10:
+                decimals = 1
+            elif xran >= 1:
+                decimals = 2
+            else:
+                decimals = max(0, int(-np.floor(np.log10(xran))) + 2)
+
+            # Check if values are effectively integers
+            nice_step = _get_nice_number(xran / 5)
+            if nice_step >= 1 and all(abs(v - round(v)) < 1e-9 for v in [xmin, xmax, nice_step]):
+                fmtr = ".0f"
+            else:
+                fmtr = f".{decimals}f"
+
+    # Estimate label width
+    test_val = xmax if abs(xmax) > abs(xmin) else xmin
+    avg_label_width = _estimate_label_width(test_val, fmtr)
+
+    # Determine number of labels: one per 25 columns max, minimum 3
+    max_labels_by_spacing = num_cols // 25
+    max_labels_by_width = num_cols // (avg_label_width + 1)
+    max_labels = max(3, min(max_labels_by_spacing, max_labels_by_width))
+
+    # Choose a nice number of labels (prefer 3, 4, 5, 6, 8, 10, 12)
+    nice_label_counts = [3, 4, 5, 6, 8, 10, 12, 15, 20]
+    num_labels = 3  # default minimum
+    for n in nice_label_counts:
+        if n <= max_labels:
+            num_labels = n
+        else:
+            break
+
+    # Calculate ticks per label interval
+    cols_per_label_interval = num_cols / (num_labels - 1)
+
+    # One tick per 5 columns max, minimum one tick per label
+    max_ticks_per_interval = int(cols_per_label_interval / 5)
+    ticks_per_interval = max(1, max_ticks_per_interval)
+
+    # Check if ticks would be too close (every 3 columns or fewer)
+    cols_per_tick = cols_per_label_interval / (ticks_per_interval + 1)
+    use_minor_symbol_for_ticks = cols_per_tick <= 3
+
+    # Minor ticks: one per column max, no more than 5 before tick/label
+    if use_minor_symbol_for_ticks:
+        # Omit minor ticks when ticks are too close
+        minor_per_tick = 0
+    else:
+        max_minor_per_tick = min(5, int(cols_per_tick) - 1)
+        minor_per_tick = max(0, max_minor_per_tick)
+
+    return num_labels, ticks_per_interval, minor_per_tick, fmtr, use_minor_symbol_for_ticks
+
+
+def add_ruler(sctxt, xmin, xmax, genomic = False, auto=False, **kwargs):
+    """
+    Add a ruler to scalar text output.
+
+    Args:
+        sctxt: Scalar text output (list of strings)
+        xmin: Minimum x value
+        xmax: Maximum x value
+        genomic: Use genomic formatting (kb, Mb)
+        auto: Automatically determine optimal ruler parameters
+        **kwargs: Manual parameters (num_labels, ticks, minor_ticks, fstr)
+
+    Returns:
+        (sctxt, dists): Updated scalar text and distance tuple
+    """
+    num_cols = sum(1 for s in sctxt[0] if s in SCALE)
+    ran = (xmax - xmin)
+
+    if auto:
+        # Use automatic parameter selection
+        num_labels, ticks_per_section, minor_per_tick, fmtr, use_minor_symbol = _auto_ruler_params(
+            xmin, xmax, num_cols, genomic
+        )
+        ticks = ticks_per_section
+        minor_ticks = minor_per_tick
+    else:
+        # Use manual parameters
+        num_labels = kwargs.get("num_labels", 5)
+        ticks = kwargs.get("ticks", 5)
+        minor_ticks = kwargs.get("minor_ticks", 5)
+        use_minor_symbol = False
+
+        lbl_delta = ran / (num_labels - 1)
+
+        # Format selection
+        if kwargs.get("fstr"):
+            fmtr = kwargs.get("fstr")
+        elif genomic:
+            nexp = np.log10(max(abs(xmax), abs(xmin), 1))
+            if nexp > 6:
+                div = 1e6
+                unit = "M"
+            elif nexp > 3:
+                div = 1e3
+                unit = "k"
+            else:
+                div = 1
+                unit = "b"
+            fmtr = lambda x: format(x/div, ".1f") + unit
+        elif abs(ran) > 1e5:
+            fmtr = ".2e"
+        elif abs(ran) < 1e-5:
+            fmtr = ".2e"
+        elif abs(lbl_delta) >= 1 and all(abs(v - round(v)) < 1e-9 for v in [xmin, xmax, lbl_delta]):
+            fmtr = ".0f"
+        elif abs(lbl_delta) >= 1:
+            fmtr = ".1f"
+        else:
+            # For small ranges, determine appropriate decimal places
+            decimals = max(1, int(-np.floor(np.log10(abs(lbl_delta)))) + 1)
+            fmtr = f".{decimals}f"
+
+    ruler, dists = make_ruler(xmin, xmax, num_cols, num_labels=num_labels,
+                             ticks=ticks, minor_ticks=minor_ticks, formatter=fmtr,
+                             use_minor_symbol_for_ticks=use_minor_symbol)
     sctxt.append(ruler)
 
     return sctxt, dists
 
-def make_ruler(xmin, xmax, num_cols, num_labels = 5, ticks = 5, minor_ticks = 5, formatter = "0.2g"):
-    
+def make_ruler(xmin, xmax, num_cols, num_labels=5, ticks=5, minor_ticks=5, formatter="0.2g", use_minor_symbol_for_ticks=False):
+    """
+    Create a ruler with evenly spaced labels, ticks, and minor ticks.
+
+    Args:
+        xmin: Minimum x value
+        xmax: Maximum x value
+        num_cols: Number of columns in the plot
+        num_labels: Number of labels to place (including endpoints)
+        ticks: Number of major ticks per label interval
+        minor_ticks: Number of minor ticks per major tick interval
+        formatter: Format string or callable for label formatting
+        use_minor_symbol_for_ticks: Use minor tick symbol for ticks (when too dense)
+
+    Returns:
+        (ruler_string, (label_dist, tick_dist, minor_tick_dist))
+    """
     xran = xmax - xmin
-    
     num_labels = max(2, num_labels)
-    
+
     if isinstance(formatter, str):
         frmstr = formatter
         formatter = lambda s: format(s, frmstr)
-    
-    label_dist_c = round(num_cols / (num_labels - 1))
-    if ticks < 1:
-        tick_dist_c = num_cols + 1
-    else:
-        tick_dist_c = round(num_cols / ticks / (num_labels - 1))
-    
-    if minor_ticks < 1:    
-        minor_tick_dist_c = num_cols + 1
-    else:
-        minor_tick_dist_c = max(1, round(num_cols / minor_ticks / max(1,ticks) / (num_labels - 1)))
-    
-    label_dist = xran * label_dist_c / num_cols
-    tick_dist = xran * tick_dist_c / num_cols
-    minor_tick_dist = xran * minor_tick_dist_c / num_cols
-    
-    bfr = ""
-    if tick_dist_c < 2 or minor_tick_dist_c < 2:
-        bfr = ""
-    
-    lbl = "╰"
-    rlbl = "╯"
-    tck = "╵"
-    mtck = "'"
-    
-    final_lbl = bfr + formatter(xmax) + rlbl
-    final_lbl_pos = num_cols - len(final_lbl)
-    
+
+    # Tick markers
+    lbl_marker = "╰"
+    tick_marker = "'" if use_minor_symbol_for_ticks else "╵"
+    minor_marker = "'"
+
+    # Calculate label positions
+    label_positions = []  # (column_pos, x_value, is_last)
+    for i in range(num_labels):
+        x_val = xmin + (xran * i / (num_labels - 1))
+        col_pos = int(round(num_cols * i / (num_labels - 1)))
+        is_last = (i == num_labels - 1)
+        label_positions.append((col_pos, x_val, is_last))
+
+    # Calculate tick positions (between labels)
+    tick_positions = set()
+    if ticks > 0:
+        for label_idx in range(num_labels - 1):
+            start_col = label_positions[label_idx][0]
+            end_col = label_positions[label_idx + 1][0]
+            interval_cols = end_col - start_col
+
+            # Ensure at least 2 columns per tick
+            actual_ticks = min(ticks, interval_cols // 2)
+
+            for t in range(1, actual_ticks + 1):
+                tick_col = start_col + int(round(interval_cols * t / (actual_ticks + 1)))
+                if tick_col not in [lp[0] for lp in label_positions]:
+                    tick_positions.add(tick_col)
+
+    # Calculate minor tick positions (between ticks and labels)
+    minor_positions = set()
+    if minor_ticks > 0 and not use_minor_symbol_for_ticks:
+        # Get all major positions (labels + ticks)
+        major_positions = sorted([lp[0] for lp in label_positions] + list(tick_positions))
+
+        for idx in range(len(major_positions) - 1):
+            start_col = major_positions[idx]
+            end_col = major_positions[idx + 1]
+            interval_cols = end_col - start_col
+
+            # Ensure at least 2 columns per minor tick
+            actual_minor = min(minor_ticks, interval_cols // 2)
+
+            for m in range(1, actual_minor + 1):
+                minor_col = start_col + int(round(interval_cols * m / (actual_minor + 1)))
+                if minor_col not in major_positions:
+                    minor_positions.add(minor_col)
+
+    # Build the ruler string
+    # First, format the final label to know its width
+    final_x_val = label_positions[-1][1]
+    final_label_str = formatter(final_x_val) + "╯"
+    final_label_width = len(final_label_str)
+    final_label_start = num_cols - final_label_width + 1
+
     ruler = []
-    nc = 0
-    while nc < num_cols + 1:
-        
-        if nc == final_lbl_pos:
-            ruler.append(final_lbl)
+    col = 0
+
+    while col <= num_cols:
+        # Check if we're at the final label position
+        if col == final_label_start:
+            ruler.append(final_label_str)
             break
-        elif nc%label_dist_c == 0:
-            labelpos = nc*xran/num_cols + xmin
-            labelstr = lbl + formatter(labelpos) + bfr
-            ruler.append(labelstr)
-            nc += len(labelstr)
-            continue
-        elif nc%tick_dist_c == 0:
-            ruler.append(tck)
-            nc+= 1
-            continue
-        elif nc%minor_tick_dist_c == 0:
-            ruler.append(mtck)
-            nc+= 1
-            continue
+
+        # Check if this column has a non-final label
+        label_here = None
+        for lp in label_positions[:-1]:  # Exclude last label
+            if lp[0] == col:
+                label_here = lp
+                break
+
+        if label_here:
+            col_pos, x_val, _ = label_here
+            label_str = lbl_marker + formatter(x_val)
+            ruler.append(label_str)
+            col += len(label_str)
+        elif col in tick_positions:
+            ruler.append(tick_marker)
+            col += 1
+        elif col in minor_positions:
+            ruler.append(minor_marker)
+            col += 1
         else:
             ruler.append(" ")
-            nc += 1
-    
+            col += 1
+
+    # Calculate actual distances for return value
+    label_dist = xran / (num_labels - 1)
+    tick_dist = label_dist / (ticks + 1) if ticks > 0 else 0
+    minor_tick_dist = tick_dist / (minor_ticks + 1) if minor_ticks > 0 and ticks > 0 else 0
+
     return "".join(ruler), (label_dist, tick_dist, minor_tick_dist)
 
-def scalar_plot_distribution(dist_dict, key_order = [], bit_depth = 8, labels = False, labelfmt = "", edges = False, **kwargs):
+def scalar_plot_distribution(dist, key_order = [], bit_depth = 8, labels = False, labelfmt = "", add_range = False, **kwargs):
     
     if not key_order:
-        key_order = sorted(dist_dict.keys())
-    scalars = [dist_dict[ks] for ks in key_order]
+        key_order = sorted(dist.keys())
+    scalars = [dist[ks] for ks in key_order]
+    space = kwargs.get("space", 0)
+    if space:
+        _scalars = [0]
+        for sc in scalars:
+            _scalars.append(sc)
+            _scalars.extend([0]*space)
+        scalars = _scalars
     
     _ = kwargs.pop("minval",None)
-    sctxt = scalar_to_text_nb(scalars, bit_depth = bit_depth, minval = 0, **kwargs)
-    
-    if edges:
-        clr = "\x1b[38;5;240m"
-        lft, rgt = list(leftright)
-        crgt = "{}{}{}".format(clr, rgt, RESET)
-        clft = "{}{}{}".format(clr, lft, RESET)
-        
-        for i in range(len(sctxt)):
-            sctxt[i] = clft + sctxt[i] + crgt
+    sctxt = scalar_to_text_nb(scalars, bit_depth = bit_depth, minval = 0, add_range = add_range, **kwargs)
     
     if labels:
         if not labelfmt:
             labelfmtr = lambda a:str(a)[0].upper()
         else:
             labelfmtr = lambda a:format(a,labelfmt)
-        lbls = [labelfmtr(k) for k in key_order]
-        sctxt.append(lbls)
+        lbls = [] + [" "]*space
+        for k in key_order:
+            lbls.append(labelfmtr(k))
+            lbls.extend([" "]*space)
+        sctxt.append("".join(lbls))
     
     return sctxt
 
-def scalar_plot_2d_distribution(dist_dict, key_order = [], min_color = 231, max_color = 76, num_colors = 9):
+def heatmap(data, row_labels=None, col_labels=None, minval=None, maxval=None, center=0, color_scheme = "terra",
+            show_values=False, value_fmt="0.2f", value_labels = None, colorbar=True, suppress = False, **kwargs):
+
+    out_rows = []
+
+    if isinstance(data, np.ndarray):
+        data = data.tolist()
+
+    min_color, max_color = get_color_scheme_24b(color_scheme)
+    mid_color, _ = get_color_scheme_24b("vscode")
     
-    if not key_order:
-        key_order = sorted(dist_dict.keys())
+    nrows = len(data)
+    ncols = len(data[0]) if nrows > 0 else 0
+
+    if nrows == 0 or ncols == 0:
+        print("Empty data")
+        return
+
+    flat_data = [val for row in data for val in row if val is not None]
+
+    if minval is None:
+        minval = min(flat_data)
+    if maxval is None:
+        maxval = max(flat_data)
     
-    chscale = [" ", OTHER.get("light"), OTHER.get("medium"), OTHER.get("dark"), SCALE[-1]]
+    rng = maxval - minval
+    if rng == 0:
+        rng = 1
     
-    print(chscale)
-    print(OTHER)
+    colors = Colors()
+
+    num_colors = kwargs.get("num_colors", 24)
+    symmetric_color = kwargs.get("symmetric_color", True)
+    if center is not None:
+        sym_range = max(abs(maxval - center), abs(minval - center))
+        minval = center - sym_range
+        maxval = center + sym_range
+
+    else:
+        if min_color is None:
+            min_color = 16
+        if max_color is None:
+            max_color = 226
     
-    rst = "\x1b[0m"
-    colfrm = "\x1b[38;5;{col}m"
-    bgcol = '\x1b[48;5;232m'
+    if symmetric_color:
+        cs1 = colors.get_color_scale_24b(mid_color, min_color, num_colors//2)
+        cs2 = colors.get_color_scale_24b(mid_color, max_color, num_colors//2)
+        color_scale = cs1[::-1] + cs2
+    else:
+        color_scale = colors.get_color_scale_24b(min_color, max_color, num_colors)
     
-    num_keys = len(key_order)
-    minval = min([min(a for a in d.values()) for d in dist_dict.values()])
-    maxval = max([max(a for a in d.values()) for d in dist_dict.values()])
-    ran = maxval - minval
     
-    cscale = Colors().get_color_scale(min_color, max_color, num_colors)
-    num_colors = len(cscale)
-    return []
-    rows = []
-    for nx in range(num_keys):
-        kx = key_order[nx]
-        row = [bgcol]
-        for ny in range(num_keys):
-            ky = key_order[ny]
-            v = dist_dict[kx][ky]
+    def value_to_color(val):
+        normalized = (val - minval) / rng
+        color_idx = int(normalized * (len(color_scale) - 1))
+        color_idx = max(0, min(len(color_scale) - 1, color_idx))
+        return color_scale[color_idx]
+
+    if row_labels is None:
+        row_labels = []
+    if col_labels is None:
+        col_labels = []
+        
+    max_row_label_len = max(len(str(lbl)) for lbl in row_labels) if row_labels else 0
+
+    row_frm = "{:<4}{}"
+    
+    col_width = kwargs.get("col_width", 2)
+    col_space = kwargs.get("col_space", 1)
+    row_height = kwargs.get("row_height", 1)
+    row_space = kwargs.get("row_space", 0.5)
+
+    if col_labels:
+        header_items = ""
+        for col_lbl in col_labels:
+            short_lbl = str(col_lbl)[:2].center(col_width) + " "*int(col_space)
+            header_items += short_lbl
             
-            vqt = max(0, min(3*num_colors-1, int(3*num_colors*((v - minval) / ran))))
+        header_line = row_frm.format("", header_items)
+        out_rows.append(header_line)
+
+    for i, row in enumerate(data):
+        row_lbl = str(row_labels[i]).ljust(max_row_label_len) if row_labels else ""
+        line = ""
+        
+        value_row = None
+        if show_values:
+            if value_labels:
+                value_row = value_labels[i]
+            else:
+                value_row = [value_fmt.format(v) for v in row]
+        
+        for nr in range(row_height):
             
-            charind = vqt // num_colors
-            colind = vqt % (len(cscale) - 1)
+            vr = value_row if nr==0 else None
+            rlbl = row_lbl if nr == 0 else ""
             
-            char = chscale[charind]
-            c = cscale[colind]
+            use_border = False
+            if row_space > 0 and row_space < 1 and nr == row_height - 1:
+                use_border = True
             
-            col = colfrm.format(col=c)
-            vstr = f"{col}{char}{char}{rst}"
-            row.append(vstr)
-            
-        row.append(rst)
-        rows.append("".join(row))
+            line = make_heatmap_row(row, value_to_color, value_labels = vr, col_width = col_width, col_space = col_space, row_border = use_border)
+            out_rows.append(row_frm.format(rlbl, line))
+        
+        if row_space >= 1:
+            for rs in range(row_space):
+                out_rows.append("")
     
-    return rows
+    if kwargs.get("ruler"):
+        
+        xmin = kwargs.get("xmin", 0)
+        xmax = kwargs.get("xmax", len(data[0]))
+        
+        num_cols = len(data[0])*(col_width + col_space)
+        
+        ruler, _ = make_ruler(xmin, xmax, num_cols, num_labels = 16, ticks = 0, minor_ticks = 0)
+        out_rows.append(row_frm.format("", ruler))
+    
+    if colorbar:
+        out_rows.append("")
+        colorbar_len = 40
+        colorbar_line = " " * (max_row_label_len + 2)
+
+        for i in range(colorbar_len):
+            normalized = i / (colorbar_len - 1)
+            val = minval + normalized * rng
+            color_code = value_to_color(val)
+            fg = get_ansi_color(color_code)
+            colorbar_line += fg + SCALE[-1] + RESET
+
+        out_rows.append(colorbar_line)
+
+        # Colorbar labels
+        label_line = " " * (max_row_label_len + 2)
+        label_line += format(minval, value_fmt).ljust(colorbar_len // 2)
+        label_line += format(maxval, value_fmt).rjust(colorbar_len // 2)
+        out_rows.append(label_line)
+    
+    if not suppress:
+        for row in out_rows:
+            print(row)
+        print()
+    
+    return out_rows
+
+def make_heatmap_row(data_row, value_to_color, value_labels = None, col_width = 1, col_space = 0, row_border = False):
+    
+    block = " "
+    space = SCALE[-1]
+    if row_border:
+        block = OTHER.get("lower_eighth")
+    # col_border = OTHER.get("right_eighth")
+    
+    line = ""
+    bg = get_ansi_color(234, bg = False)
+    
+    if col_space > 0 and col_space < 1:
+        col_width -= 1
+        print(col_space, col_width)
+    
+    for j, val in enumerate(data_row):
+        if val is None:
+            line += "  "
+            continue
+        
+        color_code = value_to_color(val)
+        fg = get_ansi_color(color_code, bg = True)
+
+        if value_labels:
+            val_str = value_labels[j]
+            col_str = val_str[:2].center(col_width)
+        else:
+            col_str = block * col_width
+        
+        # if col_space > 0 and col_space < 1:
+        #     space_str = col_border
+        # else:
+        space_str = space * col_space
+        
+        line += bg + fg + col_str + space_str + RESET
+        
+    return line
     
 def scrub_ansi(line):
     
@@ -816,7 +1226,102 @@ def make_key(features, colors):
         parts.append(fstr)
     
     return " ".join(parts)
+
+def highlight_matching(seqa, seqb, color = None, do_rc = False, do_both = False, suppress = False, chunksz = 256):
     
+    if do_both:
+        do_rc = False
+    
+    base_color = "\x1b[38;5;240m"
+    if not color:
+        # color = Colors.HIGHLIGHT
+        color = "\x1b[38;5;142m"
+        rcolor = Colors.MOTIF
+    
+    seqah = [base_color]
+    seqbh = [base_color]
+    
+    rseqb = reversed(seqb)
+    
+    n = 0
+    for sa, sb, rsb in zip(seqa, seqb, rseqb):
+        
+        rcsb = complement(rsb)
+        
+        if sa == sb and not do_rc:
+            pre = color
+            post = base_color
+        elif sa == rcsb and do_rc:
+            pre = color
+            post = base_color
+        elif sa == rcsb and do_both:
+            pre = rcolor
+            post = base_color
+        else:
+            pre = ""
+            post = ""
+        
+        seqah.append(f"{pre}{sa}{post}")
+        seqbh.append(f"{pre}{sb}{post}")
+        n+=1
+    
+    seqah.append(Colors.RESET)
+    seqbh.append(Colors.RESET)
+    
+    seqaout = "".join(seqah)
+    seqbout = "".join(seqbh)
+    
+    if not suppress:
+        for n in range(len(seqa)//chunksz + 1):
+            print(seqaout[n*chunksz:(n+1)*chunksz])
+            print(seqbout[n*chunksz:(n+1)*chunksz])
+    print(Colors.RESET)
+    return "".join(seqah), "".join(seqbh)
+
+def highlight_correlated(full_seq, shift, colors = None, suppress = False):
+    
+    if not colors:
+        ca = Colors.RCMOTIF
+        cab= Colors.HIGHLIGHT
+        cb = Colors.MOTIF
+    
+    seq_len = len(full_seq)
+    
+    seqah = []
+    seqbh = []
+    
+    sas = min(0, shift)
+    sbs = max(0, -shift)
+    
+    for n in range(len(full_seq)):
+        
+        sf = full_seq[n]
+        sa = sb = ""
+        
+        if sas + n < seq_len:
+            sa = full_seq[sas + n]        
+        if sbs + n < seq_len:
+            sb = full_seq[sbs + n]
+        
+        if sa == sb:
+            pre = ca
+            post = Colors.RESET
+        else:
+            pre = ""
+            post = ""
+        
+        if sa and sb:
+            seqah.append(f"{cab}{sf}{post}")
+        elif sa:
+            seqah.append(f"{ca}{sf}{post}")
+        elif sb:
+            seqah.append(f"{cb}{sf}{post}")
+        
+    if not suppress:
+        print("".join(seqah))
+        print("".join(seqbh))
+    return "".join(seqah+seqbh)
+
 def highlight_features(seq, features, feature_starts, feature_ends, colors = {}, show_key = True, suppress = True):
     """
     feature_starts: Dict:feature -> List[feature_start_pos]
@@ -876,7 +1381,7 @@ def highlight_features(seq, features, feature_starts, feature_ends, colors = {},
             print(key)
     return result, key
 
-def highlight_sequence(seq, subseq, colors = {}, suppress = True):
+def highlight_sequence(seq, subseq, colors = {}, suppress = True, show_key = True):
     
     starts = {}  # position -> list of sequences starting there
     ends = {}    # position -> list of sequences ending there
@@ -887,7 +1392,7 @@ def highlight_sequence(seq, subseq, colors = {}, suppress = True):
     start_pos = find_subsequence(seq, subseq)
     starts, ends = make_start_ends(subseq, start_pos, len(subseq), starts=starts, ends = ends)
 
-    return highlight_features(seq, [subseq], starts, ends, suppress = suppress)
+    return highlight_features(seq, [subseq], starts, ends, suppress = suppress, show_key = show_key)
 
 def highlight_sequences(seq:str, subseqs:List[str], start_pos = None, do_rc = False, min_len = 5, colors={}, show_key = True, suppress = True):
 
@@ -908,7 +1413,48 @@ def highlight_sequences(seq:str, subseqs:List[str], start_pos = None, do_rc = Fa
 
     highlight_features(seq, subseqs, starts, ends, colors = colors, show_key = show_key, suppress = suppress)
 
+def _highlight_runs_auto(seqa, top_seqs, top_datas, **kwargs):
+    all_seqs = []
+    start_pos = {}
     
+    for ns in range(len(top_seqs)):
+        run, ind, shift = top_datas[ns]
+        start_pos.update({top_seqs[ns][0]: [ind], top_seqs[ns][1]: [ind - shift]})
+        all_seqs.extend(top_seqs[ns])
+        
+    highlight_sequences(seqa, all_seqs, start_pos = start_pos, **kwargs)
+
+def _highlight_runs_diff(seqa, seqb, top_seqs, top_datas, **kwargs):
+    
+    seqs_a = []
+    start_pos_a = {}
+    seqs_b = []  
+    start_pos_b = {}
+    for ns in range(len(top_seqs)):
+        run, ind, shift = top_datas[ns]
+        start_pos_a.update({top_seqs[ns][0]: [ind]})
+        start_pos_b.update({top_seqs[ns][1]: [ind - shift]})
+        seqs_a.append(top_seqs[ns][0])
+        seqs_b.append(top_seqs[ns][1])
+        
+    highlight_sequences(seqa, seqs_a, start_pos = start_pos_a, **kwargs)
+    highlight_sequences(seqb, seqs_b, start_pos = start_pos_b, **kwargs)
+    
+
+def highlight_run(seqa, seqb, top_seqs, top_datas, suppress = False, show_key = True, **kwargs):
+    
+    colors = kwargs.pop("colors", {})
+    
+    for s in top_seqs:
+        if not s in colors:
+            colors[s] = random.randint(20, 230)
+    kwargs["colors"] = colors
+    
+    if seqa == seqb:
+        _highlight_runs_auto(seqa, top_seqs, top_datas, suppress = suppress, show_key = show_key, **kwargs)
+    else:
+        _highlight_runs_diff(seqa, seqb, top_seqs, top_datas, suppress = suppress, show_key = show_key, **kwargs)
+
 def highlight_sequences_in_frame(seq:str, subseqs:List[str], frame_start, min_len = 5):
     
     starts = {}  # position -> list of sequences starting there
@@ -1011,7 +1557,29 @@ def highlight_sequence_by_span(seq, span_colors = {}, default_color = '\033[97m'
     colored_seq.append(RESET)
     return "".join(colored_seq)
 
-
+def highlight_dyads(seq, dyads):
+    
+    sec = {(d.stem_start, d.end_position): random.randint(20, 230) for d in sorted(dyads, key = lambda d:d.stem_start)}
+    
+    outseq = []
+    
+    for i in range(len(seq)):
+        
+        pre = ""
+        post = ""
+        for st, en in sec:
+            if i < st:
+                break
+            if i > en:
+                continue
+            c = sec[(st, en)]
+            pre = f"\x1b[38;5;{c}m"
+            post = Colors.RESET
+            
+        outseq.append(f"{pre}{seq[i]}{post}")
+    
+    return "".join(outseq)
+    
 def draw_gene_structure(gene_features, gene_name, strand):
     """Draw a simple gene structure cartoon"""
     fig, ax = plt.subplots(figsize=(12, 3))

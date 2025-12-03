@@ -9,7 +9,7 @@ machine learning-based motifs.
 from .motif import BaseMotif, MotifDetector, IndexedMotifDetector
 
 # Specific motif types
-from .pattern import PatternMotif, string_to_re, repeat_to_re
+from .pattern import PatternMotif
 from .repeat import RepeatMotif
 from .metric import MetricMotif, gcpattern
 from .mlmotif import MLMotif
@@ -20,11 +20,11 @@ from .pwm import PWM
 from .motifio import MotifIO
 
 # Pre-defined motifs from pattern.py
-from .pattern import (
-    splice_donor_motif,
-    splice_branch_motif, 
-    splice_acceptor_motif
-)
+# from .pattern import (
+#     splice_donor_motif,
+#     splice_branch_motif, 
+#     splice_acceptor_motif
+# )
 
 __all__ = [
     # Core classes
@@ -42,12 +42,12 @@ __all__ = [
     
     # Utilities
     'MotifIO',
-    'string_to_re',
-    'repeat_to_re',
+    # 'string_to_re',
+    # 'repeat_to_re',
     
     # Pre-defined motifs
     'gcpattern',
-    'splice_donor_motif',
-    'splice_branch_motif',
-    'splice_acceptor_motif',
+    # 'splice_donor_motif',
+    # 'splice_branch_motif',
+    # 'splice_acceptor_motif',
 ]
