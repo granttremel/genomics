@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "ggene"
 version = "0.1.0"
-description = "A genome browser library for DNA sequence analysis and visualization"
+description = "just pokin around in DNA. it tells the stories of our ancestors!"
 readme = "README.md"
 requires-python = ">=3.8"
 license = {text = "MIT"}

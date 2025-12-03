@@ -52,9 +52,10 @@ def main():
         # "ACE2",
         # "TIMELESS",
         # "PER3"
-        "GPR1",
-        "GPR21",
-        "GPR99"
+        # "GPR1",
+        # "GPR21",
+        # "GPR99"
+        "PDYN"
     ]
     
     gene_idx = [

@@ -1,6 +1,7 @@
 
 
 import itertools
+import random
 
 VOCAB_DNA = "ATGC"
 VOCAB_RNA = "AUGC"
@@ -65,6 +66,9 @@ def infer_vocab(seq, *vocabs):
                     return vc
     return None
         
+def get_random_sequence(length):
+    seq = [random.choice(VOCAB) for i in range(length)]
+    return "".join(seq)
 
 def _convert_seq_vocab(seq, to_vocab, from_vocab = None):
     
@@ -111,3 +115,4 @@ def _make_complement_map(vocab):
         b2 = vocab[i+1]
         cm[b1]=b2
         cm[b2]=b1
+        

@@ -1,13 +1,111 @@
 
+import random
 import itertools
+import numpy as np
 
 from ggene.seqs import vocab as gvc
 from ggene.seqs.vocab import VOCAB, VOCAB_DNA, VOCAB_RNA
 
 # VOCAB_DNA = "ATGC"
 # VOCAB_RNA = "AUGC"
+OTHER = "Ψ"
 
-COMPLEMENT_MAP = {'A':'T','T':'A','C':'G','G':'C','U':'A','N':'N'}
+# reflection about S-W axis
+COMPLEMENT_MAP = {
+    'A':'T','T':'A',
+    'C':'G','G':'C',
+    'R':'Y','Y':'R',
+    'S':'S','W':'W',
+    'K':'M','M':'K',
+    'N':'N'}
+
+# reflection about R-Y axis
+TRANSITION_MAP = {
+    "A":"G","G":"A",
+    "C":"T","T":"C",
+    "R":"R","Y":"Y",
+    "S":"W","W":"S",
+    "K":"M","M":"K",
+    "N":"N"}
+
+# excluding the transversions already described by complement
+# reflection about K-M axis
+TRANSVERSION_MAP = {
+    "A":"C","C":"A",
+    "G":"T","T":"G",
+    "R":"Y","Y":"R",
+    "S":"W","W":"S",
+    "K":"K","M":"M",
+    "N":"N"}
+
+# ???
+_wobble = {
+    ('A','G'):'+',
+    ('T','G'):'⋅'
+}
+
+START_CODONS = ['ATG', 'CTG', 'GTG', 'TTG']  # Standard start codon (Methionine) = AUG and Rare alternative starts = CUG, GUG, UUG
+STOP_CODONS = ['TAA', 'TAG', 'TGA']
+
+ORDER = 'ATGCWRMKYSDHVBN'
+
+ALIASES = {
+    'A':'A',
+    'T':'T',
+    'G':'G',
+    'C':'C',
+    'R': 'AG',   # puRine
+    'Y': 'TC',   # pYrimidine  
+    'S': 'GC',   # Strong (3 H bonds)
+    'W': 'AT',   # Weak (2 H bonds)
+    'K': 'TG',   # Keto
+    'M': 'AC',   # aMino
+    'B': 'TGC',  # not A
+    'D': 'ATG',  # not C
+    'H': 'ATC',  # not G
+    'V': 'AGC',  # not T
+    'N': 'ATGC', # aNy
+}
+
+ALIASES_FULL = {
+    'A':'A',
+    'T':'T',
+    'G':'G',
+    'C':'C',
+    'R': 'AGR',   # puRine
+    'Y': 'TCY',   # pYrimidine  
+    'S': 'GCS',   # Strong (3 H bonds)
+    'W': 'ATW',   # Weak (2 H bonds)
+    'K': 'TGK',   # Keto
+    'M': 'ACM',   # aMino
+    'B': 'TGCYSKB',  # not A
+    'D': 'ATGRWKD',  # not C
+    'H': 'ATCYWMH',  # not G
+    'V': 'AGCRSMV',  # not T
+    'N': 'ATGCRYSWKMBDHVN', # aNy
+}
+
+
+ALIASES_REV = {v:k for k,v in ALIASES.items()}
+
+ALIASES_INV = {
+    'A':'RWMDHVN',
+    'T':'YWKBDHN',
+    'G':'RSKBDVN',
+    'C':'YSMBHVN',
+    'R':'DVN',
+    'Y':'BHN',
+    'S':'BVN',
+    'W':'DHN',
+    'K':'BDN',
+    'M':'HVN',
+    'B': 'N',
+    'D': 'N',
+    'H': 'N',
+    'V': 'N', 
+    'N': 'N',
+}
+
 CODON_TABLE = {
     'TTT': 'F', 'TTC': 'F', 'TTA': 'L', 'TTG': 'L',
     'TCT': 'S', 'TCC': 'S', 'TCA': 'S', 'TCG': 'S',
@@ -30,56 +128,29 @@ CODON_TABLE = {
     'GGT': 'G', 'GGC': 'G', 'GGA': 'G', 'GGG': 'G'
 }
 
-# CODON_TABLE_REV = {v:k for k, v in CODON_TABLE.items()}
-
 ORDER_AA = "ACDEFGHIKLMNPQRSTVWY*"
 _aa_chron = "[GA][VD]PS[EL]TRNKQICHFMYW" # trifonov
 _aa_chron2 = "[VEG]SIKT[RD]PNFQYMHWC" # 
 
-START_CODONS = ['ATG', 'CTG', 'GTG', 'TTG']  # Standard start codon (Methionine) = AUG and Rare alternative starts = CUG, GUG, UUG
-# ALTERNATIVE_START_CODONS = ['CTG', 'GTG', 'TTG']  # 
-STOP_CODONS = ['TAA', 'TAG', 'TGA']
-
-ORDER = 'ATGCWRMKYSDHVBN'
-# ORDER = "AGTC"
-# ORDER = "GATC"
-
-ALIASES = {
-    # 'A': 'A',
-    # 'T': 'T',
-    # 'G': 'G',
-    # 'C': 'C',
-    'R': 'AG',   # puRine
-    'Y': 'TC',   # pYrimidine  
-    'S': 'GC',   # Strong (3 H bonds)
-    'W': 'AT',   # Weak (2 H bonds)
-    'K': 'TG',   # Keto
-    'M': 'AC',   # aMino
-    'B': 'TGC',  # not A
-    'D': 'ATG',  # not C
-    'H': 'ATC',  # not G
-    'V': 'AGC',  # not T
-    'N': 'ATGC', # aNy
+AA_CLASSES = {
+    "basic":"HKR",
+    "acidic":"DE", 
+    "polar":"NQST", 
+    "nonpolar":"AFILMVWY",
+    "aromatic":"FWY",
+    "phosphoryl":"HSTY", # H kind weird idk
+    # "special":"CGP",
 }
 
-ALIASES_REV = {v:k for k,v in ALIASES.items()}
-
-ALIASES_INV = {
-    'A':'RWMDHVN',
-    'T':'YWKBDHN',
-    'G':'RSKBDVN',
-    'C':'YSMBHVN',
-    'R':'DVN',
-    'Y':'BHN',
-    'S':'BVN',
-    'W':'DHN',
-    'K':'BDN',
-    'M':'HVN',
-    'B': 'N',
-    'D': 'N',
-    'H': 'N',
-    'V': 'N', 
-    'N': 'N',
+AA_CLASSES_REV = {
+    "A":["nonpolar"], "C":[], "D":["acidic"], "E":["acidic"],
+    "F":["nonpolar","aromatic"], "G":[],
+    "H":["basic", "phosphoryl"], "I":["nonpolar"],
+    "K":["basic"], "L":["nonpolar"], "M":["nonpolar"],
+    "N":["polar"], "P":[], "Q":["polar"], "R":["basic"],
+    "S":["polar","phosphoryl"], "T":["polar","phosphoryl"],
+    "V":["nonpolar"], "W":["nonpolar","aromatic"],
+    "Y":["nonpolar","aromatic","phosphoryl"],
 }
 
 def get_alias(*bases, exclude = ""):
@@ -101,6 +172,18 @@ def _complement(seq):
 
 def complement(seq):
     return "".join(_complement(seq))
+
+def _transvert(seq):
+    return [TRANSVERSION_MAP.get(s,s) for s in seq] 
+
+def transvert(seq):
+    return "".join(_transvert(seq))
+
+def _transition(seq):
+    return [TRANSITION_MAP.get(s,s) for s in seq] 
+
+def transition(seq):
+    return "".join(_transition(seq))
 
 def _reverse(seq):
     return [s for s in reversed(seq)]
@@ -164,14 +247,56 @@ def get_start_stop_codons(vocab=None, rna=False):
 def get_aliases(vocab=None, rna=False):
     
     if not vocab and not rna:
-        return START_CODONS, STOP_CODONS
+        return ALIASES, ALIASES_INV
     return _convert_vocab(ALIASES, vocab, rna=rna, do_keys = False), _convert_vocab(ALIASES_INV, vocab, rna=rna, do_values = False)
+
+def get_random_sequence(length):
+    seq = [random.choice(VOCAB) for i in range(length)]
+    return "".join(seq)
+
+def get_random_aa_sequence(length):
+    codons = ["".join([random.choice(VOCAB) for ii in range(3)]) for i in range(length)]
+    seq = [CODON_TABLE.get(cd) for cd in codons]
+    return "".join(seq)
 
 def get_aa_codons(aa_str, vocab=None, rna=False):
     codons = get_codon_table(vocab=vocab, rna=rna)
     cods_ord = order_sequences([a for a,v in codons.items() if v==aa_str.upper()])
     return cods_ord
 
+def get_seq_index(seq):
+    nbs = 4
+    seq_len = len(seq)
+    base_idx = {ORDER[i]:i for i in range(nbs)}
+    return sum([base_idx.get(s)*nbs**(seq_len-i-1) for i,s in enumerate(seq)])
+
+def index_to_seq(ind, seq_len = 4):
+    nbs = 4
+    if ind == 0:
+        return "A"*seq_len
+    inds = [(ind//nbs**k)%nbs for k in range(seq_len-1, -1, -1)]
+    return "".join(ORDER[i] for i in inds)
+
+def get_seq_index_abs(seq):
+    seq = "A" + seq
+    seq_len = len(seq)
+    fullind = get_seq_index(seq)
+    return fullind + sum([4**n for n in range(1, seq_len-1)])
+
+def index_to_seq_abs(ind):
+    seq_len = 0
+    ip = ind+1
+    while ip > 0:
+        seq_len += 1
+        ip -= 4**seq_len
+    ipp = ip + 4**seq_len - 1
+    seq = index_to_seq(ipp, seq_len = seq_len+1)
+    if seq:
+        return seq[1:]
+    
+    else:
+        return ""
+    
 def get_codon_index(codon):
     nbs = 4
     cdnlen = len(codon)
@@ -216,12 +341,24 @@ def get_adjacent_codons(aa_str, mutations = "N"):
     adjdict = {c:CODON_TABLE.get(c,".") for c in adj_cods}
     return coddict, adjdict
 
-def get_minimal_alias(b1, b2):
-    b1 = ALIASES.get(b1)
-    b2 = ALIASES.get(b2)
-    bset = set(b1+b2)
+def get_minimal_alias(*bs):
+    bset = set()
+    for b in bs:
+        ba = ALIASES.get(b)
+        bset.add(ba)
     alias_key = ''.join([a for a in ORDER if a in bset])
     return ALIASES_REV.get(alias_key, "N")
+
+def get_minimal_alias2(*bs):
+    bset = set(ORDER)
+    for b in bs:
+        bset = bset.intersection(ALIASES_FULL.get(b))
+    
+    for b in ORDER:
+        if b in bset:
+            return b
+    return ""    
+    
 
 def get_minimal_alias_map():
     
@@ -238,6 +375,53 @@ def get_minimal_alias_map():
             abb = ''.join([ali for ali in ORDER if ali in ab])
             map[(a,b)] = aliases_rev[abb]
     return map
+
+def hamming(seqa, seqb, mutation_vals = {}):
+    
+    if not mutation_vals:
+        mutation_vals = {a:1 for a in ALIASES}
+    
+    merged = merge(seqa, seqb)
+    
+    hdist = 0
+    for mk in mutation_vals:
+        hdist += mutation_vals.get(mk) * merged.count(mk)
+    return hdist
+
+def consensus_entropy(consensus:str):
+    
+    if len(consensus) < 1:
+        return 1.0
+    
+    consensus_strp = consensus.lstrip("N").rstrip("N")
+    
+    entr = 0
+    for b in consensus_strp:
+        alis = ALIASES.get(b)
+        p = 1/len(alis)
+        entr += -p*np.log(p)
+    return entr / len(consensus)
+
+def merge(seqa, seqb):
+    outseq = []
+    for sa, sb in zip(seqa, seqb):
+        if sa==sb:
+            outseq.append(sa)
+        else:
+            mt = ALIASES_REV.get(sa+sb, ALIASES_REV.get(sb + sa,"N"))
+            outseq.append(mt)
+    return "".join(outseq)
+
+def is_consensus(seq, consensus):
+    
+    for ba, bc in zip(seq, consensus):
+        if ba == bc:
+            pass
+        elif ba in ALIASES.get(bc, bc):
+            pass
+        else:
+            return False
+    return True
 
 # simple motifs ig
 #idk

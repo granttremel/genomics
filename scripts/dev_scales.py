@@ -466,6 +466,10 @@ def reveal_escapes(sctext):
 def main():
     pass    
     
+    find_nice_colors()
+    
+    return
+    
     seqs.set_vocab("ATGC")
     # seqs.set_vocab("■□▼▽")
     print(seqs.vocab, seqs.COMPLEMENT_MAP)

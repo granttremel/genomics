@@ -11,7 +11,9 @@ from typing import Dict, List, Optional, Tuple, Union, Any, TYPE_CHECKING
 from dataclasses import dataclass
 import logging
 import numpy as np
+import time
 
+from ggene.genomemanager import GenomeManager
 from ggene import seqs, draw
 from ggene.seqs import vocab as gvc
 from ggene.seqs import bio, find, process
@@ -99,7 +101,7 @@ class InteractiveGenomeBrowser:
         Args:
             genome_manager: Initialized GenomeManager instance
         """
-        self.gm = genome_manager
+        self.gm:GenomeManager = genome_manager
         self.state = BrowserState(1, int(10e6), 128, 20)
         self.state2 = BrowserState(1, int(10e6), 128, 20, _is_second = True)
         self.history = []
@@ -111,7 +113,7 @@ class InteractiveGenomeBrowser:
         
         self.iterator = self.iterator2 = None
         self.window = self.window2 = None
-        self._update_iterator()
+        self._init_iterator()  # Initialize iterator on first load
         
         self.highlight = ""
         
@@ -136,7 +138,7 @@ class InteractiveGenomeBrowser:
         self.arrows = draw.get_arrow("default", 5, "-") # L, R
     
     def start(self, chrom: Union[str, int], position: int = 1,
-             window_size: int = 240, stride: int = 40, show_second = False):
+             window_size: int = 240, stride: int = 20, show_second = False):
         """Start the interactive browser.
         
         Args:
@@ -153,6 +155,8 @@ class InteractiveGenomeBrowser:
             show_second = show_second,
         )
         self.state2 = self.state.copy()
+        
+        self._init_iterator()  # Initialize iterator on first load
         
         # Clear screen
         if not self.debug:
@@ -189,6 +193,7 @@ class InteractiveGenomeBrowser:
                 self._display_current_view_sec()
             else:
                 self._display_current_view2()
+            time.sleep(0.01)
             # Get user input
             key = self._get_key()
             
@@ -291,7 +296,7 @@ class InteractiveGenomeBrowser:
             pos = self.state.position
         else:
             pos=int(pos)
-        
+
         self.state2 = self.state.copy()
         self.state2._is_second = True
         if c in list(map(str,range(23))) + ['MT','X','Y']:
@@ -299,7 +304,11 @@ class InteractiveGenomeBrowser:
         else:
             self.state2.chrom = self.state.chrom
         self.state2.position=pos
-        
+
+        # Clean up old second iterator if it exists
+        if self.iterator2:
+            self.iterator2.cleanup()
+
         self.iterator2 = UnifiedGenomeIterator(
             self.gm,
             self.state2.chrom,
@@ -310,11 +319,15 @@ class InteractiveGenomeBrowser:
             track_features = True,
             feature_types=["gene","exon","CDS","motif"]
         )
-        
+
         self.state.show_second= self.state2.show_second = True
     
-    def _update_iterator(self):
-        
+    def _init_iterator(self):
+        """Initialize iterators on first load or when needing fresh instances."""
+        # Clean up old iterator if it exists
+        if self.iterator:
+            self.iterator.cleanup()
+
         self.iterator = UnifiedGenomeIterator(
             self.gm,
             self.state.chrom,
@@ -323,10 +336,18 @@ class InteractiveGenomeBrowser:
             stride = self.state.stride,
             integrate_variants=True,
             track_features = True,
-            feature_types=["gene","exon","CDS","motif"]
+            feature_types=["gene","exon","CDS","motif","variant"]
         )
         self.window = self.iterator.get_window_at(self.state.position)
+        
+        if len(self.window.ref_seq) < 1:
+            logger.debug("window empty :(")
+            
         if self.state.show_second:
+            # Clean up old second iterator if it exists
+            if self.iterator2:
+                self.iterator2.cleanup()
+
             self.iterator2 = UnifiedGenomeIterator(
                 self.gm,
                 self.state2.chrom,
@@ -338,11 +359,22 @@ class InteractiveGenomeBrowser:
                 feature_types=["gene","exon","CDS","motif"]
             )
             self.window2 = self.iterator2.get_window_at(self.state2.position)
+
+    def _update_iterator(self):
+        """Update existing iterator position (reuses iterator to preserve async preload buffers)."""
+        # Update primary iterator position
+        self.iterator.update_position(self.state.position)
+        self.window = self.iterator.get_window_at(self.state.position)
+
+        # Update second iterator if active
+        if self.state.show_second and self.iterator2:
+            self.iterator2.update_position(self.state2.position)
+            self.window2 = self.iterator2.get_window_at(self.state2.position)
     
     def _display_current_view2(self):
         
         if not self.debug:
-            print('\033[2J\033[H')  # Clear screen and move to top
+            os.system('clear' if os.name == 'posix' else 'cls')
         
         lines_used = 0
         header, n = self.get_header_lines(second = False, suppress = True)
@@ -353,13 +385,13 @@ class InteractiveGenomeBrowser:
         dlines = []
         if self._ref_cache1:
             dlines = self.get_data_lines(self._ref_cache1, self._ref_cache1, bit_depth = 16)
-            dlines32 = self.get_data_lines(self._ref_cache1, self._ref_cache1, bit_depth = 8, scale = 32, show_stats = False)
+            # dlines32 = self.get_data_lines(self._ref_cache1, self._ref_cache1, bit_depth = 8, scale = 32, show_stats = False)
             dlines16 = self.get_data_lines(self._ref_cache1, self._ref_cache1, bit_depth = 8, scale = 16, show_stats = False)
-            dlines8 = self.get_data_lines(self._ref_cache1, self._ref_cache1, bit_depth = 8, scale = 8, show_stats = False)
-            dlines.append("\n")
-            dlines.extend(dlines32)
+            # dlines8 = self.get_data_lines(self._ref_cache1, self._ref_cache1, bit_depth = 8, scale = 8, show_stats = False)
+            # dlines.append("\n")
+            # dlines.extend(dlines32)
             dlines.extend(dlines16)
-            dlines.extend(dlines8)
+            # dlines.extend(dlines8)
             lines_used += len(dlines)
         # Navigation hints at fixed position (line 24)
         footer = self.get_footer_lines(lines_used, footer_pos = 32, suppress= True)
@@ -385,7 +417,7 @@ class InteractiveGenomeBrowser:
     def _display_current_view_sec(self):
         
         if not self.debug:
-            print('\033[2J\033[H')  # Clear screen and move to top
+            os.system('clear' if os.name == 'posix' else 'cls')
         
         lines_used = 0
         header, n1 = self.get_header_lines(suppress = True)
@@ -475,12 +507,15 @@ class InteractiveGenomeBrowser:
             #     self.extra_motifs["rcrun"] = None
         elif scale is None:
             
-            conv = {"A":"R","G":"R","T":"Y","C":"Y","N":"N"}
+            # conv = {"A":"R","G":"R","T":"Y","C":"Y","N":"N"}
+            # conv = {"A":"A","G":"GA","T":"TC","C":"C","N":"N"}
             # cf = lambda a, b: conv.get(a,"a")==conv.get(b,"b")
+            # cf = lambda a, b: a in conv.get(b)
             cf = None
             
-            sf = lambda b1, b2: 3 if b1 in "GC" else 2
-            fill = 2.5*0.25
+            # sf = lambda b1, b2: 1 if b1!=b2 else (3 if b1 in "GC" else 2)
+            sf = None
+            # fill = 2.5*0.25
             
             maxval = None
             rcmax = maxval
@@ -603,44 +638,19 @@ class InteractiveGenomeBrowser:
         
         if window.motifs:
             for motif in window.motifs:
-                motif.pop("sequence")
-                motif["feature_type"] = motif.pop("type")
-                motif["source"] = "motif"
-                motif_feat = UnifiedFeature(chrom = state.chrom, **motif)
-                features.append(motif_feat)
-            
-        if self.extra_motifs:
-            for emkey in ["run", "rcrun"]:
-                # logger.debug(f"trying to load motif {emkey}")
-                if self.extra_motifs.get(emkey):
-                    _seq, start, end, start2, end2 = self.extra_motifs.get(emkey)
-                    if state._is_second:
-                        st = start2 + state.position
-                        en = end2 + state.position
-                    else:
-                        st = start + state.position
-                        en = end + state.position
-                    motif_feat = UnifiedFeature(
-                        chrom = state.chrom, 
-                        start = st, 
-                        end=en, 
-                        feature_type = "motif", 
-                        name = emkey,
-                        source = "extra", 
-                        strand = "-" if state.show_reverse_strand else "+", 
-                        score=1.0, 
-                        attributes = {"sequence":_seq}
-                    )
-                    features.append(motif_feat)
+                features.append(motif)
             
         if hasattr(self.gm, 'annotations'):
             unified_features = self.gm.get_all_annotations(
                 str(state.chrom),
                 state.position,
                 state.position + state.window_size - 1,
-                include_motifs=True
+                include_motifs=False
             )
             features.extend(unified_features)
+            
+        features = [f for f in features if f.overlaps(window.start_ref, window.end_ref)]
+            
         return features
     
     def _get_display_lines(self, second = False, suppress = False):
@@ -684,6 +694,8 @@ class InteractiveGenomeBrowser:
         # Display sequences with codon highlighting
         slines, n = self._display_sequences(ref_seq, personal_seq, features, second = second, suppress = suppress)
         if n < 1:
+            logger.debug(f"no ref, window: {self.window}")
+            logger.debug(f"buffer: {self.iterator._buffer_start} - {self.iterator._buffer_end}")
             raise Exception("no ref or personal seq to display")
         
         all_lines["seq"] = slines
@@ -722,7 +734,7 @@ class InteractiveGenomeBrowser:
                         self._gene_cache2=f
                     else:
                         self._gene_cache=f
-                    logger.debug(f"set gene cache with {self._gene_cache}")
+                    # logger.debug(f"set gene cache with {self._gene_cache}")
                 else:
                     pass
                 
@@ -808,7 +820,7 @@ class InteractiveGenomeBrowser:
         
         currstrand = '-' if state.show_reverse_strand else '+'
         # Extract motifs from features for underline display
-        motifs = [f for f in features if f.get('feature_type') == 'motif' or f.get('feature') == 'motif'] if features else []
+        motifs = [f for f in features if f.feature_type == 'motif'] if features else []
         
         lines = {}
         n = 0
@@ -839,6 +851,7 @@ class InteractiveGenomeBrowser:
         start_codons = []
         stop_codons = []
         disp_motifs = []
+        disp_rcmotifs = []
         extra_motifs = []
         if features:
             window_start = state.position
@@ -887,8 +900,9 @@ class InteractiveGenomeBrowser:
                         stop_codons.append((display_start, display_end))
                 elif ftype == 'motif':
                     motif_source = feature.source
-                    if motif_source == "extra":
-                        dst = extra_motifs
+                    
+                    if feature.attributes.get("is_rc"):
+                        dst = disp_rcmotifs
                     else:
                         dst = disp_motifs
                     # Calculate raw positions relative to window
@@ -964,6 +978,7 @@ class InteractiveGenomeBrowser:
             in_start = any(start <= i < end for start, end in start_codons)
             in_stop = any(start <= i < end for start, end in stop_codons)
             in_motif = any(start <= i < end for start, end in disp_motifs)
+            in_rcmotif = any(start <= i < end for start, end in disp_rcmotifs)
             in_extra = any(start <= i < end for start, end in extra_motifs)
             
             if base == '-':
@@ -973,7 +988,9 @@ class InteractiveGenomeBrowser:
             elif in_stop:
                 ref_display += f"{Colors.SNP}{base}{Colors.RESET}"
             elif in_motif:
-                ref_display += f"{Colors.EXON}{base}{Colors.RESET}"
+                ref_display += f"{Colors.MOTIF}{base}{Colors.RESET}"
+            elif in_rcmotif:
+                ref_display += f"{Colors.RCMOTIF}{base}{Colors.RESET}"
             elif in_extra:
                 ref_display += f"{Colors.HIGHLIGHT}{base}{Colors.RESET}"
             else:
@@ -993,6 +1010,7 @@ class InteractiveGenomeBrowser:
             in_start = any(start <= i < end for start, end in start_codons)
             in_stop = any(start <= i < end for start, end in stop_codons)
             in_motif = any(start <= i < end for start, end in disp_motifs)
+            in_rcmotif = any(start <= i < end for start, end in disp_rcmotifs)
             
             if pers_base == '-':
                 personal_display += f"{Colors.DIM}-{Colors.RESET}"
@@ -1006,6 +1024,8 @@ class InteractiveGenomeBrowser:
                 personal_display += f"{Colors.SNP}{pers_base}{Colors.RESET}"
             elif in_motif:
                 personal_display += f"{Colors.EXON}{pers_base}{Colors.RESET}"
+            elif in_rcmotif:
+                personal_display += f"{Colors.RCMOTIF}{pers_base}{Colors.RESET}"
             else:
                 personal_display += pers_base
         
@@ -1022,9 +1042,6 @@ class InteractiveGenomeBrowser:
         extras  = []
         # Motif underline with strand indicators
         if motifs or True:
-            
-            # marker_line = "         "
-            # motif_colors = "         "
             
             for i in range(len(aligned_ref)):
                 # Check if position is in any motif
@@ -1059,10 +1076,11 @@ class InteractiveGenomeBrowser:
                     
                     # logger.debug(f"motif: {motif_found}")
                     
-                    if i == motif_start:
-                        marker_line.append(f"{color}{ra if strand == '+' else la}{Colors.RESET}")
-                    else:
-                        marker_line.append(f"{color}{stem}{Colors.RESET}")
+                    # if i == motif_start:
+                    #     marker_line.append(f"{color}{ra if strand == '+' else la}{Colors.RESET}")
+                    # else:
+                    #     marker_line.append(f"{color}{stem}{Colors.RESET}")
+                    marker_line.append(" ")
                     
                 else:
                     marker_line.append(" ")
@@ -1088,8 +1106,6 @@ class InteractiveGenomeBrowser:
         
         return lines, n
     
-    
-    
     def _display_features(self, features: List[Dict[str, Any]], variant_features, second=False, suppress = False):
         """Display feature annotations as labeled bars with compression.
         
@@ -1111,7 +1127,7 @@ class InteractiveGenomeBrowser:
         lines = []
         
         # Separate motifs from other features
-        motifs = []
+        motifs:List[UnifiedFeature] = []
         other_features = []
         for feature in features:
             ftype = feature.feature_type if hasattr(feature, 'feature_type') else feature.get('feature_type', feature.get('feature'))
@@ -1289,6 +1305,7 @@ class InteractiveGenomeBrowser:
         
         # Display motifs section
         if motifs:
+            
             if not suppress:
                 print(f"\n{Colors.BOLD}Motifs:{Colors.RESET}")
             lines.append(f"\n{Colors.BOLD}Motifs:{Colors.RESET}")
@@ -1296,9 +1313,12 @@ class InteractiveGenomeBrowser:
             # Group motifs by type
             motif_groups = {}
             for motif in motifs:
-                motif_info = motif.get('info', {}) if isinstance(motif, dict) else {}
-                motif_name = motif_info.get('name', motif.get('name', 'unknown'))
-                strand = motif.get('strand', '+')
+                
+                # logger.debug(type(motif))
+                
+                motif_name = motif.name
+                strand = motif.strand
+                source = motif.source
                 
                 if motif_name not in motif_groups:
                     motif_groups[motif_name] = []
@@ -1307,36 +1327,26 @@ class InteractiveGenomeBrowser:
             # Display each motif type
             for motif_type, motif_list in sorted(motif_groups.items()):
                 # Choose color for motif type
-                if 'splice' in motif_type.lower():
-                    color = Colors.MOTIF
-                elif 'tata' in motif_type.lower():
-                    color = Colors.MOTIF
-                elif 'cpg' in motif_type.lower():
-                    color = Colors.MOTIF
-                elif 'polya' in motif_type.lower():
-                    color = Colors.MOTIF
-                else:
-                    color = Colors.MOTIF
+                
+                if not motif_list:
+                    continue
                 
                 if not suppress:
-                    print(f"  {color}{motif_type}:{Colors.RESET}")
-                lines.append(f"  {color}{motif_type}:{Colors.RESET}")
+                    print(f"  {Colors.MOTIF}{motif_type}:{Colors.RESET}")
+                lines.append(f"  {Colors.MOTIF}{motif_type}:{Colors.RESET}")
                 
                 for motif in motif_list[:5]:  # Show max 5 instances per type
-                    start = motif.get('start')
-                    end = motif.get('end')
-                    strand = motif.get('strand', '+')
-                    score = motif.get('score', motif.get('info', {}).get('score', 0))
-                    seq = motif.get('sequence', motif.get('info', {}).get('sequence', ''))
+                    color = Colors.RCMOTIF if motif.attributes.get("is_rc", False) else Colors.MOTIF
+                    start = motif.start
+                    end = motif.end
+                    endstr = str(end - 1000*(end//1000))
+                    strand = motif.strand
+                    score = motif.score
+                    seq = motif.attributes.get("sequence")
                     
-                    # Determine which sequence (ref or personal)
-                    in_window_start = max(0, start - state.position)
-                    in_window_end = min(state.window_size, end - state.position)
+                    strand_symbol = '→' if strand == '+' else '←'
                     
-                    if in_window_start < in_window_end:
-                        strand_symbol = '→' if strand == '+' else '←'
-                        
-                        lines.append(f"    {start:,} {strand_symbol} {seq} (score: {score:.2f})")
+                    lines.append(f"    {start:,}-{endstr} {strand_symbol} {color}{seq}{Colors.RESET} (score: {score:.2f})")
                 
                 if len(motif_list) > 5:
                     if not suppress:
@@ -1769,46 +1779,63 @@ class InteractiveGenomeBrowser:
             state.position = max(1, state.position - move_distance)
     
     def _switch_chromosome(self, second = False):
-                
+
         if second:
             state = self.state2
+            iterator = self.iterator2
         else:
             state = self.state
+            iterator = self.iterator
         c=input("new chromosome: ")
         pos=input("new position (default=1,000,000): ")
         pos = self._parse_position(pos, default = 1000000)
-        
+
         if c in list(map(str,range(23))) + ['MT','X','Y']:
             state.chrom=c
             state.position=pos
-            
+            # Update iterator chromosome
+            if iterator:
+                iterator.update_chromosome(c, pos)
+
         # self._display_current_view()
         
     def _goto_position(self, second = False):
         """Jump to a specific position."""
-        
+
         if second:
             state = self.state2
+            iterator = self.iterator2
         else:
             state = self.state
+            iterator = self.iterator
         print("\n" + "-" * 40)
         try:
             pos_input = input("Enter position (or gene name): ").strip()
-            
+
             # Try to parse as number
             try:
                 new_pos = self._parse_position(pos_input)
                 state.position = max(1, new_pos)
+                # Use jump_to for potentially large jumps
+                if iterator:
+                    iterator.jump_to(new_pos)
             except ValueError:
                 # Try as gene name
                 gene_name = pos_input.upper()
                 chrom, gene_info = self.gm.gene_map.find_gene(gene_name)
-                
+
                 if chrom and gene_info:
                     gene_data = gene_info[0]
+                    old_chrom = state.chrom
                     state.chrom = chrom
                     state.position = gene_data['start']
                     print(f"Jumping to {gene_name} on chromosome {chrom}")
+                    # Update iterator - use update_chromosome if chrom changed
+                    if iterator:
+                        if str(old_chrom) != str(chrom):
+                            iterator.update_chromosome(chrom, gene_data['start'])
+                        else:
+                            iterator.jump_to(gene_data['start'])
                 else:
                     print(f"Gene '{gene_name}' not found")
                     input("Press Enter to continue...")
@@ -1822,17 +1849,20 @@ class InteractiveGenomeBrowser:
         feat_type = input("Next feature type (default: gene): ").strip()
         if not feat_type:
             feat_type = "gene"
-        
+
         # gene_end = self.gm
-        
+
         result = self.gm.find_next_feature(
-            self.state.chrom, 
+            self.state.chrom,
             self.state.position,
             feat_type
         )
-        
+
         if result:
             self.state.position = result['start']
+            # Use jump_to for potentially large jumps
+            if self.iterator:
+                self.iterator.jump_to(result['start'])
             print(f"Jumped to {result['type']}: {result['name']} at position {result['start']:,}")
             print(f"Distance: {result['distance']:,} bp")
         else:
@@ -1845,15 +1875,18 @@ class InteractiveGenomeBrowser:
         feat_type = input("Previous feature type (default: gene): ").strip()
         if not feat_type:
             feat_type = "gene"
-        
+
         result = self.gm.find_prev_feature(
             self.state.chrom,
             self.state.position,
             feat_type
         )
-        
+
         if result:
             self.state.position = result['start']
+            # Use jump_to for potentially large jumps
+            if self.iterator:
+                self.iterator.jump_to(result['start'])
             print(f"Jumped to {result['type']}: {result['name']} at position {result['start']:,}")
             print(f"Distance: {result['distance']:,} bp")
         else:
@@ -1868,8 +1901,13 @@ class InteractiveGenomeBrowser:
             if 10 <= new_size <= 400:
                 self.state.window_size = new_size
                 self.state2.window_size = new_size
+                # Update iterator window sizes
+                if self.iterator:
+                    self.iterator.window_size = new_size
+                if self.iterator2:
+                    self.iterator2.window_size = new_size
             else:
-                print("Window size must be between 10 and 200")
+                print("Window size must be between 10 and 400")
                 input("Press Enter to continue...")
         except ValueError:
             print("Invalid input")
@@ -1883,6 +1921,11 @@ class InteractiveGenomeBrowser:
             if 1 <= new_stride <= 1000:
                 self.state.stride = new_stride
                 self.state2.stride = new_stride
+                # Update iterator strides
+                if self.iterator:
+                    self.iterator.stride = new_stride
+                if self.iterator2:
+                    self.iterator2.stride = new_stride
             else:
                 print("Stride must be between 1 and 1000")
                 input("Press Enter to continue...")
@@ -2040,13 +2083,16 @@ class InteractiveGenomeBrowser:
     def _jump_to_next_gene(self):
         """Quick jump to next gene using Ctrl+Right."""
         result = self.gm.find_next_feature(
-            self.state.chrom, 
+            self.state.chrom,
             self.state.position,
             'gene'
         )
-        
+
         if result:
             self.state.position = result['start']
+            # Use jump_to for potentially large jumps
+            if self.iterator:
+                self.iterator.jump_to(result['start'])
     
     def _jump_to_prev_gene(self):
         """Quick jump to previous gene using Ctrl+Left."""
@@ -2055,9 +2101,12 @@ class InteractiveGenomeBrowser:
             self.state.position,
             'gene'
         )
-        
+
         if result:
             self.state.position = result['start']
+            # Use jump_to for potentially large jumps
+            if self.iterator:
+                self.iterator.jump_to(result['start'])
     
     def _save_state(self):
         """Save current browser state."""
@@ -2127,12 +2176,18 @@ class InteractiveGenomeBrowser:
         elif pos_str[-1] == "k":
             fact = int(1e3)
             pos_str = pos_str[:-1]
-        return fact*int(pos_str.replace(',', ''))
+        return int(fact*float(pos_str.replace(',', '')))
         
         
     
     def _cleanup(self):
         """Clean up before exiting."""
+        # Clean up iterators
+        if self.iterator:
+            self.iterator.cleanup()
+        if self.iterator2:
+            self.iterator2.cleanup()
+
         print("\n" + "-" * 40)
         print("Exiting genome browser")
 

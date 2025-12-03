@@ -752,11 +752,12 @@ def main():
     print(tabulate(cdn_freq_znf))
     
     
-    return
     
-    freqs_norm, freqs_ct, txs = get_codon_frequency_stats(gm, chrs = ["12"])
+    # freqs_norm, freqs_ct, txs = get_codon_frequency_stats(gm, chrs = ["12"])
+    chrdata = get_codon_frequency_stats(gm, chrs = ["12"])
     display_alt_codon_entropy(freqs_norm, freqs_ct, fname = "codon_entropy_chr12.txt")
     
+    return
     codons = "".join("".join(get_aa_codons(aa)) for aa in ORDER_AA)
     
     display_alt_codons(codons, use_color = True)

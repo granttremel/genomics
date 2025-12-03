@@ -5,8 +5,10 @@ import string
 
 from typing import Optional, Tuple, List
 
-from ggene.seqs.bio import reverse_complement
+from ggene.seqs.bio import reverse_complement, COMPLEMENT_MAP, ALIASES, ORDER
 from ggene.seqs.find import compare_sequences
+
+vocab = ORDER[:4]
 
 class Dyad:
 
@@ -138,18 +140,22 @@ class Dyad:
         return seq[self.loop_start:self.reverse_stem_start]
 
     def test_dyad(self, seq: Optional[str] = None,
-                  err_tol: Optional[int] = None) -> int:
+                  err_tol: Optional[int] = None,
+                  wobble_tol = None) -> int:
         if seq is None:
             seq = self.sequence
         if seq is None:
             raise ValueError("No sequence provided or stored")
-
+        
+        if self.stem_start < 0 or self.reverse_stem_end > len(self.sequence):
+            return False
+        
         first_stem, second_stem = self.extract_stems(seq)
 
         # Reverse complement the first stem
         first_rc = reverse_complement(first_stem)
 
-        return self._compare_sequences(first_rc, second_stem, err_tol)
+        return compare_sequences(first_rc, second_stem, err_tol, wobble_tol =wobble_tol)
 
     def refer_to(self, position):
         self.ref_pos = position
@@ -296,22 +302,22 @@ class Dyad:
             sequence=self.sequence
         )
 
-    @staticmethod
-    def _compare_sequences(s1: str, s2: str, err_tol: Optional[int] = None) -> int:
-        """Helper to compare two sequences and count mismatches."""
-        if len(s1) != len(s2):
-            return len(s1)
+    # @staticmethod
+    # def _compare_sequences(s1: str, s2: str, err_tol: Optional[int] = None, allow_wobble = True) -> int:
+    #     """Helper to compare two sequences and count mismatches."""
+    #     if len(s1) != len(s2):
+    #         return len(s1)
 
-        if err_tol is None:
-            err_tol = len(s1)
+    #     if err_tol is None:
+    #         err_tol = len(s1)
 
-        nerr = 0
-        for a, b in zip(s1, s2):
-            if a != b:
-                nerr += 1
-            if nerr > err_tol:
-                return nerr
-        return nerr
+    #     nerr = 0
+    #     for a, b in zip(s1, s2):
+    #         if a != b:
+    #             nerr += 1
+    #         if nerr > err_tol:
+    #             return nerr
+    #     return nerr
 
     def print(self, total_len = -1, colors = {}):
         self.print_dyad(self.sequence, *self.to_tuple(), total_len = total_len, colors = colors)
@@ -351,8 +357,6 @@ class Dyad:
             parts.append(f"{c}{p}{cr}")
         
         print("".join(parts))
-        # print(full)
-        # print(raw)
 
     def __eq__(self, other: 'Dyad') -> bool:
         """Check equality based on all position attributes."""
@@ -436,8 +440,9 @@ class Dyad:
                 supmax = sup.maximize()
                 sups.append(supmax)
             else:
-                print(f"dyad failed at {c}: {sup.to_tuple()}, sequence length {seq_len}")
-        print(f"compared {ncomps} dyads")
+                # print(f"dyad failed at {c}: {sup.to_tuple()}, sequence length {seq_len}")
+                pass
+        # print(f"compared {ncomps} dyads")
         
         return sups
     
@@ -468,52 +473,7 @@ class Dyad:
                 nn += 1
             
             cdyads = cls.sort_dyads(dyads[n:nn], sortby = "stem_length", reverse = True)
-            
-            
-        
 
-# _comp_strs = "AĀEĒGḠIĪOŌUŪYȲ"
-# vocab = "AUGC"
-# _vc = vocab
-
-# COMPLEMENT_MAP = {'A':'U','C':'G','G':'C','U':'A','N':'N'}
-# _cm = COMPLEMENT_MAP
-
-# compare_map = {'A':'A','U':'U','G':'G','C':'C','Y':'UC','R':'AG','N':'AUGC'}
-
-# iupac_aliases = {
-#     'R': 'AG',   # puRine
-#     'Y': 'CU',   # pYrimidine  
-#     'S': 'GC',   # Strong (3 H bonds)
-#     'W': 'AU',   # Weak (2 H bonds)
-#     'K': 'GU',   # Keto
-#     'M': 'AC',   # aMino
-#     'B': 'CGU',  # not A
-#     'D': 'AGU',  # not C
-#     'H': 'ACU',  # not G
-#     'V': 'ACG',  # not T
-#     'N': 'ACGU', # aNy
-# }
-
-# iupac_aliases_rev = {
-#     'A':'RWMDHVN',
-#     'U':'YWKBDHN',
-#     'G':'RSKBDVN',
-#     'C':'YSMBHVN',
-# }
-
-# aliases = {}
-
-# def set_vocab(new_vocab, new_cm):
-#     global vocab, COMPLEMENT_MAP
-    
-#     vocab = new_vocab
-#     COMPLEMENT_MAP = new_cm
-
-# def reset_vocab():
-#     global vocab, COMPLEMENT_MAP
-#     vocab = _vc
-#     COMPLEMENT_MAP = _cm
 
 def get_next_symbols(num_symbols):
     
@@ -549,10 +509,10 @@ def encode_symbols(seq):
     cs = "".join(reverse_complement(seq))
     sym, csym = get_next_symbols(2)
     
-    aliases[sym] = seq
-    aliases[seq] = sym
-    aliases[csym] = cs
-    aliases[cs] = csym
+    ALIASES[sym] = seq
+    ALIASES[seq] = sym
+    ALIASES[csym] = cs
+    ALIASES[cs] = csym
     return sym, seq, csym, cs
 
 def encode_dyad(seq, dyad:Dyad):
@@ -591,40 +551,6 @@ def substitute_symbols(seq, sym, subseq, csym, csubseq):
             
     return "".join(out), shift
 
-# def clear_symbol(sym):
-#     global vocab, COMPLEMENT_MAP, aliases
-    
-#     csym = COMPLEMENT_MAP[sym]
-    
-#     vocab = vocab.replace(sym, "")
-#     vocab = vocab.replace(csym, "")
-#     del COMPLEMENT_MAP[sym]
-#     del COMPLEMENT_MAP[csym]
-#     s = aliases.get(sym)
-#     cs = aliases.get(csym)
-#     del aliases[sym]
-#     del aliases[csym]
-#     try:
-#         del aliases[s]
-#     except:
-#         pass
-#     try:
-#         del aliases[cs]
-#     except:
-#         pass
-
-# def to_pyrpur(seq):
-#     pyrpur = 'YR'
-#     out = []
-#     for s in seq:
-#         out.append(s)
-#         for p in pyrpur:
-#             if s in iupac_aliases[p]:
-#                 out[-1] = p
-#                 break
-#     return "".join(out)
-
-
 def combine_templates(reference, templates):
     ref = [r for r in reference]
     
@@ -657,21 +583,6 @@ def make_crosscorr(reference, templates):
     idk1 = cc @ cc.T
     idk2 = np.linalg.pinv(cc)
     return idk1, idk2
-    
-# def reverse_complement(seq):
-#     return "".join(_reverse(_complement(seq)))
-
-# def _complement(seq):
-#     return [COMPLEMENT_MAP.get(s,s) for s in seq]
-
-# def complement(seq):
-#     return "".join(_complement(seq))
-
-# def _reverse(seq):
-#     return [s for s in reversed(seq)]
-
-# def reverse(seq):
-#     return "".join(_reverse(seq))
 
 def frequency_rank_dyads(seq, dyads:List[Dyad]):
     
@@ -689,56 +600,6 @@ def frequency_rank_dyads(seq, dyads:List[Dyad]):
             max_seq = ds
     
     return freqs, max_seq
-
-# def frequency_rank(seqs, proc = [], min_len = 3, topk = None, do_rc = False, err_tol = 0):
-#     max_n = 0
-#     max_seq = ""
-    
-#     # seqs = sorted(seqs, key = lambda a:-len(a))
-#     # if proc:
-#     #     proc = sorted(proc, )
-    
-#     freqs = {}
-#     procout = {}
-#     for i in range(len(seqs)):
-#         seq = seqs[i]
-        
-#         if len(seq) < min_len:
-#             continue
-        
-#         key = seq
-#         if seq in freqs:
-#             key = seq
-#         elif do_rc and reverse_complement(seq) in freqs:
-#             key = seq
-#         else:
-#             for f in freqs:
-#                 if seq in f:
-#                     key = f
-#                     break
-        
-#         if not key in freqs:
-#             freqs[key] = 0
-#             procout[key] = []
-#         n = freqs.get(key, 0)
-#         freqs[key] = freqs[key] + 1
-        
-#         if proc:
-#             procout[key].append(proc[i])
-#             print(f'{i}th sequence:')
-#             print(seq)
-#             proc[i].print()
-        
-#         if n > max_n:
-#             max_n = n
-#             max_seq = key
-    
-#     if topk is not None:
-#         top_seqs = sorted(freqs.keys(), key = lambda k:-freqs[k])[:topk]
-#         freqs = {k:freqs[k] for k in top_seqs}
-#         procout= {k:procout[k] for k in top_seqs}
-    
-#     return freqs, procout, max_seq
 
 def search_dyad(seq, stem_len, max_loop, min_loop, err_tol = 0):
     """
@@ -842,7 +703,7 @@ def seek_dyad_rev(seq, max_stem, min_stem, max_loop, min_loop):
     return -1, -1, -1, -1
 
 
-def find_all_dyads(seq, min_stem, max_stem = -1, max_loop = -1, min_loop = -1, err_tol = None)->List[Dyad]:
+def find_all_dyads(seq, min_stem, max_stem = -1, max_loop = -1, min_loop = -1, err_tol = None, allow_wobble = True)->List[Dyad]:
     
     len_seq = len(seq)
     if max_stem < 0:
@@ -869,15 +730,22 @@ def find_all_dyads(seq, min_stem, max_stem = -1, max_loop = -1, min_loop = -1, e
             
             for rss in range(ss + sl + min_loop, ss + sl + max_loop + 1):
                 
+                if allow_wobble:
+                    wobble_tol = len(test_seq) // 5
+                else:
+                    wobble_tol = None
+                
                 comp_seq = seq[rss:rss+sl]
-                err = compare_sequences(test_seq_rc, comp_seq, err_tol = err_tol)
+                err = compare_sequences(test_seq_rc, comp_seq, err_tol = err_tol, wobble_tol = wobble_tol)
                 if err <= err_tol:
                     loop_len = rss - sl - ss
                     nd = Dyad(sl, ss, loop_len, rss, sequence = seq)
-                    allres.append(nd)
+                    
+                    if nd.test_dyad(err_tol = err_tol, wobble_tol = wobble_tol):
+                        allres.append(nd)
                 ncomps += 1
     
-    print(f"tested {ncomps} sequences")
+    # print(f"tested {ncomps} sequences")
     
     return allres
 
@@ -949,7 +817,7 @@ def find_all_dyads_expand(seq, min_stem, min_loop = 3, max_loop = 8):
         #                 allres.append(d_new)
         #             ncomps += 1
     
-    print(f"tested {ncomps} sequences")
+    # print(f"tested {ncomps} sequences")
     
     return allres
     
@@ -1000,11 +868,11 @@ def find_all_dyads_chunk(seq, min_stem, chunksz):
         
         ds, ss = find_all_dyads_build(subseq, min_stem)
         
-        print(f"chunk {nc}, {len(ds)} naive, {len(ss)} superdyads")
+        # print(f"chunk {nc}, {len(ds)} naive, {len(ss)} superdyads")
         
         all_supers.extend(ss)
         all_supers = Dyad.build_superdyads(all_supers)
-        print(f"chunk {nc}, {len(ss)} combined superdyads")
+        # print(f"chunk {nc}, {len(ss)} combined superdyads")
     
     return all_supers
 

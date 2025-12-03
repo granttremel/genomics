@@ -410,6 +410,7 @@ class BEDStream(AnnotationStream):
             index_file = Path(str(self.filepath) + '.tbi')
             if index_file.exists():
                 try:
+                    print("doing tabix")
                     self.tabix = pysam.TabixFile(str(self.filepath))
                     logger.info(f"Using indexed access for {self.filepath}")
                 except Exception as e:

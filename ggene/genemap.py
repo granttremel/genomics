@@ -246,7 +246,6 @@ class GeneMap:
                     'info': attr_dict
                     }
         except Exception as e:
-            # logger.error(f'Exception occurred: {str(e)}')
             print(f'Exception occurred: {str(e)}')
             return  # Region not in file
     
