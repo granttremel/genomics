@@ -428,19 +428,24 @@ class BEDStream(AnnotationStream):
         if len(parts) < 3:
             return None
         
+        name = parts[3].strip()
+        if name.endswith(")n"):
+            motif = name.strip("()n")
+        else:
+            motif = ""
+        
         return UnifiedFeature(
-            chrom=parts[0],
+            chrom=parts[0].removeprefix("chr"),
             start=int(parts[1]) + 1,  # BED is 0-based
             end=int(parts[2]),
             feature_type=self.feature_type,
             source=self.source_name,
-            name=parts[3] if len(parts) > 3 else None,
-            score=float(parts[4]) if len(parts) > 4 else None,
+            name=parts[3],
+            score= -1,
             strand=parts[5] if len(parts) > 5 else None,
             attributes={
-                'thickStart': int(parts[6]) if len(parts) > 6 else None,
-                'thickEnd': int(parts[7]) if len(parts) > 7 else None,
-                'itemRgb': parts[8] if len(parts) > 8 else None
+                "type": parts[4],
+                "motif":motif,
             }
         )
     
@@ -448,17 +453,19 @@ class BEDStream(AnnotationStream):
                start: Optional[int] = None,
                end: Optional[int] = None) -> Iterator[UnifiedFeature]:
         """Stream BED features."""
-        with open(self.filepath, 'r') as f:
-            for line in f:
-                feature = self._parse_line(line)
-                if feature:
-                    if chrom and feature.chrom != chrom:
-                        continue
-                    if start and feature.end < start:
-                        continue
-                    if end and feature.start > end:
-                        continue
-                    yield feature
+        
+        chrom = str(chrom)
+        tbichrom = chrom if chrom.startswith("chr") else "chr" + chrom
+        for line in self.tabix.fetch(tbichrom, start=start, end=end):
+            feature = self._parse_line(line)
+            if feature:
+                if chrom and feature.chrom != chrom:
+                    continue
+                if start and feature.end < start:
+                    continue
+                if end and feature.start > end:
+                    continue
+                yield feature
 
 
 class JASPARStream(AnnotationStream):

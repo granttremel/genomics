@@ -4,6 +4,17 @@ sort a gtf using zcat:
 
 zcat Homo_sapiens.GRCh38.112.gtf.gz | sort -k1,1 -k4,4n > sorted.gtf
 
+extract a .gz (gunzip)
+gunzip -k {fname}.gz
+
+# convert .out to BED, indices chosen for repeatmasker
+tail -n +4 {fname}.fa.out | awk 'OFS="\t" {print $5, $6-1, $7, $10, $11, $9, $14}' > {dest}.bed 
+# sort
+sort -k1,1 -k2,2n {fname}.bed > {fname}.sorted.bed
+# bgzip, index
+bgzip {fname}.sorted.bed # produces {fname}.sorted.bed.gz, consumes original
+tabix -p bed {fname}.sorted.bed.gz
+
 compress:
 
 bgzip sorted.gtf
