@@ -484,6 +484,24 @@ def correlate_longest_subseq_err(seq1, seq2, max_err, comparison_func=None, scal
     return correlate_general(seq1, seq2, analyze_longest_run, scale=scale, step=step, keep=keep,
                             fill_at_zero=fill_tuple)
 
+def correlate_composition(seq, comp_type = "GC", scale=None, step = 1, keep = None, shift_step = 1, fill = 0.5):
+    
+    def calc_comp(shift, subseq1, subseq2, overlap_len):
+        return sum([subseq1.count(b) for b in comp_type]) / len(subseq1)
+    
+    fill_tuple = (fill,) if fill is not None else None
+    res = correlate_general(seq, seq, calc_comp, scale=scale, step=step, keep=keep, shift_step = shift_step, fill_at_zero = fill_tuple)
+    return res
+
+def correlate_gc(seq, scale = None, step = 1, keep = None, shift_step = 1, fill = 0.5):
+    return correlate_composition(seq, comp_type = "GC", scale=scale, step=step, keep=keep, shift_step = shift_step, fill=fill)
+
+def correlate_ag(seq, scale = None, step = 1, keep = None, shift_step = 1, fill = 0.5):
+    return correlate_composition(seq, comp_type = "AG", scale=scale, step=step, keep=keep, shift_step = shift_step, fill=fill)
+
+def correlate_ac(seq, scale = None, step = 1, keep = None, shift_step = 1, fill = 0.5):
+    return correlate_composition(seq, comp_type = "AC", scale=scale, step=step, keep=keep, shift_step = shift_step, fill=fill)
+    
 def extract_run(seqa, seqb, run_len, run_ind, shift, buffer = 0):
     
     amin = run_ind - buffer

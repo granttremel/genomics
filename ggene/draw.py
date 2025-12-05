@@ -705,9 +705,9 @@ def add_ruler(sctxt, xmin, xmax, genomic = False, auto=False, **kwargs):
                 unit = "b"
             fmtr = lambda x: format(x/div, ".1f") + unit
         elif abs(ran) > 1e5:
-            fmtr = ".2e"
+            fmtr = ".0e"
         elif abs(ran) < 1e-5:
-            fmtr = ".2e"
+            fmtr = ".0e"
         elif abs(lbl_delta) >= 1 and all(abs(v - round(v)) < 1e-9 for v in [xmin, xmax, lbl_delta]):
             fmtr = ".0f"
         elif abs(lbl_delta) >= 1:

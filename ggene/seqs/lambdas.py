@@ -7,8 +7,20 @@ from ggene.motifs.motif import MotifDetector
 md:MotifDetector = MotifDetector()
 md.setup_default_motifs()
 
-def seq_cg(seq, feats):
-    return (seq.count("C") + seq.count("G")) / len(seq)
+def seq_gc(seq, feats):
+    return (seq.count("G") + seq.count("C")) / len(seq)
+
+def seq_ag(seq, feats):
+    """
+    AG ratio
+    """
+    return (seq.count("A") + seq.count("G")) / len(seq)
+
+def seq_ac(seq, feats):
+    """
+    AC ratio (amino vs keto)
+    """
+    return (seq.count("A") + seq.count("C")) / len(seq)
 
 def seq_cpg(seq, feats):
     return seq.count("CG")
@@ -72,7 +84,9 @@ def seq_hexa_repeats(seq, feats):
     return _seq_repeats(seq, feats, rptlen)
 
 lambda_map = {
-    "cg":seq_cg,
+    "gc":seq_gc,
+    "ag":seq_ag,
+    "ac":seq_ac,
     "cpg":seq_cpg,
     
     "genes":seq_genes,

@@ -273,15 +273,95 @@ def get_seq_index(seq):
 def index_to_seq(ind, seq_len = 4):
     nbs = 4
     if ind == 0:
-        return "A"*seq_len
+        return ORDER[0]*seq_len
     inds = [(ind//nbs**k)%nbs for k in range(seq_len-1, -1, -1)]
     return "".join(ORDER[i] for i in inds)
 
 def get_seq_index_abs(seq):
-    seq = "A" + seq
+    seq = ORDER[0] + seq
     seq_len = len(seq)
     fullind = get_seq_index(seq)
     return fullind + sum([4**n for n in range(1, seq_len-1)])
+
+def get_seq_least_index_ugh(seq):
+    
+    for b in VOCAB:
+        sym = b
+        nsym = seq.count(sym)
+        if not nsym:
+            pass
+        else:
+            break
+    
+    if sym == VOCAB[-1]:
+        return seq, get_seq_index_abs(seq)
+    
+    if nsym == 1:
+        opt_ind = seq.index(sym)
+        opt_seq = seq[opt_ind + 1:] + seq[:opt_ind+1]
+        return opt_seq, get_seq_index_abs(seq)
+    
+    seq_len = len(seq)
+    init_seq = seq
+    ind = 0
+    arg_min = -1
+    min_seq_ind = np.inf
+    done = False
+    while not done:
+        symind = seq_len - seq.index(sym) - 1
+        seq = seq[symind:] + seq[:symind]
+        ind += symind
+        
+        seq_ind = get_seq_index_abs(seq)
+        if seq_ind < min_seq_ind:
+            arg_min = ind
+            min_seq_ind = seq_ind
+        
+        if ind >= len(seq):
+            done = True
+            break
+        
+    return init_seq[arg_min:] + init_seq[:arg_min], min_seq_ind
+    
+def get_least_seq_index(seq, do_rc = True, do_rev = False, do_comp = False):
+    
+    if len(seq) < 1:
+        return None
+    
+    seq_len = len(seq)
+    arg_min = -1
+    min_seq_ind = np.inf
+    
+    for i in range(len(seq)):
+        test_seq = seq[i:] + seq[:i]
+        test_seq_ind = get_seq_index(test_seq)
+        if test_seq_ind < min_seq_ind:
+            arg_min = i
+            min_seq_ind = test_seq_ind
+    
+    cseq = rcseq = revseq = ""
+    cind = rcind = revind = np.inf
+    
+    if do_rc:
+        rcseq, rcind, rc_arg_min = get_least_seq_index(reverse_complement(seq), do_rc = False, do_rev = False, do_comp = False)
+    if do_comp:
+        cseq, cind, c_arg_min = get_least_seq_index(complement(seq), do_rc = False, do_rev = False, do_comp = False)
+    if do_rev:
+        revseq, revind, rev_arg_min = get_least_seq_index(reverse(seq), do_rc = False, do_rev = False, do_comp = False)
+    
+    min_ind = min(test_seq_ind, rcind, cind, revind)
+    
+    code = [i == min_ind for i in [test_seq_ind, rcind, cind, revind]]
+    code_int = sum([i*2**n for n,i in enumerate(code)])
+    
+    if rcind == min_ind:
+        return rcseq, rcind, rc_arg_min
+    elif cind == min_ind:
+        return cseq, cind, c_arg_min
+    elif revind == min_ind:
+        return revseq, revind, rev_arg_min
+    else:
+        return seq[arg_min:] + seq[:arg_min], test_seq_ind, arg_min
 
 def index_to_seq_abs(ind):
     seq_len = 0

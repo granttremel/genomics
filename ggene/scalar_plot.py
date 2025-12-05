@@ -211,11 +211,13 @@ class ScalarPlot:
             self.ruler.options.update(ruler_kwargs)
             self.ruler.render()
 
-    def show(self) -> None:
+    def show(self, plot_label = "", fmt = "") -> None:
         """Print the rendered plot to stdout."""
-        
-        for row in self.rows:
-            print(row)
+        if not fmt:
+            fmt = "{}"
+        for i, row in enumerate(self.rows):
+            rlbl = plot_label if i==0 else ""
+            print(f"{rlbl.ljust(len(plot_label)+2)}{fmt.format(row)}")
         if self.ruler:
             self.ruler.show()
 
@@ -228,6 +230,8 @@ class ScalarPlot:
         
         for n in range(num_lines):
             subdata = self.scalars[chunksz*n:chunksz*(n+1)]
+            if len(subdata) < 1:
+                break
             subplot = ScalarPlot(subdata, **self.options)
             subplot.show()
             print()

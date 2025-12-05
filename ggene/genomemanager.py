@@ -541,7 +541,7 @@ class GenomeManager:
             
         return long_dels, long_inserts
     
-    def get_chromosomal_quantities(self, chr, seq_specs, chunksz = 10e6, start = 1e6, length = None):
+    def get_chromosomal_quantities(self, chr, seq_specs, chunksz = 10e6, start = 1e6, length = None, resample = False, do_rc = False):
         
         seq_fns = []
         for seq_spec in seq_specs:
@@ -551,7 +551,7 @@ class GenomeManager:
             elif callable(seq_spec):
                 seq_fn = seq_spec
                 seq_fns.append(seq_fn)
-            
+        
         if not seq_fns:
             return None, None
         
@@ -567,7 +567,9 @@ class GenomeManager:
         
         for n in range(num_chunks):
             end = start + step
-            seq = self.get_sequence(chrstr, start, end)
+            seq = self.annotations.get_sequence(chrstr, start, end)
+            if do_rc:
+                seq = reverse_complement(seq)
             ufeats = self.get_all_annotations(chrstr, start, end)
             feats = [uf.to_dict() for uf in ufeats]
             if len(seq) < 1:
@@ -578,38 +580,46 @@ class GenomeManager:
                 starts[i].append(start)
                 qts[i].append(qt)
             start = end
+            
+        if resample:
+            rsqts = [[] for i in range(len(seq_fns))]
+            for n in range(1, num_chunks - 1):
+                for i in range(len(seq_fns)):
+                    rsqts[i].append(0.25*qts[i][n-1] + 0.5*qts[i][n] + 0.25*qts[i][n+1])
+            qts = rsqts
+            starts = [st[1:num_chunks-1] for st in starts]
+        
         return qts, starts
 
-    def get_chromosomal_quantity(self, chr, seq_spec, chunksz = 10e6, start = 1e6, length = None):
-        qts, starts = self.get_chromosomal_quantities(chr, [seq_spec], chunksz = chunksz, start = start, length = length)
+    def get_chromosomal_quantity(self, chr, seq_spec, chunksz = 10e6, start = 1e6, length = None, resample = False, do_rc = False):
+        qts, starts = self.get_chromosomal_quantities(chr, [seq_spec], chunksz = chunksz, start = start, length = length, resample = resample, do_rc = do_rc)
         return qts[0], starts[0]
         
-    def display_chromosomal_quantity(self, chr, seq_spec, chunksz = 10e6, start = 1e6, max_disp = 256, length = None):
+    def display_chromosomal_quantity(self, chr, seq_spec, chunksz = 10e6, start = 1e6, max_disp = 256, length = None, resample = False, **kwargs):
         
         if not length:
             length = self.gene_map.max_indices[str(chr)] - start
         
-        qts, starts = self.get_chromosomal_quantity(chr, seq_spec, chunksz=chunksz, start = start, length = length)
+        qts, starts = self.get_chromosomal_quantity(chr, seq_spec, chunksz=chunksz, start = start, length = length, resample = resample)
         
         if qts is not None:
             qt_name = str(seq_spec)
         else:
             return
         
-        lines = self.get_chrom_quantity_lines(chr, qts, qt_name, chunksz = chunksz, start = start, max_disp = max_disp, length = length, suppress = False)
+        lines = self.get_chrom_quantity_lines(chr, qts, qt_name, chunksz = chunksz, start = start, max_disp = max_disp, length = length, suppress = False, resample = resample, **kwargs)
         
         return lines
     
-    def display_chromosomal_quantities(self, chr, seq_specs, chunksz = 10e6, start = 1e6, max_disp = 256, length = None):
+    def display_chromosomal_quantities(self, chr, seq_specs, chunksz = 10e6, start = 1e6, max_disp = 256, length = None, resample = False, **kwargs):
         
         if not length:
             length = self.gene_map.max_indices[str(chr)] - start
         
         fg_colors = []
         
-        qts, starts = self.get_chromosomal_quantities(chr, seq_specs, chunksz=chunksz, start = start, length = length)
+        qts, starts = self.get_chromosomal_quantities(chr, seq_specs, chunksz=chunksz, start = start, length = length, resample = resample)
         qt_names = [str(seq_spec) for seq_spec in seq_specs]
-        # qt_name_str = " | ".join([""] + qt_names)
         num_qts = len(qts)
         
         all_lines=[]
@@ -620,7 +630,7 @@ class GenomeManager:
             qt_names_col.append(f"\x1b[38;5;{nice_colors[n]}m{qt_names[n]}\x1b[0m")
             
             do_flip = bool(n%2)
-            lines = self.get_chrom_quantity_lines(chr, qts[n], qt_names[n], chunksz=chunksz, start=start, max_disp=max_disp, length=length, suppress = True, flip = do_flip, fg_color = nice_colors[n])
+            lines = self.get_chrom_quantity_lines(chr, qts[n], qt_names[n], chunksz=chunksz, start=start, max_disp=max_disp, length=length, suppress = True, flip = do_flip, fg_color = nice_colors[n], **kwargs)
             all_lines.append(lines[1:])
         
         
@@ -645,8 +655,8 @@ class GenomeManager:
         num_chunks = length//chunksz
         num_disp_chunks = max(1, int(num_chunks // max_disp))
         
-        minval = 0
-        maxval = max(qts)
+        minval = kwargs.pop("minval", 0)
+        maxval = kwargs.pop("maxval", max(qts))
         
         lines = []
         lines.append(f"{qt_name} for chr{chr}")
