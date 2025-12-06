@@ -17,45 +17,37 @@ class AlignmentResult:
         self.length = alignment.length
         self.target = alignment.target
         self.query = alignment.query
+        
+        cts = alignment.counts()
+        self.gaps, self.identities, self.mismatches = cts.gaps, cts.identities, cts.mismatches
+        self.score = alignment.score
+        self.ham = self.length - self.identities
+        
+        self.target_algn, self.query_algn = alignment[0], alignment[1]
+        
         self.subs = alignment.substitutions
         self.t_algn, self.q_algn = alignment.aligned
         
-        if aligner:
-            self.score = aligner.score
-            self.match_score = aligner.match_score
-            self.mismatch_score = aligner.mismatch_score
-            self.ogap_score = aligner.open_gap_score
-            self.egap_score = aligner.extend_gap_score
-        else:
-            self.score=self.match_score=self.mismatch_score=self.ogap_score=self.egap_score=0
+        # if aligner:
+        #     self.match_score = aligner.match_score
+        #     self.mismatch_score = aligner.mismatch_score
+        #     self.ogap_score = aligner.open_gap_score
+        #     self.egap_score = aligner.extend_gap_score
+        # else:
+        #     self.match_score=self.mismatch_score=self.ogap_score=self.egap_score=0
         
         self._alignment = alignment
     
     def get_aligned_seqs(self):
-        
-        tgt_algn = []
-        q_algn = []
-        last_te = last_qe = 0
-        for (ts, te), (qs, qe) in zip(self.t_algn, self.q_algn):
-            tgt_sec = self.target[last_te:ts]
-            tgt_algn.append(tgt_sec)
-            q_algn.append('-'*(len(tgt_sec)))
-            
-            q_sec = self.query[last_qe:qs]
-            tgt_algn.append('-'*(len(q_sec)))
-            q_algn.append(q_sec)
-            
-            tgt_both = self.target[ts:te]
-            tgt_algn.append(tgt_both)
-            q_both = self.query[qs:qe]
-            q_algn.append(q_both)
-            
-            last_te, last_qe = te, qe
-        
-        return "".join(tgt_algn), "".join(q_algn)
-        
+        return self.target_algn, self.query_algn
         
     def print(self, chunksz = 256):
+        
+        print(f"score: {self.score:0.1f}")
+        # print(f"score: {self.score}, hamming: {self.ham}")
+        print(f"identities: {self.identities}, gaps: {self.gaps}, mismatches: {self.mismatches}")
+        # print(f"match score={self.match_score}, mismatch score={self.mismatch_score}, open gap={self.ogap_score}, extend gap={self.egap_score}")
+        
         tgt_algn, q_algn = self.get_aligned_seqs()
         num_chunks = len(tgt_algn)//chunksz + 1
         for n in range(num_chunks):
@@ -91,13 +83,45 @@ pair_cost = {
     ("C","A"):1.0,
 }
 
+_default_scores = {
+    "match_score":1,
+    "mismatch_score":-0.9,
+    
+    # "open_left_deletion_score":0,
+    # "open_internal_deletion_score":-1,
+    # "open_right_deletion_score":0,
+    
+    # "open_left_insertion_score":0,
+    # "open_internal_insertion_score":-1,
+    # "open_right_insertion_score":0,
+    
+    # "extend_left_deletion_score":0,
+    # "extend_internal_deletion_score":-1,
+    # "extend_right_deletion_score":0,
+    
+    # "extend_left_insertion_score":0,
+    # "extend_internal_insertion_score":-1,
+    # "extend_right_insertion_score":0,
+    
+    "left_gap_score":-1,
+    "right_gap_score":-1,
+    "internal_gap_score":-1,
+}
 
-def score_sequences(seqa, seqb):
-    score = Align.PairwiseAligner().score(seqa, seqb)
+def get_scores(scores):
+    sc = _default_scores.copy()
+    sc.update(scores)
+    return sc
+
+def score_sequences(seqa, seqb, **scores):
+    scores = get_scores(scores)
+    score = Align.PairwiseAligner(**scores).score(seqa, seqb)
     return score
 
-def align_sequences(seqa, seqb, topk = 1):
-    aligner = Align.PairwiseAligner()
+def align_sequences(seqa, seqb, topk = 1, **scores):
+    scores = get_scores(scores)
+    
+    aligner = Align.PairwiseAligner(**scores)
     res = aligner.align(seqa, seqb)
     
     return [AlignmentResult(res[k], aligner=aligner) for k in range(topk)]

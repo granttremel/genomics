@@ -456,6 +456,9 @@ def main():
     # show_motif_symms(2*mtf)
     # show_motif_symms(3*mtf)
     
+    view_repeats(gm, "1", 10e6)
+    
+    return
     
     motif_cts, motif_lens, motif_insts = {}, {}, {}
     for chr in list(range(1, 24)) + ["X","Y"]:

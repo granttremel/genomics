@@ -203,6 +203,13 @@ def is_rna(seq):
 def is_dna(seq):
     return "T" in seq and not "U" in seq
 
+def is_seq(seq):
+    voc_comb = set(VOCAB_DNA + VOCAB_RNA)
+    for b in seq:
+        if not b in voc_comb:
+            return False
+    return True
+    
 def order_sequences(seqs):
     
     nbs = len(VOCAB)
@@ -326,7 +333,7 @@ def get_seq_least_index_ugh(seq):
 def get_least_seq_index(seq, do_rc = True, do_rev = False, do_comp = False):
     
     if len(seq) < 1:
-        return None
+        return None, None, None, None
     
     seq_len = len(seq)
     arg_min = -1
@@ -343,11 +350,11 @@ def get_least_seq_index(seq, do_rc = True, do_rev = False, do_comp = False):
     cind = rcind = revind = np.inf
     
     if do_rc:
-        rcseq, rcind, rc_arg_min = get_least_seq_index(reverse_complement(seq), do_rc = False, do_rev = False, do_comp = False)
+        rcseq, rcind, rc_arg_min, _ = get_least_seq_index(reverse_complement(seq), do_rc = False, do_rev = False, do_comp = False)
     if do_comp:
-        cseq, cind, c_arg_min = get_least_seq_index(complement(seq), do_rc = False, do_rev = False, do_comp = False)
+        cseq, cind, c_arg_min, _ = get_least_seq_index(complement(seq), do_rc = False, do_rev = False, do_comp = False)
     if do_rev:
-        revseq, revind, rev_arg_min = get_least_seq_index(reverse(seq), do_rc = False, do_rev = False, do_comp = False)
+        revseq, revind, rev_arg_min, _ = get_least_seq_index(reverse(seq), do_rc = False, do_rev = False, do_comp = False)
     
     min_ind = min(test_seq_ind, rcind, cind, revind)
     
@@ -355,13 +362,13 @@ def get_least_seq_index(seq, do_rc = True, do_rev = False, do_comp = False):
     code_int = sum([i*2**n for n,i in enumerate(code)])
     
     if rcind == min_ind:
-        return rcseq, rcind, rc_arg_min
+        return rcseq, rcind, rc_arg_min, code_int
     elif cind == min_ind:
-        return cseq, cind, c_arg_min
+        return cseq, cind, c_arg_min, code_int
     elif revind == min_ind:
-        return revseq, revind, rev_arg_min
+        return revseq, revind, rev_arg_min, code_int
     else:
-        return seq[arg_min:] + seq[:arg_min], test_seq_ind, arg_min
+        return seq[arg_min:] + seq[:arg_min], test_seq_ind, arg_min, code_int
 
 def index_to_seq_abs(ind):
     seq_len = 0
