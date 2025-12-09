@@ -152,6 +152,22 @@ class RepeatNode:
     @property
     def num_connections(self):
         return len(self.scs) + len(self.ics) + len(self.dcs)
+    
+    @property
+    def motif_len(self):
+        return len(self.motif)
+
+    @property
+    def gc_content(self):
+        return (self.motif.count("G") + self.motif.count("C")) / self.motif_len
+
+    def get_atts(self):
+        return {
+            "motif":self.motif,
+            "motif_len":self.motif_len,
+            "num_connections":self.num_connections,
+            "gc_content":self.gc_content,
+        }
 
     def join(self, other, subs = 0, ins = 0, dels = 0, cont = False):
         
@@ -220,25 +236,25 @@ class RepeatNetwork:
     def to_network(self):
         
         Gs = nx.Graph()
-        Gi = nx.Graph()
-        Gd = nx.Graph()
-        Gc = nx.Graph()
+        Gi = nx.DiGraph()
+        Gd = nx.DiGraph()
+        Gc = nx.DiGraph()
         
         for mtf, node in self.nodes.items():
             
-            Gs.add_node(mtf)
-            Gi.add_node(mtf)
-            Gd.add_node(mtf)
-            Gc.add_node(mtf)
+            Gs.add_node(mtf, **node.get_atts())
+            Gi.add_node(mtf, **node.get_atts())
+            Gd.add_node(mtf, **node.get_atts())
+            Gc.add_node(mtf, **node.get_atts())
             
             for omtf in node.scs.keys():
-                Gs.add_edge(mtf, omtf)
+                Gs.add_edge(omtf, mtf)
             for omtf in node.ics.keys():
-                Gi.add_edge(mtf, omtf)
+                Gi.add_edge(omtf, mtf)
             for omtf in node.dcs.keys():
-                Gd.add_edge(mtf, omtf)
+                Gd.add_edge(omtf, mtf)
             for omtf in node.ccs.keys():
-                Gc.add_edge(mtf, omtf)
+                Gc.add_edge(omtf, mtf)
         
         return Gs, Gi, Gd, Gc
 
@@ -274,6 +290,7 @@ def main():
     # chrs = None
     chrs = ["1","3","17"]
     chr = chrs[0]
+    chr = "2"
     # test_motif = "GAGCTC"
     # test_motif = "GAGGCAC"
     # test_motif = "GAGGGAG"
@@ -295,9 +312,33 @@ def main():
     for n in range(4):
         graph = [Gs, Gi, Gd, Gc][n]
         lbl = ["subs","ins","dels","conts"][n]
-        f, ax = plt.subplots()
-        nx.draw_networkx(graph, ax=ax, node_size = 1, node_shape = ',', with_labels = False)
-        f.savefig(f"./data/rpts_chr{chr}_G{lbl}.png")
+        
+        k = 1/np.sqrt(len(graph.nodes))
+        comm = nx.community.louvain_communities(graph)
+        cind = 0
+        for nc in range(len(comm)):
+            
+            if len(comm[nc]) < 5:
+                continue
+            
+            cgraph = graph.subgraph(comm[nc])
+            k = 1/np.sqrt(len(cgraph.nodes))
+            
+            pos = nx.spring_layout(cgraph, k = k, iterations = 50)
+            # pos = nx.spectral_layout(graph)
+            # pos = nx.multipartite_layout(graph, subset_key = "motif_len")
+            # pos = nx.forceatlas2_layout(graph)
+            # pos = nx.kamada_kawai_layout(graph)
+            
+            with_lbls = False
+            font_size = None
+            if len(comm[nc]) < 100:
+                with_lbls = True
+                font_size = 6
+            f, ax = plt.subplots(dpi =144)
+            nx.draw_networkx(cgraph, pos=pos, ax=ax, node_size = 1, node_shape = ',', with_labels = with_lbls, font_size = font_size, arrows=False)
+            f.savefig(f"./data/repeat_plots/rpts_chr{chr}_G{lbl}_comm{cind}.png")
+            cind += 1
     
     # res = id_repeat(gm, rpts, test_motif, chrs = chrs, max_ham = 1)
     # for r in res:
