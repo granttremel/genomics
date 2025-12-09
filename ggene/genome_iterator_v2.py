@@ -193,7 +193,14 @@ class UnifiedGenomeIterator:
         
         for motif_name, instances in all_insts.items():
             if instances:
-                for motif_start, motif_end, score, is_rc in instances:
+                # for motif_start, motif_end, score, is_rc, mtf_cls in instances:
+                for motif in instances:
+                    
+                    motif_start = motif.get("start", 0)
+                    motif_end = motif.get("end", 0)
+                    score = motif.get("score", 0)
+                    is_rc = motif.get("is_rc", False)
+                    mtf_cls = motif.get("class", "")
                     
                     genomic_start = buffer_start + motif_start
                     
@@ -218,6 +225,7 @@ class UnifiedGenomeIterator:
                         attributes={
                             'sequence': mseq,
                             'is_rc':is_rc,
+                            'class':mtf_cls,
                             'caller':'iterator',
                         }
                     ))

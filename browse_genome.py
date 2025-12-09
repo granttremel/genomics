@@ -6,6 +6,7 @@ Launch the interactive genome browser.
 import sys
 import argparse
 import logging
+from ggene import other_paths
 from ggene.genomemanager import GenomeManager
 from ggene.genome_browser import browse_genome as browse_genome_v1
 from ggene.genome_browser_v2 import browse_genome as browse_genome_v2
@@ -26,6 +27,8 @@ def main():
                        help='Window size in base pairs (default: 80)')
     parser.add_argument('--gene', '-g', type=str,
                        help='Jump to a specific gene (overrides position)')
+    parser.add_argument('--random', '-r', action="store_true",
+                       help='start at random position')
     parser.add_argument('--debug', '-d', action="store_true",
                        help='debug')
     parser.add_argument('--old', '-o', action="store_true",
@@ -34,9 +37,15 @@ def main():
     args = parser.parse_args()
     
     print("Loading genome data...")
-    gm = GenomeManager()
+    gm = GenomeManager(**other_paths)
     
     # If gene is specified, find its position
+    chrom = ""
+    pos = -1
+    if args.position:
+        pos = args.position
+        chrom = args.chrom
+    
     if args.gene:
         gene_name = args.gene.upper()
         chrom, gene_info = gm.gene_map.find_gene(gene_name)
@@ -48,13 +57,21 @@ def main():
             print(f"Found {gene_name} on chromosome {chrom} at position {args.position:,}")
         else:
             print(f"Gene '{gene_name}' not found, using default position")
+    elif args.random:
+        
+        import random
+        chrom = str(random.choice(range(23)))
+        max_ind = gm.gene_map.max_indices.get(chrom)
+        pos = int(random.random() * (max_ind - 1e6) + 1e6)
+    
+    
     # gui = int(args.gui[0])==1
     # Start the browser
     
     if args.old:
-        browse_genome_v1(gm, args.chrom, args.position, args.window, debug = args.debug, use_gui=False)
+        browse_genome_v1(gm, chrom, pos, args.window, debug = args.debug, use_gui=False)
     else:
-        browse_genome_v2(gm, args.chrom, args.position, args.window, debug = args.debug, use_gui=False)
+        browse_genome_v2(gm, chrom, pos, args.window, debug = args.debug, use_gui=False)
 
 
 if __name__ == "__main__":

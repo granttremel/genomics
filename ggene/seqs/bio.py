@@ -47,7 +47,7 @@ _wobble = {
 START_CODONS = ['ATG', 'CTG', 'GTG', 'TTG']  # Standard start codon (Methionine) = AUG and Rare alternative starts = CUG, GUG, UUG
 STOP_CODONS = ['TAA', 'TAG', 'TGA']
 
-ORDER = 'ATGCWRMKYSDHVBN'
+ORDER = 'ATGCWRMKYSDHVBN-'
 
 ALIASES = {
     'A':'A',
@@ -428,13 +428,13 @@ def get_adjacent_codons(aa_str, mutations = "N"):
     adjdict = {c:CODON_TABLE.get(c,".") for c in adj_cods}
     return coddict, adjdict
 
-def get_minimal_alias(*bs):
+def get_minimal_alias(*bs, default = "N"):
     bset = set()
     for b in bs:
         ba = ALIASES.get(b)
         bset.add(ba)
     alias_key = ''.join([a for a in ORDER if a in bset])
-    return ALIASES_REV.get(alias_key, "N")
+    return ALIASES_REV.get(alias_key, default)
 
 def get_minimal_alias2(*bs):
     bset = set(ORDER)
@@ -475,6 +475,9 @@ def hamming(seqa, seqb, mutation_vals = {}):
         hdist += mutation_vals.get(mk) * merged.count(mk)
     return hdist
 
+
+##########3 consensuses ################
+
 def consensus_entropy(consensus:str):
     
     if len(consensus) < 1:
@@ -489,14 +492,38 @@ def consensus_entropy(consensus:str):
         entr += -p*np.log(p)
     return entr / len(consensus)
 
-def merge(seqa, seqb):
+def merge(seqa, seqb, default = 'N'):
     outseq = []
     for sa, sb in zip(seqa, seqb):
         if sa==sb:
             outseq.append(sa)
         else:
-            mt = ALIASES_REV.get(sa+sb, ALIASES_REV.get(sb + sa,"N"))
+            # mt = ALIASES_REV.get(sa+sb, ALIASES_REV.get(sb + sa, default))
+            mt = get_minimal_alias(sa, sb, default=default)
             outseq.append(mt)
+    return "".join(outseq)
+
+def merge_all(seqs, default = 'N'):
+    
+    cons = merge(seqs.pop(0), seqs.pop(0), default = default)
+    
+    for seq in seqs:
+        cons = merge(cons, seq, default = default)
+    
+    return cons
+
+def merge_with_gaps(seqa, seqb, default = 'N'):
+    
+    outseq = []
+    for sa, sb in zip(seqa, seqb):
+        if sa==sb:
+            outseq.append(sa)
+        elif sa == "-" or sb == "-":
+            outseq.append("-")
+        else:
+            mt = get_minimal_alias(sa, sb, default=default)
+            outseq.append(mt)
+    
     return "".join(outseq)
 
 def is_consensus(seq, consensus):
@@ -509,6 +536,34 @@ def is_consensus(seq, consensus):
         else:
             return False
     return True
+
+def consensus_to_alias(cons, aliases):
+    
+    aliases = aliases
+    
+    outseq = []
+    
+    ali_dict = {}
+    
+    for ali in aliases:
+        refs = ALIASES_FULL.get(ali)
+        for r in refs:
+            if r not in ali_dict:
+                ali_dict[r] = ali
+    
+    for b in cons:
+        outseq.append(ali_dict.get(b, 'N'))
+        
+    return "".join(outseq)
+
+def consensus_to_SW(cons):
+    return consensus_to_alias(cons, "SW")
+
+def consensus_to_RY(cons):
+    return consensus_to_alias(cons, "RY")
+
+def consensus_to_MK(cons):
+    return consensus_to_alias(cons, "MK")
 
 # simple motifs ig
 #idk

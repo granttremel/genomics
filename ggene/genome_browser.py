@@ -94,6 +94,8 @@ class InteractiveGenomeBrowser:
     genecard="https://www.genecards.org/cgi-bin/carddisp.pl?gene={name}"
     wiki="https://en.wikipedia.org/wiki/{name}"
     ensembl = "http://www.ensembl.org/Homo_sapiens/geneview?gene={gene_id};db=core"
+    left_margin = 12
+    row_frm = "{cm}{margin:<12}" + Colors.RESET + "{cr}{row}" + Colors.RESET
     
     def __init__(self, genome_manager: 'GenomeManager', debug = False):
         """Initialize the genome browser.
@@ -336,7 +338,7 @@ class InteractiveGenomeBrowser:
             stride = self.state.stride,
             integrate_variants=True,
             track_features = True,
-            feature_types=["gene","exon","CDS","motif","variant"]
+            feature_types=["gene","exon","CDS","motif","variant", "repeat"]
         )
         self.window = self.iterator.get_window_at(self.state.position)
         
@@ -356,7 +358,7 @@ class InteractiveGenomeBrowser:
                 stride = self.state2.stride,
                 integrate_variants=True,
                 track_features = True,
-                feature_types=["gene","exon","CDS","motif"]
+                feature_types=["gene","exon","CDS","motif","variant", "repeat"]
             )
             self.window2 = self.iterator2.get_window_at(self.state2.position)
 
@@ -373,6 +375,7 @@ class InteractiveGenomeBrowser:
     
     def _display_current_view2(self):
         
+        
         if not self.debug:
             os.system('clear' if os.name == 'posix' else 'cls')
         
@@ -386,32 +389,33 @@ class InteractiveGenomeBrowser:
         if self._ref_cache1:
             dlines = self.get_data_lines(self._ref_cache1, self._ref_cache1, bit_depth = 16)
             # dlines32 = self.get_data_lines(self._ref_cache1, self._ref_cache1, bit_depth = 8, scale = 32, show_stats = False)
-            dlines16 = self.get_data_lines(self._ref_cache1, self._ref_cache1, bit_depth = 8, scale = 16, show_stats = False)
-            # dlines8 = self.get_data_lines(self._ref_cache1, self._ref_cache1, bit_depth = 8, scale = 8, show_stats = False)
-            # dlines.append("\n")
             # dlines.extend(dlines32)
+            dlines16 = self.get_data_lines(self._ref_cache1, self._ref_cache1, bit_depth = 8, scale = 16, show_stats = False)
             dlines.extend(dlines16)
+            # dlines8 = self.get_data_lines(self._ref_cache1, self._ref_cache1, bit_depth = 8, scale = 8, show_stats = False)
             # dlines.extend(dlines8)
+            # dlines.append("\n")
             lines_used += len(dlines)
+        
         # Navigation hints at fixed position (line 24)
         footer = self.get_footer_lines(lines_used, footer_pos = 32, suppress= True)
         
         print("\n".join(header))
-        print("-" * 80)
+        print()
+        # print("-" * 80)
         
         seqlines1 = all_lines.get("seq",[])
         ruler = seqlines1.get("ruler",[])
         seq1 = seqlines1.get("seq",[])
         ext1 = seqlines1.get("extras",[])
+        feats = all_lines.get("features",[])
         
-        print('\n'.join(ruler))
-        print('\n'.join(seq1))
-        print('\n'.join(ext1))
-        
-        print("\n".join(dlines))
-        
-        print("\n".join(all_lines.get("features", [])))
-        
+        print_lines = [ruler, seq1, ext1, dlines, feats]
+        for lines in print_lines:
+            if lines:
+                print("\n".join(lines))
+                print()
+            
         print("\n".join(footer))
     
     def _display_current_view_sec(self):
@@ -534,28 +538,28 @@ class InteractiveGenomeBrowser:
         data1 = draw.scalar_to_text_nb(conv_res, minval = 0, maxval =maxval, fg_color = fg, bg_color = bg, bit_depth = bit_depth, add_range = True)
         data2 = draw.scalar_to_text_nb(rc_conv_res, minval = 0, maxval = rcmax, fg_color = rcfg, bg_color = bg, flip = True, bit_depth = bit_depth, add_range = True)
         
-        dn1 = "Corr"
-        dn2 = "RCCorr"
-        pre2 = f"{Colors.BOLD}{dn1}:    {Colors.RESET}"
-        rcpre1 = f"{Colors.BOLD}{dn2}:  {Colors.RESET}"
-        blank = "         "
-        prefix1 = [blank] * (len(data1)-1) + [pre2]
-        prefix2 = [rcpre1] + [blank] * (len(data2)-1) 
+        dn1 = "Corr:"
+        dn2 = "RCCorr:"
+        prefix1 = [""] * (len(data1)-1) + [dn1]
+        prefix2 = [dn2] + [""] * (len(data2)-1) 
         
         outlines = []
         for p, d in zip(prefix1, data1):
             dv = list(d)
             dvstr = "".join(dv)
-            outlines.append(p+dvstr)
+            outlines.append(self.row_frm.format(cm = Colors.BOLD, margin = p, cr = "", row = dvstr))
         for p, d in zip(prefix2, data2):
             dv = list(d)
             dvstr = "".join(dv)
-            outlines.append(p+dvstr)
+            outlines.append(self.row_frm.format(cm = Colors.BOLD, margin = p, cr = "", row = dvstr))
         
         if show_stats:
-            outlines.append("{:<10}{:<10}{:<10}{:<10}{:<10}{:<10}".format(*["","Mean", "SD","CV", "Min", "Max"]))
-            outlines.append(f"{dn1:<10}{np.mean(conv_res):<10.2g}{np.std(conv_res):<10.2g}{np.std(conv_res)/np.mean(conv_res):<10.2g}{min(conv_res):<10.2g}{max(conv_res):<10.2g}")
-            outlines.append(f"{dn2:<10}{np.mean(rc_conv_res):<10.2g}{np.std(rc_conv_res):<10.2g}{np.std(rc_conv_res)/np.mean(rc_conv_res):<10.2g}{min(rc_conv_res):<10.2g}{max(rc_conv_res):<10.2g}")
+            header = "{:<10}{:<10}{:<10}{:<10}{:<10}".format("Mean", "SD","CV", "Min", "Max")
+            r1 = f"{np.mean(conv_res):<10.2g}{np.std(conv_res):<10.2g}{np.std(conv_res)/np.mean(conv_res):<10.2g}{min(conv_res):<10.2g}{max(conv_res):<10.2g}"
+            r2 = f"{np.mean(rc_conv_res):<10.2g}{np.std(rc_conv_res):<10.2g}{np.std(rc_conv_res)/np.mean(rc_conv_res):<10.2g}{min(rc_conv_res):<10.2g}{max(rc_conv_res):<10.2g}"
+            outlines.append(self.row_frm.format(cm = "", margin="", cr="", row=header))
+            outlines.append(self.row_frm.format(cm = "", margin=dn1, cr="", row=r1))
+            outlines.append(self.row_frm.format(cm = "", margin=dn2, cr="", row=r2))
         
         tlines = []
         if threshs:
@@ -591,7 +595,6 @@ class InteractiveGenomeBrowser:
         else:
             state = self.state
         
-        n =  0
         hlines = []
         # Header with mode indicators
         mode_indicators = []
@@ -603,20 +606,65 @@ class InteractiveGenomeBrowser:
             mode_indicators.append("RNA")
         else:
             mode_indicators.append("DNA")
-        n += 2
         
-        if not suppress:
-            print(f"{Colors.BOLD}Chromosome {state.chrom} | "
-                f"Position {state.position:,} | "
-                f"Window {state.window_size}bp | "
-                f"{' | '.join(mode_indicators)}{Colors.RESET}")
-            # print("-" * 80)
         hlines.append(f"{Colors.BOLD}Chromosome {state.chrom} | "
               f"Position {state.position:,} | "
               f"Window {state.window_size}bp | "
               f"{' | '.join(mode_indicators)}{Colors.RESET}")
-        n += 1
-        return hlines, n
+        if not suppress:
+            print(hlines[-1])
+        
+        # chr_map = self.make_chromosomal_map(second=second, suppress=suppress)
+        # logger.debug(f"chr map with {len(chr_map)} lines, final: {repr(chr_map[-1])}")
+        chr_map = ["-"*80]
+        
+        hlines.extend(chr_map)
+        
+        return hlines, len(hlines)
+    
+    def make_chromosomal_map(self, second = False, suppress = False):
+        
+        if second:
+            state = self.state2
+        else:
+            state = self.state
+        
+        hlines = []
+        
+        window_len = self.left_margin + state.window_size
+        
+        chr_len = self.gm.gene_map.max_indices.get(state.chrom)
+        curr_pos = state.position
+        frac = curr_pos / chr_len
+        marker_pos = int(frac * window_len)
+        
+        if not state.chrom in self._data_cache:
+            
+            buff = 10e6
+            num_chunks = window_len
+            chunksz = (chr_len - 2*buff) // num_chunks
+            chr_data, _ = self.gm.get_chromosomal_quantity(state.chrom, "gc", chunksz = chunksz, start = buff, length = chr_len - 2*buff, resample = False)
+            chr_plot = draw.scalar_to_text_nb(chr_data, bit_depth = 16, add_range = True, fg_color = 238)
+            for i in range(len(chr_plot)):
+                chr_plot[i] = draw.scrub_ansi(chr_plot[i])
+            
+            self._data_cache[state.chrom] = chr_plot.copy()
+        
+        else:
+            chr_plot = self._data_cache[state.chrom].copy()
+        
+        for i in range(len(chr_plot)):
+            chr_plot[i] = chr_plot[i][:marker_pos+1] + Colors.SUBTLE + chr_plot[i][marker_pos+1:]
+            chr_plot[i] = chr_plot[i][:marker_pos] + Colors.HIGHLIGHT + chr_plot[i][marker_pos:]
+            chr_plot[i] = Colors.SUBTLE + chr_plot[i] + Colors.RESET 
+        
+        hlines.extend(chr_plot)
+        
+        if not suppress:
+            for line in hlines:
+                print(line)
+        
+        return hlines
     
     def get_footer_lines(self, lines_used, footer_pos=24, suppress = False):
         
@@ -669,11 +717,12 @@ class InteractiveGenomeBrowser:
         
         ref_seq, personal_seq, features = window.ref_seq, window.alt_seq, window.features
 
-        
         variant_features = window.variant_features if window.variant_features else []
         variant_deltas = window.variant_deltas  # For coordinate tracking
         
         features = self.get_all_features(window, state, features)
+        
+        # logger.debug(f"repeats: {", ".join([str(f) for f in features if f.feature_type == "repeat"])}")
         
         self._cache_current_gene(features, second=second)
         
@@ -850,8 +899,8 @@ class InteractiveGenomeBrowser:
         # Find start and stop codons in features
         start_codons = []
         stop_codons = []
-        disp_motifs = []
-        disp_rcmotifs = []
+        disp_motifs = {}
+        disp_rcmotifs = {}
         extra_motifs = []
         if features:
             window_start = state.position
@@ -923,7 +972,8 @@ class InteractiveGenomeBrowser:
                     display_end = max(0, min(display_end, len(aligned_ref)))
                     
                     if display_start < display_end:
-                        dst.append((display_start, display_end))
+                        # dst.append((display_start, display_end))
+                        dst[(display_start, display_end)] = Colors.get_motif_color(feature)
         
         # Calculate position labels
         start_pos = state.position
@@ -933,9 +983,7 @@ class InteractiveGenomeBrowser:
         
         rlines = []
         # Position ruler (adjusted for alignment)
-        if not suppress:
-            print(f"\n{Colors.POSITION}Position:{Colors.RESET}")
-        rlines.append(f"\n{Colors.POSITION}Position:{Colors.RESET}")
+
         strand = '-' if state.show_reverse_strand else '+'
         ruler = ""
         pos_counter = 0  # Track actual genomic positions despite gaps
@@ -949,13 +997,14 @@ class InteractiveGenomeBrowser:
                     ruler += "."
                 pos_counter += 1
             else:
-                ruler += " "  # Space for gaps
+                ruler += " "  # Space for gaps        
+        
+        rlines.append(self.row_frm.format(cm = Colors.POSITION, margin="Position:",cr="", row=ruler))
         if not suppress:
-            print(f"         {ruler}")
-        rlines.append(f"         {ruler}")
+            print(rlines[-1])
         
         # Position numbers (every 10 bases, adjusted for gaps)
-        pos_line = "         "
+        pos_line=""
         pos_counter = 0
         for i in range(len(aligned_ref)):
             if aligned_ref[i] != '-':
@@ -964,21 +1013,32 @@ class InteractiveGenomeBrowser:
                     pos_line = pos_line[:len(pos_line)] + label
                 pos_counter += 1
             pos_line += " " if i < len(aligned_ref) - 1 else ""
+        rlines.append(self.row_frm.format(cm="", margin = "", cr = "", row = pos_line[:len(aligned_ref)]))
         if not suppress:
-            print(pos_line[:len(aligned_ref) + 9])
-        rlines.append(pos_line[:len(aligned_ref) + 9])
+            print(rlines[-1])
+            
         lines["ruler"] = rlines
         n += len(rlines)
         
         slines = []
         # Reference sequence with codon highlighting
-        ref_display = f"\n{Colors.BOLD}Ref:    {Colors.RESET} "
+        ref_label = "Ref:"
+        ref_display = ""
         for i, base in enumerate(aligned_ref):
             # Check if in start/stop codon
             in_start = any(start <= i < end for start, end in start_codons)
             in_stop = any(start <= i < end for start, end in stop_codons)
-            in_motif = any(start <= i < end for start, end in disp_motifs)
-            in_rcmotif = any(start <= i < end for start, end in disp_rcmotifs)
+            in_motif = any(start <= i < end for start, end in disp_motifs.keys())
+            mtf_col = Colors.RESET
+            if in_motif:
+                for (start, end), _mtf_col in disp_motifs.items():
+                    if start <= i and i < end:
+                        mtf_col = _mtf_col
+            in_rcmotif = any(start <= i < end for start, end in disp_rcmotifs.keys())
+            if in_rcmotif:
+                for (start, end), _mtf_col in disp_rcmotifs.items():
+                    if start <= i and i < end:
+                        mtf_col = _mtf_col
             in_extra = any(start <= i < end for start, end in extra_motifs)
             
             if base == '-':
@@ -988,19 +1048,20 @@ class InteractiveGenomeBrowser:
             elif in_stop:
                 ref_display += f"{Colors.SNP}{base}{Colors.RESET}"
             elif in_motif:
-                ref_display += f"{Colors.MOTIF}{base}{Colors.RESET}"
+                ref_display += f"{mtf_col}{base}{Colors.RESET}"
             elif in_rcmotif:
-                ref_display += f"{Colors.RCMOTIF}{base}{Colors.RESET}"
+                ref_display += f"{mtf_col}{base}{Colors.RESET}"
             elif in_extra:
                 ref_display += f"{Colors.HIGHLIGHT}{base}{Colors.RESET}"
             else:
                 ref_display += base
+        slines.append(self.row_frm.format(cm=Colors.BOLD, margin=ref_label, cr="", row=ref_display))
         if not suppress:
-            print(ref_display)
-        slines.append(ref_display)
+            print(slines[-1])
         
         # Personal sequence with variant and codon coloring
-        personal_display = f"{Colors.BOLD}Persnl: {Colors.RESET} "
+        personal_label = "Personal:"
+        personal_display = ""
         
         for i in range(len(aligned_pers)):
             ref_base = aligned_ref[i] if i < len(aligned_ref) else ''
@@ -1029,19 +1090,13 @@ class InteractiveGenomeBrowser:
             else:
                 personal_display += pers_base
         
+        slines.append(self.row_frm.format(cm = Colors.BOLD, margin=personal_label, cr="", row=personal_display))
         if not suppress:
-            print(personal_display)
-        slines.append(personal_display)
-        lines["seq"] = slines
-        n+= len(slines)
+            print(slines[-1])
         
-        marker_line = ["          "]
-        offset = len(marker_line)
-        la, ra = self.arrows
-        stem = '-'
-        extras  = []
+        marker_line = [" "]
         # Motif underline with strand indicators
-        if motifs or True:
+        if motifs:
             
             for i in range(len(aligned_ref)):
                 # Check if position is in any motif
@@ -1073,36 +1128,25 @@ class InteractiveGenomeBrowser:
                         logger.debug(f"extra motif sequence: {motif_found.get("attributes",{}).get("sequence")}")
                     else:
                         color = Colors.MOTIF
-                    
-                    # logger.debug(f"motif: {motif_found}")
-                    
-                    # if i == motif_start:
-                    #     marker_line.append(f"{color}{ra if strand == '+' else la}{Colors.RESET}")
-                    # else:
-                    #     marker_line.append(f"{color}{stem}{Colors.RESET}")
+                        
                     marker_line.append(" ")
-                    
                 else:
                     marker_line.append(" ")
             
         
         # Variant indicator line
-        for i in range(offset, len(variant_positions)):
-            if variant_positions[i]:
+        for i in range(len(marker_line)):
+            
+            if i < len(variant_positions) and variant_positions[i]:
                 marker_line[i] = f"{Colors.DIM}*{Colors.RESET}"
-            # else:
-            #     marker_line += " "
         
+        mline = self.row_frm.format(cm = "", margin = "", cr = "", row = "".join(marker_line))
+        slines.append(mline)
         if not suppress:
-            print(marker_line)
-        extras.append("".join(marker_line))
-        lines["extras"] = extras
-        # if any(variant_positions):
-        #     if not suppress:
-        #         print(f"{Colors.DIM}{variant_line}{Colors.RESET}")
-        #     extras.append(f"{Colors.DIM}{variant_line}{Colors.RESET}")
-        # lines["extras"] = extras
-        # n+=len(extras)
+            print(slines[-1])
+        
+        lines["seq"] = slines
+        n+= len(slines)
         
         return lines, n
     
@@ -1122,7 +1166,7 @@ class InteractiveGenomeBrowser:
         else:
             state = self.state
         
-        feature_types = ["gene","exon","CDS","motif"]
+        feature_types = ["gene","exon","CDS", "motif", "variant", "repeat"]
         
         lines = []
         
@@ -1130,7 +1174,8 @@ class InteractiveGenomeBrowser:
         motifs:List[UnifiedFeature] = []
         other_features = []
         for feature in features:
-            ftype = feature.feature_type if hasattr(feature, 'feature_type') else feature.get('feature_type', feature.get('feature'))
+            # ftype = feature.feature_type if hasattr(feature, 'feature_type') else feature.get('feature_type', feature.get('feature'))
+            ftype = feature.feature_type
             if not ftype in feature_types:
                 continue
             if ftype == 'motif':
@@ -1138,18 +1183,19 @@ class InteractiveGenomeBrowser:
             else:
                 other_features.append(feature)
         
+        lines.append(self.row_frm.format(cm=Colors.BOLD, margin="Features:", cr="", row=""))
         if not suppress:
-            print(f"\n{Colors.BOLD}Features:{Colors.RESET}")
-        lines.append(f"\n{Colors.BOLD}Features:{Colors.RESET}")
+            print(lines[-1])
         
         # Group features by type and extent
         feature_groups = {}
         for feature in other_features:
-            ftype = feature.feature_type if hasattr(feature, 'feature_type') else feature.get('feature_type', feature.get('feature'))
+            ftype = feature.feature_type
             # Skip start/stop codons as they're shown differently
             if ftype in ['start_codon', 'stop_codon']:
                 continue
             if ftype not in feature_groups:
+                logger.debug(f"adding feature type {ftype}")
                 feature_groups[ftype] = {}
             
             # Group by extent (start and end positions)
@@ -1193,7 +1239,8 @@ class InteractiveGenomeBrowser:
                 if feat_end >= window_start and feat_start <= window_start + state.window_size - 1:
                     # Create feature bar with type label
                     type_label = f"{ftype[:7]:>7}"
-                    bar = f"{type_label}: "  # 9 chars total
+                    bar_lbl = f"{type_label}: "  # 9 chars total
+                    bar = ""
                     
                     for i in range(state.window_size):
                         # Check if this position is within the feature
@@ -1234,7 +1281,9 @@ class InteractiveGenomeBrowser:
                         if not feat.strand==currstrand:
                             labelstr = label + f'({feat.strand})'
                             label=labelstr
-                            
+                    
+                    # lbl_offset = 9
+                    lbl_offset = 0
                     
                     # Calculate label position (keep label visible and centered)
                     if state.show_reverse_strand:
@@ -1245,18 +1294,18 @@ class InteractiveGenomeBrowser:
                         visible_start = max(0, display_start)
                         visible_end = min(state.window_size, display_end)
                     label_center = visible_start + (visible_end - visible_start) // 2
-                    label_pos = 9 + label_center - len(label) // 2
+                    label_pos = lbl_offset + label_center - len(label) // 2
                     
                     # Ensure label stays within the visible part of the feature
-                    label_pos = max(9 + visible_start, label_pos)
-                    label_pos = min(9 + visible_end - len(label), label_pos)
+                    label_pos = max(lbl_offset + visible_start, label_pos)
+                    label_pos = min(lbl_offset + visible_end - len(label), label_pos)
                     
                     # Insert label into bar if it fits
-                    if label_pos > 9 and label_pos + len(label) < len(bar):
+                    if label_pos > lbl_offset and label_pos + len(label) < len(bar):
                         bar = bar[:label_pos] + label + bar[label_pos + len(label):]
+                    lines.append(self.row_frm.format(cm = color, margin = bar_lbl, cr = color, row = bar))
                     if not suppress:
-                        print(f"{color}{bar}{Colors.RESET}")
-                    lines.append(f"{color}{bar}{Colors.RESET}")
+                        print(lines[-1])
                     
         # lastly display variants separately with details
         # Combine variant features from both sources
@@ -1274,6 +1323,7 @@ class InteractiveGenomeBrowser:
         unique_variants = []
         for var in all_variant_features:
             if not var.feature_type in feature_types:
+                logger.debug(f"skipping variant {var}")
                 continue
             if var.start not in seen_positions:
                 unique_variants.append(var)
@@ -1299,9 +1349,11 @@ class InteractiveGenomeBrowser:
                 alt = self._render_seq(alt)
                 
                 # Only show if overlaps with window
-                if var_end >= state.position and var_start <= state.position + state.window_size - 1:
+                if var_end >= state.position and var_start <= state.position + state.window_size - 1 or True:
                     var_type = 'SNP' if len(ref) == len(alt) else 'INDEL'
-                    print(f"    {var_start}: {ref}→{gt} ({var_type}, Q={qual:.1f}, {zyg})")
+                    lines.append(f"    {var_start}: {ref}→{gt} ({var_type}, Q={qual:.1f}, {zyg})")
+                    if not suppress:
+                        print(lines[-1])
         
         # Display motifs section
         if motifs:
@@ -1491,6 +1543,8 @@ class InteractiveGenomeBrowser:
             return "3'UTR"
         elif ftype == 'intron':
             return "intron"
+        elif ftype == "repeat":
+            return feature.name
         else:
             return ftype[:10]
     
@@ -1729,7 +1783,7 @@ class InteractiveGenomeBrowser:
             'tf_binding': Colors.INSERTION,  # Green for TF binding
             'splice_donor': Colors.SNP,  # Red for splice sites
             'splice_acceptor': Colors.SNP,
-            'repeat': Colors.DIM,  # Gray for repeats
+            'repeat': Colors.REPEAT,  # Gray for repeats
             'chip_peak': Colors.EXON  # Cyan for ChIP peaks
         }
         return color_map.get(ftype, Colors.DIM)

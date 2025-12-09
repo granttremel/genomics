@@ -1,5 +1,8 @@
 
 
+import re
+import regex
+
 from ggene import seqs
 from ggene.seqs.bio import reverse_complement
 from ggene.motifs.motif import MotifDetector
@@ -56,7 +59,7 @@ def seq_max_run(seq, feats):
         maxrun = max(maxrun, max(runs))
     return maxrun
 
-def _seq_pattern(seq, feats, motif_name):
+def _seq_motif(seq, feats, motif_name):
     ptrn = md.motifs.get(motif_name)
     if not ptrn:
         return -1
@@ -64,8 +67,17 @@ def _seq_pattern(seq, feats, motif_name):
         return ptrn.count_instances(seq)
 
 def seq_hammerhead_st1(seq, feats):
-    return _seq_pattern(seq, feats, "hammerhead_stem1")
+    return _seq_motif(seq, feats, "hammerhead_stem1")
 
+def _seq_pattern(seq, feats, ptrn):
+    return len(re.findall(ptrn, seq))
+
+def _seq_fuzzy_pattern(seq, feats, ptrn, max_err):
+    
+    ptrn_str = "(%s){e<=%s}" % (str(ptrn), str(max_err))
+    eptrn = regex.compile(ptrn_str)
+    return len(regex.findall(eptrn, seq))
+    
 def _seq_repeats(seq, feats, rptlen):
     seqq = seq.replace("N","")
     runs, _, _ = seqs.process.correlate_longest_subseq(seqq, seqq, scale = rptlen+1)
@@ -82,6 +94,16 @@ def seq_penta_repeats(seq, feats):
 def seq_hexa_repeats(seq, feats):
     rptlen = 6
     return _seq_repeats(seq, feats, rptlen)
+
+def needs_features(seq_spec):
+    
+    if seq_spec in lambda_map:
+        seq_spec = lambda_map.get(seq_spec)
+    
+    if seq_spec in [seq_genes, seq_exons, seq_motifs, seq_cds_len, seq_cds_pct, seq_feats]:
+        return True
+    else:
+        return False
 
 lambda_map = {
     "gc":seq_gc,

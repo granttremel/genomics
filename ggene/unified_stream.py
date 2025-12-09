@@ -518,55 +518,76 @@ class JASPARStream(AnnotationStream):
 
 
 class RepeatMaskerStream(AnnotationStream):
-    """Stream RepeatMasker annotations."""
+    """Stream RepeatMasker annotations using indexed access."""
     
-    def __init__(self, filepath: str):
-        super().__init__("RepeatMasker")
+    def __init__(self, filepath: str, feature_type: str = "repeat"):
+        super().__init__("BED")
         self.filepath = Path(filepath)
+        self.feature_type = feature_type
+        self.source_name = "RepeatMasker"
+        
+        # Check if file is indexed
+        self.tabix = None
+        if self.filepath.suffix == '.gz':
+            index_file = Path(str(self.filepath) + '.tbi')
+            if index_file.exists():
+                try:
+                    self.tabix = pysam.TabixFile(str(self.filepath))
+                    logger.info(f"Using indexed access for {self.filepath}")
+                except Exception as e:
+                    logger.warning(f"Failed to open tabix index: {e}")
+        
+        if not self.tabix and self.filepath.suffix == '.gz':
+            logger.warning(f"No index found for {self.filepath}. Performance will be slow!")
+            logger.info(f"Create index with: tabix -p bed {self.filepath}")
         
     def _parse_line(self, line: str) -> Optional[UnifiedFeature]:
-        """Parse RepeatMasker .out format."""
-        parts = line.strip().split()
-        if len(parts) < 15 or parts[0].isdigit() == False:
+        """Parse BED line."""
+        if line.startswith('#') or line.startswith('track'):
             return None
             
+        parts = line.strip().split('\t')
+        if len(parts) < 3:
+            return None
+        
+        name = parts[3].strip()
+        if name.endswith(")n"):
+            motif = name.strip("()n")
+        else:
+            motif = ""
+        
         return UnifiedFeature(
-            chrom=parts[4],
-            start=int(parts[5]),
-            end=int(parts[6]),
-            feature_type='repeat',
+            chrom=parts[0].removeprefix("chr"),
+            start=int(parts[1]) + 1,  # BED is 0-based
+            end=int(parts[2]),
+            feature_type=self.feature_type,
             source=self.source_name,
-            name=parts[9],  # Repeat name
-            strand=parts[8],
-            score=float(parts[0]),  # SW score
+            name=parts[3],
+            score= -1,
+            strand=parts[5] if len(parts) > 5 else None,
             attributes={
-                'repeat_class': parts[10],
-                'repeat_family': parts[11] if len(parts) > 11 else None,
-                'divergence': parts[1],
-                'deletion': parts[2],
-                'insertion': parts[3]
+                "type": parts[4],
+                "motif":motif,
             }
         )
     
     def stream(self, chrom: Optional[str] = None,
                start: Optional[int] = None,
                end: Optional[int] = None) -> Iterator[UnifiedFeature]:
-        """Stream RepeatMasker features."""
-        with open(self.filepath, 'r') as f:
-            # Skip header lines
-            for _ in range(3):
-                next(f)
-                
-            for line in f:
-                feature = self._parse_line(line)
-                if feature:
-                    if chrom and feature.chrom != chrom:
-                        continue
-                    if start and feature.end < start:
-                        continue
-                    if end and feature.start > end:
-                        continue
-                    yield feature
+        """Stream BED features."""
+        
+        chrom = str(chrom)
+        tbichrom = chrom if chrom.startswith("chr") else "chr" + chrom
+        for line in self.tabix.fetch(tbichrom, start=start, end=end):
+            feature = self._parse_line(line)
+            if feature:
+                if chrom and feature.chrom != chrom:
+                    continue
+                if start and feature.end < start:
+                    continue
+                if end and feature.start > end:
+                    continue
+                yield feature
 
 
 class UnifiedGenomeAnnotations:

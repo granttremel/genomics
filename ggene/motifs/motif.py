@@ -39,11 +39,15 @@ class MotifDetector:
                 all_insts[motif_name] = []
             
             for motif_start, motif_end, score in motif.find_instances(seq):
-                all_insts[motif_name].append((motif_start, motif_end, score, False))
+                mtf_dict = {"start":motif_start, "end":motif_end, "score":score, "is_rc":False, "class":motif.motif_class}
+                # all_insts[motif_name].append((motif_start, motif_end, score, False, motif.motif_class))
+                all_insts[motif_name].append(mtf_dict)
             
             if motif.allow_rc:
                 for rcmotif_start, rcmotif_end, score in motif.find_instances(rcseq):
-                    all_insts[motif_name].append((seq_len - rcmotif_end, seq_len - rcmotif_start,  score, True))
+                    mtf_dict = {"start":rcmotif_start, "end":rcmotif_end, "score":score, "is_rc":True, "class":motif.motif_class}
+                    # all_insts[motif_name].append((seq_len - rcmotif_end, seq_len - rcmotif_start,  score, True, motif.motif_class))
+                    all_insts[motif_name].append(mtf_dict)
         
         return all_insts
     
@@ -64,12 +68,26 @@ class MotifDetector:
                 if motif:
                     motif_re = consensus_to_re(motif)
                     try:
-                        pm = PatternMotif(k2, motif_re, lambda a:1.0, allow_rc = True)
+                        pm = PatternMotif(k2, motif_re, lambda a:1.0, allow_rc = True, motif_class = k1)
                     except Exception as e:
                         print("failed to initialize pattern:",k1, k2, motif, motif_re, f"with error {str(e)}")
                         continue
                     self.add_motif(pm)
-                
+            
+        
+    def get_motif_class(self, motif_name = "", motif = ""):
+        
+        if motif:
+            for name, _motif in default_motifs.items():
+                if motif == _motif:
+                    motif_name = name
+                    break
+        
+        for mtf_cls, mtfs in motif_classes.items():
+            if motif_name in mtfs:
+                return mtf_cls
+
+        return ""
 
 class IndexedMotifDetector:
     """Pre-index genome for fast motif searches"""

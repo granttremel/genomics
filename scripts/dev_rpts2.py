@@ -5,8 +5,6 @@ from typing import Dict, List, Set, Optional, Any
 import numpy as np
 import random
 
-from Bio import Align
-
 from ggene import DATA_DIR
 from ggene.genomemanager import GenomeManager
 from ggene import unified_stream, sequence_stream
@@ -14,10 +12,8 @@ from ggene import draw
 from ggene.scalar_plot import ScalarPlot
 
 from ggene.seqs import bio, process, find, align, repeats
-from ggene.seqs.repeats import Repeat
+from ggene.seqs.repeats import Repeat, RepeatLibrary, Motif, MotifNetwork
 from ggene.seqs.vocab import VOCAB
-
-from Bio.Align import substitution_matrices
 
 
 def load_genome():
@@ -106,7 +102,6 @@ def test_rpt_lib(gm, rpts, test_chr = "19", max_num = 1e5, topk = 24):
     for i in range(topk):
         for j in range(i, topk):
             
-            
             rpti = tops[i]
             rptj = tops[j]
             
@@ -114,42 +109,187 @@ def test_rpt_lib(gm, rpts, test_chr = "19", max_num = 1e5, topk = 24):
                 continue
             
             ham = rpti.get_hamming_distance(rptj)
-            # algn = align.align_sequences(rpti.motif, rptj.motif)[0]
             
             print(f"***** {rpti.motif}->{rptj.motif} HD: {ham} *****")
     
     return lib
 
+def load_motifs(chr = "1"):
+    
+    motifs = []
+    with open(f'./data/motifs_chr{chr}.txt', "r") as f:
+        for line in f:
+            motifs.append(line.strip())
+    
+    motifs = list(sorted(motifs, key = lambda k: bio.get_seq_index_abs(k)))
+    
+    return motifs
+
+def build_motif_network(motifs, max_len = 6):
+    
+    curr_len = 2
+    
+    mtfs = MotifNetwork()
+    
+    for i, motif in enumerate(motifs):
+        new_motif = Motif(motif)
+        mtfs.add_to_tree(new_motif)
+        
+        if new_motif.motif_len > curr_len:
+            curr_len += 1
+        
+        if curr_len > max_len:
+            break
+    
+    mtfs.join_peers()
+    return mtfs
+
+def test_motif_network(gm, rpts):
+    test_chr = "1"
+    max_rpts = 1e4
+    lib = test_rpt_lib(gm, rpts, test_chr = test_chr, max_num=max_rpts, topk = 12)
+    
+    with open(f"./data/motifs_chr{test_chr}.txt","w") as f:
+        for mtf in lib.motifs:
+            f.write(mtf + "\n")
+    
+    motifs = load_motifs(chr = test_chr)
+    mtfs = build_motif_network(motifs)
+
+    mtfs.print()
+    mtfs.print_stats()
+    
+    return mtfs
+
+def verify_rpt_rotation(motifa, motifb):
+    
+    max_err = len(motifb)
+    
+    rmotifbs = [rotate(motifb, r) for r in range(len(motifb))]
+    
+    res = repeats.hamming_distance_re(motifa, rmotifbs, max_err = max_err, min_err = 0)
+    errs = [r[1] for r in res]
+    # sctxt = draw.scalar_to_text_nb(errs, bit_depth = 8)
+    
+    # print(motifa, sctxt[0])
+    for mtfb, (r, s, i, b )in zip(rmotifbs,res):
+        print(mtfb, s+i+b, s, i, b)
+    
+    return errs
+
+def verify_rpt_corotation(motifa, motifb):
+    
+    max_err = len(motifb)
+    
+    rcmotifb = rotate(bio.reverse_complement(motifb), r=1)
+    rmotifbs = [rotate(rcmotifb, r) for r in range(len(motifb))]
+    rcmotifbs = [rotate(rcmotifb, -r) for r in range(len(motifb))]
+    
+    res = repeats.hamming_distance_re(motifa, rmotifbs, max_err = max_err, min_err = 0)
+    rcres = repeats.hamming_distance_re(motifa, rcmotifbs, max_err = max_err, min_err = 0)
+    errs = [r[1] for r in res]
+    rcerrs = [r[1] for r in rcres]
+    
+    for mtfb, (r, s, i, b), (rr,ss,ii,bb) in zip(rmotifbs, res, rcres):
+        print(mtfb, s+i+b, ss+ii+bb)
+    
+    return errs, rcerrs
+
+def rotate(motif, r = 1):
+    r = r % len(motif)
+    return motif[r:] + motif[:r]
+
+def rpt_rotation_mc(num_rounds, len_motifa, len_motifb):
+    
+    for n in range(num_rounds):
+        
+        mtfa = "".join(["ATGC"[random.randint(0,3)] for n in range(len_motifa)])
+        ins_pos = random.randint(0, len_motifa)
+        mtfb = mtfa[:ins_pos] + random.choice("ATGC") + mtfa[ins_pos:]
+        
+        mtfa_min, _, _, _ = bio.get_least_seq_index(mtfa)
+        mtfb_min, _, _, _ = bio.get_least_seq_index(mtfb)
+        rcmtfb = bio.reverse_complement(mtfb_min)
+        # rcmtfb_min = rotate(rcmtfb, r = 1)
+        rcmtfb_min = rcmtfb
+        
+        errs, rcerrs = verify_rpt_corotation(mtfa_min, mtfb_min)
+        revdiff_errs = [r-rc for r,rc in zip(errs, rcerrs)]
+        
+        # errs, rcerrs = verify_rpt_rotation(mtfa_min, mtfb_min)
+        # rcerrs = verify_rpt_rotation(mtfa_min, rcmtfb_min)
+        # sum_errs = [r+rc for r,rc in zip(errs, rcerrs)]
+        # revdiff_errs = [r-rc for r,rc in zip(errs, reversed(rcerrs))]
+        
+        argmin_errs = get_all_argmin(errs)
+        argmin_revdiff = get_all_argmin(revdiff_errs)
+        
+        print(mtfa)
+        print(mtfb)
+        ScalarPlot(errs, bit_depth = 8, minval = 0, maxval = len(mtfb_min), fg_color = 59).show()
+        ScalarPlot(rcerrs, bit_depth = 8, minval = 0, maxval = len(mtfb_min), flip = True, fg_color = 131).show()
+        print()
+        ScalarPlot(revdiff_errs, bit_depth = 16, center = 0, mode = "mid").show()
+        print()
+        print(f"argmin: {argmin_errs}, argmin revdiff: {argmin_revdiff}")
+        print()
+
+def get_all_argmin(vals):
+    minval = min(vals)
+    argmins = []
+    for i, v in enumerate(vals):
+        if v==minval:
+            argmins.append(i)
+    return argmins
 
 def main():
     
     gm, rpts = load_genome()
     
-    # test_rpt_align(double_second = False)
+    # mtfs = test_motif_network(gm, rpts)
     
-    max_rpts = 1e4
-    lib = test_rpt_lib(gm, rpts, max_num=max_rpts, topk = 12)
-    print(lib.motifs, len(lib.motifs), len(list(set(lib.motifs))))
-    neighbs = lib.build_neighborhood()
-    
-    print(neighbs)
-    
-    # names = substitution_matrices.load()
-    # # print(names)
-    # for name in names:
-    #     print(name)
-    #     print(substitution_matrices.load(name))
+    # while True:
         
-    
-    # seqa = "AAAT"
-    # seqb = "AT"
-    
-    # test_ham(seqa, seqb)
-    # test_ham(seqb, seqa)
+    #     mtfa = random.choice(mtfs.motifs)
+    #     if len(mtfa.children) < 1:
+    #         continue
         
+    #     mtfbs = list(mtfa.children)
+    #     for mtfb in mtfbs:
+    #         verify_rpt_rotation(str(mtfa), str(mtfb))
+    #         print()
+    #     input()
     
+    num_rounds = 1
+    len_motifa = 9
+    len_motifb = 6
+    rpt_rotation_mc(num_rounds, len_motifa, len_motifb)
+    
+    
+    # seq = "GGAAAAGGT"
+    # rcseq = bio.reverse_complement(seq)
+    # rcseq_r = rotate(rcseq, 1)
+    # print(seq)
+    # print(rcseq)
+    # print(rcseq_r)
+    
+    # ScalarPlot([-0.5,-0.25,0, 0.25,1], )
+    
+    
+    """
+    
+    
+    
+    
+    
+    
+    """
     
     pass
+    
+    
+
+
 
 
 if __name__=="__main__":

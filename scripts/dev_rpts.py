@@ -99,7 +99,7 @@ def get_motif_stats(gm, chr, min_length = 3, combine_rc = True, topk = 5, rank_b
         if mtflen < min_length:
             continue
         
-        mkey, ind, _ = bio.get_least_seq_index(motif, do_rc = combine_rc)
+        mkey, ind, _, _ = bio.get_least_seq_index(motif, do_rc = combine_rc)
         
         if not mkey in motif_insts:
             motif_count[mkey] = 0
@@ -129,7 +129,7 @@ def get_motif_stats(gm, chr, min_length = 3, combine_rc = True, topk = 5, rank_b
         print(f"rotation group: {",".join(rtn_groups[mtf])}")
         disthist, bins = np.histogram(motif_insts[mtf], bins = hist_bins)
         ScalarPlot(disthist, add_range = True, xmin = bins[0], xmax = bins[-1], ruler = True, num_labels = 11, ticks = 0, genomic = True).show()
-        show_motif_symms(mtf)
+        # show_motif_symms(mtf)
         print()
     
     return motif_count, motif_len, motif_insts
@@ -234,7 +234,7 @@ def test_rcind_stats(seq_len, num_trials, random_seqs = True):
         else:
             test_seq = bio.index_to_seq(n, seq_len = seq_len)
         
-        opt_seq, opt_ind, v = bio.get_least_seq_index(test_seq, do_rc = True, do_rev = False, do_comp = False)
+        opt_seq, opt_ind, v, _ = bio.get_least_seq_index(test_seq, do_rc = True, do_rev = False, do_comp = False)
         
         l2v = np.log2(v)
         if l2v != int(l2v):
@@ -261,7 +261,7 @@ def test_rcind_stats(seq_len, num_trials, random_seqs = True):
 
 def gather_repeat_seqs(gm:GenomeManager, rpt_proto, chrs = [], context = 128, length_range = 0):
     
-    rpt_proto, ind, arg_min = bio.get_least_seq_index(rpt_proto)
+    rpt_proto, ind, arg_min, _ = bio.get_least_seq_index(rpt_proto)
     rpt_test = 2*rpt_proto
     rpt_len = len(rpt_proto)
     
@@ -279,7 +279,7 @@ def gather_repeat_seqs(gm:GenomeManager, rpt_proto, chrs = [], context = 128, le
             new_seq = ""
             mtf = rpt.attributes.get("motif","")
             if abs(rpt_len - len(mtf)) <= length_range:
-                rmtf, ind, mtf_arg_min = bio.get_least_seq_index(mtf)
+                rmtf, ind, mtf_arg_min, _ = bio.get_least_seq_index(mtf)
                 is_rc = False
                 if mtf in rpt_test:
                     new_seq = gm.annotations.get_sequence(testchr, rpt.start - context, rpt.end + context)
@@ -456,13 +456,11 @@ def main():
     # show_motif_symms(2*mtf)
     # show_motif_symms(3*mtf)
     
-    view_repeats(gm, "1", 10e6)
-    
-    return
+    # view_repeats(gm, "1", 10e6)
     
     motif_cts, motif_lens, motif_insts = {}, {}, {}
     for chr in list(range(1, 24)) + ["X","Y"]:
-        mc, ml, mi = get_motif_stats(gm, str(chr), min_length = 5, combine_rc = True, topk = 10, rank_by_insts = True)
+        mc, ml, mi = get_motif_stats(gm, str(chr), min_length = 5, combine_rc = True, topk = 100, rank_by_insts = True)
         motif_cts, motif_lens, motif_insts = pool_motif_stats(mc, ml, mi, motif_cts, motif_lens, motif_insts)
         input()
     

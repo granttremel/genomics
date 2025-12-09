@@ -31,7 +31,7 @@ from .genome_iterator import GenomeIterator, FeatureExtractor
 from .genome_browser_v2 import InteractiveGenomeBrowser
 from .unified_stream import UnifiedGenomeAnnotations, GTFStream, VCFStream, UnifiedFeature
 from ggene.motifs import MotifDetector, PatternMotif, RepeatMotif
-
+from ggene.seqs.lambdas import needs_features
 """
 interesting places (chr, pos)
 
@@ -52,7 +52,7 @@ class GenomeManager:
                  gtf_path: str = DEFAULT_GTF_PATH,
                  ref_path: str = DEFAULT_FASTA_PATH,
                  my_path: str = '',
-                 library_path: str = DEFAULT_LIBRARY) -> None:
+                 library_path: str = DEFAULT_LIBRARY, **kwargs) -> None:
         """Initialize GenomeManager.
         
         Args:
@@ -109,7 +109,13 @@ class GenomeManager:
                     logger.info(f"Loaded FASTQ file: {my_path}")
                 except Exception as e:
                     logger.warning(f"Could not load FASTQ file: {e}")
-                    
+                
+            for k, v in kwargs.items():
+                if k == "repeatmasker_path":
+                    self.annotations.add_repeatmasker(v)
+                
+                pass
+                
         except Exception as e:
             logger.error(f"Failed to initialize GenomeManager: {e}")
             raise
@@ -117,8 +123,8 @@ class GenomeManager:
     def _setup_default_motifs(self):
         """Setup default motifs for detection."""
         
-        # self.motif_detector.setup_default_motifs()
-        self.motif_detector.setup_default_motifs(class_names = ["splice","promoter"])
+        self.motif_detector.setup_default_motifs()
+        # self.motif_detector.setup_default_motifs(class_names = ["splice","promoter"])
         # self.motif_detector.setup_default_motifs(class_names = ["hammerhead", "SRP", "pseudoknot","msat"])
         # self.motif_detector.setup_default_motifs(class_names = ["SRP_S"])
 
@@ -187,7 +193,14 @@ class GenomeManager:
         
         for motif_name, instances in all_insts.items():
             if instances:
-                for motif_start, motif_end, score, is_rc in instances:
+                # for motif_start, motif_end, score, is_rc in instances:
+                for motif in instances:
+                    
+                    motif_start = motif.get("start", 0)
+                    motif_end = motif.get("end", 0)
+                    score = motif.get("score", 0)
+                    is_rc = motif.get("is_rc", False)
+                    mtf_cls = motif.get("class", "")
                     
                     mseq = sequence[motif_start:motif_end]
                     mtfstrand = strand
@@ -207,6 +220,7 @@ class GenomeManager:
                         attributes={
                             'sequence': mseq,
                             'is_rc':is_rc,
+                            'motif_class':mtf_cls,
                             'caller':'GenomeManager'
                         }
                     ))
@@ -555,9 +569,12 @@ class GenomeManager:
         if not seq_fns:
             return None, None
         
+        needs_feats = any([needs_features(sfn) for sfn in seq_fns])
+        
         chrmax = self.gene_map.max_indices.get(str(chr))
         if not length:
             length = int(chrmax - start)
+        chunksz = int(chunksz)
         num_chunks = int(length//chunksz)
         step = chunksz
         starts = [[] for qt in seq_fns]
@@ -565,21 +582,33 @@ class GenomeManager:
         
         chrstr = str(chr)
         
+        # full_seq = self.annotations.get_sequence(chrstr, start, start + num_chunks * chunksz)
+        
+        import time
+        
         for n in range(num_chunks):
             end = start + step
             seq = self.annotations.get_sequence(chrstr, start, end)
             if do_rc:
                 seq = reverse_complement(seq)
-            ufeats = self.get_all_annotations(chrstr, start, end)
-            feats = [uf.to_dict() for uf in ufeats]
+            if needs_feats:
+                ufeats = self.get_all_annotations(chrstr, start, end)
+                feats = [uf.to_dict() for uf in ufeats]
+            else:
+                feats = []
+            
             if len(seq) < 1:
                 start = end
                 continue
+            
             for i,seq_fn in enumerate(seq_fns):
                 qt = seq_fn(seq, feats)
                 starts[i].append(start)
                 qts[i].append(qt)
             start = end
+            
+            if n%128==0:
+                print(f"chunk {n}/{num_chunks}")
             
         if resample:
             rsqts = [[] for i in range(len(seq_fns))]
@@ -618,6 +647,9 @@ class GenomeManager:
         
         fg_colors = []
         
+        minvals = kwargs.pop("minvals",[])
+        maxvals = kwargs.pop("maxvals",[])
+        
         qts, starts = self.get_chromosomal_quantities(chr, seq_specs, chunksz=chunksz, start = start, length = length, resample = resample)
         qt_names = [str(seq_spec) for seq_spec in seq_specs]
         num_qts = len(qts)
@@ -629,8 +661,15 @@ class GenomeManager:
         for n in range(len(seq_specs)):
             qt_names_col.append(f"\x1b[38;5;{nice_colors[n]}m{qt_names[n]}\x1b[0m")
             
+            minval = None
+            if minvals:
+                minval = minvals[n]
+            maxval = None
+            if maxvals:
+                maxval = maxvals[n]
+            
             do_flip = bool(n%2)
-            lines = self.get_chrom_quantity_lines(chr, qts[n], qt_names[n], chunksz=chunksz, start=start, max_disp=max_disp, length=length, suppress = True, flip = do_flip, fg_color = nice_colors[n], **kwargs)
+            lines = self.get_chrom_quantity_lines(chr, qts[n], qt_names[n], chunksz=chunksz, start=start, max_disp=max_disp, length=length, suppress = True, flip = do_flip, fg_color = nice_colors[n], minval=minval, maxval=maxval, **kwargs)
             all_lines.append(lines[1:])
         
         

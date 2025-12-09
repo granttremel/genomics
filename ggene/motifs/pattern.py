@@ -5,7 +5,7 @@ from .motif import BaseMotif
 
 class PatternMotif(BaseMotif):
     
-    def __init__(self, name, pattern, scoring_function, allow_rc = True):
+    def __init__(self, name, pattern, scoring_function, allow_rc = True, motif_class = ""):
         super().__init__(name)
         
         if isinstance(pattern, str):
@@ -14,6 +14,7 @@ class PatternMotif(BaseMotif):
         self.pattern=pattern
         self.score_func = scoring_function
         self.allow_rc = allow_rc
+        self.motif_class = motif_class
         
     def __call__(self, seq):
         res = re.search(self.pattern, seq)

@@ -5,14 +5,15 @@ import numpy as np
 import os
 import matplotlib.pyplot as plt
 
-from ggene.seqs import process
-from ggene.seqs import bio
+from ggene import draw
+from ggene.display.colors import Colors
+from ggene.seqs import process, bio, heal
 
 from Bio import Align
 
 class AlignmentResult:
     
-    def __init__(self, alignment:Align.Alignment, aligner:Align.PairwiseAligner = None):
+    def __init__(self, alignment:Align.Alignment):
         
         self.length = alignment.length
         self.target = alignment.target
@@ -24,37 +25,28 @@ class AlignmentResult:
         self.ham = self.length - self.identities
         
         self.target_algn, self.query_algn = alignment[0], alignment[1]
+        self.cons = bio.merge_with_gaps(self.target_algn, self.query_algn, default = '-')
         
         self.subs = alignment.substitutions
         self.t_algn, self.q_algn = alignment.aligned
         
-        # if aligner:
-        #     self.match_score = aligner.match_score
-        #     self.mismatch_score = aligner.mismatch_score
-        #     self.ogap_score = aligner.open_gap_score
-        #     self.egap_score = aligner.extend_gap_score
-        # else:
-        #     self.match_score=self.mismatch_score=self.ogap_score=self.egap_score=0
-        
         self._alignment = alignment
+    
+    @property
+    def consensus(self):
+        return self.cons
     
     def get_aligned_seqs(self):
         return self.target_algn, self.query_algn
         
-    def print(self, chunksz = 256):
+    def print(self, chunksz = 128, emph_match = True, emph_subs = True, emph_indels = False, color_subs = False, show_middle = False, show_consensus = False):
         
-        print(f"score: {self.score:0.1f}")
-        # print(f"score: {self.score}, hamming: {self.ham}")
-        print(f"identities: {self.identities}, gaps: {self.gaps}, mismatches: {self.mismatches}")
-        # print(f"match score={self.match_score}, mismatch score={self.mismatch_score}, open gap={self.ogap_score}, extend gap={self.egap_score}")
+        print(Colors.BOLD + f"Score: {self.score:0.1f} with {self.identities} identities, {self.gaps} gaps, {self.mismatches} mismatches" + Colors.RESET)
+        print()
         
         tgt_algn, q_algn = self.get_aligned_seqs()
-        num_chunks = len(tgt_algn)//chunksz + 1
-        for n in range(num_chunks):
-            print(tgt_algn[n*chunksz:(n+1)*chunksz])
-            print(q_algn[n*chunksz:(n+1)*chunksz])
-            print()
-        
+        print_aligned_seqs(tgt_algn, q_algn, chunksz = chunksz, consensus = self.consensus if show_consensus else "", emph_match=emph_match,  emph_subs=emph_subs,  emph_indels=emph_indels, color_subs = color_subs, show_middle=show_middle)
+    
     def __len__(self):
         return self.length
 
@@ -83,56 +75,238 @@ pair_cost = {
     ("C","A"):1.0,
 }
 
+_all_scores = {
+    
+    "open_left_deletion_score":0,
+    "open_internal_deletion_score":-1,
+    "open_right_deletion_score":0,
+    
+    "open_left_insertion_score":0,
+    "open_internal_insertion_score":-1,
+    "open_right_insertion_score":0,
+    
+    "extend_left_deletion_score":0,
+    "extend_internal_deletion_score":-1,
+    "extend_right_deletion_score":0,
+    
+    "extend_left_insertion_score":0,
+    "extend_internal_insertion_score":-1,
+    "extend_right_insertion_score":0,
+    
+}
+
 _default_scores = {
     "match_score":1,
     "mismatch_score":-0.9,
-    
-    # "open_left_deletion_score":0,
-    # "open_internal_deletion_score":-1,
-    # "open_right_deletion_score":0,
-    
-    # "open_left_insertion_score":0,
-    # "open_internal_insertion_score":-1,
-    # "open_right_insertion_score":0,
-    
-    # "extend_left_deletion_score":0,
-    # "extend_internal_deletion_score":-1,
-    # "extend_right_deletion_score":0,
-    
-    # "extend_left_insertion_score":0,
-    # "extend_internal_insertion_score":-1,
-    # "extend_right_insertion_score":0,
     
     "left_gap_score":-1,
     "right_gap_score":-1,
     "internal_gap_score":-1,
 }
 
-def get_scores(scores):
+def get_scores(**scores):
     sc = _default_scores.copy()
     sc.update(scores)
     return sc
 
+def get_consensus_scores():
+    cscores = _all_scores.copy()
+    cscores.update(
+        open_internal_deletion_score=-2,        
+        open_internal_insertion_score=-2,        
+        extend_internal_deletion_score=-1,        
+        extend_internal_insertion_score=-1,
+    )
+    return cscores
+
 def score_sequences(seqa, seqb, **scores):
-    scores = get_scores(scores)
+    scores = get_scores(**scores)
     score = Align.PairwiseAligner(**scores).score(seqa, seqb)
     return score
 
+def score_consensus(cons, seqb):
+    scores = get_consensus_scores()
+    return score_sequences(cons, seqb, **scores)
+
 def align_sequences(seqa, seqb, topk = 1, **scores):
-    scores = get_scores(scores)
+    scores = get_scores(**scores)
     
     aligner = Align.PairwiseAligner(**scores)
     res = aligner.align(seqa, seqb)
     
-    return [AlignmentResult(res[k], aligner=aligner) for k in range(topk)]
+    return [AlignmentResult(res[k]) for k in range(topk)]
 
-# def print_alignment(algn:Align.Alignment):
-    
-#     print(algn.target)
-#     print(algn.query)
-    
-    # algn.aligned
+def align_consensus(seqa, seqb, topk = 1):
+    scores = get_consensus_scores()
+    return align_sequences(seqa, seqb, topk = topk, **scores)
 
+def align_multi(seqs, topk = 1):
+    
+    min_len = min([len(s) for s in seqs])
+    seqs_min = [s[:min_len] for s in seqs]
+    
+    algnr = Align.MultipleSeqAlignment(seqs_min)
+    
+    return algnr
+
+def print_aligned_seqs(algn_target, algn_query, 
+                        chunksz = 128, 
+                        consensus = "",
+                        emph_match = False, 
+                        emph_subs = False, 
+                        emph_indels = False, 
+                        color_subs = False,
+                        show_middle = False, 
+                        show_subs = False,
+                    ):
+    
+    line_frm = "{:<4}{:>4} {}"
+    
+    num_chunks = len(algn_target)//chunksz + 1
+    for n in range(num_chunks):
+        sub_tgt = algn_target[n*chunksz:(n+1)*chunksz]
+        sub_q =  algn_query[n*chunksz:(n+1)*chunksz]
+        ctgt, cquery = get_colored_aligned_seqs(sub_tgt, sub_q, emph_match=emph_match,  emph_subs=emph_subs,  emph_indels=emph_indels, color_subs = color_subs)
+        print(line_frm.format("T", n*chunksz, ctgt))
+        
+        if show_middle:
+            mid = get_middle(sub_tgt, sub_q, show_subs = show_subs)
+            print(line_frm.format("", "", mid))
+        
+        print(line_frm.format("Q", "", cquery))
+        
+        if consensus:
+            sub_cons = consensus[n*chunksz:(n+1)*chunksz]
+            print(line_frm.format("C","", sub_cons))
+        
+        print()
+    
+def get_colored_aligned_seqs(tgt, query, emph_match = True, emph_subs = False, emph_indels = False, color_subs = False):
+    
+    curr_tcol = Colors.SUBTLE
+    curr_qcol = Colors.SUBTLE
+    
+    tgt_col = [curr_tcol]
+    q_col = [curr_qcol]
+    
+    cmap = get_colormap(emph_match=emph_match, emph_subs=emph_subs, emph_indels=emph_indels, color_subs = color_subs)
+    
+    for t, q in zip(tgt, query):
+        ct, cq = get_aligned_color(t, q, colormap = cmap)
+        
+        if ct != curr_tcol:
+            tgt_col.append(Colors.RESET + ct)
+            curr_tcol = ct
+        
+        if cq != curr_qcol:
+            q_col.append(Colors.RESET + cq)
+            curr_qcol = cq
+        
+        tgt_col.append(t)
+        q_col.append(q)
+    
+    tgt_col.append(Colors.RESET)
+    q_col.append(Colors.RESET)
+    
+    return "".join(tgt_col), "".join(q_col)
+
+css = "\x1b[38;5;232m"
+cs = "\x1b[38;5;238m"
+cm = "\x1b[38;5;250m"
+csub = "\x1b[38;5;14m"
+
+cry = "\x1b[38;5;140m"
+csw = "\x1b[38;5;160m"
+ckm = "\x1b[38;5;112m"
+
+cins = "\x1b[38;5;94m"
+cdel = "\x1b[38;5;88m"
+
+mtn_syms = {
+    "C":"≬",
+    "I":"⌇",
+    "V":"∫",
+}
+
+def get_middle(tgt, query, show_subs = False):
+    
+    mid = [css]
+    for t, q in zip(tgt, query):
+        if t==q:
+            mid.append("|")
+        elif t=='-' or q=='-':
+            mid.append(" ")
+        elif show_subs:
+            m = heal.identify_mutation_type(t, q)
+            sym = mtn_syms.get(m)
+            mid.append(sym)
+        else:
+            mid.append(" ")
+    mid.append(Colors.RESET)
+    return "".join(mid)
+
+def get_colormap(emph_match, emph_subs, emph_indels, color_subs):
+    
+    colormap = {k:cs for k in ["","m","ins","del","C","I","V"]}
+    if emph_match:
+        colormap["m"] = cm
+    if emph_subs:
+        if color_subs:
+            colormap["C"] = csw
+            colormap["I"] = cry
+            colormap["V"] = ckm
+        else:
+            colormap["C"] = csub
+            colormap["I"] = csub
+            colormap["V"] = csub
+            
+    if emph_indels:
+        colormap["ins"] = cins
+        colormap["del"] = cdel
+    
+    return colormap
+
+def get_aligned_color(tgt_base, q_base, colormap = {}):
+    
+    if tgt_base == q_base:
+        return colormap.get("m", css), colormap.get("m", css)
+    elif tgt_base == '-':
+        return colormap.get("", css), colormap.get("ins", css)
+    elif q_base == '-':
+        return colormap.get("del", css), colormap.get("", css)
+    else:
+        mt = heal.identify_mutation_type(tgt_base, q_base)
+        return colormap.get(mt, css), colormap.get(mt, css)
+
+def get_substitution_color(tgt_base, q_base):
+    
+    m = heal.identify_mutation(tgt_base, q_base)
+    
+    if m in "SW":
+        return csw, csw
+    elif m in "YR":
+        return cry, cry
+    elif m in "MK":
+        return ckm, ckm
+    else:
+        return cm, cm
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
 ############## just some stuff #######################
 
 

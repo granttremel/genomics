@@ -133,6 +133,28 @@ class Healer:
         
         return locs, mods
             
+def identify_mutation(ba, bb):
+    
+    m = bio.ALIASES_REV.get(ba + bb)
+    if not m:
+        m = bio.ALIASES_REV.get(bb + ba)
+    
+    if not m:
+        return "e"
+    else:
+        return m
+
+def identify_mutation_type(ba, bb):
+    m = identify_mutation(ba, bb)
+    
+    if m in "YR":
+        return "I"
+    elif m in "SW":
+        return "C"
+    elif m in "KM":
+        return "V"
+    else:
+        return " "
 
 def get_mutation_spectrum(seqa, seqb, mutation_spec = {},  b_is_rc = False, allowed_mutations = 'RYSWKM'):
     

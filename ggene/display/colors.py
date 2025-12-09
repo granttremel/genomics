@@ -25,17 +25,25 @@ class Colors:
     EXON = '\033[96m'        # Cyan
     CDS = '\033[93m'         # Yellow
     UTR = '\033[90m'         # Gray
+    REPEAT = "\x1b[38;5;143m"
     
     START_CODON = '\x1b[35m'
     STOP_CODON = '\x1b[35m'
 
     # Motif colors (for underlines)
     MOTIF = '\033[38;5;110m'   # Cyan for other motifs
+    MOTIF_SPL = '\033[38;5;111m'   # Cyan for other motifs
+    MOTIF_PRO = '\033[38;5;112m'   # Cyan for other motifs
     RCMOTIF = '\x1b[38;5;106m'
+    RCMOTIF_SPL = '\x1b[38;5;107m'
+    RCMOTIF_PRO = '\x1b[38;5;108m'
+    
     HIGHLIGHT = '\x1b[148m' # goldish
     
     # Navigation
     POSITION = '\033[97m'    # White
+    
+    SUBTLE = '\x1b[38;5;240m'
 
     @classmethod
     def variant_color(cls, ref: str, alt: str) -> str:
@@ -66,17 +74,24 @@ class Colors:
             return cls.RESET
 
     @classmethod
-    def get_motif_color(cls, motif_type: str) -> str:
+    def get_motif_color(cls, motif_feat) -> str:
         """Get color for a motif type."""
-        motif_type_lower = motif_type.lower()
+        # motif_type_lower = motif_class.lower()
 
-        if 'splice' in motif_type_lower:
-            return cls.MOTIF
-        elif 'tata' in motif_type_lower:
-            return cls.MOTIF
-        elif 'cpg' in motif_type_lower:
-            return cls.MOTIF
-        elif 'polya' in motif_type_lower:
-            return cls.MOTIF
+        if isinstance(motif_feat, dict):
+            motif_class = motif_feat.get("attributes",{}).get("","")
+            motif_rc = motif_feat.get("attributes",{}).get("is_rc",False)
         else:
-            return cls.MOTIF
+            motif_class = motif_feat.attributes.get("","")
+            motif_rc = motif_feat.attributes.get("is_rc",False)
+
+        if 'splice' in motif_class:
+            return cls.RCMOTIF_SPL if motif_rc else cls.MOTIF_SPL
+        elif 'promoter' in motif_class:
+            return cls.RCMOTIF_PRO if motif_rc else cls.MOTIF_PRO
+        # elif 'hammerhead' in motif_class:
+        #     return cls.MOTIF
+        # elif 'SRP' in motif_class:
+        #     return cls.MOTIF
+        else:
+            return cls.RCMOTIF if motif_rc else cls.MOTIF

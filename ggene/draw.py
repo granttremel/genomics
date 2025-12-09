@@ -153,6 +153,7 @@ class Colors:
     EXON = '\033[96m'        # Cyan
     CDS = '\033[93m'         # Yellow
     UTR = '\033[90m'         # Gray
+    REPEAT = "\x1b[38;5;143m"
     
     START_CODON = '\x1b[35m'
     STOP_CODON = '\x1b[35m'

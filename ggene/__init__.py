@@ -40,6 +40,10 @@ DEFAULT_LIBRARY = DATA_DIR / "library"
 def get_paths():
     return str(DEFAULT_VCF_PATH), str(DEFAULT_GTF_PATH), str(DEFAULT_FASTA_PATH), str(DEFAULT_LIBRARY)
 
+other_paths = {
+    "repeatmasker_path":  DATA_DIR / "repeatmasker" / "repeats.sorted.bed.gz",
+}
+
 INFO_TAGS = (
     'AF1', 'DP', 'DP4', 'FQ', 'MQ', 'PC2', 'PCHI1', 
     'PV4', 'QCHI2', 'RP', 'CLR', 'UGT', 'VDB', 'RPB', 'HWE'
