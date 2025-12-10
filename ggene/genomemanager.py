@@ -62,6 +62,11 @@ class GenomeManager:
         """
         try:
             self.vcf = VCF(vcf_path)
+            
+        except Exception as e:
+            logger.error(f"Failed to load VCF (variants), skipping: {e}")
+        
+        try:
             self.library_path = library_path
             
             # Keep old GeneMap for backward compatibility

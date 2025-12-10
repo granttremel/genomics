@@ -76,6 +76,10 @@ class RepeatSeq:
     def context(self):
         return len(self.upstream)
 
+    @property
+    def full_seq(self):
+        return self.upstream + self.repeat + self.downstream
+
     def __len__(self):
         return len(self.repeat)
     

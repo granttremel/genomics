@@ -6,6 +6,7 @@ from typing import Dict, List, Set, Optional, Any
 import numpy as np
 import random
 
+from matplotlib import pyplot as plt
 import networkx as nx
 
 from Bio import Align
@@ -24,6 +25,39 @@ def load_genome():
     gm = GenomeManager(**other_paths)
     rpts = gm.annotations.streams.get("repeats")
     return gm, rpts
+
+def get_repeats(gm, rpts, chr, motif, repeat_type = "Simple_repeat", min_len = None, min_cts = None, max_rpts = None):
+    
+    min_mtf = bio.get_least_seq_index(motif)
+    
+    out_rpts = []
+    
+    for rpt in rpts.stream(chr, start = 1e6):
+        
+        if repeat_type and not rpt.attributes.get("type") == repeat_type:
+            continue
+        
+        rpt_min_mtf = bio.get_least_seq_index(rpt.attributes.get("motif",""))
+        
+        if not rpt_min_mtf == min_mtf:
+            continue
+        
+        rpt_len = rpt.end - rpt.start
+        rpt_cts = len(rpt_min_mtf) / rpt_len
+        
+        if min_len and rpt_len < min_len:
+            continue
+        if min_cts and rpt_cts < min_cts:
+            continue
+        
+        rpt_seq = repeats.RepeatSeq.get_instance(gm, rpt, context_sz = 128)
+        
+        out_rpts.append(rpt_seq)
+        
+        if max_rpts and len(out_rpts) > max_rpts:
+            break
+    out_rpts = list(sorted(out_rpts, key = lambda k: -len(k)))
+    return out_rpts
 
 
 def id_repeat(gm, rpts, motif, chrs = None, max_ham = 0):
@@ -283,32 +317,13 @@ def build_rpt_network(gm, rpts, chr, max_rpts = None):
     
     return net
 
-def main():
+def test_rpt_network(gm, rpts, chr, max_rpts = None):
     
-    gm, rpts = load_genome()
-    
-    # chrs = None
-    chrs = ["1","3","17"]
-    chr = chrs[0]
-    chr = "2"
-    # test_motif = "GAGCTC"
-    # test_motif = "GAGGCAC"
-    # test_motif = "GAGGGAG"
-    # test_motif = "AGGCGG"
-    test_motif = "AATGGAATCG"
-    # test_motif = get_random_sequence(seq_len = 7)
-    
-    # tm_min, _, _, _ = bio.get_least_seq_index(test_motif)
-    tm_min = test_motif
-    print(f"test motif: {test_motif} ({tm_min})")
-    print(bio.consensus_to_SW(tm_min), bio.consensus_to_RY(tm_min), bio.consensus_to_MK(tm_min))
-    
-    net = build_rpt_network(gm, rpts, chr, max_rpts = None)
+    net = build_rpt_network(gm, rpts, chr, max_rpts = max_rpts)
     net.print()
     
     Gs, Gi, Gd, Gc = net.to_network()
     
-    from matplotlib import pyplot as plt
     for n in range(4):
         graph = [Gs, Gi, Gd, Gc][n]
         lbl = ["subs","ins","dels","conts"][n]
@@ -340,16 +355,139 @@ def main():
             f.savefig(f"./data/repeat_plots/rpts_chr{chr}_G{lbl}_comm{cind}.png")
             cind += 1
     
-    # res = id_repeat(gm, rpts, test_motif, chrs = chrs, max_ham = 1)
-    # for r in res:
-    #     print(r)
     
-    # plot_chr_motif(gm, chr, test_motif)
+    pass
+
+def pad_sequence(seq:str, to_length, char = "N"):
     
-    # for n in range(20):
-    #     test_motif = get_random_sequence()
-    #     vars = get_all_variations(test_motif)
-    #     print(", ".join(vars))
+    rfill = lfill = (to_length - len(seq))//2
+    
+    if rfill + lfill + len(seq) < to_length:
+        rfill += 1
+        
+    return char * lfill + seq + char*rfill
+
+def tile_sequence(seq, to_length):
+    
+    rfill = lfill = (to_length - len(seq))//2
+    
+    if rfill + lfill + len(seq) < to_length:
+        rfill += 1
+        
+    left = lfill//len(seq) + 1
+    right = rfill//len(seq) + 1
+    
+    leftseq = (seq*left)[-lfill:]
+    rightseq = (seq*right)[:rfill]
+    
+    return leftseq + seq + rightseq
+
+def stretch_sequence(seq, step, keep, frame = 0, to_length = None, fill_char = "N"):
+    
+    fill = step - keep
+    out_seq = []
+    
+    frame = frame % step
+    
+    for i in range(frame, len(seq), keep):
+        out_seq.append(seq[i:i+keep])
+        out_seq.append(fill_char * fill)
+    
+    out_seq = "".join(out_seq)
+    if to_length:
+        rtrim = ltrim = ( -to_length + len(out_seq))//2
+        if not rtrim + len(out_seq) + ltrim == to_length:
+            ltrim += 0
+        
+        out_seq = out_seq[ltrim:len(out_seq) - rtrim]
+    
+    return out_seq
+
+def display_repeat_motif(rpts, mtf, ntile = 2):
+    def sf(a, b, sc, f):
+        return f if a==b else -f
+    
+    for rpt in rpts:
+        print(rpt.raw_repeat)
+        print(rpt.repeat)
+        
+        # tm_pad = pad_sequence(test_motif, len(rpt.full_seq))
+        # tm_pad = tile_sequence(test_motif, len(rpt.full_seq))
+        
+        scac = lambda a, b, sc: sf(a, b, sc, 1)
+        ac, rcac = process.correlate(rpt.full_seq, rpt.full_seq, fill=0.25, score_func = scac)
+        sc1 = ScalarPlot(ac, add_range = True, minval = 0)
+        sc2 = ScalarPlot(rcac, add_range = True, minval = 0, flip = True)
+        print("autocorrelation")
+        ScalarPlot.show_paired(sc1, sc2, chunksz = 256, xlabel = rpt.full_seq, center_xlabel = True)
+        print()
+        
+        tm_pad = pad_sequence(mtf*ntile, len(rpt.full_seq))
+        nsc = len(rpt.full_seq) / len(mtf) / ntile
+        
+        scd = lambda a, b, sc: sf(a, b, sc, nsc)
+        
+        d,rcd = process.correlate(rpt.full_seq, tm_pad,  fill = None, score_func = scd)
+        sc1 = ScalarPlot(d, add_range = True, minval = 0)
+        sc2 = ScalarPlot(rcd, add_range = True, minval = 0, flip = True)
+        print("response to motif kernel")
+        ScalarPlot.show_paired(sc1, sc2, chunksz = 256, xlabel = rpt.full_seq, center_xlabel = True)
+        print()
+        input()
+    
+    pass
+
+def main():
+    
+    gm, rptmskr = load_genome()
+    
+    # chrs = None
+    chrs = ["1","3","17"]
+    chr = chrs[0]
+    # test_motif = "GAGCTC"
+    # test_motif = "GAGGCAC"
+    # test_motif = "GAGGGAG"
+    # test_motif = "AGGCGG"
+    # test_motif = "AATGGAATCG"
+    test_motif = "ATATAC"
+    # test_motif = get_random_sequence(seq_len = 7)
+    
+    # tm_min, _, _, _ = bio.get_least_seq_index(test_motif)
+    tm_min = test_motif
+    print(f"test motif: {test_motif} ({tm_min})")
+    # print(bio.consensus_to_SW(tm_min), bio.consensus_to_RY(tm_min), bio.consensus_to_MK(tm_min))
+    
+    rpts = get_repeats(gm, rptmskr, chr, test_motif, min_len = 20, max_rpts = 10)
+    
+    rpt = rpts[0]
+    rpt_len = len(rpt.full_seq)
+    # display_repeat_motif(rpts, test_motif, ntile = 2)
+    nsc = len(rpt.full_seq) / len(test_motif) / 2
+    def sf(a, b, sc, f):
+        return f if a==b else -f
+    scd = lambda a, b, sc: sf(a, b, sc, nsc)
+
+    tm_pad = pad_sequence(test_motif*2, rpt_len)
+    tm_stretch = stretch_sequence(tm_pad, 2, 1, to_length = rpt_len)
+    tm_stretch2 = stretch_sequence(tm_pad, 3, 2, to_length = rpt_len)
+    tm_stretch3 = stretch_sequence(tm_pad, 5, 3, to_length = rpt_len)
+    # tm_stretch3 = stretch_sequence(tm_pad, 3, 2,frame = 1, to_length = rpt_len)
+    # tm_stretch3 = stretch_sequence(tm_pad, 3, 2, frame = 2, to_length = rpt_len)
+    
+    print(tm_pad)
+    print(tm_stretch)
+    print(tm_stretch2)
+    print(tm_stretch3)
+    
+
+    for kern in [tm_pad, tm_stretch, tm_stretch2, tm_stretch3]:
+        d,rcd = process.correlate(rpt.full_seq, kern,  fill = None, score_func = scd)
+        sc1 = ScalarPlot(d, add_range = True, minval = 0)
+        sc2 = ScalarPlot(rcd, add_range = True, minval = 0, flip = True)
+        print("response to motif kernel")
+        ScalarPlot.show_paired(sc1, sc2, chunksz = 256, xlabel = rpt.full_seq, center_xlabel = True)
+        print()
+    
 
 
 if __name__=="__main__":

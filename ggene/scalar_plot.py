@@ -217,7 +217,7 @@ class ScalarPlot:
             fmt = "{}"
         for i, row in enumerate(self.rows):
             rlbl = plot_label if i==0 else ""
-            print(f"{rlbl.ljust(len(plot_label)+2)}{fmt.format(row)}")
+            print(f"{rlbl.ljust(len(plot_label))}{fmt.format(row)}")
         if self.ruler:
             self.ruler.show()
 
@@ -237,13 +237,13 @@ class ScalarPlot:
             print()
             
     @classmethod
-    def show_paired(cls, top_plot, btm_plot, chunksz = None):
+    def show_paired(cls, top_plot, btm_plot, chunksz = None, xlabel = None, center_xlabel = False):
         
         if not chunksz:
             chunksz = len(top_plot.scalars)
         line_length = len(top_plot.rows[0])
         
-        num_lines = (line_length // chunksz)
+        num_lines = (line_length // chunksz) + 1
         if top_plot.options.get("maxval") is None:
             top_plot.options["maxval"] = max(top_plot.scalars)
         
@@ -254,9 +254,16 @@ class ScalarPlot:
             tsubdata = top_plot.scalars[chunksz*n:chunksz*(n+1)]
             tsubplot = ScalarPlot(tsubdata, **top_plot.options)
             tsubplot.show()
+            
+            if center_xlabel and xlabel:
+                print(xlabel[n*chunksz:(n+1)*chunksz])
+            
             bsubdata = btm_plot.scalars[chunksz*n:chunksz*(n+1)]
             bsubplot = ScalarPlot(bsubdata, **btm_plot.options)
             bsubplot.show()
+            
+            if not center_xlabel and xlabel:
+                print(xlabel[n*chunksz:(n+1)*chunksz])
             
             print()
         

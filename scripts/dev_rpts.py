@@ -460,7 +460,7 @@ def main():
     
     motif_cts, motif_lens, motif_insts = {}, {}, {}
     for chr in list(range(1, 24)) + ["X","Y"]:
-        mc, ml, mi = get_motif_stats(gm, str(chr), min_length = 5, combine_rc = True, topk = 100, rank_by_insts = True)
+        mc, ml, mi = get_motif_stats(gm, str(chr), min_length = 5, combine_rc = True, topk = 20, rank_by_insts = True)
         motif_cts, motif_lens, motif_insts = pool_motif_stats(mc, ml, mi, motif_cts, motif_lens, motif_insts)
         input()
     
