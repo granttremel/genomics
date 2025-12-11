@@ -11,9 +11,8 @@ gene
 
 **/local.yaml
 
-<<<<<<< HEAD
-=======
 **/*/__pycache__
 
 local.yaml
->>>>>>> a4287e8 (just trying stuff out tbh)
+
+**/scripts/*

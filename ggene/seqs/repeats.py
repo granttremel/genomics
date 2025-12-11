@@ -28,8 +28,6 @@ def hamming_distance_re(motifa, motifbs, max_err = 1, min_err = 1):
     
     res = []
     for motifb in motifbs:
-        # match = regex.search(motifa_ptrn, str(motifb))
-        # match = regex.match(motifa_ptrn, str(motifb))
         match = regex.fullmatch(motifa_ptrn, str(motifb))
         if match and sum(match.fuzzy_counts) >= min_err:
             s, i, d = match.fuzzy_counts
@@ -70,6 +68,7 @@ class RepeatSeq:
     upstream:str = ""
     downstream:str = ""
     gene:str = ""
+    motif:str = ""
     raw_repeat:Dict[str, Any] = None
     
     @property
@@ -88,7 +87,9 @@ class RepeatSeq:
         
         loc = Loc.from_feature(rpt_feat)
         rpt_seq = gm.get_sequence(loc.chr, loc.start, loc.end)
-        mtf_len = len(rpt_feat.get("motif"))
+        motif = rpt_feat.get("attributes",{}).get("motif")
+        # mtf_len = len(motif)
+        mtf_len = len(rpt_feat.get("motif",""))
         count = len(rpt_seq)//mtf_len if mtf_len else -1
         upstr = gm.get_sequence(loc.chr, loc.start - context_sz, loc.start)
         downstr = gm.get_sequence(loc.chr, loc.end, loc.end + context_sz)
@@ -105,7 +106,7 @@ class RepeatSeq:
             if gn:
                 gene = gn
         
-        rpt_inst = cls(loc, rpt_seq, count, upstr, downstr, gene=gene, raw_repeat = rpt_feat)
+        rpt_inst = cls(loc, rpt_seq, count, upstr, downstr, gene=gene, motif = motif, raw_repeat = rpt_feat)
         
         return rpt_inst
 

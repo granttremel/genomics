@@ -1,5 +1,23 @@
 
+import math
+
 from .vocab import VOCAB
+
+
+def totient(n):
+    
+    if n==1:
+        return 1
+    
+    phi = int(n>1 and n)
+    for p in range(2, int(n**0.5+1)):
+        if not n%p: # n,p coprime
+            phi -= phi//p
+            while not n%p:
+                n//=p
+    
+    if n>1: phi -= phi//n
+    return phi
 
 def get_seq_index(seq):
     nbs = 4
@@ -33,10 +51,7 @@ def index_to_seq_abs(ind):
     
     else:
         return ""
-    
-def permute(seq, n):
-    return seq[n:] + seq[:n]
-    
+
 def find_min_permutation(seq):
     
     min_ind = get_seq_index(seq)
@@ -44,7 +59,7 @@ def find_min_permutation(seq):
     min_seq = seq
     
     for i in range(len(seq)):
-        ns = permute(seq, i)
+        ns = rotate(seq, i)
         ind = get_seq_index(ns)
         if ind < min_ind:
             min_ind = ind
@@ -54,3 +69,54 @@ def find_min_permutation(seq):
             if ns != min_seq:
                 print(f"maybe tiebreaker... {ns} vs {min_seq}")
     return min_perm, min_ind, min_seq
+
+
+def get_all_sequences(n, k, ab = None):
+    
+    
+    
+    pass
+
+
+def rotate(seq, n):
+    return seq[n:] + seq[:n]
+
+def count_rotations(n, k):
+    """
+    unique necklaces length n with k symbols, up to rotation. or, unique repeats (over quotient/modulo space)
+    """
+    N = 0
+    for d in range(1, int(n**0.5)+1):
+        
+        if n%d==0:
+            dd = n//d
+            
+            N += totient(d)*k**(dd)
+            if d!=dd:
+                N += totient(dd)*k**(d)
+    
+    return N//n
+    
+def to_canonical_r(seq, abt = "ATGC"):
+    
+    symbol_idx = {a:i for a,i in enumerate(abt)}
+    # idx_symbol = {i:a for a,i in symbol_idx.items()}
+    s = [symbol_idx[b] for b in seq]
+    
+    n = len(seq)
+    f = [-1] * (2*n)
+    k = 0
+    for j in range(1, 2*n):
+        i = f[j-k-1]
+        while i != 1 and s[j%n] != s[(k+i+1) % n]:
+            if s[j%n] < s[(k+i+1)%n]:
+                k = j - i - 1
+            i = f[i]
+        if i==-1 and s[j%n] != s[(k+i+1)%n]:
+            if s[j%n] < s[(k+i+1)%n]:
+                k=j
+            f[j-k] = -1
+        else:
+            f[j-k] = i+1
+    
+    return k, seq[k:] + seq[:k]

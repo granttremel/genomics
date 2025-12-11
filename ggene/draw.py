@@ -2,6 +2,7 @@
 from typing import List
 import math
 import random
+import regex
 import numpy as np
 
 import matplotlib.pyplot as plt
@@ -936,7 +937,7 @@ def heatmap(data, row_labels=None, col_labels=None, minval=None, maxval=None, ce
         
     max_row_label_len = max(len(str(lbl)) for lbl in row_labels) if row_labels else 0
 
-    row_frm = "{:<4}{}"
+    row_frm = "{:<%s}{}" % str(max_row_label_len + 1)
     
     col_width = kwargs.get("col_width", 2)
     col_space = kwargs.get("col_space", 1)
@@ -946,10 +947,10 @@ def heatmap(data, row_labels=None, col_labels=None, minval=None, maxval=None, ce
     if col_labels:
         header_items = ""
         for col_lbl in col_labels:
-            short_lbl = str(col_lbl)[:2].center(col_width) + " "*int(col_space)
+            short_lbl = str(col_lbl).center(col_width) + " "*int(col_space)
             header_items += short_lbl
             
-        header_line = row_frm.format("", header_items)
+        header_line = row_frm.format(" ", header_items)
         out_rows.append(header_line)
 
     for i, row in enumerate(data):
@@ -1033,7 +1034,7 @@ def make_heatmap_row(data_row, value_to_color, value_labels = None, col_width = 
     
     for j, val in enumerate(data_row):
         if val is None:
-            line += "  "
+            line += " "*(col_width + col_space)
             continue
         
         color_code = value_to_color(val)
@@ -1060,7 +1061,73 @@ def scrub_ansi(line):
     ansi_re = re.compile(r"\x1b(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
     newline = ansi_re.sub("", line)
     return newline
-    
+
+def visible_len(line):
+    """Get the length of a string excluding ANSI escape sequences."""
+    return len(scrub_ansi(line))
+
+def visible_slice(line, start=0, stop=None, step=1):
+    """
+    Slice a string based on visible character positions, preserving ANSI codes.
+
+    This extracts visible characters from position start to stop (exclusive),
+    while keeping any ANSI escape sequences that apply to those characters.
+    """
+    import re
+    ansi_re = re.compile(r"\x1b(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
+
+    # Parse the string into tokens: either ANSI codes or visible characters
+    tokens = []
+    pos = 0
+    for match in ansi_re.finditer(line):
+        # Add any visible characters before this ANSI code
+        if match.start() > pos:
+            for char in line[pos:match.start()]:
+                tokens.append(('char', char))
+        # Add the ANSI code
+        tokens.append(('ansi', match.group()))
+        pos = match.end()
+    # Add any remaining visible characters
+    if pos < len(line):
+        for char in line[pos:]:
+            tokens.append(('char', char))
+
+    # Count visible characters and determine slice bounds
+    vlen = sum(1 for t in tokens if t[0] == 'char')
+    if stop is None:
+        stop = vlen
+
+    # Extract the slice, keeping ANSI codes
+    result = []
+    visible_idx = 0
+    last_ansi = None  # Track the last ANSI code we've seen
+
+    for token_type, token_val in tokens:
+        if token_type == 'ansi':
+            # Keep track of ANSI codes - we might need them
+            last_ansi = token_val
+            # If we're in the slice range, include this ANSI code
+            if start <= visible_idx < stop:
+                result.append(token_val)
+        else:  # token_type == 'char'
+            if visible_idx == start and last_ansi and not result:
+                # Starting a slice - include the last ANSI code to maintain color
+                result.append(last_ansi)
+
+            if start <= visible_idx < stop and (visible_idx - start) % step == 0:
+                result.append(token_val)
+
+            visible_idx += 1
+
+            if visible_idx >= stop:
+                break
+
+    # Add RESET at the end if we have any content
+    if result and RESET not in ''.join(result[-5:]):
+        result.append(RESET)
+
+    return ''.join(result)
+
 def plot_adjacent(seqa, seqb):
     bit_depth = 16
     qseqa = quantize(seqa, bit_depth, mid=True)
@@ -1217,6 +1284,35 @@ def make_start_ends(feature_name, feature_positions, feature_length, starts = {}
     
     return starts, ends
 
+def make_spans(starts, ends):
+    
+    feats = set()
+    istarts = {}
+    iends = {}
+    spans = {}
+    
+    for s, fs in starts.items():
+        
+        for f in fs:
+            if not f in istarts:
+                feats.add(f)
+                istarts[f] = []
+            istarts[f].append(s)
+    
+    for e, fs in ends.items():
+        for f in fs:
+            if not f in iends:
+                feats.add(f)
+                iends[f] = []
+            iends[f].append(e)
+    
+    for f in feats:
+        st = istarts[f]
+        en = iends[f]
+        spans[f] = [(s, e) for s, e in zip(sorted(st), sorted(en))]
+    
+    return spans
+
 def make_key(features, colors):
     
     parts = ["key:"]
@@ -1323,18 +1419,22 @@ def highlight_correlated(full_seq, shift, colors = None, suppress = False):
         print("".join(seqbh))
     return "".join(seqah+seqbh)
 
-def highlight_features(seq, features, feature_starts, feature_ends, colors = {}, show_key = True, suppress = True):
+def highlight_features(seq, features, feature_spans = {}, feature_starts = {}, feature_ends = {}, colors = {}, show_key = True, suppress = True, break_features = False):
     """
     feature_starts: Dict:feature -> List[feature_start_pos]
     feature_ends: Dict:feature -> List[feature_end_pos]
     """
     # Build the colored string
     
+    if not feature_spans:
+        # feature_spans = {f:[(s, e) for s, e in zip(feature_starts[f], feature_ends[f])]for f in features}
+        feature_spans = make_spans(feature_starts, feature_ends)
+        # print(feature_spans)
+    
     baseline_color = 240
     bc = f"\x1b[38;5;{baseline_color}m"
     
     result = []
-    active_seqs = []  # Currently active sequences
     current_color = 0
     last_ansi = bc
     
@@ -1347,33 +1447,37 @@ def highlight_features(seq, features, feature_starts, feature_ends, colors = {},
     result.append(bc)  # Start with baseline color
 
     for i in range(len(seq)):
-        if i in feature_ends:
-            for s in feature_ends[i]:
-                if s in active_seqs:
-                    active_seqs.remove(s)
-
-        if i in feature_starts:
-            for s in feature_starts[i]:
-                if s not in active_seqs:
-                    active_seqs.append(s)
-
-        if not active_seqs:
-            current_color = baseline_color
-        elif len(active_seqs) == 1:
-            current_color = colors[active_seqs[0]]
-        elif len(active_seqs) == 2:
-            color_sum = sum(colors[s] for s in active_seqs)
-            current_color = 20 + (color_sum % 211)
-        else:
-            current_color = 255
+        
+        current_color = baseline_color
+        
+        pre_break = False
+        done = False
+        for f in features:
+            for s, e in feature_spans[f]:
+                if i < s:
+                    continue
+                elif i >= e:
+                    continue
+                else:
+                    current_color = colors.get(f)
+                    pre_break = i == s 
+                    done = True
+                if done:
+                    break
+            if done:
+                break
 
         ansi = f"\x1b[38;5;{current_color}m"
 
         if ansi != last_ansi:
+            if break_features:
+                result.append(" ")
             result.append(ansi)
             last_ansi = ansi
-
-        result.append(seq[i])
+        elif break_features and pre_break:
+            result.append(" ")
+        
+        result.append(seq[i])        
 
     result.append(RESET)
     if not suppress:
@@ -1382,18 +1486,63 @@ def highlight_features(seq, features, feature_starts, feature_ends, colors = {},
             print(key)
     return result, key
 
-def highlight_sequence(seq, subseq, colors = {}, suppress = True, show_key = True):
+def highlight_sequence(seq, subseq, color = None, suppress = True, show_key = True):
     
     starts = {}  # position -> list of sequences starting there
     ends = {}    # position -> list of sequences ending there
     
-    if not subseq in colors:
-        colors[subseq] = random.randint(20, 230)
+    if not color:
+        color = random.randint(20, 230)
+    colors = {subseq:color}
 
     start_pos = find_subsequence(seq, subseq)
     starts, ends = make_start_ends(subseq, start_pos, len(subseq), starts=starts, ends = ends)
 
-    return highlight_features(seq, [subseq], starts, ends, suppress = suppress, show_key = show_key)
+    return highlight_features(seq, [subseq], feature_starts = starts, feature_ends = ends, colors=colors, suppress = suppress, show_key = show_key)
+
+def highlight_sequence_fuzzy(seq, subseq, colors = None, max_err = 1, suppress = True, show_key = True, break_features = False):
+    
+    if not colors:
+        colors = []
+    if len(colors) <= max_err:
+        colors.extend([random.randint(20, 230) for i in range(len(colors), max_err+1)])
+    
+    feats = [subseq]
+    spans = {subseq:[]}
+    clrs = {subseq:colors[0]}
+    
+    key_info = {}
+    
+    ptrn_str = "(%s){e<=%s}" % (subseq, str(max_err))
+    ptrn = regex.compile(ptrn_str, regex.BESTMATCH)
+    
+    matches = regex.finditer(ptrn, seq)
+    
+    for m in matches:
+        if not m:
+            continue
+        
+        fsubseq = m.groups()[0]
+        
+        err = sum(m.fuzzy_counts)
+        start, end = m.spans()[0]
+        
+        if not fsubseq in feats:
+            feats.append(fsubseq)
+            spans[fsubseq] = []
+            clrs[fsubseq] = colors[err]
+        if not err in key_info:
+            key_info[err] = set()
+            
+        key_info[err].add(fsubseq)
+        spans[fsubseq].append((start, end))
+    
+    out, _ = highlight_features(seq, feats, feature_spans = spans, colors = clrs, show_key = False, suppress = suppress, break_features = break_features)
+    key = ", ".join([f"\x1b[38;5;{colors[err]}merr={err}:[{",".join(subseqs)}]" for err, subseqs in key_info.items()]) + "\x1b[0m"
+    if show_key and not suppress:
+        print(key)
+    
+    return out, key
 
 def highlight_sequences(seq:str, subseqs:List[str], start_pos = None, do_rc = False, min_len = 5, colors={}, show_key = True, suppress = True):
 
@@ -1412,7 +1561,7 @@ def highlight_sequences(seq:str, subseqs:List[str], start_pos = None, do_rc = Fa
 
         starts, ends = make_start_ends(s, start_pos[s], len(s), starts=starts, ends = ends)
 
-    highlight_features(seq, subseqs, starts, ends, colors = colors, show_key = show_key, suppress = suppress)
+    highlight_features(seq, subseqs, feature_starts = starts, feature_ends = ends, colors = colors, show_key = show_key, suppress = suppress)
 
 def _highlight_runs_auto(seqa, top_seqs, top_datas, **kwargs):
     all_seqs = []

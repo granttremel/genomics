@@ -135,6 +135,7 @@ default_motifs = {
     "AU_rich":"ATTTA",
     # "Shine-Dalgarno":"AGGAGGT", # prokaryotes and archaea ... 
     "Kozak":"ACCATGG",
+    "PolyA":"A{7,}|T{7,}",
     
     "hammerhead":"YYRRGCCGTTACCTRCAGCTGATGAGCTCCAARAAGAGCGAAACCNRNYAGGTCCTGYAGTAYTGGCYNR",
     "hammerhead_stem1":"RGCCGN{45,65}TGGCY", # nominal 55
@@ -170,6 +171,7 @@ default_motifs = {
     "telomerase_pseudoknot_hTR171-184": "AAAAAATGTCAGCT",
     
     # "msat_1": "AAGCATGGACCATTCCTTCAGGATGGAGCCTGCCAAGTGTGGACCATTCCTTCAGGATGCAGCCAGGTAAGCATCAGCCATTCCTTCATAATGCGGCCAGGTAAGCAT",
+    "msat2": "CACGTG",
     "msat_telomerase": "TTAGGG",
     "msat_telomerase-2": "CTAAC",
     
@@ -186,6 +188,7 @@ motif_classes = {
         "TATA_box",
         "CAAT_box",
         "E_box", 
+        "PolyA",
         "AU_rich",
         # "Shine-Dalgarno",
         "Kozak"
@@ -239,6 +242,7 @@ motif_classes = {
     
     "msat":[
         # "msat_1",
+        "msat2",
         "msat_telomerase",
         "msat_telomerase-2",
     ],

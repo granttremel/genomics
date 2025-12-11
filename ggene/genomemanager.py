@@ -612,8 +612,8 @@ class GenomeManager:
                 qts[i].append(qt)
             start = end
             
-            if n%128==0:
-                print(f"chunk {n}/{num_chunks}")
+            # if n%128==0:
+            #     print(f"chunk {n}/{num_chunks}")
             
         if resample:
             rsqts = [[] for i in range(len(seq_fns))]
@@ -634,6 +634,8 @@ class GenomeManager:
         if not length:
             length = self.gene_map.max_indices[str(chr)] - start
         
+        show_hist = kwargs.get("show_hist",False)
+        
         qts, starts = self.get_chromosomal_quantity(chr, seq_spec, chunksz=chunksz, start = start, length = length, resample = resample)
         
         if qts is not None:
@@ -643,6 +645,23 @@ class GenomeManager:
         
         lines = self.get_chrom_quantity_lines(chr, qts, qt_name, chunksz = chunksz, start = start, max_disp = max_disp, length = length, suppress = False, resample = resample, **kwargs)
         
+        if show_hist:
+            
+            data = qts
+            
+            minval = kwargs.get("minval", min(data))
+            maxval = kwargs.get("minval", max(data))
+            
+            hist, bins = np.histogram(data, bins = min(max_disp, int(np.sqrt(len(data)))), range = (minval, maxval))
+            
+            res = draw.scalar_to_text_nb(hist, minval =0, add_range = True)
+            res, _ = draw.add_ruler(res, xmin = bins[0], xmax = bins[-1], num_labels = 5, ticks = 0, minor_ticks = 0)
+            
+            print(f"histogram of {seq_spec}")
+            for r in res:
+                print(r)
+            print()
+            
         return lines
     
     def display_chromosomal_quantities(self, chr, seq_specs, chunksz = 10e6, start = 1e6, max_disp = 256, length = None, resample = False, **kwargs):

@@ -10,7 +10,10 @@ from ggene.draw import (
     scalar_to_text_nb,
     scalar_to_text_mid,
     scalar_plot_distribution,
-    get_color_scheme
+    get_color_scheme,
+    scrub_ansi,
+    visible_len,
+    visible_slice
 )
 from ggene.ruler import Ruler
 
@@ -241,6 +244,7 @@ class ScalarPlot:
         
         if not chunksz:
             chunksz = len(top_plot.scalars)
+        
         line_length = len(top_plot.rows[0])
         
         num_lines = (line_length // chunksz) + 1
@@ -252,18 +256,25 @@ class ScalarPlot:
         
         for n in range(num_lines):
             tsubdata = top_plot.scalars[chunksz*n:chunksz*(n+1)]
+            if len(tsubdata) < 1:
+                break
+            
             tsubplot = ScalarPlot(tsubdata, **top_plot.options)
             tsubplot.show()
             
+            # xlbl = xlabel[n*chunksz:(n+1)*chunksz] if chunksz else xlabel
+            
             if center_xlabel and xlabel:
-                print(xlabel[n*chunksz:(n+1)*chunksz])
+                xlbl = visible_slice(xlabel, start = n*chunksz, stop = (n+1)*chunksz, step = 1)
+                print(xlbl)
             
             bsubdata = btm_plot.scalars[chunksz*n:chunksz*(n+1)]
             bsubplot = ScalarPlot(bsubdata, **btm_plot.options)
             bsubplot.show()
             
             if not center_xlabel and xlabel:
-                print(xlabel[n*chunksz:(n+1)*chunksz])
+                xlbl = visible_slice(xlabel, start = n*chunksz, stop = (n+1)*chunksz, step = 1)
+                print(xlbl)
             
             print()
         

@@ -1,5 +1,5 @@
 
-
+import string
 import itertools
 import random
 
@@ -14,12 +14,92 @@ be asymmetric about horizontal axis, so complement is like visually rotating it.
 two orienations of the character
 visually distinct without being too busy or dense?
 counterpunctal forms
+may need two rotated versions for upper sequence and lower sequence
 e.g.:
 V and ^ (if they were more symmetric)
 T and U ironically
 A and W ?
 
+⊓ and ⊔
+Ո and Ս
+Ψ ψ Ϙ Ͳ
+Ш Ϣ
+⋿
+∈ and ∋
+≪ and ≫
+⋒ and ⋓
+╥ and ╨
+╤ ╧
+
+ATGC = ┬╤╦╥
+TACG = ╧┴╨╩
+
+or ╪ ╫
+or ╤ ╥ ╦ ╧ ╨ ╩
 """
+
+_addl_syms = "ЂЄЉЊЋБГ"
+
+_good_syms = [
+    (9632, 9727, 1), # geo
+    (9484, 9544, 4), # box, fine
+    (8704, 8959, 1), # math
+    (8960, 9210, 1), # technical
+    (11360, 11391, 1), # latin extended c
+    (9487, 9547, 4), # box, bold
+    (9552, 9580, 1), # box, double
+    (9728, 9983, 1), # misc symbols
+    (9985, 10175, 1), # dingbats
+]
+
+def get_symbol(i):
+    
+    if i < len(string.ascii_uppercase):    
+        return string.ascii_uppercase[i]
+    else:
+        i-=len(string.ascii_uppercase)
+        
+        for start, stop, step in _good_syms:
+            
+            n = (stop+1-start)//step
+            if i > n:
+                i-= n
+                continue
+            else:
+                return chr(start + step * i)
+    
+    return ""
+
+def screen_symbols(start, end):
+    
+    syms = []
+    for i in range(start, end):
+        
+        print(i, chr(i))
+        res = input("\nkeep?\n")
+        
+        if 'y' in res.lower():
+            syms.append(i)
+
+    print(f"new_symbols=[{",".join(syms)}]")
+    return syms
+
+
+def extend_vocab(vocab, k_tot):
+    
+    vocab = list(vocab)
+    
+    i = 0
+    # for c in string.ascii_uppercase:
+    while len(vocab) < k_tot:
+        c = get_symbol(i)
+        if c in vocab:
+            continue
+        
+        vocab.append(c)
+        i += 1
+    
+    return "".join(vocab)
 
 def set_vocab(new_vocab):
     global VOCAB

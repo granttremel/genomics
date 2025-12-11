@@ -1,4 +1,6 @@
 
+import random
+
 import numpy as np
 import itertools
 
@@ -6,6 +8,14 @@ from typing import Optional, Dict, List, Tuple, Any
 from .bio import reverse_complement, get_aliases
 from .vocab import VOCAB
 
+def rotate_seq(seq, nr = 1):
+    nr = nr % len(seq)
+    return seq[nr:] + seq[:nr]
+
+def permute_seq(seq):
+    seq_list = list(seq)
+    random.shuffle(seq_list)
+    return "".join(seq_list)
 
 def normalize_sequence(seq):
     """
@@ -303,7 +313,7 @@ def correlate(seq1, seq2, comparison_func=None, score_func=None, fill=0, scale=N
         cmp = comparison_func
 
     if not score_func:
-        sf = lambda a, b, sc: int(a == b)
+        sf = lambda a, b, sc: int(a == b)*len(seq1)/sc
     else:
         sf = score_func
 
@@ -331,10 +341,10 @@ def correlate(seq1, seq2, comparison_func=None, score_func=None, fill=0, scale=N
 
             if cmp(sa, sb):
                 score = sf(sa, sb, sc)
-                direct_sum += score / len(seq1_subseq)
+                direct_sum += score
                 
             elif cmp(sa, rcsb):
-                rc_sum += sf(sa, rcsb, sc) / len(seq1_subseq)
+                rc_sum += sf(sa, rcsb, sc)
 
         return direct_sum, rc_sum
 

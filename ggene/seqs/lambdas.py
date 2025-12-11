@@ -5,6 +5,7 @@ import regex
 
 from ggene import seqs
 from ggene.seqs.bio import reverse_complement
+from ggene.seqs.find import consensus_to_re
 from ggene.motifs.motif import MotifDetector
 
 md:MotifDetector = MotifDetector()
@@ -12,6 +13,9 @@ md.setup_default_motifs()
 
 def seq_gc(seq, feats):
     return (seq.count("G") + seq.count("C")) / len(seq)
+
+def seq_at(seq, feats):
+    return (seq.count("A") + seq.count("T")) / len(seq)
 
 def seq_ag(seq, feats):
     """
@@ -27,6 +31,51 @@ def seq_ac(seq, feats):
 
 def seq_cpg(seq, feats):
     return seq.count("CG")
+
+def seq_cpg_to_gc(seq, feats):
+    return seq.count("CG") / max(1, seq.count("C") + seq.count("G"))
+
+def seq_polya(seq, feats):
+    return _seq_polyn(seq, feats, "A", do_rc = True)
+
+def seq_polyt(seq, feats):
+    return _seq_polyn(seq, feats, "T", do_rc = True)
+
+def seq_polyg(seq, feats):
+    return _seq_polyn(seq, feats, "G", do_rc = True)
+
+def seq_polyc(seq, feats):
+    return _seq_polyn(seq, feats, "C", do_rc = True)
+
+def seq_polyy(seq, feats):
+    return _seq_polyn(seq, feats, "Y", do_rc = False)
+
+def seq_polyr(seq, feats):
+    return _seq_polyn(seq, feats, "R", do_rc = False)
+
+def seq_polys(seq, feats):
+    return _seq_polyn(seq, feats, "S", do_rc = False)
+
+def seq_polyw(seq, feats):
+    return _seq_polyn(seq, feats, "W", do_rc = False)
+
+def _seq_polyn(seq, feats, b, do_rc = False):
+    
+    bs = [b]
+    if do_rc:
+        bs.append(reverse_complement(b))
+    
+    ptrn = "|".join([consensus_to_re("(%s{5,})" % bb) for bb in bs])
+    ptrn = re.compile(ptrn)
+    
+    ms = re.finditer(ptrn, seq)
+    
+    max_run = 0
+    for m in ms:
+        st, en = m.span()
+        max_run = max(max_run, en-st)
+    return max_run
+
 
 def seq_feats(seq, feats):
     return len(feats)
@@ -95,6 +144,31 @@ def seq_hexa_repeats(seq, feats):
     rptlen = 6
     return _seq_repeats(seq, feats, rptlen)
 
+def _seq_repeat(seq, feats, repeat):
+    ptrn = re.compile(consensus_to_re(repeat))
+    ms = re.findall(ptrn, seq)
+    return len(ms)
+
+def _seq_repeat_run(seq, feats, repeat, gap = 0):
+    ptrn = re.compile(consensus_to_re(repeat))
+    ms = re.finditer(ptrn, seq)
+    
+    maxr = 0
+    r = 0
+    last_end = 0
+    for m in ms:
+        st, en = m.span()
+        if st - last_end <= gap:
+            r += 1
+        elif st < last_end:
+            continue
+        else:
+            r = 0
+        maxr = max(maxr, r)
+        last_end = en
+    
+    return maxr
+
 def needs_features(seq_spec):
     
     if seq_spec in lambda_map:
@@ -107,9 +181,20 @@ def needs_features(seq_spec):
 
 lambda_map = {
     "gc":seq_gc,
+    "at":seq_at,
     "ag":seq_ag,
     "ac":seq_ac,
     "cpg":seq_cpg,
+    "cpg_to_gc":seq_cpg_to_gc,
+    
+    "polya":seq_polya,
+    "polyt":seq_polyt,
+    "polyg":seq_polyg,
+    "polyc":seq_polyc,
+    "polyy":seq_polyy,
+    "polyr":seq_polyr,
+    "polys":seq_polys,
+    "polyw":seq_polyw,
     
     "genes":seq_genes,
     "exons":seq_exons,

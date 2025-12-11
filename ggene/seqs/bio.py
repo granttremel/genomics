@@ -14,9 +14,14 @@ OTHER = "Ψ"
 COMPLEMENT_MAP = {
     'A':'T','T':'A',
     'C':'G','G':'C',
+    
     'R':'Y','Y':'R',
     'S':'S','W':'W',
     'K':'M','M':'K',
+    
+    'B':'V','V':'B',
+    'D':'H','H':'D',
+    
     'N':'N'}
 
 # reflection about R-Y axis
@@ -329,7 +334,7 @@ def get_seq_least_index_ugh(seq):
             break
         
     return init_seq[arg_min:] + init_seq[:arg_min], min_seq_ind
-    
+
 def get_least_seq_index(seq, do_rc = True, do_rev = False, do_comp = False):
     
     if len(seq) < 1:
@@ -491,6 +496,37 @@ def consensus_entropy(consensus:str):
         p = 1/len(alis)
         entr += -p*np.log(p)
     return entr / len(consensus)
+
+def consensus_likelihood(consensus):
+    return np.exp(consensus_logprob(consensus))
+
+def consensus_logprob(consensus):
+    
+    logp = 0
+    for b in consensus:
+        alis = ALIASES.get(b)
+        logp -= np.log(4-len(alis))
+    return logp
+
+def consensus_oddsratio(consensus, samps, obs):
+    
+    p_obs = obs / samps
+    
+    p_cons = np.exp(consensus_logprob(consensus))
+    
+    # mean_rand = samps * p_cons
+    # var_rand = samps * p_cons * (1-p_cons)
+    
+    return p_obs / p_cons
+
+def consensus_to_minimal(cns):
+    
+    smin = []
+    
+    for b in cns:
+        smin.append(ALIASES.get(b,b)[0])
+    
+    return "".join(smin)
 
 def merge(seqa, seqb, default = 'N'):
     outseq = []
