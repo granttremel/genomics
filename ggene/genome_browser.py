@@ -168,6 +168,8 @@ class InteractiveGenomeBrowser:
         print(f"Navigate with arrow keys, 'q' to quit, 'h' for help")
         print("-" * 80)
         
+        logger.debug(self.gm.motif_detector.motifs.get("rand1").pattern)
+        
         try:
             self._run_browser()
         except KeyboardInterrupt:
@@ -1166,7 +1168,11 @@ class InteractiveGenomeBrowser:
         else:
             state = self.state
         
-        feature_types = ["gene","exon","CDS", "motif", "variant", "repeat"]
+        feature_types = ["gene","exon","CDS", 
+                         "motif", 
+                        #  "variant", 
+                         "repeat"
+                         ]
         
         lines = []
         

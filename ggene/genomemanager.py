@@ -128,7 +128,10 @@ class GenomeManager:
     def _setup_default_motifs(self):
         """Setup default motifs for detection."""
         
-        self.motif_detector.setup_default_motifs()
+        # self.motif_detector.setup_default_motifs()
+        self.motif_detector.setup_default_motifs(class_names = ["misc"])
+        
+        
         # self.motif_detector.setup_default_motifs(class_names = ["splice","promoter"])
         # self.motif_detector.setup_default_motifs(class_names = ["hammerhead", "SRP", "pseudoknot","msat"])
         # self.motif_detector.setup_default_motifs(class_names = ["SRP_S"])

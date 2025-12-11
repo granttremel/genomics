@@ -175,10 +175,11 @@ default_motifs = {
     "msat_telomerase": "TTAGGG",
     "msat_telomerase-2": "CTAAC",
     
-    "misc1": "TATATATATGGGAGA",
-    "misc1": "TATATATATGTGGGAAA",
-    "misc1": "TATATATACGGGAAA",
-    "misc1": "TATATATATGGGAGA",
+    "rand1":"YYYRYYYRYYYRYYYRRRYYYYRRYRRYRRYY",
+    # "misc1": "TATATATATGGGAGA",
+    # "misc1": "TATATATATGTGGGAAA",
+    # "misc1": "TATATATACGGGAAA",
+    # "misc1": "TATATATATGGGAGA",
 }
 
 motif_classes = {
@@ -247,7 +248,11 @@ motif_classes = {
         "msat_telomerase-2",
     ],
     
-    "misc":[],
+    "misc":[
+        "rand1",
+        
+        
+    ],
 }
 
 

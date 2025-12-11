@@ -17,6 +17,51 @@ def permute_seq(seq):
     random.shuffle(seq_list)
     return "".join(seq_list)
 
+def pad_sequence(seq:str, to_length, char = "N"):
+    
+    rfill = lfill = (to_length - len(seq))//2
+    
+    if rfill + lfill + len(seq) < to_length:
+        rfill += 1
+        
+    return char * lfill + seq + char*rfill
+
+def tile_sequence(seq, to_length):
+    
+    rfill = lfill = (to_length - len(seq))//2
+    
+    if rfill + lfill + len(seq) < to_length:
+        rfill += 1
+        
+    left = lfill//len(seq) + 1
+    right = rfill//len(seq) + 1
+    
+    leftseq = (seq*left)[-lfill:]
+    rightseq = (seq*right)[:rfill]
+    
+    return leftseq + seq + rightseq
+
+def stretch_sequence(seq, step, keep, frame = 0, to_length = None, fill_char = "N"):
+    
+    fill = step - keep
+    out_seq = []
+    
+    frame = frame % step
+    
+    for i in range(frame, len(seq), keep):
+        out_seq.append(seq[i:i+keep])
+        out_seq.append(fill_char * fill)
+    
+    out_seq = "".join(out_seq)
+    if to_length:
+        rtrim = ltrim = ( -to_length + len(out_seq))//2
+        if not rtrim + len(out_seq) + ltrim == to_length:
+            ltrim += 0
+        
+        out_seq = out_seq[ltrim:len(out_seq) - rtrim]
+    
+    return out_seq
+
 def normalize_sequence(seq):
     """
     would be nice. define a seq as "normal", so that norm_seq(seq) = seq, norm_seq(rc(seq)) = seq

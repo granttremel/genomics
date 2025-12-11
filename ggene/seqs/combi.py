@@ -79,6 +79,7 @@ def get_all_sequences(n, k, ab = None):
 
 
 def rotate(seq, n):
+    n = (-n)% len(seq)
     return seq[n:] + seq[:n]
 
 def count_rotations(n, k):
@@ -97,26 +98,40 @@ def count_rotations(n, k):
     
     return N//n
     
-def to_canonical_r(seq, abt = "ATGC"):
-    
-    symbol_idx = {a:i for a,i in enumerate(abt)}
-    # idx_symbol = {i:a for a,i in symbol_idx.items()}
+def to_canonical_r(seq, ab = "ATGC"):
+    """
+    provides rotation k that transforms seq into the canonical rotation
+    Booth: https://en.wikipedia.org/wiki/Lexicographically_minimal_string_rotation
+    """
+    symbol_idx = {a:i for i,a in enumerate(ab)}
     s = [symbol_idx[b] for b in seq]
     
     n = len(seq)
     f = [-1] * (2*n)
     k = 0
     for j in range(1, 2*n):
+        
         i = f[j-k-1]
-        while i != 1 and s[j%n] != s[(k+i+1) % n]:
+        while i != -1 and s[j%n] != s[(k+i+1) % n]:
             if s[j%n] < s[(k+i+1)%n]:
                 k = j - i - 1
             i = f[i]
         if i==-1 and s[j%n] != s[(k+i+1)%n]:
             if s[j%n] < s[(k+i+1)%n]:
-                k=j
+                k = j
             f[j-k] = -1
         else:
             f[j-k] = i+1
+    k=(-k)%len(ab)
+    return k, rotate(seq, k)
+
+
+def permute(seq, n=1, ab = "ATGC"):
+    """
     
-    return k, seq[k:] + seq[:k]
+    """
+    
+    
+    
+    
+    pass

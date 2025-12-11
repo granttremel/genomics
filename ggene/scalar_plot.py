@@ -103,6 +103,7 @@ class ScalarPlot:
             'ruler': False,
             'xmin': None,
             'xmax': None,
+            'ruler_formatter':"",
             'genomic': False,
             'auto': False,
             'num_labels': 5,
@@ -199,6 +200,7 @@ class ScalarPlot:
 
         # Only pass manual parameters if not in auto mode
         if not self.options['auto']:
+            ruler_kwargs['formatter'] = self.options['ruler_formatter']
             ruler_kwargs['num_labels'] = self.options['num_labels']
             ruler_kwargs['ticks'] = self.options['ticks']
             if self.options['minor_ticks'] is not None:
@@ -251,8 +253,14 @@ class ScalarPlot:
         if top_plot.options.get("maxval") is None:
             top_plot.options["maxval"] = max(top_plot.scalars)
         
+        top_plot.options["ruler"] = False
+        top_plot.options["fg_color"] = 65
+        
         btm_plot.options["flip"] = True
-        btm_plot.options["fg_color"] = 65
+        
+        btm_ruler = btm_plot.options.get("ruler", False)
+        btm_xmin = btm_plot.options.get("xmin", -1)
+        btm_xmax = btm_plot.options.get("xmax", -1)
         
         for n in range(num_lines):
             tsubdata = top_plot.scalars[chunksz*n:chunksz*(n+1)]
@@ -269,6 +277,13 @@ class ScalarPlot:
                 print(xlbl)
             
             bsubdata = btm_plot.scalars[chunksz*n:chunksz*(n+1)]
+            
+            # if btm_ruler:
+                
+            #     xchunk = (btm_xmax - btm_xmin) / 
+            #     new_xmin = btm_xmin + n*chunksz
+                
+            
             bsubplot = ScalarPlot(bsubdata, **btm_plot.options)
             bsubplot.show()
             
