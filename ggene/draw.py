@@ -8,6 +8,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 
+from ggene.utils import utils
 from ggene.seqs.bio import reverse_complement, complement
 from ggene.seqs.find import find_subsequence, find_subsequences
 
@@ -697,17 +698,18 @@ def add_ruler(sctxt, xmin, xmax, genomic = False, auto=False, **kwargs):
         if kwargs.get("fstr"):
             fmtr = kwargs.get("fstr")
         elif genomic:
-            nexp = np.log10(max(abs(xmax), abs(xmin), 1))
-            if nexp > 6:
-                div = 1e6
-                unit = "M"
-            elif nexp > 3:
-                div = 1e3
-                unit = "k"
-            else:
-                div = 1
-                unit = "b"
-            fmtr = lambda x: format(x/div, ".1f") + unit
+            fmtr = utils.format_genomic
+            # nexp = np.log10(max(abs(xmax), abs(xmin), 1))
+            # if nexp > 6:
+            #     div = 1e6
+            #     unit = "M"
+            # elif nexp > 3:
+            #     div = 1e3
+            #     unit = "k"
+            # else:
+            #     div = 1
+            #     unit = "b"
+            # fmtr = lambda x: format(x/div, ".1f") + unit
         elif abs(ran) > 1e5:
             fmtr = ".0e"
         elif abs(ran) < 1e-5:
@@ -749,8 +751,12 @@ def make_ruler(xmin, xmax, num_cols, num_labels=5, ticks=5, minor_ticks=5, forma
     num_labels = max(2, num_labels)
 
     if isinstance(formatter, str):
-        frmstr = formatter
-        formatter = lambda s: format(s, frmstr)
+        
+        if formatter == "genomic":
+            formatter = utils.format_genomic
+        else:
+            frmstr = formatter
+            formatter = lambda s: format(s, frmstr)
 
     # Tick markers
     lbl_marker = "╰"

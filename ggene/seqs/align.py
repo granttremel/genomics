@@ -38,6 +38,20 @@ class AlignmentResult:
     
     def get_aligned_seqs(self):
         return self.target_algn, self.query_algn
+    
+    def get_mutation_spectrum(self):
+        
+        spec = {}
+        
+        for b, row in zip("ATGC", self.subs):
+            rsum = sum(row)
+            for bb, v in zip("ATGC", row):
+                
+                if b==bb:
+                    continue
+                spec[bb+b] = v/rsum
+        
+        return spec
         
     def print(self, chunksz = 128, emph_match = True, emph_subs = True, emph_indels = False, color_subs = False, show_middle = False, show_consensus = False):
         

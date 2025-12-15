@@ -42,6 +42,7 @@ def get_paths():
 
 other_paths = {
     "repeatmasker_path":  DATA_DIR / "repeatmasker" / "repeats.sorted.bed.gz",
+    "dfam_path": DATA_DIR / "dfam/hg38_dfam.nrph.bed.gz"
 }
 
 INFO_TAGS = (

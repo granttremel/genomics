@@ -42,6 +42,10 @@ class UnifiedFeature:
     id: Optional[str] = ""
     attributes: Dict[str, Any] = field(default_factory=dict)
     
+    @property
+    def chr(self):
+        return self.chrom
+    
     def __lt__(self, other):
         """For heap-based merging."""
         return (self.chrom, self.start, self.end) < (other.chrom, other.start, other.end)
@@ -589,6 +593,48 @@ class RepeatMaskerStream(AnnotationStream):
                     continue
                 yield feature
 
+class DfamStream(BEDStream):
+    
+    def __init__(self, filepath):
+        super().__init__(filepath, feature_type = "dfam_hit")
+        
+    def _parse_line(self, line: str) -> Optional[UnifiedFeature]:
+        """Parse BED line. Columns:
+        # BED: chrom, start, end, name, score(bits), strand, family_acc, e-value, bias, hmm-st, hmm-en, env-st, env-en, sq-len, kimura_div
+        """
+        
+        if line.startswith('#') or line.startswith('track'):
+            return None
+            
+        parts = line.strip().split('\t')
+        if len(parts) < 3:
+            return None
+        
+        name = parts[3].strip()
+        if name.endswith(")n"):
+            motif = name.strip("()n")
+        else:
+            motif = ""
+        
+        return UnifiedFeature(
+            chrom=parts[0].removeprefix("chr"),
+            start=int(parts[1]) + 1,  # BED is 0-based
+            end=int(parts[2]),
+            feature_type=self.feature_type,
+            source=self.source_name,
+            name=parts[3],
+            score= -1,
+            strand=parts[5] if len(parts) > 5 else None,
+            attributes={
+                "bits":float(parts[4]),
+                "family_acc":parts[6],
+                "e-value":float(parts[7]),
+                "bias":float(parts[7]),
+                "kimura_div":float(parts[7]),
+                "start_hmm":int(parts[9]),
+                "end_hmm":int(parts[10]),
+            }
+        )
 
 class UnifiedGenomeAnnotations:
     """Unified interface for all genomic annotations and sequences.
@@ -678,6 +724,9 @@ class UnifiedGenomeAnnotations:
     def add_repeatmasker(self, filepath: str, name: str = "repeats"):
         """Add RepeatMasker annotation source."""
         self.add_source(name, RepeatMaskerStream(filepath))
+    
+    def add_dfam(self, filepath, name="dfam"):
+        self.add_source(name, DfamStream(filepath))
     
     def stream_all(self, chrom: Optional[str] = None,
                    start: Optional[int] = None,

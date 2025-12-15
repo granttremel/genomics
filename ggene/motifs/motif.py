@@ -54,13 +54,30 @@ class MotifDetector:
     def score(self, seq, motifs=[]):
         pass
 
-    def setup_default_motifs(self, class_names = []):
+    def setup_default_motifs(self, pattern_classes = [], hmm_classes = []):
         
+        if pattern_classes:
+            self.setup_default_patterns(pattern_classes)
+        
+        if hmm_classes:
+            self.setup_default_hmms(hmm_classes)
+        
+    
+    def setup_default_hmms(self, hmm_classes):
+        
+        from .hmm import get_hmmmotifs
+        
+        hmm_mtfs = get_hmmmotifs(classes = hmm_classes)
+        
+        for hmm in hmm_mtfs:
+            self.add_motif(hmm)
+            
+    
+    def setup_default_patterns(self, class_names):
         if not class_names:
             class_names = motif_classes.keys()
         
         from .pattern import PatternMotif
-        
         for k1 in class_names:
             cls_motifs = motif_classes[k1]
             for k2 in cls_motifs:

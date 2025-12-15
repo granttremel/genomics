@@ -23,4 +23,24 @@ index with tabix:
 
 tabix -p gff sorted.gtf.gz
 
-
+zcat hg38_dfam.nrph.hits.gz | \
+  grep -v '^#' | \
+  awk -F'\t' 'BEGIN{OFS="\t"} {
+    # Handle strand-dependent coordinates
+    if ($9 == "-") {
+      start = $11 - 1;  # ali-en is smaller, convert to 0-based
+      end = $10;        # ali-st is larger
+    } else {
+      start = $10 - 1;  # ali-st is smaller, convert to 0-based
+      end = $11;        # ali-en is larger
+    }
+    # BED: chrom, start, end, name, score(bits), strand, family_acc, e-value, bias, hmm-st, hmm-en, env-st, env-en, sq-len, kimura_div
+    print $1, start, end, $3, $4, $9, $2, $5, $6, $7, $8, $12, $13, $14, $15
+  }' | \
+  sort -k1,1 -k2,2n > hg38_dfam.nrph.bed
+  
+#seq_name    family_acc    family_name      bits     e-value    bias    hmm-st    hmm-en  strand      ali-st    ali-en    env-st    env-en     sq-len    kimura_div
+-----------  ------------  -------------  ------  ----------  ------  --------  --------  --------  --------  --------  --------  --------  ---------  ------------
+chr1         DF0001137.4   TAR1            355      1.1e-103    98.4      1206      1716  -            10954     10464     10964     10448  248956422          8.32
+chr1         DF0001137.4   TAR1            558.7    4.1e-165    71.5       466      1114  -            11463     10826     11482     10810  248956422          6.74
+chr1         DF0000279.4   L1MC4a_3end      64      6.9e-16      9.4       195       395  -            11676     11502     11696     11480  248956422         17.98

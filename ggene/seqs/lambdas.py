@@ -118,6 +118,15 @@ def _seq_motif(seq, feats, motif_name):
 def seq_hammerhead_st1(seq, feats):
     return _seq_motif(seq, feats, "hammerhead_stem1")
 
+def _seq_te(seq, feats, te_name):
+    return sum([1 for f in feats if f.get("feature_type") == "dfam_hit" and te_name in f.get("name")])
+
+def seq_alu(seq, feats):
+    return _seq_te(seq, feats, "Alu")
+
+def seq_line1(seq, feats):
+    return _seq_te(seq, feats, "L1")
+
 def _seq_pattern(seq, feats, ptrn):
     return len(re.findall(ptrn, seq))
 
@@ -174,10 +183,22 @@ def needs_features(seq_spec):
     if seq_spec in lambda_map:
         seq_spec = lambda_map.get(seq_spec)
     
-    if seq_spec in [seq_genes, seq_exons, seq_motifs, seq_cds_len, seq_cds_pct, seq_feats]:
-        return True
+    if seq_spec in [seq_genes]:
+        return ["gene"]
+    elif seq_spec in [seq_exons]:
+        return ["exon"]
+    elif seq_spec in [seq_motifs]:
+        return ["motif"]
+    elif seq_spec in [seq_cds_len, seq_cds_pct]:
+        return ["CDS"]
+    elif seq_spec in [seq_feats]:
+        return []
+    elif seq_spec in [_seq_te, seq_alu, seq_line1]:
+        return ["dfam_hit"]
+    elif not seq_spec in lambda_map.values():
+        return []
     else:
-        return False
+        return None
 
 lambda_map = {
     "gc":seq_gc,
@@ -199,6 +220,8 @@ lambda_map = {
     "genes":seq_genes,
     "exons":seq_exons,
     "motifs":seq_motifs,
+    "alu":seq_alu,
+    "line1":seq_line1,
     
     "cds_len":seq_cds_len,
     "cds_pct":seq_cds_pct,

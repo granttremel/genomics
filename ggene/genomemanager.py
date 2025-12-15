@@ -118,6 +118,8 @@ class GenomeManager:
             for k, v in kwargs.items():
                 if k == "repeatmasker_path":
                     self.annotations.add_repeatmasker(v)
+                if k == "dfam_path":
+                    self.annotations.add_dfam(v)
                 
                 pass
                 
@@ -129,8 +131,8 @@ class GenomeManager:
         """Setup default motifs for detection."""
         
         # self.motif_detector.setup_default_motifs()
-        self.motif_detector.setup_default_motifs(class_names = ["misc"])
-        
+        # self.motif_detector.setup_default_motifs(pattern_classes = ["splice","promoter"], hmm_classes = ["Alu"])
+        self.motif_detector.setup_default_motifs(pattern_classes = ["splice","promoter"], hmm_classes = [])
         
         # self.motif_detector.setup_default_motifs(class_names = ["splice","promoter"])
         # self.motif_detector.setup_default_motifs(class_names = ["hammerhead", "SRP", "pseudoknot","msat"])
@@ -563,7 +565,7 @@ class GenomeManager:
             
         return long_dels, long_inserts
     
-    def get_chromosomal_quantities(self, chr, seq_specs, chunksz = 10e6, start = 1e6, length = None, resample = False, do_rc = False):
+    def get_chromosomal_quantities(self, chr, seq_specs, chunksz = 10e6, start = 1e6, length = None, resample = False, do_rc = False, needs_feats = []):
         
         seq_fns = []
         for seq_spec in seq_specs:
@@ -577,7 +579,11 @@ class GenomeManager:
         if not seq_fns:
             return None, None
         
-        needs_feats = any([needs_features(sfn) for sfn in seq_fns])
+        if not needs_feats:
+            needs_feats = []
+            for sfn in seq_fns:
+                needs_feats += needs_features(sfn)
+        needs_feats = list(set([v for v in needs_feats if v is not None]))
         
         chrmax = self.gene_map.max_indices.get(str(chr))
         if not length:
@@ -590,7 +596,7 @@ class GenomeManager:
         
         chrstr = str(chr)
         
-        # full_seq = self.annotations.get_sequence(chrstr, start, start + num_chunks * chunksz)
+        # print(f"getting quantities for chr{chr} with chunksz {chunksz} and {num_chunks} chunks ({needs_feats})")
         
         import time
         
@@ -600,17 +606,16 @@ class GenomeManager:
             if do_rc:
                 seq = reverse_complement(seq)
             if needs_feats:
-                ufeats = self.get_all_annotations(chrstr, start, end)
-                feats = [uf.to_dict() for uf in ufeats]
+                ufeats = list(self.annotations.stream_by_types(needs_feats, chr, start=start, end=end))
             else:
-                feats = []
+                ufeats = []
             
             if len(seq) < 1:
                 start = end
                 continue
             
             for i,seq_fn in enumerate(seq_fns):
-                qt = seq_fn(seq, feats)
+                qt = seq_fn(seq, ufeats)
                 starts[i].append(start)
                 qts[i].append(qt)
             start = end
@@ -628,8 +633,8 @@ class GenomeManager:
         
         return qts, starts
 
-    def get_chromosomal_quantity(self, chr, seq_spec, chunksz = 10e6, start = 1e6, length = None, resample = False, do_rc = False):
-        qts, starts = self.get_chromosomal_quantities(chr, [seq_spec], chunksz = chunksz, start = start, length = length, resample = resample, do_rc = do_rc)
+    def get_chromosomal_quantity(self, chr, seq_spec, chunksz = 10e6, start = 1e6, length = None, resample = False, do_rc = False, needs_feats = []):
+        qts, starts = self.get_chromosomal_quantities(chr, [seq_spec], chunksz = chunksz, start = start, length = length, resample = resample, do_rc = do_rc, needs_feats = needs_feats)
         return qts[0], starts[0]
         
     def display_chromosomal_quantity(self, chr, seq_spec, chunksz = 10e6, start = 1e6, max_disp = 256, length = None, resample = False, **kwargs):

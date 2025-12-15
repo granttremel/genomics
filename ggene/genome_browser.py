@@ -134,7 +134,7 @@ class InteractiveGenomeBrowser:
             'CDS', 'five_prime_utr', 'three_prime_utr',
             'start_codon', 'stop_codon', 
             'tf_binding', 'motif', 'splice_donor', 'splice_acceptor',
-            'repeat', 'chip_peak', 'variant'
+            'repeat', 'dfam_hit', 'chip_peak', 'variant'
         ]
         
         self.arrows = draw.get_arrow("default", 5, "-") # L, R
@@ -167,8 +167,6 @@ class InteractiveGenomeBrowser:
         print(f"{Colors.BOLD}Interactive Genome Browser{Colors.RESET}")
         print(f"Navigate with arrow keys, 'q' to quit, 'h' for help")
         print("-" * 80)
-        
-        logger.debug(self.gm.motif_detector.motifs.get("rand1").pattern)
         
         try:
             self._run_browser()
@@ -274,7 +272,6 @@ class InteractiveGenomeBrowser:
                 self._open_ensembl()
             elif key == 't':
                 self._translate_transcript()
-                # self.gm.ribo.translate_transcript()
             elif key == 'ctrl_right':  # Ctrl+Right: Next gene
                 self._jump_to_next_gene()
             elif key == 'ctrl_left':   # Ctrl+Left: Previous gene  
@@ -340,7 +337,7 @@ class InteractiveGenomeBrowser:
             stride = self.state.stride,
             integrate_variants=True,
             track_features = True,
-            feature_types=["gene","exon","CDS","motif","variant", "repeat"]
+            feature_types=["gene","exon","CDS","dfam_hit"]
         )
         self.window = self.iterator.get_window_at(self.state.position)
         
@@ -360,7 +357,7 @@ class InteractiveGenomeBrowser:
                 stride = self.state2.stride,
                 integrate_variants=True,
                 track_features = True,
-                feature_types=["gene","exon","CDS","motif","variant", "repeat"]
+            feature_types=["gene","exon","CDS","dfam_hit"]
             )
             self.window2 = self.iterator2.get_window_at(self.state2.position)
 
@@ -387,20 +384,31 @@ class InteractiveGenomeBrowser:
         all_lines, n = self._get_display_lines(suppress = True)
         lines_used += n
         
+        # rpts =["GCGCGCGC", "GAGAGAGA", "ATGCATGC", "ATCGATCG"]
+        rpts = []
+        
         dlines = []
         if self._ref_cache1:
-            dlines = self.get_data_lines(self._ref_cache1, self._ref_cache1, bit_depth = 16)
+            # dlines = self.get_data_lines(self._ref_cache1, self._ref_cache1, bit_depth = 16)
+            
             # dlines32 = self.get_data_lines(self._ref_cache1, self._ref_cache1, bit_depth = 8, scale = 32, show_stats = False)
             # dlines.extend(dlines32)
-            dlines16 = self.get_data_lines(self._ref_cache1, self._ref_cache1, bit_depth = 8, scale = 16, show_stats = False)
-            dlines.extend(dlines16)
+            
+            # dlines16 = self.get_data_lines(self._ref_cache1, self._ref_cache1, bit_depth = 8, scale = 16, show_stats = False)
+            # dlines.extend(dlines16)
+            
             # dlines8 = self.get_data_lines(self._ref_cache1, self._ref_cache1, bit_depth = 8, scale = 8, show_stats = False)
             # dlines.extend(dlines8)
-            # dlines.append("\n")
+            
+            for rpt in rpts:
+                full_rpt = process.pad_sequence(rpt, len(self._ref_cache1))
+                new_dlines = self.get_data_lines(full_rpt, self._ref_cache1, show_stats = False, bit_depth = 8)
+                dlines.extend(new_dlines)
+            
             lines_used += len(dlines)
         
         # Navigation hints at fixed position (line 24)
-        footer = self.get_footer_lines(lines_used, footer_pos = 32, suppress= True)
+        footer = self.get_footer_lines(lines_used, footer_pos = 0, suppress= True)
         
         print("\n".join(header))
         print()
@@ -1168,11 +1176,14 @@ class InteractiveGenomeBrowser:
         else:
             state = self.state
         
-        feature_types = ["gene","exon","CDS", 
-                         "motif", 
-                        #  "variant", 
-                         "repeat"
-                         ]
+        # feature_types = ["gene","exon","CDS", 
+        #                  "motif", 
+        #                  "variant", 
+        #                  "repeat",
+        #                  "dfam_hit"
+        #                  ]
+        
+        feature_types = self.iterator.feature_types
         
         lines = []
         
@@ -1515,17 +1526,23 @@ class InteractiveGenomeBrowser:
         info = feature.get('attributes', {})
         
         if ftype == 'gene':
-            # return info.get('gene_name', 'gene')
-            return feature.name if feature.name else "?"
+            
+            if feature.name:
+                return feature.name
+            elif feature.id:
+                return f"id={feature.id}, {feature.attributes.get("gene_biotype","")}"
+            else:
+                return "?"
+            
         elif ftype == 'transcript':
             name = info.get('transcript_name', info.get('transcript_id', 'transcript'))
-            # name=feature.name
             # Shorten long transcript names
             if len(name) > 20:
                 if '-' in name:
                     return name.split('-')[-1]
                 return name[:20]
             return name
+        
         elif ftype == 'exon':
             exon_num = info.get('exon_number', '?')
             return f"exon {exon_num}"
@@ -1551,6 +1568,8 @@ class InteractiveGenomeBrowser:
             return "intron"
         elif ftype == "repeat":
             return feature.name
+        elif ftype == "dfam_hit":
+            return feature.name + ("(-)" if feature.strand=="-" else "")
         else:
             return ftype[:10]
     

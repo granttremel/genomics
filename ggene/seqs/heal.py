@@ -2,9 +2,12 @@
 import numpy as np
 
 from ggene import seqs
+from ggene import draw
 from ggene.seqs import bio, find, process, manipulate
 from .bio import reverse_complement
 from .vocab import VOCAB
+import itertools
+
 
 class Healer:
     
@@ -183,3 +186,84 @@ def get_mutation_spectrum(seqa, seqb, mutation_spec = {},  b_is_rc = False, allo
                 ms[real_b] += 1
     
     return ms
+
+def convert_mutation_spectrum(mutation_spec, aliases):
+    
+    alias_map = bio.get_alias_map(aliases)
+    new_ms = {k+kk:0 for k,kk in itertools.product(alias_map.values(), alias_map.values()) if k!=kk}
+    
+    for k, v in mutation_spec.items():
+        b, bb  = alias_map.get(k[0], "N"), alias_map.get(k[1], "N")
+        if b==bb:
+            continue
+        new_ms[b+bb] += v
+    
+    return new_ms
+
+def plot_mutation_spectrum(mutation_spec, do_heatmap = False, aliases = "", **kwargs):
+    
+    if aliases:
+        mutation_spec = convert_mutation_spectrum(mutation_spec, aliases)
+        kwargs["ab"] = aliases
+    
+    if do_heatmap:
+        _mutation_heatmap(mutation_spec, **kwargs)
+    else:
+        _mutation_dist(mutation_spec, **kwargs)
+    pass
+
+def _mutation_heatmap(mutation_spec, **kwargs):
+    
+    hm_data = []
+    
+    kwargs["center"] = kwargs.pop("center", None)
+    kwargs["minval"] = kwargs.pop("minval", 0)
+    kwargs["col_width"] = kwargs.pop("col_width", 2)
+    kwargs["col_space"] = kwargs.pop("col_space", 0)
+    kwargs["row_height"] = kwargs.pop("row_height", 1)
+    kwargs["row_space"] = kwargs.pop("row_space", 0)
+    kwargs["symmetric_color"] = kwargs.pop("symmetric_color", False)
+    
+    ab = kwargs.get("ab", VOCAB)
+    
+    for b in ab:
+        hm_row = []
+        for bb in ab:
+            hm_row.append(mutation_spec.get(b + bb))
+        hm_data.append(hm_row)
+    
+    draw.heatmap(hm_data, row_labels = ab, col_labels = ab, **kwargs)
+    print()
+    
+
+def _mutation_dist(mutation_spec, **kwargs):
+    
+    data = []
+    lbl1s = []
+    lbl2s = []
+    
+    minval = kwargs.pop("minval", 0)
+    ab = kwargs.get("ab", VOCAB)
+    
+    for b in ab:
+        for bb in ab:
+            
+            if b==bb:
+                continue
+            
+            data.append(mutation_spec[b+bb])
+            lbl2s.append(bb)
+        
+        data.append(minval)
+        lbl1s.append(b+" "*(len(ab)-1))
+        lbl2s.append(" ")
+    
+    scd = draw.scalar_to_text_nb(data, minval=minval, add_range = True, **kwargs)
+    
+    for r in scd:
+        print(r)
+    
+    print("".join(lbl2s))
+    print("".join(lbl1s))
+    print()
+    

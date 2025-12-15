@@ -173,13 +173,15 @@ def compare_sequences(seqa, seqb, chunksz = 128, score_modes = ["alignment", "ru
             scores_rs = scores[nsm]
             rcscores_rs = rcscores[nsm]
         
-        hm = draw.heatmap(scores_rs, center = None, row_labels = row_lbls, suppress = True, color_scheme = "terra", col_space = 0, row_space = 0,
+        cs = "coolwarm"
+        
+        hm = draw.heatmap(scores_rs, center = None, row_labels = row_lbls, suppress = True, color_scheme = cs, col_space = 0, row_space = 0,
                           ruler = ruler, xmin = xmin, xmax = xmax, num_labels=num_labels)
         
         for nr in range(len(hm)):
             all_hms[nr].append(hm[nr])
         
-        rchm = draw.heatmap(rcscores_rs, center = None, row_labels = row_lbls, suppress = True, color_scheme = "terra", col_space = 0, row_space = 0,
+        rchm = draw.heatmap(rcscores_rs, center = None, row_labels = row_lbls, suppress = True, color_scheme = cs, col_space = 0, row_space = 0,
                           ruler = ruler, xmin = xmin, xmax = xmax, num_labels=num_labels)
         
         for nr in range(len(rchm)):

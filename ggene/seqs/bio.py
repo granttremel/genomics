@@ -433,6 +433,34 @@ def get_adjacent_codons(aa_str, mutations = "N"):
     adjdict = {c:CODON_TABLE.get(c,".") for c in adj_cods}
     return coddict, adjdict
 
+def convert_to_aliases(seq, aliases, default = "N"):
+    
+    alias_map = get_alias_map(aliases)
+    
+    outseq = []
+    
+    for b in seq:
+        
+        newb = alias_map.get(b, default)
+        outseq.append(newb)
+    
+    return "".join(outseq)
+
+def get_alias_map(aliases):
+    
+    alias_map = {}
+    
+    for b in ORDER:
+        
+        alis = ALIASES_INV.get(b,"")
+        
+        for a in alis:
+            if a in aliases:
+                alias_map[b] = a
+                break
+        
+    return alias_map
+
 def get_minimal_alias(*bs, default = "N"):
     bset = set()
     for b in bs:
