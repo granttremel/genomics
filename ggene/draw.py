@@ -340,6 +340,8 @@ def get_color_scheme_24b(name):
         return [20,34,78], [180,34,78]
     elif name == "terra":
         return [19,118,83], [244,143,35]
+    elif name == "unterra":
+        return [10,75,50], [125,25,125]
     elif name == "vscode":
         return [28,28,28], [28,28,28]
 

@@ -275,6 +275,11 @@ def _search_align(test_seq, config: SearchConfig) -> SearchResult:
         rc_argmax = rc_argmax,
     )
 
+def _search_hmm(test_seq, config: SearchConfig):
+    
+    
+    pass
+
 def search_chr(gm, chr, num_chunks, chunksz, topk, chr_start = None, chr_length = None, buffer = 1e6, config: SearchConfig = None, **search_kwargs) -> ChromosomeSearchResult:
 
     chr_scores = []

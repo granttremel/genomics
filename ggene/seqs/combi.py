@@ -19,18 +19,18 @@ def totient(n):
     if n>1: phi -= phi//n
     return phi
 
-def get_seq_index(seq):
-    nbs = 4
+def get_seq_index(seq, ab = "ATGC"):
+    nbs = len(ab)
     seq_len = len(seq)
-    base_idx = {VOCAB[i]:i for i in range(nbs)}
-    return sum([base_idx.get(s)*nbs**(seq_len-i-1) for i,s in enumerate(seq)])
+    base_idx = {ab[i]:i for i in range(nbs)}
+    return sum([base_idx.get(s, 0)*nbs**(seq_len-i-1) for i,s in enumerate(seq)])
 
-def index_to_seq(ind, seq_len = 4):
+def index_to_seq(ind, seq_len = 4, ab = "ATGCN"):
     nbs = 4
     if ind == 0:
         return "A"*seq_len
     inds = [(ind//nbs**k)%nbs for k in range(seq_len-1, -1, -1)]
-    return "".join(VOCAB[i] for i in inds)
+    return "".join(ab[i] for i in inds)
 
 def get_seq_index_abs(seq):
     seq = "A" + seq
@@ -98,7 +98,7 @@ def count_rotations(n, k):
     
     return N//n
     
-def to_canonical_r(seq, ab = "ATGC"):
+def to_canonical_r(seq, ab = "ATGCN"):
     """
     provides rotation k that transforms seq into the canonical rotation
     Booth: https://en.wikipedia.org/wiki/Lexicographically_minimal_string_rotation

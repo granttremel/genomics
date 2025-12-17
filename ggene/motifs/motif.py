@@ -141,7 +141,7 @@ class BaseMotif(ABC):
 default_motifs = {
     
     # "splice_donor": "GTRAGT",
-    "splice_donor": "YAGGTRAGT",
+    "splice_donor": "YAGGTRAGT", # ACTYACCTR
     "splice_branch": "CTCAY",
     "splice_acceptor": "Y{5,}YAG",
     

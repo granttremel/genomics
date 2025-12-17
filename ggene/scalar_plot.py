@@ -273,8 +273,11 @@ class ScalarPlot:
             # xlbl = xlabel[n*chunksz:(n+1)*chunksz] if chunksz else xlabel
             
             if center_xlabel and xlabel:
-                xlbl = visible_slice(xlabel, start = n*chunksz, stop = (n+1)*chunksz, step = 1)
-                print(xlbl)
+                if not isinstance(xlabel, list):
+                    xlabel = [xlabel]
+                for _xlabel in xlabel:
+                    xlbl = visible_slice(_xlabel, start = n*chunksz, stop = (n+1)*chunksz, step = 1)
+                    print(xlbl)
             
             bsubdata = btm_plot.scalars[chunksz*n:chunksz*(n+1)]
             

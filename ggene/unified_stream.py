@@ -80,7 +80,9 @@ class UnifiedFeature:
             'id': self.id,
             'attributes': self.attributes
         }
-
+    
+    
+    
 
 class AnnotationStream(ABC):
     """Abstract base class for annotation streams."""
@@ -110,6 +112,17 @@ class AnnotationStream(ABC):
                 features.append(feature)
         return features
 
+    def test(self, chrom, pos):
+        
+        if not hasattr(self, "tabix"):
+            return True
+        
+        try:
+            self.tabix.fetch(chrom, pos, pos+1)
+        except:
+            return False
+        
+        return True
 
 class GTFStream(AnnotationStream):
     """Stream GTF/GFF annotations using indexed access."""
@@ -171,6 +184,10 @@ class GTFStream(AnnotationStream):
                start: Optional[int] = None,
                end: Optional[int] = None) -> Iterator[UnifiedFeature]:
         """Stream GTF features using indexed access when available."""
+        
+        res = self.test(chrom, start)
+        if not res:
+            return
         
         # Use indexed access if available
         if self.tabix and chrom:
@@ -349,6 +366,10 @@ class VCFStream(AnnotationStream):
                end: Optional[int] = None) -> Iterator[UnifiedFeature]:
         """Stream VCF features using cyvcf2's efficient indexed access."""
         
+        res = self.test(chrom, start)
+        if not res:
+            return
+        
         # Use cyvcf2's efficient querying
         if self.vcf and chrom:
             chrstr = str(chrom)
@@ -457,8 +478,12 @@ class BEDStream(AnnotationStream):
                start: Optional[int] = None,
                end: Optional[int] = None) -> Iterator[UnifiedFeature]:
         """Stream BED features."""
-        
         chrom = str(chrom)
+        
+        # res = self.test(chrom, start)
+        # if not res:
+        #     return
+        
         tbichrom = chrom if chrom.startswith("chr") else "chr" + chrom
         for line in self.tabix.fetch(tbichrom, start=start, end=end):
             feature = self._parse_line(line)
@@ -497,7 +522,11 @@ class JASPARStream(AnnotationStream):
         """Stream motif predictions by scanning sequence."""
         if not chrom or not start or not end:
             return
-            
+        
+        res = self.test(chrom, start)
+        if not res:
+            return
+        
         # Get sequence for region
         seq = self.get_sequence(chrom, start, end)
         
@@ -582,6 +611,17 @@ class RepeatMaskerStream(AnnotationStream):
         
         chrom = str(chrom)
         tbichrom = chrom if chrom.startswith("chr") else "chr" + chrom
+        
+        res = self.test(chrom, start)
+        if not res:
+            return
+        
+        try:
+            self.tabix.fetch(tbichrom, start=start, end=start+1)
+        except:
+            logger.error(f"index {start} not contained within index file!")
+            return
+        
         for line in self.tabix.fetch(tbichrom, start=start, end=end):
             feature = self._parse_line(line)
             if feature:
@@ -633,6 +673,7 @@ class DfamStream(BEDStream):
                 "kimura_div":float(parts[7]),
                 "start_hmm":int(parts[9]),
                 "end_hmm":int(parts[10]),
+                # "raw_line":line
             }
         )
 

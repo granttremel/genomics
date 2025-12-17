@@ -1705,3 +1705,15 @@ class GenomeManager:
                 positions.append(iterator.current_pos - iterator.stride)
         
         return positions
+
+    ###### iterators #######
+    
+    def iter_chromes(self, include_mito = False):
+        
+        mt_chr = []
+        if include_mito:
+            mt_chr = ['MT']
+        
+        for chr in [str(i) for i in range(1, 23)] + ['X','Y'] + mt_chr:
+            yield chr
+

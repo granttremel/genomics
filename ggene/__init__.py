@@ -31,7 +31,7 @@ with open(CONFIG_PATH) as f:
     cfg = yaml.safe_load(f)
 
 # Constants
-DATA_DIR = Path(cfg.get("data_dir"))
+DATA_DIR = Path(cfg.get("data_dir"), )
 DEFAULT_VCF_PATH = DATA_DIR / "gt_vcf.gz"
 DEFAULT_GTF_PATH = DATA_DIR / "GRCh38_sorted.gtf.gz"
 DEFAULT_FASTA_PATH = DATA_DIR / "Homo_sapiens.GRCh38.dna.primary_assembly.fa.gz"

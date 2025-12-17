@@ -318,7 +318,7 @@ class InteractiveGenomeBrowser:
             stride = self.state2.stride,
             integrate_variants=True,
             track_features = True,
-            feature_types=["gene","exon","CDS","motif"]
+            feature_types=["gene","exon","CDS","motif","variant"]
         )
 
         self.state.show_second= self.state2.show_second = True
@@ -337,7 +337,7 @@ class InteractiveGenomeBrowser:
             stride = self.state.stride,
             integrate_variants=True,
             track_features = True,
-            feature_types=["gene","exon","CDS","dfam_hit"]
+            feature_types=["gene","exon","CDS","variant","dfam_hit"]
         )
         self.window = self.iterator.get_window_at(self.state.position)
         
@@ -357,7 +357,7 @@ class InteractiveGenomeBrowser:
                 stride = self.state2.stride,
                 integrate_variants=True,
                 track_features = True,
-            feature_types=["gene","exon","CDS","dfam_hit"]
+            feature_types=["gene","exon","CDS","variant","dfam_hit"]
             )
             self.window2 = self.iterator2.get_window_at(self.state2.position)
 
@@ -389,7 +389,7 @@ class InteractiveGenomeBrowser:
         
         dlines = []
         if self._ref_cache1:
-            # dlines = self.get_data_lines(self._ref_cache1, self._ref_cache1, bit_depth = 16)
+            dlines = self.get_data_lines(self._ref_cache1, self._ref_cache1, bit_depth = 16)
             
             # dlines32 = self.get_data_lines(self._ref_cache1, self._ref_cache1, bit_depth = 8, scale = 32, show_stats = False)
             # dlines.extend(dlines32)
