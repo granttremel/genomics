@@ -1341,16 +1341,33 @@ def make_key(features, colors):
     
     return " ".join(parts)
 
-def highlight_matching(seqa, seqb, color = None, do_rc = False, do_both = False, suppress = False, chunksz = 256):
+def highlight_matching(seqa, seqb, colors = None, do_rc = False, do_both = False, suppress = False, color_bg = False, chunksz = 256):
     
     if do_both:
         do_rc = False
     
-    base_color = "\x1b[38;5;240m"
-    if not color:
-        # color = Colors.HIGHLIGHT
-        color = "\x1b[38;5;142m"
+    bg_frm = "\x1b[48;5;{}m"
+    fg_frm = "\x1b[38;5;{}m"
+    
+    if color_bg:
+        cfrm = bg_frm
+    else:
+        cfrm = fg_frm
+    
+    base_color_fg = fg_frm.format(248)
+    base_color_bg = cfrm.format(234)
+    base_color = Colors.RESET + base_color_fg + base_color_bg
+    if not colors:
+        color = cfrm.format(142)
         rcolor = Colors.MOTIF
+    else:
+        c, cr = colors
+        color = cfrm.format(c)
+        rcolor = cfrm.format(cr)
+    
+    if color_bg:
+        color = color + Colors.BOLD
+        rcolor = rcolor + Colors.BOLD
     
     seqah = [base_color]
     seqbh = [base_color]

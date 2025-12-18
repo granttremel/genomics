@@ -123,11 +123,16 @@ def test_vtrna(gm:GenomeManager, context_sz = 128, pct = 90, show_scplots = Fals
             
             res, rcres = process.correlate(seqii, seqjj, comparison_func = cf, score_func = sf, fill = None)
             
+            xlabel = draw.highlight_matching(seqii, seqjj, colors = (65+6, 53), do_both = True, suppress = True, color_bg = True)
+            
+            # print(xlabel[0])
+            # print(xlabel[1])
+            
             if show_scplots:
                 print(f"Plot of gene {fi.name}, {fj.name}")
                 sc1 = ScalarPlot(res, add_range = True, minval = 0)
                 sc2 = ScalarPlot(rcres, add_range = True, minval = 0)
-                ScalarPlot.show_paired(sc1, sc2, chunksz = 256, xlabel = [seqii, seqjj], center_xlabel = True)
+                ScalarPlot.show_paired(sc1, sc2, chunksz = 256, xlabel = xlabel, center_xlabel = True)
             
             hmdata["fwd_pct"][-1].append(np.percentile(res, [pct])[0])
             hmdata["rev_pct"][-1].append(np.percentile(rcres, [pct])[0])
@@ -178,14 +183,8 @@ def main():
     # test_vc = "ᖰᖱᕫᕬ"
     # test_vc = "ᘔᘖᐁᐃ" # slay!
     # test_vc = "ᖸᖹᘉᘈ" # has potential
-    test_vc = "ᑭᑯᖗᖘ"
-    test_vc = "ᘂᘃᖼᖽ"
-    
-    vocab.set_vocab(test_vc)
-    
-    print(vocab.VOCAB, vocab.VOCAB_DNA)
-    
-    # input()
+    # test_vc = "ᑭᑯᖗᖘ"
+    # test_vc = "ᘂᘃᖼᖽ"
     
     # initialize_rna_library(gm, chrom = "")
     
