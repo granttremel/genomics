@@ -12,6 +12,7 @@ from dataclasses import dataclass
 from abc import ABC, abstractmethod
 
 from ggene.unified_stream import UnifiedFeature
+from ggene.seqs import vocab
 
 if TYPE_CHECKING:
     from ggene.unified_stream import UnifiedFeature
@@ -102,7 +103,8 @@ class FASTAStream(BaseSequenceStream):
         try:
             # pysam uses 0-based half-open intervals
             seq = self.fasta.fetch(str(chrom), start - 1, end)
-            return seq.upper()
+            seq = vocab._convert_seq_vocab(seq.upper(), vocab.VOCAB, from_vocab = vocab.VOCAB_DNA)
+            return seq
         except Exception as e:
             logger.debug(f"Failed to fetch sequence {chrom}:{start}-{end}: {e}")
             return ""

@@ -109,9 +109,10 @@ _symbols = [
 
 _curves = [
     "⎡","⎢","⎣","","","","","","","","","","","","","",
-    
-    
 ]
+
+_sick_chars = [chr(i) for i in range(0x1400, 0x1680)] + [chr(i) for i in range(0x18B0, 0x18F6)]
+
 
 _protein_metavocab = "".join(["☉","☼","⚙","⚛","❁","✾"])
 # _protein_metavocab = "".join(["◉","◎","◴","◵","◶","◷"])
@@ -341,7 +342,7 @@ def get_color_scheme_24b(name):
     elif name == "terra":
         return [19,118,83], [244,143,35]
     elif name == "unterra":
-        return [10,75,50], [125,25,125]
+        return [19,118,83], [125,25,125]
     elif name == "vscode":
         return [28,28,28], [28,28,28]
 
@@ -944,7 +945,7 @@ def heatmap(data, row_labels=None, col_labels=None, minval=None, maxval=None, ce
         row_labels = []
     if col_labels is None:
         col_labels = []
-        
+    
     max_row_label_len = max(len(str(lbl)) for lbl in row_labels) if row_labels else 0
 
     row_frm = "{:<%s}{}" % str(max_row_label_len + 1)
@@ -955,14 +956,20 @@ def heatmap(data, row_labels=None, col_labels=None, minval=None, maxval=None, ce
     row_space = kwargs.get("row_space", 0.5)
 
     if col_labels:
-        header_items = ""
-        for col_lbl in col_labels:
-            short_lbl = str(col_lbl).center(col_width) + " "*int(col_space)
-            header_items += short_lbl
+        
+        num_col_lbl_rows = len(col_labels[0]) if isinstance(col_labels[0], list) else 1
+        
+        for n in range(num_col_lbl_rows):
+            header_items = ""
+            for i, col_lbls in enumerate(col_labels):
+                col_lbl = col_lbls[n]
+                short_lbl = str(col_lbl).center(col_width+col_space)
+                header_items += short_lbl
             
-        header_line = row_frm.format(" ", header_items)
-        out_rows.append(header_line)
-
+            header_line = row_frm.format(" ", header_items)
+            
+            out_rows.append(header_line)
+    
     for i, row in enumerate(data):
         row_lbl = str(row_labels[i]).ljust(max_row_label_len) if row_labels else ""
         line = ""
@@ -976,7 +983,7 @@ def heatmap(data, row_labels=None, col_labels=None, minval=None, maxval=None, ce
         
         for nr in range(row_height):
             
-            vr = value_row if nr==0 else None
+            vr = value_row if nr == 0 else None
             rlbl = row_lbl if nr == 0 else ""
             
             use_border = False

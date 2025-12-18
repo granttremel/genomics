@@ -81,7 +81,7 @@ class UnifiedFeature:
             'attributes': self.attributes
         }
     
-    
+UFeat = UnifiedFeature
     
 
 class AnnotationStream(ABC):
@@ -120,7 +120,9 @@ class AnnotationStream(ABC):
         try:
             self.tabix.fetch(chrom, pos, pos+1)
         except:
-            return False
+            logger.debug("tabix fetch failed... maybe?")
+            pass
+            # return False
         
         return True
 
@@ -187,6 +189,7 @@ class GTFStream(AnnotationStream):
         
         res = self.test(chrom, start)
         if not res:
+            print(f"tabix fetch failed for {type(self)} with path {self.filepath}")
             return
         
         # Use indexed access if available
@@ -368,6 +371,7 @@ class VCFStream(AnnotationStream):
         
         res = self.test(chrom, start)
         if not res:
+            print(f"tabix fetch failed for {type(self)} with path {self.filepath}")
             return
         
         # Use cyvcf2's efficient querying
@@ -525,6 +529,7 @@ class JASPARStream(AnnotationStream):
         
         res = self.test(chrom, start)
         if not res:
+            print(f"tabix fetch failed for {type(self)} with path {self.filepath}")
             return
         
         # Get sequence for region
@@ -614,6 +619,7 @@ class RepeatMaskerStream(AnnotationStream):
         
         res = self.test(chrom, start)
         if not res:
+            print(f"tabix fetch failed for {type(self)} with path {self.filepath}")
             return
         
         try:

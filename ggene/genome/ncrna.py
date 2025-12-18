@@ -102,28 +102,38 @@ def gather_all_rna_genes(gm:GenomeManager):
 def gather_rna_genes(gm:GenomeManager, chrom):
     
     rna_genes = {bt:[] for bt in rna_types}
-        
+    
     print(f"######### starting chr{chrom} ####### \n")
     
+    ng = 0
+    nrg = 0
     for gene in gm.annotations.stream_by_types(['gene'], chrom):
-        
+        ng += 1
         gn = gene.get("gene_name", gene.get("name",""))
         bt = gene.get("attributes",{}).get("gene_biotype")
-        if not "RNA" in bt:
-            continue
         
         if not bt in rna_types:
-            rna_types.append(bt)
+            continue
+        
+        # if not "RNA" in bt:
+        #     continue
+        
+        sc, v = assign_rna_subclass(gene)
+        
+        if not bt in rna_genes:
+            # rna_types.append(bt)
             rna_genes[bt] = []
-        rna_genes[bt].append(gene.to_dict())
+        rna_genes[bt].append(gene)
+        nrg += 1
     
+    print(f"searchged {ng} genes on chr{chrom} and found {nrg} rna genes")
     return rna_genes
 
 
 def save_rna_genes(rna_genes, ftag = ""):
     
     for rnt, genes in rna_genes.items():
-        json_str = json.dumps({rnt:genes})
+        json_str = json.dumps({rnt:[g.to_dict() for g in genes]})
         
         for repstr in ["[",r"}},"]:
             json_str = json_str.replace(repstr, repstr + "\n")
@@ -131,6 +141,8 @@ def save_rna_genes(rna_genes, ftag = ""):
         
         
         fname = DEFAULT_LIBRARY / LIB_DIR / (f"rna_genes_{rnt}" + ("_" + ftag if ftag else "") +".json")
+        # fname.mkdir(exist_ok = True)
+        # print(f"saving rna genes to {fname}")
         with open(fname,"w+") as f:
             f.write(json_str)
 
