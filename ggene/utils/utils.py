@@ -7,7 +7,8 @@
 
 
 def format_genomic(index):
-    
+    index = int(index)
+    fstr = "0.1f"
     if index > 0.5e6:
         div = 1e6
         unit = "M"
@@ -17,4 +18,5 @@ def format_genomic(index):
     else:
         div = 1
         unit = "b"
-    return format(index/div, ".1f") + unit
+        fstr = ""
+    return format(index/div, fstr) + unit

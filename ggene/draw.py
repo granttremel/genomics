@@ -276,6 +276,7 @@ class Colors:
         out.set_effect(effect_spec)
         return out
 
+
 RESET = '\033[0m'
 
 CS = Colors.from_specs(text_spec=250, text_bright = True, effect_spec ="")
@@ -1343,8 +1344,10 @@ def make_key(features, colors):
 
 def highlight_matching(seqa, seqb, colors = None, do_rc = False, do_both = False, suppress = False, color_bg = False, chunksz = 256):
     
+    do_fwd = (not do_rc)
     if do_both:
-        do_rc = False
+        do_rc = True
+        do_fwd = True
     
     bg_frm = "\x1b[48;5;{}m"
     fg_frm = "\x1b[38;5;{}m"
@@ -1365,49 +1368,51 @@ def highlight_matching(seqa, seqb, colors = None, do_rc = False, do_both = False
         color = cfrm.format(c)
         rcolor = cfrm.format(cr)
     
-    if color_bg:
-        color = color + Colors.BOLD
-        rcolor = rcolor + Colors.BOLD
+    color = color + Colors.BOLD
+    rcolor = rcolor + Colors.BOLD
     
     seqah = [base_color]
     seqbh = [base_color]
+    rcseqbh = [base_color]
     
     rseqb = reversed(seqb)
     
     n = 0
     for sa, sb, rsb in zip(seqa, seqb, rseqb):
         
-        rcsb = complement(rsb)
+        apre = ""
+        bpre = ""
+        rcbpre = ""
+        post = ""
         
-        if sa == sb and not do_rc:
-            pre = color
+        if do_rc and sa == complement(rsb):
+            apre = rcbpre = rcolor
             post = base_color
-        elif sa == rcsb and do_rc:
-            pre = color
+        if do_fwd and sa == sb:
+            apre = bpre = color
             post = base_color
-        elif sa == rcsb and do_both:
-            pre = rcolor
-            post = base_color
-        else:
-            pre = ""
-            post = ""
         
-        seqah.append(f"{pre}{sa}{post}")
-        seqbh.append(f"{pre}{sb}{post}")
+        seqah.append(f"{apre}{sa}{post}")
+        seqbh.append(f"{bpre}{sb}{post}")
+        rcseqbh.append(f"{rcbpre}{rsb}{post}")
         n+=1
     
     seqah.append(Colors.RESET)
     seqbh.append(Colors.RESET)
+    rcseqbh.append(Colors.RESET)
     
     seqaout = "".join(seqah)
     seqbout = "".join(seqbh)
+    rcseqbout = "".join(rcseqbh)
     
     if not suppress:
         for n in range(len(seqa)//chunksz + 1):
             print(seqaout[n*chunksz:(n+1)*chunksz])
             print(seqbout[n*chunksz:(n+1)*chunksz])
-    print(Colors.RESET)
-    return "".join(seqah), "".join(seqbh)
+            print(rcseqbout[n*chunksz:(n+1)*chunksz])
+        print(Colors.RESET)
+    
+    return seqaout, seqbout, rcseqbout
 
 def highlight_correlated(full_seq, shift, colors = None, suppress = False):
     

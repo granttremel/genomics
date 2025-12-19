@@ -34,7 +34,11 @@ def main():
     parser.add_argument('--old', '-o', action="store_true",
                        help='do version 1')
     
+    parser.add_argument('--artist-type', type=str, default = "bar")
+    
     args = parser.parse_args()
+    
+    print(f"args: {args}")
     
     print("Loading genome data...")
     gm = GenomeManager(**other_paths)
@@ -64,12 +68,17 @@ def main():
         max_ind = gm.gene_map.max_indices.get(chrom)
         pos = int(random.random() * (max_ind - 1e6) + 1e6)
     
+    artist_defaults = {"show_ruler":True}
     
     # gui = int(args.gui[0])==1
     # Start the browser
     
+    window_sz = args.window
+    if args.artist_type == "bar":
+        window_sz *= 4
+      
     if args.old:
-        browse_genome_v1(gm, chrom, pos, args.window, debug = args.debug, use_gui=False)
+        browse_genome_v1(gm, chrom, pos, args.window, debug = args.debug, use_gui=False, artist_type = args.artist_type, **artist_defaults)
     else:
         browse_genome_v2(gm, chrom, pos, args.window, debug = args.debug, use_gui=False)
 

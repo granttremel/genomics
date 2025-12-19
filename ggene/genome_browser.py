@@ -34,6 +34,8 @@ from ggene.processing.coordinate_mapper import CoordinateMapper, SequenceRendere
 from ggene.processing.sequence_processor import SequenceProcessor
 from ggene.processing.feature_processor import FeatureProcessor
 
+from ggene.display import artist
+
 if TYPE_CHECKING:
     from .genomemanager import GenomeManager
 
@@ -50,6 +52,8 @@ class BrowserState:
     position: int
     window_size: int
     stride: int
+    display_height:int
+    artist_type:str = "normal" # "normal", "sequence", "zoom"
     show_features: bool = True
     show_quality: bool = False
     show_amino_acids: bool = False
@@ -97,25 +101,38 @@ class InteractiveGenomeBrowser:
     left_margin = 12
     row_frm = "{cm}{margin:<12}" + Colors.RESET + "{cr}{row}" + Colors.RESET
     
-    def __init__(self, genome_manager: 'GenomeManager', debug = False):
+    def __init__(self, genome_manager: 'GenomeManager', debug = False, **kwargs):
         """Initialize the genome browser.
         
         Args:
             genome_manager: Initialized GenomeManager instance
         """
-        self.gm:GenomeManager = genome_manager
-        self.state = BrowserState(1, int(10e6), 128, 20)
-        self.state2 = BrowserState(1, int(10e6), 128, 20, _is_second = True)
-        self.history = []
-        self.debug = debug
+        
+        self.debug = debug        
         if self.debug:
             logger.setLevel(logging.DEBUG)
         else:
             logger.setLevel(logging.ERROR)
+        logger.debug(f"init genome browser with debug {debug} and kwargs {kwargs}")
+        # if kwargs.get("artist_type","") == "seq":
+        #     show_second = True
+        self.gm:GenomeManager = genome_manager
+        self.state = BrowserState(1, int(10e6), 128, 20, display_height = kwargs.pop("display_height", 24), artist_type = kwargs.pop('artist_type', 'normal'))
+        self.state2 = BrowserState(1, int(10e6), 128, 20, display_height = self.state.display_height, artist_type = self.state.artist_type, _is_second = True)
+        
+        # logger.debug(f"state on start with show second {show_second} {self.state}")
+        self.history = []
         
         self.iterator = self.iterator2 = None
-        self.window = self.window2 = None
         self._init_iterator()  # Initialize iterator on first load
+        self.window = self.window2 = None
+        self.artist:artist.Artist = self._init_artist(self.state.artist_type, **kwargs)
+        
+        if type(self.artist) == artist.SeqArtist:
+            self.state.show_second = True
+            logger.debug("its a seq")
+        else:
+            logger.debug(f"its a {type(self.artist)}")
         
         self.highlight = ""
         
@@ -140,7 +157,7 @@ class InteractiveGenomeBrowser:
         self.arrows = draw.get_arrow("default", 5, "-") # L, R
     
     def start(self, chrom: Union[str, int], position: int = 1,
-             window_size: int = 240, stride: int = 20, show_second = False):
+             window_size: int = 240, stride: int = 20, display_height = 24, show_second = False, **kwargs):
         """Start the interactive browser.
         
         Args:
@@ -149,24 +166,38 @@ class InteractiveGenomeBrowser:
             window_size: Size of sequence window to display
             stride: How many bases to move on arrow key
         """
+        if kwargs.get("artist_type","") == "seq":
+            show_second = True
+        
         self.state = BrowserState(
             chrom=chrom,
             position=position,
             window_size=window_size,
             stride=stride,
+            display_height=display_height,
             show_second = show_second,
         )
         self.state2 = self.state.copy()
         
+        logger.debug(f"state on start with show second {show_second} {self.state}")
+        logger.debug(f"state2 on start {self.state2}")
+        
         self._init_iterator()  # Initialize iterator on first load
+        self.artist = self._init_artist(kwargs.pop("artist_type", self.state.artist_type), **kwargs)
+          
+        # if type(self.artist) == artist.SeqArtist:
+        #     self.state.show_second = True
+        #     logger.debug("its a seq")
+        # else:
+        #     logger.debug(f"its a {type(self.artist)}")
         
         # Clear screen
-        if not self.debug:
-            os.system('clear' if os.name == 'posix' else 'cls')
+        # if not self.debug:
+        #     os.system('clear' if os.name == 'posix' else 'cls')
         
-        print(f"{Colors.BOLD}Interactive Genome Browser{Colors.RESET}")
-        print(f"Navigate with arrow keys, 'q' to quit, 'h' for help")
-        print("-" * 80)
+        # print(f"{Colors.BOLD}Interactive Genome Browser{Colors.RESET}")
+        # print(f"Navigate with arrow keys, 'q' to quit, 'h' for help")
+        # print("-" * 80)
         
         try:
             self._run_browser()
@@ -188,13 +219,18 @@ class InteractiveGenomeBrowser:
         
     def _run_browser(self):
         """Main browser loop."""
+        
+        logger.debug(f"entering browser loop with state {self.state}")
+        
         while True:
             # Display current view
             self._update_iterator()
             if self.state.show_second:
-                self._display_current_view_sec()
+                # self._display_current_view_sec()
+                self._update_view_sec()
             else:
-                self._display_current_view2()
+                # self._display_current_view2()
+                self._update_view()
             time.sleep(0.01)
             # Get user input
             key = self._get_key()
@@ -289,7 +325,7 @@ class InteractiveGenomeBrowser:
         
         self._cleanup()
     
-    def initialize_second_sequence(self):
+    def initialize_second_sequence(self, **kwargs):
         print("initializing second sequence:")
         c=input("chromosome: ")
         pos=input("position: ")
@@ -322,6 +358,36 @@ class InteractiveGenomeBrowser:
         )
 
         self.state.show_second= self.state2.show_second = True
+    
+    def _init_artist(self, artist_type, **kwargs):
+        
+        if artist_type == "normal":
+            
+            def display_handle(state, window) -> List[str]:
+                return self._display_current_view2()
+            
+            artst = artist.ProxyArtist(func_handle = display_handle, **kwargs)
+        
+        elif artist_type == "bar":
+            
+            aps = artist.BarArtistParams()
+            artst = artist.BarArtist(aps)
+            # artst.set_params(**kwargs)
+            
+        elif artist_type == "seq":
+            
+            aps = artist.SeqArtistParams()
+            artst = artist.SeqArtist(aps)
+            
+        else:
+            
+            artst = None
+        
+        artst.set_params(**kwargs)
+        return artst
+    
+    def _update_artist_params(self, **kwargs):
+        self.artist.set_params(**kwargs)
     
     def _init_iterator(self):
         """Initialize iterators on first load or when needing fresh instances."""
@@ -371,16 +437,63 @@ class InteractiveGenomeBrowser:
         if self.state.show_second and self.iterator2:
             self.iterator2.update_position(self.state2.position)
             self.window2 = self.iterator2.get_window_at(self.state2.position)
+            logger.debug("updating second iterator")
+        else:
+            logger.debug("didn't update the second iterator....... :(")
     
-    def _display_current_view2(self):
+    def _update_view(self):
         
+        # if self.state.show_second:
+        #     return self._update_view_sec()
         
         if not self.debug:
             os.system('clear' if os.name == 'posix' else 'cls')
         
+        header, nh = self.get_header_lines(second = False, suppress = True)
+        
+        lines = self.artist.render(self.state, self.window)
+        nl = len(lines)
+        
+        footer = self.get_footer_lines(nh + nl, footer_pos = self.state.display_height, suppress = True)
+        
+        for section in [header, lines, footer]:
+            for line in section:
+                print(line)
+    
+    def _update_view_sec(self):
+        
+        if not self.debug:
+            os.system('clear' if os.name == 'posix' else 'cls')
+        
+        header, nh = self.get_header_lines(second = False, suppress = True)
+        
+        if type(self.artist) == artist.SeqArtist:
+            lines = self.artist.render(self.state, self.window, self.state2, self.window2)
+            
+        else:
+            
+            lines = []
+            lines.extend(self.artist.render(self.state, self.window))
+            lines.extend(self.artist.render(self.state2, self.window2))
+            
+        nl = len(lines)
+        
+        footer = self.get_footer_lines(nh + nl, footer_pos = self.state.display_height, suppress = True)
+        
+        for section in [header, lines, footer]:
+            for line in section:
+                print(line)
+        
+    
+    def _display_current_view2(self):
+        
+        out_lines = []
+        
         lines_used = 0
-        header, n = self.get_header_lines(second = False, suppress = True)
-        lines_used += n + 1
+        # header, n = self.get_header_lines(second = False, suppress = True)
+        # out_lines.extend(header)
+        # lines_used += n + 1
+        
         all_lines, n = self._get_display_lines(suppress = True)
         lines_used += n
         
@@ -408,10 +521,10 @@ class InteractiveGenomeBrowser:
             lines_used += len(dlines)
         
         # Navigation hints at fixed position (line 24)
-        footer = self.get_footer_lines(lines_used, footer_pos = 0, suppress= True)
+        # footer = self.get_footer_lines(lines_used, footer_pos = 0, suppress= True)
         
-        print("\n".join(header))
-        print()
+        # print("\n".join(header))
+        # print()
         # print("-" * 80)
         
         seqlines1 = all_lines.get("seq",[])
@@ -422,11 +535,16 @@ class InteractiveGenomeBrowser:
         
         print_lines = [ruler, seq1, ext1, dlines, feats]
         for lines in print_lines:
-            if lines:
-                print("\n".join(lines))
-                print()
+            out_lines.extend(lines)
+            # if lines:
+            #     print("\n".join(lines))
+            #     print()
             
-        print("\n".join(footer))
+        # print("\n".join(footer))
+        
+        # out_lines.extend(footer)
+        
+        return out_lines
     
     def _display_current_view_sec(self):
         
@@ -616,9 +734,9 @@ class InteractiveGenomeBrowser:
             mode_indicators.append("RNA")
         else:
             mode_indicators.append("DNA")
-        
+        center_pos = state.position + state.window_size//2
         hlines.append(f"{Colors.BOLD}Chromosome {state.chrom} | "
-              f"Position {state.position:,} | "
+              f"Position {center_pos:,} | "
               f"Window {state.window_size}bp | "
               f"{' | '.join(mode_indicators)}{Colors.RESET}")
         if not suppress:
@@ -1976,10 +2094,13 @@ class InteractiveGenomeBrowser:
         """Change the window size."""
         print("\n" + "-" * 40)
         try:
+            r = self.state.stride / self.state.window_size
             new_size = int(input(f"Enter new window size (current: {self.state.window_size}): "))
-            if 10 <= new_size <= 400:
+            if 10 <= new_size <= 400 or True:
                 self.state.window_size = new_size
+                self.state.stride = int(r*new_size)
                 self.state2.window_size = new_size
+                self.state2.stride = int(r*new_size)
                 # Update iterator window sizes
                 if self.iterator:
                     self.iterator.window_size = new_size
@@ -1997,7 +2118,7 @@ class InteractiveGenomeBrowser:
         print("\n" + "-" * 40)
         try:
             new_stride = int(input(f"Enter new stride (current: {self.state.stride}): "))
-            if 1 <= new_stride <= 1000:
+            if 1 <= new_stride <= 1000 or True:
                 self.state.stride = new_stride
                 self.state2.stride = new_stride
                 # Update iterator strides
@@ -2276,7 +2397,8 @@ def browse_genome(genome_manager: 'GenomeManager',
                   position: int = 1000000,
                   window_size: int = 240,
                   debug=False,
-                  use_gui: bool = False):
+                  use_gui: bool = False, 
+                  **kwargs):
     """Convenience function to start the genome browser.
     
     Args:
@@ -2289,6 +2411,8 @@ def browse_genome(genome_manager: 'GenomeManager',
     if debug:
         logger.setLevel("DEBUG")
     
+    logger.debug(f"enter browse_genome with chrom {chrom}, pos {position}, window_size {window_size}, use_gui {use_gui}, kwargs {kwargs}")
+    
     if use_gui:
         try:
             from .genome_browser_gui import launch_genome_browser
@@ -2300,6 +2424,6 @@ def browse_genome(genome_manager: 'GenomeManager',
             browser = InteractiveGenomeBrowser(genome_manager)
             browser.start(chrom, position, window_size)
     else:
-        browser = InteractiveGenomeBrowser(genome_manager, debug = debug)
+        browser = InteractiveGenomeBrowser(genome_manager, debug = debug, **kwargs)
         # browser.start(chrom, position, window_size, show_second = True)
-        browser.start(chrom, position, window_size)
+        browser.start(chrom, position, window_size, **kwargs)

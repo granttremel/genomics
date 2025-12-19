@@ -106,9 +106,9 @@ class FASTAStream(BaseSequenceStream):
             seq = seq.upper()
             if not vocab.VOCAB == vocab.VOCAB_DNA:
                 seq = vocab._convert_seq_vocab(seq, vocab.VOCAB, from_vocab = vocab.VOCAB_DNA)
-                print(f"converted vocab from {vocab.VOCAB_DNA} to {vocab.VOCAB}")
-            else:
-                print(f"did not convert vocab: {vocab.VOCAB}")
+            #     print(f"converted vocab from {vocab.VOCAB_DNA} to {vocab.VOCAB}")
+            # else:
+            #     print(f"did not convert vocab: {vocab.VOCAB}")
             return seq
         except Exception as e:
             logger.debug(f"Failed to fetch sequence {chrom}:{start}-{end}: {e}")
