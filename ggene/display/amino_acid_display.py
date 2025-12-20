@@ -6,7 +6,7 @@ between reference and personal sequences.
 """
 
 from typing import List, Tuple, Optional, Dict
-from ggene import CODON_TABLE_DNA, CODON_TABLE_RNA
+from ggene.seqs.bio import CODON_TABLE, START_CODONS, STOP_CODONS, to_rna, to_dna
 from ggene.display.colors import Colors
 from ggene.processing.sequence_processor import SequenceProcessor
 import logging

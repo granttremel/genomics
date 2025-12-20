@@ -4,7 +4,7 @@
 import sys
 sys.path.insert(0, '/home/gront/Documents/python/genomics-prj')
 
-from ggene.database.genomemanager import GenomeManager
+from ggene.database.genome_manager import GenomeManager
 from ggene.genome_iterator import GenomeIterator
 
 def test_continuous_through_insertion():

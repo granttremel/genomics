@@ -65,6 +65,9 @@ class Colors:
         if effect:
             self.effect = effect
     
+    def format_string(self, string):
+        return f"{self.code}{string}{self.RESET}"
+    
     @property
     def fg_code(self):
         return self.get_color(self.fg_color, background = False)
@@ -98,7 +101,7 @@ class Colors:
     def get_color(cls, color_spec, background = False):
         
         if isinstance(color_spec, int):
-            return cls._get_color_24b(color_spec, background = background)
+            return cls._get_color_8b(color_spec, background = background)
         elif isinstance(color_spec, list) or isinstance(color_spec, tuple):
             if len(color_spec) == 3:
                 return cls._get_color_24b(color_spec, background = background)
@@ -107,11 +110,11 @@ class Colors:
     
     @classmethod
     def _get_color_8b(cls, color_spec, background = False):
-        return cls._color_frm_8b(b_or_f = cls._bgi if background else cls._fgi ,c=color_spec)
+        return cls._color_frm_8b.format(b_or_f = cls._bgi if background else cls._fgi ,c=color_spec)
     
     @classmethod
     def _get_color_24b(cls, color_spec, background = False):
-        return cls._color_frm_24b(b_or_f = cls._bgi if background else cls._fgi ,c=color_spec)
+        return cls._color_frm_24b.format(b_or_f = cls._bgi if background else cls._fgi ,c=color_spec)
         
     @classmethod
     def get_colors_fgbg(cls, fg_color_spec, bg_color_spec):

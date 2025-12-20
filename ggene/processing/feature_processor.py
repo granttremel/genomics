@@ -7,7 +7,7 @@ for genomic annotations.
 
 from typing import Dict, List, Optional, Set, Tuple, Any
 from collections import defaultdict
-from ggene.database.unified_stream import UFeature
+from ggene.database.annotations import UFeature
 
 
 class FeatureProcessor:

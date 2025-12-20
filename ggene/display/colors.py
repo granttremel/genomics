@@ -5,45 +5,46 @@ This module provides ANSI color codes and color schemes for terminal-based
 visualization of genomic data.
 """
 
+from ggene.draw.colors import Colors
 
-class Colors:
+class FColors(Colors):
     """ANSI color codes for terminal display."""
 
-    RESET = '\033[0m'
-    BOLD = '\033[1m'
-    DIM = '\033[2m'
-    UNDERLINE = '\033[4m'
+    # RESET = '\033[0m'
+    # BOLD = '\033[1m'
+    # DIM = '\033[2m'
+    # UNDERLINE = '\033[4m'
 
-    # Variant colors
-    SNP = '\033[91m'        # Red for SNPs
-    INSERTION = '\033[92m'   # Green for insertions
-    DELETION = '\033[93m'    # Yellow for deletions
+    # # Variant colors
+    # SNP = '\033[91m'        # Red for SNPs
+    # INSERTION = '\033[92m'   # Green for insertions
+    # DELETION = '\033[93m'    # Yellow for deletions
 
-    # Feature colors
-    GENE = '\033[94m'        # Blue
-    TRANSCRIPT = '\033[95m'  # Magenta
-    EXON = '\033[96m'        # Cyan
-    CDS = '\033[93m'         # Yellow
-    UTR = '\033[90m'         # Gray
-    REPEAT = "\x1b[38;5;143m"
+    # # Feature colors
+    # GENE = '\033[94m'        # Blue
+    # TRANSCRIPT = '\033[95m'  # Magenta
+    # EXON = '\033[96m'        # Cyan
+    # CDS = '\033[93m'         # Yellow
+    # UTR = '\033[90m'         # Gray
+    # REPEAT = "\x1b[38;5;143m"
     
-    START_CODON = '\x1b[35m'
-    STOP_CODON = '\x1b[35m'
+    # START_CODON = '\x1b[35m'
+    # STOP_CODON = '\x1b[35m'
 
-    # Motif colors (for underlines)
-    MOTIF = '\033[38;5;110m'   # Cyan for other motifs
-    MOTIF_SPL = '\033[38;5;111m'   # Cyan for other motifs
-    MOTIF_PRO = '\033[38;5;112m'   # Cyan for other motifs
-    RCMOTIF = '\x1b[38;5;106m'
-    RCMOTIF_SPL = '\x1b[38;5;107m'
-    RCMOTIF_PRO = '\x1b[38;5;108m'
+    # # Motif colors (for underlines)
+    # MOTIF = '\033[38;5;110m'   # Cyan for other motifs
+    # MOTIF_SPL = '\033[38;5;111m'   # Cyan for other motifs
+    # MOTIF_PRO = '\033[38;5;112m'   # Cyan for other motifs
+    # RCMOTIF = '\x1b[38;5;106m'
+    # RCMOTIF_SPL = '\x1b[38;5;107m'
+    # RCMOTIF_PRO = '\x1b[38;5;108m'
     
-    HIGHLIGHT = '\x1b[148m' # goldish
+    # HIGHLIGHT = '\x1b[148m' # goldish
     
-    # Navigation
-    POSITION = '\033[97m'    # White
+    # # Navigation
+    # POSITION = '\033[97m'    # White
     
-    SUBTLE = '\x1b[38;5;240m'
+    # SUBTLE = '\x1b[38;5;240m'
 
     @classmethod
     def variant_color(cls, ref: str, alt: str) -> str:

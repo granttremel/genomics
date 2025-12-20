@@ -4,7 +4,7 @@ from typing import Optional, List, Dict, Any, Tuple
 import numpy as np
 
 from ggene import DATA_DIR, other_paths
-from ggene.database.genomemanager import GenomeManager
+from ggene.database.genome_manager import GenomeManager
 from ggene import draw
 from ggene.display.colors import Colors
 from ggene.draw.scalar_plot import ScalarPlot

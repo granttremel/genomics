@@ -10,7 +10,7 @@ from ggene import draw
 from ggene.display.colors import Colors
 from ggene.processing.coordinate_mapper import CoordinateMapper, SequenceRenderer
 from ggene.processing.sequence_processor import SequenceProcessor
-from ggene.database.unified_stream import UFeature
+from ggene.database.annotations import UFeature
 import logging
 
 logger = logging.getLogger(__name__)

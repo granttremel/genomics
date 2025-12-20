@@ -5,7 +5,7 @@ import sys
 sys.path.insert(0, '/home/gront/Documents/python/genomics-prj')
 
 import time
-from ggene.database.unified_stream import GTFStream, VCFStream
+from ggene.database.annotations import GTFStream, VCFStream
 from ggene.database.index_utils import ensure_indexed, check_all_indexes
 
 def test_indexed_vs_linear():

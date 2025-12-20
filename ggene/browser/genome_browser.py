@@ -13,7 +13,7 @@ import logging
 import numpy as np
 import time
 
-from ggene.database.genomemanager import GenomeManager
+from ggene.database.genome_manager import GenomeManager
 from ggene import seqs, draw
 from ggene.seqs import vocab as gvc
 from ggene.seqs import bio, find, process
@@ -21,10 +21,11 @@ from ggene.seqs.bio import CODON_TABLE, COMPLEMENT_MAP, to_rna, complement, reve
 from ggene.seqs import process
 from ggene.genome.features import Gene, Feature
 from ggene.database.genome_iterator import UGenomeIterator
-from ggene.database.unified_stream import UFeature
+from ggene.database.annotations import UFeature
 
 # Import new modular components
-from ggene.display.colors import Colors
+# from ggene.draw.FColors import FColors
+from ggene.display.colors import FColors
 from ggene.display.formatters import LabelFormatter
 from ggene.display.renderer import DisplayRenderer
 from ggene.display.sequence_display import SequenceDisplay
@@ -37,12 +38,12 @@ from ggene.processing.feature_processor import FeatureProcessor
 from ggene.display import artist
 
 if TYPE_CHECKING:
-    from .genomemanager import GenomeManager
+    from ggene.database.genome_manager import GenomeManager
 
 logger = logging.getLogger(__name__)
 logger.setLevel("DEBUG")
 
-# Colors class has been moved to display/colors.py
+# FColors class has been moved to display/FColors.py
 
 
 @dataclass
@@ -98,8 +99,9 @@ class InteractiveGenomeBrowser:
     genecard="https://www.genecards.org/cgi-bin/carddisp.pl?gene={name}"
     wiki="https://en.wikipedia.org/wiki/{name}"
     ensembl = "http://www.ensembl.org/Homo_sapiens/geneview?gene={gene_id};db=core"
+    
     left_margin = 12
-    row_frm = "{cm}{margin:<12}" + Colors.RESET + "{cr}{row}" + Colors.RESET
+    row_frm = "{cm}{margin:<12}" + FColors.RESET + "{cr}{row}" + FColors.RESET
     
     def __init__(self, genome_manager: 'GenomeManager', debug = False, **kwargs):
         """Initialize the genome browser.
@@ -191,7 +193,7 @@ class InteractiveGenomeBrowser:
         # if not self.debug:
         #     os.system('clear' if os.name == 'posix' else 'cls')
         
-        # print(f"{Colors.BOLD}Interactive Genome Browser{Colors.RESET}")
+        # print(f"{FColors.BOLD}Interactive Genome Browser{FColors.RESET}")
         # print(f"Navigate with arrow keys, 'q' to quit, 'h' for help")
         # print("-" * 80)
         
@@ -602,7 +604,8 @@ class InteractiveGenomeBrowser:
         
         # logger.debug(vars)
         
-        bg, fg = draw.get_color_scheme("test")
+        bg, fg = FColors.get_color_scheme("test")
+        
         rcfg = fg - 12
         fill = 0.25
         # rcfill = fill / 2
@@ -671,11 +674,11 @@ class InteractiveGenomeBrowser:
         for p, d in zip(prefix1, data1):
             dv = list(d)
             dvstr = "".join(dv)
-            outlines.append(self.row_frm.format(cm = Colors.BOLD, margin = p, cr = "", row = dvstr))
+            outlines.append(self.row_frm.format(cm = FColors.BOLD, margin = p, cr = "", row = dvstr))
         for p, d in zip(prefix2, data2):
             dv = list(d)
             dvstr = "".join(dv)
-            outlines.append(self.row_frm.format(cm = Colors.BOLD, margin = p, cr = "", row = dvstr))
+            outlines.append(self.row_frm.format(cm = FColors.BOLD, margin = p, cr = "", row = dvstr))
         
         if show_stats:
             header = "{:<10}{:<10}{:<10}{:<10}{:<10}".format("Mean", "SD","CV", "Min", "Max")
@@ -693,7 +696,7 @@ class InteractiveGenomeBrowser:
             tlines.extend(tres2)
             
             if len(tlines) > 0:
-                tlines = ["\n", f"{Colors.BOLD}Threshs: {Colors.RESET}"] + tlines
+                tlines = ["\n", f"{FColors.BOLD}Threshs: {FColors.RESET}"] + tlines
         
         nspaces = max_extra_lines - len(tlines)
         tlines.extend(["\n"*nspaces])
@@ -731,10 +734,10 @@ class InteractiveGenomeBrowser:
         else:
             mode_indicators.append("DNA")
         center_pos = state.position + state.window_size//2
-        hlines.append(f"{Colors.BOLD}Chromosome {state.chrom} | "
+        hlines.append(f"{FColors.BOLD}Chromosome {state.chrom} | "
               f"Position {center_pos:,} | "
               f"Window {state.window_size}bp | "
-              f"{' | '.join(mode_indicators)}{Colors.RESET}")
+              f"{' | '.join(mode_indicators)}{FColors.RESET}")
         if not suppress:
             print(hlines[-1])
         
@@ -778,9 +781,9 @@ class InteractiveGenomeBrowser:
             chr_plot = self._data_cache[state.chrom].copy()
         
         for i in range(len(chr_plot)):
-            chr_plot[i] = chr_plot[i][:marker_pos+1] + Colors.SUBTLE + chr_plot[i][marker_pos+1:]
-            chr_plot[i] = chr_plot[i][:marker_pos] + Colors.HIGHLIGHT + chr_plot[i][marker_pos:]
-            chr_plot[i] = Colors.SUBTLE + chr_plot[i] + Colors.RESET 
+            chr_plot[i] = chr_plot[i][:marker_pos+1] + FColors.SUBTLE + chr_plot[i][marker_pos+1:]
+            chr_plot[i] = chr_plot[i][:marker_pos] + FColors.HIGHLIGHT + chr_plot[i][marker_pos:]
+            chr_plot[i] = FColors.SUBTLE + chr_plot[i] + FColors.RESET 
         
         hlines.extend(chr_plot)
         
@@ -801,9 +804,9 @@ class InteractiveGenomeBrowser:
         
         if not suppress:
             print("-" * 80)
-            print(f"{Colors.DIM}[←/→: move | Ctrl+←/→: gene | ↑/↓: jump | g: goto | Ctrl+↑: save | Ctrl+↓: load | ?: help | q: quit]{Colors.RESET}")
+            print(f"{FColors.DIM}[←/→: move | Ctrl+←/→: gene | ↑/↓: jump | g: goto | Ctrl+↑: save | Ctrl+↓: load | ?: help | q: quit]{FColors.RESET}")
         lines.append("-" * 80)
-        lines.append(f"{Colors.DIM}[←/→: move | Ctrl+←/→: gene | ↑/↓: jump | g: goto | Ctrl+↑: save | Ctrl+↓: load | ?: help | q: quit]{Colors.RESET}")
+        lines.append(f"{FColors.DIM}[←/→: move | Ctrl+←/→: gene | ↑/↓: jump | g: goto | Ctrl+↑: save | Ctrl+↓: load | ?: help | q: quit]{FColors.RESET}")
         return lines
     
     def get_all_features(self, window, state,  features =[]):
@@ -1097,7 +1100,7 @@ class InteractiveGenomeBrowser:
                     
                     if display_start < display_end:
                         # dst.append((display_start, display_end))
-                        dst[(display_start, display_end)] = Colors.get_motif_color(feature)
+                        dst[(display_start, display_end)] = FColors.get_motif_color(feature)
         
         # Calculate position labels
         start_pos = state.position
@@ -1123,7 +1126,7 @@ class InteractiveGenomeBrowser:
             else:
                 ruler += " "  # Space for gaps        
         
-        rlines.append(self.row_frm.format(cm = Colors.POSITION, margin="Position:",cr="", row=ruler))
+        rlines.append(self.row_frm.format(cm = FColors.POSITION, margin="Position:",cr="", row=ruler))
         if not suppress:
             print(rlines[-1])
         
@@ -1153,7 +1156,7 @@ class InteractiveGenomeBrowser:
             in_start = any(start <= i < end for start, end in start_codons)
             in_stop = any(start <= i < end for start, end in stop_codons)
             in_motif = any(start <= i < end for start, end in disp_motifs.keys())
-            mtf_col = Colors.RESET
+            mtf_col = FColors.RESET
             if in_motif:
                 for (start, end), _mtf_col in disp_motifs.items():
                     if start <= i and i < end:
@@ -1166,20 +1169,20 @@ class InteractiveGenomeBrowser:
             in_extra = any(start <= i < end for start, end in extra_motifs)
             
             if base == '-':
-                ref_display += f"{Colors.DIM}-{Colors.RESET}"
+                ref_display += f"{FColors.DIM}-{FColors.RESET}"
             elif in_start:
-                ref_display += f"{Colors.INSERTION}{base}{Colors.RESET}"
+                ref_display += f"{FColors.INSERTION}{base}{FColors.RESET}"
             elif in_stop:
-                ref_display += f"{Colors.SNP}{base}{Colors.RESET}"
+                ref_display += f"{FColors.SNP}{base}{FColors.RESET}"
             elif in_motif:
-                ref_display += f"{mtf_col}{base}{Colors.RESET}"
+                ref_display += f"{mtf_col}{base}{FColors.RESET}"
             elif in_rcmotif:
-                ref_display += f"{mtf_col}{base}{Colors.RESET}"
+                ref_display += f"{mtf_col}{base}{FColors.RESET}"
             elif in_extra:
-                ref_display += f"{Colors.HIGHLIGHT}{base}{Colors.RESET}"
+                ref_display += f"{FColors.HIGHLIGHT}{base}{FColors.RESET}"
             else:
                 ref_display += base
-        slines.append(self.row_frm.format(cm=Colors.BOLD, margin=ref_label, cr="", row=ref_display))
+        slines.append(self.row_frm.format(cm=FColors.BOLD, margin=ref_label, cr="", row=ref_display))
         if not suppress:
             print(slines[-1])
         
@@ -1198,23 +1201,23 @@ class InteractiveGenomeBrowser:
             in_rcmotif = any(start <= i < end for start, end in disp_rcmotifs)
             
             if pers_base == '-':
-                personal_display += f"{Colors.DIM}-{Colors.RESET}"
+                personal_display += f"{FColors.DIM}-{FColors.RESET}"
             elif variant_positions[i] if i < len(variant_positions) else False:
                 # Variant detected
-                color = Colors.variant_color(ref_base, pers_base)
-                personal_display += f"{color}{pers_base}{Colors.RESET}"
+                color = FColors.variant_color(ref_base, pers_base)
+                personal_display += f"{color}{pers_base}{FColors.RESET}"
             elif in_start:
-                personal_display += f"{Colors.INSERTION}{pers_base}{Colors.RESET}"
+                personal_display += f"{FColors.INSERTION}{pers_base}{FColors.RESET}"
             elif in_stop:
-                personal_display += f"{Colors.SNP}{pers_base}{Colors.RESET}"
+                personal_display += f"{FColors.SNP}{pers_base}{FColors.RESET}"
             elif in_motif:
-                personal_display += f"{Colors.EXON}{pers_base}{Colors.RESET}"
+                personal_display += f"{FColors.EXON}{pers_base}{FColors.RESET}"
             elif in_rcmotif:
-                personal_display += f"{Colors.RCMOTIF}{pers_base}{Colors.RESET}"
+                personal_display += f"{FColors.RCMOTIF}{pers_base}{FColors.RESET}"
             else:
                 personal_display += pers_base
         
-        slines.append(self.row_frm.format(cm = Colors.BOLD, margin=personal_label, cr="", row=personal_display))
+        slines.append(self.row_frm.format(cm = FColors.BOLD, margin=personal_label, cr="", row=personal_display))
         if not suppress:
             print(slines[-1])
         
@@ -1240,18 +1243,18 @@ class InteractiveGenomeBrowser:
                     strand = motif_found.get('strand', '+')
                     
                     if 'splice' in motif_name.lower():
-                        color = Colors.MOTIF
+                        color = FColors.MOTIF
                     elif 'tata' in motif_name.lower():
-                        color = Colors.MOTIF
+                        color = FColors.MOTIF
                     elif 'cpg' in motif_name.lower():
-                        color = Colors.MOTIF
+                        color = FColors.MOTIF
                     elif 'polya' in motif_name.lower():
-                        color = Colors.MOTIF
+                        color = FColors.MOTIF
                     elif 'run' in motif_name.lower():
-                        color = Colors.HIGHLIGHT
+                        color = FColors.HIGHLIGHT
                         logger.debug(f"extra motif sequence: {motif_found.get("attributes",{}).get("sequence")}")
                     else:
-                        color = Colors.MOTIF
+                        color = FColors.MOTIF
                         
                     marker_line.append(" ")
                 else:
@@ -1262,7 +1265,7 @@ class InteractiveGenomeBrowser:
         for i in range(len(marker_line)):
             
             if i < len(variant_positions) and variant_positions[i]:
-                marker_line[i] = f"{Colors.DIM}*{Colors.RESET}"
+                marker_line[i] = f"{FColors.DIM}*{FColors.RESET}"
         
         mline = self.row_frm.format(cm = "", margin = "", cr = "", row = "".join(marker_line))
         slines.append(mline)
@@ -1314,7 +1317,7 @@ class InteractiveGenomeBrowser:
             else:
                 other_features.append(feature)
         
-        lines.append(self.row_frm.format(cm=Colors.BOLD, margin="Features:", cr="", row=""))
+        lines.append(self.row_frm.format(cm=FColors.BOLD, margin="Features:", cr="", row=""))
         if not suppress:
             print(lines[-1])
         
@@ -1462,8 +1465,8 @@ class InteractiveGenomeBrowser:
         
         if unique_variants:
             if not suppress:
-                print(f"  {Colors.SNP}Variants:{Colors.RESET}")
-            lines.append(f"  {Colors.SNP}Variants:{Colors.RESET}")
+                print(f"  {FColors.SNP}Variants:{FColors.RESET}")
+            lines.append(f"  {FColors.SNP}Variants:{FColors.RESET}")
             for var in unique_variants:
                 var_start = var.start
                 var_end = var.end
@@ -1490,8 +1493,8 @@ class InteractiveGenomeBrowser:
         if motifs:
             
             if not suppress:
-                print(f"\n{Colors.BOLD}Motifs:{Colors.RESET}")
-            lines.append(f"\n{Colors.BOLD}Motifs:{Colors.RESET}")
+                print(f"\n{FColors.BOLD}Motifs:{FColors.RESET}")
+            lines.append(f"\n{FColors.BOLD}Motifs:{FColors.RESET}")
             
             # Group motifs by type
             motif_groups = {}
@@ -1515,11 +1518,11 @@ class InteractiveGenomeBrowser:
                     continue
                 
                 if not suppress:
-                    print(f"  {Colors.MOTIF}{motif_type}:{Colors.RESET}")
-                lines.append(f"  {Colors.MOTIF}{motif_type}:{Colors.RESET}")
+                    print(f"  {FColors.MOTIF}{motif_type}:{FColors.RESET}")
+                lines.append(f"  {FColors.MOTIF}{motif_type}:{FColors.RESET}")
                 
                 for motif in motif_list[:5]:  # Show max 5 instances per type
-                    color = Colors.RCMOTIF if motif.attributes.get("is_rc", False) else Colors.MOTIF
+                    color = FColors.RCMOTIF if motif.attributes.get("is_rc", False) else FColors.MOTIF
                     start = motif.start
                     end = motif.end
                     endstr = str(end - 1000*(end//1000))
@@ -1529,7 +1532,7 @@ class InteractiveGenomeBrowser:
                     
                     strand_symbol = '→' if strand == '+' else '←'
                     
-                    lines.append(f"    {start:,}-{endstr} {strand_symbol} {color}{seq}{Colors.RESET} (score: {score:.2f})")
+                    lines.append(f"    {start:,}-{endstr} {strand_symbol} {color}{seq}{FColors.RESET} (score: {score:.2f})")
                 
                 if len(motif_list) > 5:
                     if not suppress:
@@ -1758,7 +1761,7 @@ class InteractiveGenomeBrowser:
             # Display amino acid sequences
             info = cds.get('info', {})
             gene_name = info.get('gene_name', 'Unknown')
-            print(f"\n{Colors.BOLD}AA Translation (CDS - {gene_name}):{Colors.RESET}")
+            print(f"\n{FColors.BOLD}AA Translation (CDS - {gene_name}):{FColors.RESET}")
             
             # Calculate proper amino acid positioning for current strand
             if state.show_reverse_strand:
@@ -1789,7 +1792,7 @@ class InteractiveGenomeBrowser:
             ref_aa_display = f"Ref AA:  {' ' * leading_spaces}"
             for aa in ref_aa:
                 ref_aa_display += f"{aa}  "
-            print(f"{Colors.DIM}{ref_aa_display}{Colors.RESET}")
+            print(f"{FColors.DIM}{ref_aa_display}{FColors.RESET}")
             
             # Personal amino acids with change highlighting
             pers_aa_display = f"Pers AA: {' ' * leading_spaces}"
@@ -1798,13 +1801,13 @@ class InteractiveGenomeBrowser:
                     # Missense mutation
                     if pers_a == '*':
                         # Nonsense mutation (stop gained)
-                        pers_aa_display += f"{Colors.SNP}{pers_a}{Colors.RESET}  "
+                        pers_aa_display += f"{FColors.SNP}{pers_a}{FColors.RESET}  "
                     elif ref_a == '*':
                         # Stop lost
-                        pers_aa_display += f"{Colors.INSERTION}{pers_a}{Colors.RESET}  "
+                        pers_aa_display += f"{FColors.INSERTION}{pers_a}{FColors.RESET}  "
                     else:
                         # Regular missense
-                        pers_aa_display += f"{Colors.DELETION}{pers_a}{Colors.RESET}  "
+                        pers_aa_display += f"{FColors.DELETION}{pers_a}{FColors.RESET}  "
                 else:
                     pers_aa_display += f"{pers_a}  "
             print(pers_aa_display)
@@ -1830,7 +1833,7 @@ class InteractiveGenomeBrowser:
                         boundary_line += "-"
                 else:
                     boundary_line += " "
-            print(f"{Colors.DIM}{boundary_line} CDS region{Colors.RESET}")
+            print(f"{FColors.DIM}{boundary_line} CDS region{FColors.RESET}")
             
             # Show mutation types
             mutations = []
@@ -1846,7 +1849,7 @@ class InteractiveGenomeBrowser:
                         mutations.append(f"p.{ref_a}{aa_position_in_cds}{pers_a}")
             
             if mutations:
-                print(f"{Colors.DIM}Mutations: {', '.join(mutations[:5])}{Colors.RESET}")
+                print(f"{FColors.DIM}Mutations: {', '.join(mutations[:5])}{FColors.RESET}")
             
             break  # Only show first CDS for clarity
     
@@ -1909,23 +1912,23 @@ class InteractiveGenomeBrowser:
             Color code
         """
         color_map = {
-            'gene': Colors.GENE,
-            'transcript': Colors.TRANSCRIPT,
-            'exon': Colors.EXON,
-            'CDS': Colors.CDS,
-            'five_prime_utr': Colors.UTR,
-            'three_prime_utr': Colors.UTR,
-            'start_codon': Colors.SNP,
-            'stop_codon': Colors.SNP,
-            'variant': Colors.DELETION,
-            'motif': Colors.EXON,  # Green for motifs
-            'tf_binding': Colors.INSERTION,  # Green for TF binding
-            'splice_donor': Colors.SNP,  # Red for splice sites
-            'splice_acceptor': Colors.SNP,
-            'repeat': Colors.REPEAT,  # Gray for repeats
-            'chip_peak': Colors.EXON  # Cyan for ChIP peaks
+            'gene': FColors.GENE,
+            'transcript': FColors.TRANSCRIPT,
+            'exon': FColors.EXON,
+            'CDS': FColors.CDS,
+            'five_prime_utr': FColors.UTR,
+            'three_prime_utr': FColors.UTR,
+            'start_codon': FColors.SNP,
+            'stop_codon': FColors.SNP,
+            'variant': FColors.DELETION,
+            'motif': FColors.EXON,  # Green for motifs
+            'tf_binding': FColors.INSERTION,  # Green for TF binding
+            'splice_donor': FColors.SNP,  # Red for splice sites
+            'splice_acceptor': FColors.SNP,
+            'repeat': FColors.REPEAT,  # Gray for repeats
+            'chip_peak': FColors.EXON  # Cyan for ChIP peaks
         }
-        return color_map.get(ftype, Colors.DIM)
+        return color_map.get(ftype, FColors.DIM)
     
     def bookmark_position(self):
         
@@ -2214,12 +2217,12 @@ class InteractiveGenomeBrowser:
         print("  w           : Change window size")
         print("  s           : Change stride")
         print("  i           : Show position info")
-        print("\nColors:")
-        print(f"  {Colors.SNP}Red{Colors.RESET}        : SNPs / Stop codons")
-        print(f"  {Colors.INSERTION}Green{Colors.RESET}      : Insertions / Start codons")
-        print(f"  {Colors.DELETION}Yellow{Colors.RESET}     : Deletions / Missense mutations")
-        print(f"  {Colors.GENE}Blue{Colors.RESET}       : Genes")
-        print(f"  {Colors.EXON}Cyan{Colors.RESET}       : Exons")
+        print("\nFColors:")
+        print(f"  {FColors.SNP}Red{FColors.RESET}        : SNPs / Stop codons")
+        print(f"  {FColors.INSERTION}Green{FColors.RESET}      : Insertions / Start codons")
+        print(f"  {FColors.DELETION}Yellow{FColors.RESET}     : Deletions / Missense mutations")
+        print(f"  {FColors.GENE}Blue{FColors.RESET}       : Genes")
+        print(f"  {FColors.EXON}Cyan{FColors.RESET}       : Exons")
         print("\nFeature Labels:")
         print("  Left side shows feature types with smart compression")
         print("  Multiple features: ex1/2/3, GENE1/+2, 001-015(25)")
@@ -2326,10 +2329,10 @@ class InteractiveGenomeBrowser:
             with open(state_file, 'w') as f:
                 json.dump(state_data, f, indent=2)
             # Brief status message without disrupting display
-            print(f"\\033[s\\033[25;1H{Colors.DIM}State saved{Colors.RESET}\\033[u", end="", flush=True)
+            print(f"\\033[s\\033[25;1H{FColors.DIM}State saved{FColors.RESET}\\033[u", end="", flush=True)
             __import__('time').sleep(0.5)
         except Exception as e:
-            print(f"\\033[s\\033[25;1H{Colors.SNP}Save failed: {e}{Colors.RESET}\\033[u", end="", flush=True)
+            print(f"\\033[s\\033[25;1H{FColors.SNP}Save failed: {e}{FColors.RESET}\\033[u", end="", flush=True)
             __import__('time').sleep(1)
     
     def _load_state(self):
@@ -2339,7 +2342,7 @@ class InteractiveGenomeBrowser:
         
         state_file = '.genome_browser_state.json'
         if not os.path.exists(state_file):
-            print(f"\\033[s\\033[25;1H{Colors.DIM}No saved state found{Colors.RESET}\\033[u", end="", flush=True)
+            print(f"\\033[s\\033[25;1H{FColors.DIM}No saved state found{FColors.RESET}\\033[u", end="", flush=True)
             __import__('time').sleep(0.5)
             return
         
@@ -2357,10 +2360,10 @@ class InteractiveGenomeBrowser:
             self.state.show_reverse_strand = state_data['show_reverse_strand']
             self.state.show_rna = state_data['show_rna']
             
-            print(f"\\033[s\\033[25;1H{Colors.DIM}State loaded{Colors.RESET}\\033[u", end="", flush=True)
+            print(f"\\033[s\\033[25;1H{FColors.DIM}State loaded{FColors.RESET}\\033[u", end="", flush=True)
             __import__('time').sleep(0.5)
         except Exception as e:
-            print(f"\\033[s\\033[25;1H{Colors.SNP}Load failed: {e}{Colors.RESET}\\033[u", end="", flush=True)
+            print(f"\\033[s\\033[25;1H{FColors.SNP}Load failed: {e}{FColors.RESET}\\033[u", end="", flush=True)
             __import__('time').sleep(1)
     
     def _parse_position(self, pos_str, default = 1000000):

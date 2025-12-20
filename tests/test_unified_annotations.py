@@ -4,13 +4,13 @@
 import sys
 sys.path.insert(0, '/home/gront/Documents/python/genomics-prj')
 
-from ggene.database.unified_stream import (
-    UnifiedGenomeAnnotations, 
+from ggene.database.annotations import (
+    UGenomeAnnotations, 
     GTFStream, 
     VCFStream,
     UFeature
 )
-from ggene.database.genomemanager import GenomeManager
+from ggene.database.genome_manager import GenomeManager
 import heapq
 from typing import Iterator
 
@@ -18,7 +18,7 @@ def test_unified_streaming():
     """Test streaming from multiple sources."""
     
     print("Setting up unified annotation system...")
-    annotations = UnifiedGenomeAnnotations()
+    annotations = UGenomeAnnotations()
     
     # Add real data sources
     print("Adding GTF annotations...")
@@ -118,7 +118,7 @@ def test_genome_browser_integration():
     gm = GenomeManager()
     
     # Create unified annotations
-    annotations = UnifiedGenomeAnnotations()
+    annotations = UGenomeAnnotations()
     annotations.add_vcf("./genome/vcf/HG00096.vcf.gz", "variants")
     
     # Simulate what the browser would do
@@ -188,7 +188,7 @@ def demonstrate_feature_pipeline():
     
     # 1. Initialize unified annotation system
     print("\n1. Initializing annotation sources...")
-    annotations = UnifiedGenomeAnnotations()
+    annotations = UGenomeAnnotations()
     
     # Add local files
     print("   - Adding GTF (genes)")

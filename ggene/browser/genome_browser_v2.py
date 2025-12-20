@@ -18,7 +18,7 @@ from ggene.seqs import bio, find, process
 from ggene.seqs.bio import CODON_TABLE, COMPLEMENT_MAP, to_rna, complement, reverse_complement
 from ggene.genome.features import Gene, Feature
 from ggene.database.genome_iterator import UGenomeIterator
-from ggene.database.unified_stream import UFeature
+from ggene.database.annotations import UFeature
 
 # Import new modular components
 from ggene.display.colors import Colors

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Test the genome browser with motif detection display."""
 
-from ggene.database.genomemanager import GenomeManager
+from ggene.database.genome_manager import GenomeManager
 from ggene.genome_browser_v2 import InteractiveGenomeBrowser
 
 def main():

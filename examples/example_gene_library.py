@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Example script demonstrating gene library save/load functionality."""
 
-from ggene.database.genomemanager import GenomeManager
+from ggene.database.genome_manager import GenomeManager
 from ggene.genome.features import Gene
 import json
 import os

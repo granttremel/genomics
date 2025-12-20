@@ -4,7 +4,7 @@ Test the improved genome iterator implementation.
 """
 
 import logging
-from ggene.database.genomemanager import GenomeManager
+from ggene.database.genome_manager import GenomeManager
 from ggene.genome_iterator import GenomeIterator
 
 logging.basicConfig(level=logging.INFO)

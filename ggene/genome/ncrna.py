@@ -4,8 +4,8 @@ import json
 from difflib import SequenceMatcher
 
 from ggene import DEFAULT_LIBRARY
-from ggene.database.genomemanager import GenomeManager
-from ggene.database.unified_stream import UFeature
+from ggene.database.genome_manager import GenomeManager
+from ggene.database.annotations import UFeature
 
 LIB_DIR = "ncache/ncrnas"
 

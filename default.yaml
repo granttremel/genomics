@@ -1,2 +1,12 @@
 
 data_dir: "./data"
+library_dir: "library"
+variants_filename: "" # VCF
+genes_filename: "" # GTF
+sequence_filename: "" # FASTA
+variant_sequence_filename: "" # FASTQ
+
+
+other_paths:
+  repeatmasker_filename: ""
+  dfam_filename: ""

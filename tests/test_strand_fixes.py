@@ -3,7 +3,7 @@
 Test the strand-aware fixes for genome browser.
 """
 
-from ggene.database.genomemanager import GenomeManager
+from ggene.database.genome_manager import GenomeManager
 
 def main():
     print("Testing Strand-Aware Fixes")

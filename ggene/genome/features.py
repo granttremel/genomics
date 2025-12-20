@@ -20,6 +20,32 @@ MIN_ATTRIBUTES = [
     'type', 'sfid', 'start', 'end', 'start_relative', 'end_relative',
     'transcript_name', 'exon_number', 'protein_version', 'alt', 'ref', 'qual'
 ]
+
+def shorten_variant(var: Any, keys: Optional[List[str]] = None) -> Dict[str, Any]:
+    """Extract key variant information into a dictionary.
+    
+    Args:
+        var: Variant object from cyvcf2
+        keys: Additional attributes to extract
+        
+    Returns:
+        Dictionary with variant information
+    """
+    if keys is None:
+        keys = []
+        
+    out_dict = {
+        'pos': var.POS,
+        'ref': var.REF,
+        'alt': var.ALT[0] if var.ALT else None,
+    }
+    
+    for key in keys:
+        if hasattr(var, key):
+            out_dict[key] = getattr(var, key)
+    
+    return out_dict
+
 def variant_to_dict(variant, gene_name, chrom, strand):
     delta = len(variant.ALT[0]) - len(variant.REF)
     variant_dict = {

@@ -6,8 +6,8 @@ Launch the interactive genome browser.
 import sys
 import argparse
 import logging
-from ggene import other_paths
-from ggene.database.genomemanager import GenomeManager
+from ggene.config import other_paths
+from ggene.database.genome_manager import GenomeManager
 from ggene.browser.genome_browser import browse_genome as browse_genome_v1
 from ggene.browser.genome_browser_v2 import browse_genome as browse_genome_v2
 

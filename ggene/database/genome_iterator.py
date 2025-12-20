@@ -3,7 +3,7 @@
 This module provides an iterator over genomic positions with:
 - Preloading of sequences and variants
 - Three coordinate systems (reference, alternate, display)
-- Integration with UnifiedGenomeAnnotations
+- Integration with UGenomeAnnotations
 - Efficient buffering for large indels
 - Integrated motif detection
 """
@@ -17,11 +17,11 @@ import asyncio
 from concurrent.futures import ThreadPoolExecutor
 
 from ggene.seqs.bio import reverse_complement
-from ggene.database.unified_stream import UFeature
+from ggene.database.annotations import UFeature
 
 if TYPE_CHECKING:
-    from .genomemanager import GenomeManager
-    from .unified_stream import UnifiedGenomeAnnotations
+    from .genome_manager import GenomeManager
+    from .annotations import UGenomeAnnotations
 
 logger = logging.getLogger(__name__)
 logger.setLevel("CRITICAL")
@@ -112,7 +112,7 @@ class UGenomeIterator:
         """Initialize the unified genome iterator.
         
         Args:
-            genome_manager: GenomeManager with UnifiedGenomeAnnotations
+            genome_manager: GenomeManager with UGenomeAnnotations
             chrom: Chromosome to iterate
             start: Start position (1-based)
             end: End position (1-based, inclusive)
@@ -124,7 +124,7 @@ class UGenomeIterator:
             detect_motifs: Whether to detect motifs in sequences
         """
         self.gm:'GenomeManager' = genome_manager
-        self.annotations:'UnifiedGenomeAnnotations' = genome_manager.annotations
+        self.annotations:'UGenomeAnnotations' = genome_manager.annotations
         self.chrom = str(chrom)
         self.start = start
         self.end = end

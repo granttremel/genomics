@@ -11,11 +11,11 @@ import logging
 from dataclasses import dataclass
 from abc import ABC, abstractmethod
 
-from ggene.database.unified_stream import UFeature
+from ggene.database.annotations import UFeature
 from ggene.seqs import vocab
 
 if TYPE_CHECKING:
-    from ggene.database.unified_stream import UFeature
+    from ggene.database.annotations import UFeature
 
 logger = logging.getLogger(__name__)
 # logger.setLevel(logging.DEBUG)

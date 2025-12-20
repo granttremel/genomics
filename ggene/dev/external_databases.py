@@ -13,7 +13,7 @@ import logging
 from dataclasses import dataclass
 import numpy as np
 
-from ggene.database.unified_stream import UFeature, AnnotationStream
+from ggene.database.annotations import UFeature, AnnotationStream
 
 logger = logging.getLogger(__name__)
 

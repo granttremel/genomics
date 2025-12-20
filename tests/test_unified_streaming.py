@@ -6,8 +6,8 @@ sys.path.insert(0, '/home/gront/Documents/python/genomics-prj')
 
 from ggene import get_paths
 DEFAULT_VCF_PATH, DEFAULT_GTF_PATH, DEFAULT_FASTA_PATH, DEFAULT_LIBRARY = get_paths()
-from ggene.database.unified_stream import UnifiedGenomeAnnotations
-from ggene.database.genomemanager import GenomeManager
+from ggene.database.annotations import UGenomeAnnotations
+from ggene.database.genome_manager import GenomeManager
 import os
 
 def test_sequence_streaming():
@@ -17,7 +17,7 @@ def test_sequence_streaming():
     print("=" * 60)
     
     # Create unified annotation system with sequence streaming
-    annotations = UnifiedGenomeAnnotations(
+    annotations = UGenomeAnnotations(
         fasta_path=DEFAULT_FASTA_PATH,
         vcf_path=DEFAULT_VCF_PATH
     )
@@ -150,7 +150,7 @@ def test_performance():
     
     import time
     
-    annotations = UnifiedGenomeAnnotations(
+    annotations = UGenomeAnnotations(
         fasta_path=DEFAULT_FASTA_PATH,
         vcf_path=DEFAULT_VCF_PATH
     )

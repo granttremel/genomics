@@ -683,7 +683,7 @@ class DfamStream(BEDStream):
             }
         )
 
-class UnifiedGenomeAnnotations:
+class UGenomeAnnotations:
     """Unified interface for all genomic annotations and sequences.
     
     Merges multiple annotation streams and sequence data efficiently.
@@ -708,7 +708,7 @@ class UnifiedGenomeAnnotations:
             vcf_path: Optional path to VCF file for variants
             min_qual: Minimum quality threshold for variants
         """
-        from .sequence_stream import FASTAStream, SequenceStreamWithVariants
+        from .sequences import FASTAStream, SequenceStreamWithVariants
         
         try:
             fasta_stream = FASTAStream(fasta_path)
@@ -855,7 +855,7 @@ class UnifiedGenomeAnnotations:
         return bedgraph
 
 
-class CachedUnifiedAnnotations(UnifiedGenomeAnnotations):
+class CachedUnifiedAnnotations(UGenomeAnnotations):
     """Cached version for better performance."""
     
     def __init__(self, cache_size: int = 10000):

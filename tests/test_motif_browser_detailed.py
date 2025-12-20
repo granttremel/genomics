@@ -2,7 +2,7 @@
 """Detailed test for motif detection - scan a larger region."""
 
 import logging
-from ggene.database.genomemanager import GenomeManager
+from ggene.database.genome_manager import GenomeManager
 from ggene.database.genome_iterator import UGenomeIterator
 
 # Setup logging

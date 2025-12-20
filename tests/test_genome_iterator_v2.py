@@ -6,7 +6,7 @@ sys.path.insert(0, '/home/gront/Documents/python/genomics-prj')
 
 from ggene import get_paths
 DEFAULT_VCF_PATH, DEFAULT_GTF_PATH, DEFAULT_FASTA_PATH, DEFAULT_LIBRARY = get_paths()
-from ggene.database.genomemanager import GenomeManager
+from ggene.database.genome_manager import GenomeManager
 from ggene.database.genome_iterator import UGenomeIterator
 
 def test_coordinate_tracking():

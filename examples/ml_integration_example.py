@@ -7,7 +7,7 @@ This demonstrates how to use the genome iterator to prepare data for ML models.
 import numpy as np
 import logging
 from typing import List, Dict, Any, Optional
-from ggene.database.genomemanager import GenomeManager
+from ggene.database.genome_manager import GenomeManager
 from ggene.genome_iterator import FeatureExtractor
 
 logger = logging.getLogger(__name__)

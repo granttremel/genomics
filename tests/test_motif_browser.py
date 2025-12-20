@@ -3,7 +3,7 @@
 
 import logging
 import sys
-from ggene.database.genomemanager import GenomeManager
+from ggene.database.genome_manager import GenomeManager
 from ggene.genome_browser_v2 import InteractiveGenomeBrowser
 from ggene.database.genome_iterator import UGenomeIterator
 

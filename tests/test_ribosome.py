@@ -4,7 +4,7 @@ Test the new Ribosome class for transcript translation.
 """
 
 import logging
-from ggene.database.genomemanager import GenomeManager
+from ggene.database.genome_manager import GenomeManager
 
 # Configure logging to see what's happening
 logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')

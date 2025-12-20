@@ -12,27 +12,25 @@ import sys
 
 import json
 import logging
+
 logger = logging.getLogger(__name__)
 logger.setLevel("CRITICAL")
 # logger.setLevel(logging.DEBUG)
 
-from .. import get_paths
-DEFAULT_VCF_PATH, DEFAULT_GTF_PATH, DEFAULT_FASTA_PATH, DEFAULT_LIBRARY = get_paths()
-
-from .. import draw
-from .. import shorten_variant
-from .. import dev
-from .genemap import GeneMap
-from ..genome.features import Gene, Feature
-from ..genome.translate import Ribosome
-# from ..genome_iterator import GenomeIterator, FeatureExtractor
-from .genome_iterator import UGenomeIterator
+from ggene import draw
+# from ggene import shorten_variant
+from ggene import dev
+from ggene.config import get_config, get_paths
+from ggene.database.gene_map import GeneMap
+from ggene.genome.features import Gene, Feature, shorten_variant
+from ggene.genome.translate import Ribosome
+from ggene.database.genome_iterator import UGenomeIterator
 from ggene.browser.genome_browser_v2 import InteractiveGenomeBrowser
-from .unified_stream import UnifiedGenomeAnnotations, GTFStream, VCFStream, UFeature
+from ggene.database.annotations import UGenomeAnnotations, GTFStream, VCFStream, UFeature
 from ggene.motifs import MotifDetector, PatternMotif, RepeatMotif
 from ggene.seqs.lambdas import needs_features
-from ..seqs.bio import reverse_complement, to_rna, to_dna, is_rna, is_dna, COMPLEMENT_MAP
-from ..seqs.lambdas import lambda_map
+from ggene.seqs.bio import reverse_complement, to_rna, to_dna, is_rna, is_dna, COMPLEMENT_MAP
+from ggene.seqs.lambdas import lambda_map
 
 class GenomeManager:
     """Main class for managing genomic data including VCF and GTF files."""
@@ -40,19 +38,34 @@ class GenomeManager:
     chr_frm = "{chrom}"
     # chr_frm = "chr{chrom}"
     
-    def __init__(self, 
-                 vcf_path: str = DEFAULT_VCF_PATH,
-                 gtf_path: str = DEFAULT_GTF_PATH,
-                 ref_path: str = DEFAULT_FASTA_PATH,
+    def __init__(self,
+                 vcf_path: str = None,
+                 gtf_path: str = None,
+                 ref_path: str = None,
                  my_path: str = '',
-                 library_path: str = DEFAULT_LIBRARY, **kwargs) -> None:
+                 library_path: str = None, 
+                 **kwargs) -> None:
         """Initialize GenomeManager.
-        
+
         Args:
             vcf_path: Path to VCF file
-            gtf_path: Path to GTF file  
+            gtf_path: Path to GTF file
             fasta_path: Path to FASTA file for genomic sequences
         """
+        # Lazy import to avoid circular dependency
+        # from ggene import get_paths
+        DEFAULT_VCF_PATH, DEFAULT_GTF_PATH, DEFAULT_FASTA_PATH, DEFAULT_LIBRARY, other_paths = get_paths()
+
+        # Use defaults if not provided
+        if vcf_path is None:
+            vcf_path = DEFAULT_VCF_PATH
+        if gtf_path is None:
+            gtf_path = DEFAULT_GTF_PATH
+        if ref_path is None:
+            ref_path = DEFAULT_FASTA_PATH
+        if library_path is None:
+            library_path = DEFAULT_LIBRARY
+
         try:
             self.vcf = VCF(vcf_path)
             
@@ -68,7 +81,7 @@ class GenomeManager:
             # print(f"loading sequence from {DEFAULT_FASTA_PATH} (exists = {os.path.exists(DEFAULT_FASTA_PATH)})")
             
             # Initialize new unified annotation system with sequence streaming
-            self.annotations = UnifiedGenomeAnnotations(
+            self.annotations = UGenomeAnnotations(
                 fasta_path=ref_path if ref_path and os.path.exists(ref_path) else None,
                 vcf_path=vcf_path if vcf_path and os.path.exists(vcf_path) else None
             )
@@ -107,14 +120,14 @@ class GenomeManager:
                     logger.info(f"Loaded FASTQ file: {my_path}")
                 except Exception as e:
                     logger.warning(f"Could not load FASTQ file: {e}")
-                
-            for k, v in kwargs.items():
+            
+            other_paths.update(kwargs)
+            
+            for k, v in other_paths.items():
                 if k == "repeatmasker_path":
                     self.annotations.add_repeatmasker(v)
                 if k == "dfam_path":
                     self.annotations.add_dfam(v)
-                
-                pass
                 
         except Exception as e:
             logger.error(f"Failed to initialize GenomeManager: {e}")
@@ -143,7 +156,7 @@ class GenomeManager:
             source_type: Type of file (bed, gff, vcf, etc.)
         """
         if source_type.lower() == "bed":
-            from .unified_stream import BEDStream
+            from .annotations import BEDStream
             self.annotations.add_source(name, BEDStream(filepath))
         elif source_type.lower() in ["gff", "gtf"]:
             self.annotations.add_gtf(filepath, name)

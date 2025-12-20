@@ -8,7 +8,11 @@ from typing import Dict, List, Optional, Tuple, Callable, Union, TYPE_CHECKING, 
 from dataclasses import dataclass
 import logging
 
-from ggene import CODON_TABLE_DNA,CODON_TABLE_RNA,START_CODONS,ALTERNATIVE_START_CODONS,STOP_CODONS,to_rna, to_dna
+# from ggene import CODON_TABLE_DNA,CODON_TABLE_RNA,START_CODONS,ALTERNATIVE_START_CODONS,STOP_CODONS,to_rna, to_dna
+# from ggene.seqs.bio import CODON_TABLE_DNA, CODON_TABLE_RNA, START_CODONS, ALTERNATIVE_START_CODONS, STOP_CODONS, to_rna, to_dna
+from ggene.seqs.bio import CODON_TABLE, START_CODONS, STOP_CODONS, to_rna, to_dna
+
+CODON_TABLE_DNA = CODON_TABLE
 
 if TYPE_CHECKING:
     from .features import Feature
