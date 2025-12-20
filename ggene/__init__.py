@@ -17,7 +17,7 @@ import pyranges as pr
 import yaml
 from pathlib import Path
 
-from .features import Feature, Gene
+from .genome.features import Feature, Gene
 
 __all__ = ['logger', 'DATA_DIR','DEFAULT_VCF_PATH', 'DEFAULT_GTF_PATH', 'COMPLEMENT_MAP', 'Feature', 'Gene','shorten_variant']
 

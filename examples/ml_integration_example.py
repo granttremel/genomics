@@ -7,7 +7,7 @@ This demonstrates how to use the genome iterator to prepare data for ML models.
 import numpy as np
 import logging
 from typing import List, Dict, Any, Optional
-from ggene.genomemanager import GenomeManager
+from ggene.database.genomemanager import GenomeManager
 from ggene.genome_iterator import FeatureExtractor
 
 logger = logging.getLogger(__name__)
@@ -59,7 +59,7 @@ class GenomicMLPipeline:
                 tss = transcript['start'] if transcript['strand'] == '+' else transcript['end']
                 
                 # Create feature for promoter region
-                from ggene.features import Feature
+                from ggene.genome.features import Feature
                 promoter = Feature({
                     'feature': 'promoter',
                     'chrom': chrom,

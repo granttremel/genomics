@@ -13,15 +13,15 @@ import logging
 import numpy as np
 import time
 
-from ggene.genomemanager import GenomeManager
+from ggene.database.genomemanager import GenomeManager
 from ggene import seqs, draw
 from ggene.seqs import vocab as gvc
 from ggene.seqs import bio, find, process
 from ggene.seqs.bio import CODON_TABLE, COMPLEMENT_MAP, to_rna, complement, reverse_complement
 from ggene.seqs import process
-from ggene.features import Gene, Feature
-from ggene.genome_iterator_v2 import UnifiedGenomeIterator
-from ggene.unified_stream import UnifiedFeature
+from ggene.genome.features import Gene, Feature
+from ggene.database.genome_iterator import UGenomeIterator
+from ggene.database.unified_stream import UFeature
 
 # Import new modular components
 from ggene.display.colors import Colors
@@ -53,7 +53,7 @@ class BrowserState:
     window_size: int
     stride: int
     display_height:int
-    artist_type:str = "normal" # "normal", "sequence", "zoom"
+    artist_type:str = "normal" # "normal", "seq", "line", "zoom"
     show_features: bool = True
     show_quality: bool = False
     show_amino_acids: bool = False
@@ -114,8 +114,7 @@ class InteractiveGenomeBrowser:
         else:
             logger.setLevel(logging.ERROR)
         logger.debug(f"init genome browser with debug {debug} and kwargs {kwargs}")
-        # if kwargs.get("artist_type","") == "seq":
-        #     show_second = True
+
         self.gm:GenomeManager = genome_manager
         self.state = BrowserState(1, int(10e6), 128, 20, display_height = kwargs.pop("display_height", 24), artist_type = kwargs.pop('artist_type', 'normal'))
         self.state2 = BrowserState(1, int(10e6), 128, 20, display_height = self.state.display_height, artist_type = self.state.artist_type, _is_second = True)
@@ -130,9 +129,6 @@ class InteractiveGenomeBrowser:
         
         if type(self.artist) == artist.SeqArtist:
             self.state.show_second = True
-            logger.debug("its a seq")
-        else:
-            logger.debug(f"its a {type(self.artist)}")
         
         self.highlight = ""
         
@@ -346,7 +342,7 @@ class InteractiveGenomeBrowser:
         if self.iterator2:
             self.iterator2.cleanup()
 
-        self.iterator2 = UnifiedGenomeIterator(
+        self.iterator2 = UGenomeIterator(
             self.gm,
             self.state2.chrom,
             self.state2.position,
@@ -368,10 +364,10 @@ class InteractiveGenomeBrowser:
             
             artst = artist.ProxyArtist(func_handle = display_handle, **kwargs)
         
-        elif artist_type == "bar":
+        elif artist_type == "line":
             
-            aps = artist.BarArtistParams()
-            artst = artist.BarArtist(aps)
+            aps = artist.LineArtistParams()
+            artst = artist.LineArtist(aps)
             # artst.set_params(**kwargs)
             
         elif artist_type == "seq":
@@ -395,7 +391,7 @@ class InteractiveGenomeBrowser:
         if self.iterator:
             self.iterator.cleanup()
 
-        self.iterator = UnifiedGenomeIterator(
+        self.iterator = UGenomeIterator(
             self.gm,
             self.state.chrom,
             self.state.position,
@@ -415,7 +411,7 @@ class InteractiveGenomeBrowser:
             if self.iterator2:
                 self.iterator2.cleanup()
 
-            self.iterator2 = UnifiedGenomeIterator(
+            self.iterator2 = UGenomeIterator(
                 self.gm,
                 self.state2.chrom,
                 self.state2.position,
@@ -1033,7 +1029,7 @@ class InteractiveGenomeBrowser:
         if features:
             window_start = state.position
             for feature in features:
-                ftype = feature.feature_type if isinstance(feature, UnifiedFeature) else feature.get("feature_type")
+                ftype = feature.feature_type if isinstance(feature, UFeature) else feature.get("feature_type")
                 if ftype == 'start_codon':
                     # Calculate raw positions relative to window
                     raw_start = max(0, feature.start - window_start)
@@ -1306,7 +1302,7 @@ class InteractiveGenomeBrowser:
         lines = []
         
         # Separate motifs from other features
-        motifs:List[UnifiedFeature] = []
+        motifs:List[UFeature] = []
         other_features = []
         for feature in features:
             # ftype = feature.feature_type if hasattr(feature, 'feature_type') else feature.get('feature_type', feature.get('feature'))
@@ -1446,7 +1442,7 @@ class InteractiveGenomeBrowser:
         # Combine variant features from both sources
         all_variant_features = []
         
-        # Add variants from features list (UnifiedFeature objects)
+        # Add variants from features list (UFeature objects)
         all_variant_features.extend([f for f in features if f.feature_type == 'variant'])
         
         # Add variants from variant_features list if provided
@@ -2425,5 +2421,4 @@ def browse_genome(genome_manager: 'GenomeManager',
             browser.start(chrom, position, window_size)
     else:
         browser = InteractiveGenomeBrowser(genome_manager, debug = debug, **kwargs)
-        # browser.start(chrom, position, window_size, show_second = True)
         browser.start(chrom, position, window_size, **kwargs)

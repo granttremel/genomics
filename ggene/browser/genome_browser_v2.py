@@ -16,9 +16,9 @@ from ggene import seqs, draw
 from ggene.seqs import vocab as gvc
 from ggene.seqs import bio, find, process
 from ggene.seqs.bio import CODON_TABLE, COMPLEMENT_MAP, to_rna, complement, reverse_complement
-from ggene.features import Gene, Feature
-from ggene.genome_iterator_v2 import UnifiedGenomeIterator
-from ggene.unified_stream import UnifiedFeature
+from ggene.genome.features import Gene, Feature
+from ggene.database.genome_iterator import UGenomeIterator
+from ggene.database.unified_stream import UFeature
 
 # Import new modular components
 from ggene.display.colors import Colors
@@ -284,7 +284,7 @@ class InteractiveGenomeBrowser:
     
     def _update_iterator(self):
         
-        self.iterator = UnifiedGenomeIterator(
+        self.iterator = UGenomeIterator(
             self.gm,
             self.state.chrom,
             self.state.position,
@@ -296,7 +296,7 @@ class InteractiveGenomeBrowser:
         )
         self.window = self.iterator.get_window_at(self.state.position)
         if self.state.show_second:
-            self.iterator2 = UnifiedGenomeIterator(
+            self.iterator2 = UGenomeIterator(
                 self.gm,
                 self.state2.chrom,
                 self.state2.position,
@@ -431,7 +431,7 @@ class InteractiveGenomeBrowser:
                 motif.pop("sequence")
                 motif["feature_type"] = motif.pop("type")
                 motif["source"] = "motif"
-                motif_feat = UnifiedFeature(chrom = state.chrom, **motif)
+                motif_feat = UFeature(chrom = state.chrom, **motif)
                 features.append(motif_feat)
                 
         if hasattr(self.gm, 'annotations'):
@@ -638,7 +638,7 @@ class InteractiveGenomeBrowser:
         if features:
             window_start = state.position
             for feature in features:
-                ftype = feature.feature_type if isinstance(feature, UnifiedFeature) else feature.get("feature_type")
+                ftype = feature.feature_type if isinstance(feature, UFeature) else feature.get("feature_type")
                 if ftype == 'start_codon':
                     # Calculate raw positions relative to window
                     raw_start = max(0, feature.start - window_start)
@@ -1030,7 +1030,7 @@ class InteractiveGenomeBrowser:
         # Combine variant features from both sources
         all_variant_features = []
         
-        # Add variants from features list (UnifiedFeature objects)
+        # Add variants from features list (UFeature objects)
         all_variant_features.extend([f for f in features if f.feature_type == 'variant'])
         
         # Add variants from variant_features list if provided

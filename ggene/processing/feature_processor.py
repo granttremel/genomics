@@ -7,7 +7,7 @@ for genomic annotations.
 
 from typing import Dict, List, Optional, Set, Tuple, Any
 from collections import defaultdict
-from ggene.unified_stream import UnifiedFeature
+from ggene.database.unified_stream import UFeature
 
 
 class FeatureProcessor:
@@ -56,8 +56,8 @@ class FeatureProcessor:
                 motif_copy['feature_type'] = motif_copy.pop('type', 'motif')
                 motif_copy['source'] = 'motif'
 
-                # Create UnifiedFeature
-                motif_feat = UnifiedFeature(chrom=state.chrom, **motif_copy)
+                # Create UFeature
+                motif_feat = UFeature(chrom=state.chrom, **motif_copy)
                 features.append(motif_feat)
 
         # Add annotations from genome manager
@@ -218,7 +218,7 @@ class FeatureProcessor:
                 cds_features.append(feature)
             elif ftype == 'transcript' and hasattr(feature, 'cds_start'):
                 # Create CDS feature from transcript
-                cds_feat = UnifiedFeature(
+                cds_feat = UFeature(
                     chrom=feature.chrom,
                     start=feature.cds_start,
                     end=feature.cds_end,

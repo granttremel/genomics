@@ -3,9 +3,9 @@
 
 import logging
 import sys
-from ggene.genomemanager import GenomeManager
+from ggene.database.genomemanager import GenomeManager
 from ggene.genome_browser_v2 import InteractiveGenomeBrowser
-from ggene.genome_iterator_v2 import UnifiedGenomeIterator
+from ggene.database.genome_iterator import UGenomeIterator
 
 # Setup logging to see debug messages
 logging.basicConfig(
@@ -22,7 +22,7 @@ def test_motif_detection():
     
     # Create iterator with motif detection
     print("\nCreating genome iterator with motif detection...")
-    iterator = UnifiedGenomeIterator(
+    iterator = UGenomeIterator(
         gm,
         chrom='1',
         start=200000,
@@ -59,7 +59,7 @@ def test_motif_detection():
             print(f"\nChecking near gene at position {gene.start}...")
             
             # Create iterator near gene start (promoter region)
-            iterator2 = UnifiedGenomeIterator(
+            iterator2 = UGenomeIterator(
                 gm,
                 chrom='1',
                 start=max(1, gene.start - 500),

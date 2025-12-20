@@ -4,7 +4,7 @@ Test script for launching the PyQt genome browser.
 """
 import sys
 import logging
-from ggene.genomemanager import GenomeManager
+from ggene.database.genomemanager import GenomeManager
 from ggene.genome_browser_gui import launch_genome_browser
 
 # Set up logging

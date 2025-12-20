@@ -16,30 +16,23 @@ logger = logging.getLogger(__name__)
 logger.setLevel("CRITICAL")
 # logger.setLevel(logging.DEBUG)
 
-from . import get_paths
+from .. import get_paths
 DEFAULT_VCF_PATH, DEFAULT_GTF_PATH, DEFAULT_FASTA_PATH, DEFAULT_LIBRARY = get_paths()
-# from . import COMPLEMENT_MAP, reverse_complement, to_rna, to_dna, is_rna, is_dna
-from .seqs.bio import reverse_complement, to_rna, to_dna, is_rna, is_dna, COMPLEMENT_MAP
-from .seqs.lambdas import lambda_map
-from . import draw
-from . import shorten_variant
-from . import utils
+
+from .. import draw
+from .. import shorten_variant
+from .. import dev
 from .genemap import GeneMap
-from .features import Gene, Feature
-from .translate import Ribosome
-from .genome_iterator import GenomeIterator, FeatureExtractor
-from .genome_browser_v2 import InteractiveGenomeBrowser
-from .unified_stream import UnifiedGenomeAnnotations, GTFStream, VCFStream, UnifiedFeature
+from ..genome.features import Gene, Feature
+from ..genome.translate import Ribosome
+# from ..genome_iterator import GenomeIterator, FeatureExtractor
+from .genome_iterator import UGenomeIterator
+from ggene.browser.genome_browser_v2 import InteractiveGenomeBrowser
+from .unified_stream import UnifiedGenomeAnnotations, GTFStream, VCFStream, UFeature
 from ggene.motifs import MotifDetector, PatternMotif, RepeatMotif
 from ggene.seqs.lambdas import needs_features
-"""
-interesting places (chr, pos)
-
-(12, 2446120), # deletion in microsatellite in intron (CACNA1C)
-(13, 86039060), # insertion in msat TGCC in intergenic + nearby T->G
-^ this whole area is patterny
-
-"""
+from ..seqs.bio import reverse_complement, to_rna, to_dna, is_rna, is_dna, COMPLEMENT_MAP
+from ..seqs.lambdas import lambda_map
 
 class GenomeManager:
     """Main class for managing genomic data including VCF and GTF files."""
@@ -162,7 +155,7 @@ class GenomeManager:
         logger.info(f"Added annotation source '{name}' from {filepath}")
     
     def get_all_annotations(self, chrom: str, start: int, end: int,
-                           include_motifs: bool = True) -> List[UnifiedFeature]:
+                           include_motifs: bool = True) -> List[UFeature]:
         """Get all annotations for a region including motifs.
         
         Args:
@@ -172,7 +165,7 @@ class GenomeManager:
             include_motifs: Whether to scan for motifs
             
         Returns:
-            List of UnifiedFeature objects
+            List of UFeature objects
         """
         # Get annotations from databases
         annotations = self.annotations.query_range(chrom, start, end)
@@ -186,7 +179,7 @@ class GenomeManager:
         
         return sorted(annotations)
     
-    def scan_motifs(self, sequence: str, chrom: str, start_pos: int, strand = '+') -> List[UnifiedFeature]:
+    def scan_motifs(self, sequence: str, chrom: str, start_pos: int, strand = '+') -> List[UFeature]:
         """Scan a sequence for motifs.
         
         Args:
@@ -195,7 +188,7 @@ class GenomeManager:
             start_pos: Genomic start position of the sequence
             
         Returns:
-            List of UnifiedFeature objects for found motifs
+            List of UFeature objects for found motifs
         """
         features = []
         
@@ -218,7 +211,7 @@ class GenomeManager:
                         mseq = reverse_complement(mseq)
                         mtfstrand = '-' if mtfstrand == '+' else '+'
                     
-                    features.append(UnifiedFeature(
+                    features.append(UFeature(
                         chrom=chrom,
                         start=start_pos + motif_start,
                         end=start_pos + motif_end - 1,
@@ -521,7 +514,7 @@ class GenomeManager:
         """
         try:
             quals = [v.QUAL for v in self.vcf(self._make_index(chrom, start=start, end=end))]
-            stats = utils.stat.from_data(quals)
+            stats = dev.stat.from_data(quals)
             return stats, quals
         except Exception as e:
             logger.error(f"Failed to get quality stats: {e}")
@@ -1352,7 +1345,7 @@ class GenomeManager:
         
         try:
             gene_dict = gene.to_dict()
-            gene_dict_ser = utils.make_serializable(gene_dict)
+            gene_dict_ser = dev.make_serializable(gene_dict)
             
             output_file = os.path.join(self.library_path, gene.name + '.json')
             # Wrap in gene name for consistency with your format
@@ -1488,7 +1481,7 @@ class GenomeManager:
         self.load_gene(ind.upper())
     
     def iterate_genome(self, chrom: Union[str, int], start: int, 
-                      end: Optional[int] = None, **kwargs) -> GenomeIterator:
+                      end: Optional[int] = None, **kwargs) -> UGenomeIterator:
         """Create a genome iterator for a specific region.
         
         Args:
@@ -1500,7 +1493,8 @@ class GenomeManager:
         Returns:
             GenomeIterator instance
         """
-        return GenomeIterator(self, chrom, start, end, **kwargs)
+        # return GenomeIterator(self, chrom, start, end, **kwargs)
+        return UGenomeIterator(self, chrom, start, end, **kwargs)
     
     def extract_ml_features(self, features: List[Feature], 
                            upstream: int = 1000, 
@@ -1516,8 +1510,9 @@ class GenomeManager:
         Returns:
             List of dictionaries with extracted sequences and metadata
         """
-        extractor = FeatureExtractor(self)
-        return extractor.extract_around_features(features, upstream, downstream, **kwargs)
+        return []
+        # extractor = FeatureExtractor(self)
+        # return extractor.extract_around_features(features, upstream, downstream, **kwargs)
     
     def get_features_at_position(self, chrom: Union[str, int], position: int,
                                 exclude_types: Optional[List[str]] = None,
@@ -1547,7 +1542,7 @@ class GenomeManager:
             if include_types and uf.feature_type not in include_types:
                 continue
                 
-            # Convert UnifiedFeature to dict-like format expected by old code
+            # Convert UFeature to dict-like format expected by old code
             feature_dict = {
                 'feature': uf.feature_type,
                 'start': uf.start,
@@ -1693,7 +1688,7 @@ class GenomeManager:
         """
         positions = []
         
-        iterator = GenomeIterator(
+        iterator = UGenomeIterator(
             self, chrom, start, end,
             window_size=len(motif),
             integrate_variants=integrate_variants

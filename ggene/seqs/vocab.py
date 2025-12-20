@@ -39,6 +39,30 @@ or ╪ ╫
 or ╤ ╥ ╦ ╧ ╨ ╩
 
 
+quads
+_   0000    ----    -
+▖   0001    ---A    A
+▗   0010    --T-    T
+▘   0100    -G--    G
+▝   1000    C---    C
+
+▄   0011    --TA    W
+▌   0101    -G-A    R
+▐   1010    C-T-    Y
+▀   1100    CG--    S
+▞   1001    C--A    M
+▚   0110    -GT-    K
+
+▙   0111    -GTA    D
+▛   1101    CG-A    V
+▜   1110    CGT-    B
+▟   1011    C-TA    H
+
+█   1111    CGTA    N
+    
+
+
+
 wow! these are unified canadian aboriginal syllabics:
 ᐁ ᐂ ᐃ ᐄ 
 ᑌ ᑍ ᑎ 
@@ -104,6 +128,11 @@ _latin_rotated = {
 }
 
 _addl_syms = "ЂЄЉЊЋБГ"
+
+quad_vc_base = "-ATGCWRYSAKDVBHN"
+quad_vc_block = "_▖▗▘▝▄▌▐▀▞▚▙▛▜▟█"
+
+quad_vc = {bs:bk for bs, bk in zip(quad_vc_base, quad_vc_block)}
 
 _good_syms = [
     (9632, 9727, 1), # geo

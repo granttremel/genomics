@@ -6,8 +6,8 @@ sys.path.insert(0, '/home/gront/Documents/python/genomics-prj')
 
 from ggene import get_paths
 DEFAULT_VCF_PATH, DEFAULT_GTF_PATH, DEFAULT_FASTA_PATH, DEFAULT_LIBRARY = get_paths()
-from ggene.genomemanager import GenomeManager
-from ggene.genome_iterator_v2 import UnifiedGenomeIterator
+from ggene.database.genomemanager import GenomeManager
+from ggene.database.genome_iterator import UGenomeIterator
 
 def test_coordinate_tracking():
     """Test the three coordinate systems."""
@@ -28,7 +28,7 @@ def test_coordinate_tracking():
     print("-" * 60)
     
     # Create iterator
-    iterator = UnifiedGenomeIterator(
+    iterator = UGenomeIterator(
         gm, chrom, start, 
         end=start + 200,
         window_size=window_size,
@@ -96,7 +96,7 @@ def test_preloading_performance():
         start_time = time.time()
         
         # Create iterator with preloading
-        iterator = UnifiedGenomeIterator(
+        iterator = UGenomeIterator(
             gm, chrom, start, end,
             window_size=100,
             stride=100,
@@ -132,7 +132,7 @@ def test_jump_functionality():
     gm = GenomeManager()
     
     # Create iterator
-    iterator = UnifiedGenomeIterator(
+    iterator = UGenomeIterator(
         gm, chrom=1, start=1000000,
         window_size=50,
         integrate_variants=True
@@ -177,7 +177,7 @@ def test_constant_window_size():
     
     print(f"\nTesting windows of size {window_size} bp around large insertion")
     
-    iterator = UnifiedGenomeIterator(
+    iterator = UGenomeIterator(
         gm, chrom, start,
         end=start + 300,
         window_size=window_size,

@@ -1,9 +1,9 @@
 
 
 from ggene import DEFAULT_LIBRARY
-from ggene.genomemanager import GenomeManager
+from ggene.database.genomemanager import GenomeManager
 
-from ggene.unified_stream import UnifiedFeature
+from ggene.database.unified_stream import UFeature
 
 LIB_DIR = "ncache"
 
@@ -12,7 +12,7 @@ def list_feature_atts(gm:GenomeManager, att = "feature_type"):
     feat_vals = set()
     
     getter = None
-    if att in UnifiedFeature.__dataclass_fields__:
+    if att in UFeature.__dataclass_fields__:
         getter = lambda f:getattr(f, att)
     else:
         getter = lambda f:f.attributes.get(att,"")

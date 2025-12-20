@@ -8,7 +8,7 @@ import regex
 import numpy as np
 
 
-from ggene.genomemanager import GenomeManager
+from ggene.database.genomemanager import GenomeManager
 from ggene.seqs import bio, align, process, compare
 
 def hamming_distance_algn(motifa, motifb):

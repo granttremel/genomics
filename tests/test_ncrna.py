@@ -2,8 +2,8 @@
 import numpy as np
 
 from ggene import other_paths
-from ggene.genomemanager import GenomeManager
-from ggene.unified_stream import UFeat
+from ggene.database.genomemanager import GenomeManager
+from ggene.database.unified_stream import UFeat
 
 from ggene.genome import genes, ncrna
 

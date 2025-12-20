@@ -4,13 +4,13 @@
 import sys
 sys.path.insert(0, '/home/gront/Documents/python/genomics-prj')
 
-from ggene.unified_stream import (
+from ggene.database.unified_stream import (
     UnifiedGenomeAnnotations, 
     GTFStream, 
     VCFStream,
-    UnifiedFeature
+    UFeature
 )
-from ggene.genomemanager import GenomeManager
+from ggene.database.genomemanager import GenomeManager
 import heapq
 from typing import Iterator
 
@@ -68,31 +68,31 @@ def test_concurrent_merging():
     print("Testing concurrent stream merging...")
     
     # Create mock streams
-    def stream1() -> Iterator[UnifiedFeature]:
+    def stream1() -> Iterator[UFeature]:
         """Mock gene stream."""
         positions = [1000, 5000, 9000]
         for pos in positions:
-            yield UnifiedFeature(
+            yield UFeature(
                 chrom="1", start=pos, end=pos+1000,
                 feature_type="gene", source="GTF",
                 name=f"Gene_{pos}"
             )
     
-    def stream2() -> Iterator[UnifiedFeature]:
+    def stream2() -> Iterator[UFeature]:
         """Mock variant stream."""
         positions = [500, 1500, 6000, 9500]
         for pos in positions:
-            yield UnifiedFeature(
+            yield UFeature(
                 chrom="1", start=pos, end=pos,
                 feature_type="SNP", source="VCF",
                 name=f"Var_{pos}"
             )
     
-    def stream3() -> Iterator[UnifiedFeature]:
+    def stream3() -> Iterator[UFeature]:
         """Mock repeat stream."""
         positions = [2000, 7000, 8000]
         for pos in positions:
-            yield UnifiedFeature(
+            yield UFeature(
                 chrom="1", start=pos, end=pos+200,
                 feature_type="repeat", source="RepeatMasker",
                 name=f"Repeat_{pos}"
@@ -165,8 +165,8 @@ def test_motif_integration():
     for match in pattern.finditer(test_seq):
         print(f"  Found splice donor at {match.start()}: {match.group()}")
         
-        # Convert to UnifiedFeature
-        feature = UnifiedFeature(
+        # Convert to UFeature
+        feature = UFeature(
             chrom="test",
             start=match.start() + 1,
             end=match.end(),
@@ -207,10 +207,10 @@ def demonstrate_feature_pipeline():
     
     # This would actually stream from all sources
     mock_features = [
-        UnifiedFeature(chrom, 1000100, 1000200, "gene", "GTF", name="GENE1"),
-        UnifiedFeature(chrom, 1000150, 1000150, "SNP", "VCF", name="rs123"),
-        UnifiedFeature(chrom, 1000180, 1000280, "repeat", "RepeatMasker", name="AluY"),
-        UnifiedFeature(chrom, 1000250, 1000260, "tf_binding", "JASPAR", name="CTCF"),
+        UFeature(chrom, 1000100, 1000200, "gene", "GTF", name="GENE1"),
+        UFeature(chrom, 1000150, 1000150, "SNP", "VCF", name="rs123"),
+        UFeature(chrom, 1000180, 1000280, "repeat", "RepeatMasker", name="AluY"),
+        UFeature(chrom, 1000250, 1000260, "tf_binding", "JASPAR", name="CTCF"),
     ]
     
     for f in sorted(mock_features):

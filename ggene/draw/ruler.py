@@ -9,6 +9,8 @@ collisions.
 from typing import List, Optional, Dict, Any, Callable, Union, Tuple
 import numpy as np
 
+from .format import format_genomic
+from .chars import RULER, SCALE
 
 class Ruler:
     """
@@ -74,8 +76,8 @@ class Ruler:
             'formatter': None,  # None = auto-detect
             'multi_row_labels': False,
             'max_label_rows': 4,
-            'drop_line_char': '│',
-            'drop_corner_char': '╯',
+            'drop_line_char': RULER.get("tick"),
+            'drop_corner_char': RULER.get("rlabel_marker"),
         }
 
     def render(self) -> None:
@@ -101,8 +103,8 @@ class Ruler:
         self._calculate_tick_distances(num_labels, ticks_per_interval, minor_per_tick)
 
         # Determine tick symbols
-        tick_marker = "'" if use_minor_symbol else "╵"
-        minor_marker = "'"
+        tick_marker = RULER.get("minor_tick") if use_minor_symbol else RULER.get("tick")
+        minor_marker = RULER.get("minor_tick")
 
         if self.options['multi_row_labels']:
             self.rows = self._render_multi_row(
@@ -216,10 +218,14 @@ class Ruler:
     ) -> List[str]:
         """Render ruler with all labels in a single row."""
         # Format final label to position it correctly
+        
+        llbl, rlbl = RULER.get("llabel_marker"), RULER.get("rlabel_marker")
+        
         final_col, final_x = label_positions[-1]
-        final_label_str = formatter(final_x) + "╯"
+        final_label_str = formatter(final_x) + rlbl
         final_label_width = len(final_label_str)
         final_label_start = self.num_cols - final_label_width
+
 
         ruler = []
         col = 0
@@ -239,7 +245,7 @@ class Ruler:
 
             if label_here:
                 _, x_val = label_here
-                label_str = "╰" + formatter(x_val)
+                label_str = llbl + formatter(x_val)
                 ruler.append(label_str)
                 col += len(label_str)
             elif col in tick_positions:
@@ -356,13 +362,15 @@ class Ruler:
         minor_marker: str
     ) -> str:
         """Build the main ruler row with ticks and row-0 labels."""
+        
+        llbl, rlbl = RULER.get("llabel_marker"), RULER.get("rlabel_marker")
         ruler = []
         col = 0
 
         while col <= self.num_cols:
             # Check for label at this position
             if col in row_labels:
-                label_str = "╰" + row_labels[col]
+                label_str = llbl + row_labels[col]
                 ruler.append(label_str)
                 col += len(label_str)
             elif col in tick_positions:
@@ -408,7 +416,6 @@ class Ruler:
 
     def _manual_params(self) -> Tuple[int, int, int, Callable, bool]:
         """Get ruler parameters from manual options."""
-        from ggene.draw import _get_nice_number
 
         num_labels = self.options['num_labels']
         ticks = self.options['ticks']
@@ -526,7 +533,7 @@ class Ruler:
                 decimals = max(0, int(-np.floor(np.log10(xran))) + 2)
 
             # Check if values are effectively integers
-            from ggene.draw import _get_nice_number
+            # from ggene.draw import _get_nice_number
             nice_step = _get_nice_number(xran / 5)
             if nice_step >= 1 and all(abs(v - round(v)) < 1e-9 for v in [self.xmin, self.xmax, nice_step]):
                 return lambda s: format(s, ".0f")
@@ -684,3 +691,319 @@ class Ruler:
 
     def __str__(self) -> str:
         return '\n'.join(self.rows)
+
+
+def _get_nice_number(x, round_down=False):
+    """Get a 'nice' number close to x (1, 2, 5, 10, 20, 50, 100, etc.)"""
+    if x == 0:
+        return 0
+
+    exp = np.floor(np.log10(abs(x)))
+    frac = abs(x) / (10 ** exp)
+
+    if round_down:
+        if frac < 1.5:
+            nice_frac = 1
+        elif frac < 3:
+            nice_frac = 2
+        elif frac < 7:
+            nice_frac = 5
+        else:
+            nice_frac = 10
+    else:
+        if frac <= 1:
+            nice_frac = 1
+        elif frac <= 2:
+            nice_frac = 2
+        elif frac <= 5:
+            nice_frac = 5
+        else:
+            nice_frac = 10
+
+    return nice_frac * (10 ** exp) * (1 if x >= 0 else -1)
+
+
+def _estimate_label_width(value, formatter):
+    """Estimate the width of a formatted label."""
+    if isinstance(formatter, str):
+        test_str = format(value, formatter)
+    else:
+        test_str = formatter(value)
+    # Add 1 for the tick marker
+    return len(test_str) + 1
+
+
+def _auto_ruler_params(xmin, xmax, num_cols, genomic=False):
+    """
+    Automatically determine optimal ruler parameters.
+
+    Heuristics:
+    - One label per 25 columns max, minimum 3 labels per plot
+    - One tick per 5 columns max, minimum one tick per label
+    - One minor tick per column max, no more than 5 minor ticks before tick/label
+    - If ticks every 3 columns or fewer, use minor tick symbol and omit minor ticks
+
+    Returns: (num_labels, ticks_per_label, minor_ticks_per_tick, formatter)
+    """
+    xran = xmax - xmin
+
+    # Determine formatter first
+    if genomic:
+        nexp = np.log10(max(abs(xmax), abs(xmin), 1))
+        if nexp > 6:
+            div = 1e6
+            unit = "M"
+            decimals = 1 if xran/1e6 < 10 else 0
+        elif nexp > 3:
+            div = 1e3
+            unit = "k"
+            decimals = 1 if xran/1e3 < 10 else 0
+        else:
+            div = 1
+            unit = "b"
+            decimals = 0
+        fmtr = lambda x: format(x/div, f".{decimals}f") + unit
+    else:
+        # Smart format selection
+        if abs(xran) > 1e5:
+            fmtr = ".2e"
+        elif abs(xran) < 1e-3:
+            fmtr = ".2e"
+        else:
+            # Determine decimal places based on range
+            if xran >= 100:
+                decimals = 0
+            elif xran >= 10:
+                decimals = 1
+            elif xran >= 1:
+                decimals = 2
+            else:
+                decimals = max(0, int(-np.floor(np.log10(xran))) + 2)
+
+            # Check if values are effectively integers
+            nice_step = _get_nice_number(xran / 5)
+            if nice_step >= 1 and all(abs(v - round(v)) < 1e-9 for v in [xmin, xmax, nice_step]):
+                fmtr = ".0f"
+            else:
+                fmtr = f".{decimals}f"
+
+    # Estimate label width
+    test_val = xmax if abs(xmax) > abs(xmin) else xmin
+    avg_label_width = _estimate_label_width(test_val, fmtr)
+
+    # Determine number of labels: one per 25 columns max, minimum 3
+    max_labels_by_spacing = num_cols // 25
+    max_labels_by_width = num_cols // (avg_label_width + 1)
+    max_labels = max(3, min(max_labels_by_spacing, max_labels_by_width))
+
+    # Choose a nice number of labels (prefer 3, 4, 5, 6, 8, 10, 12)
+    nice_label_counts = [3, 4, 5, 6, 8, 10, 12, 15, 20]
+    num_labels = 3  # default minimum
+    for n in nice_label_counts:
+        if n <= max_labels:
+            num_labels = n
+        else:
+            break
+
+    # Calculate ticks per label interval
+    cols_per_label_interval = num_cols / (num_labels - 1)
+
+    # One tick per 5 columns max, minimum one tick per label
+    max_ticks_per_interval = int(cols_per_label_interval / 5)
+    ticks_per_interval = max(1, max_ticks_per_interval)
+
+    # Check if ticks would be too close (every 3 columns or fewer)
+    cols_per_tick = cols_per_label_interval / (ticks_per_interval + 1)
+    use_minor_symbol_for_ticks = cols_per_tick <= 3
+
+    # Minor ticks: one per column max, no more than 5 before tick/label
+    if use_minor_symbol_for_ticks:
+        # Omit minor ticks when ticks are too close
+        minor_per_tick = 0
+    else:
+        max_minor_per_tick = min(5, int(cols_per_tick) - 1)
+        minor_per_tick = max(0, max_minor_per_tick)
+
+    return num_labels, ticks_per_interval, minor_per_tick, fmtr, use_minor_symbol_for_ticks
+
+
+def add_ruler(sctxt, xmin, xmax, genomic = False, auto=False, **kwargs):
+    """
+    Add a ruler to scalar text output.
+
+    Args:
+        sctxt: Scalar text output (list of strings)
+        xmin: Minimum x value
+        xmax: Maximum x value
+        genomic: Use genomic formatting (kb, Mb)
+        auto: Automatically determine optimal ruler parameters
+        **kwargs: Manual parameters (num_labels, ticks, minor_ticks, fstr)
+
+    Returns:
+        (sctxt, dists): Updated scalar text and distance tuple
+    """
+    num_cols = sum(1 for s in sctxt[0] if s in SCALE)
+    ran = (xmax - xmin)
+
+    if auto:
+        # Use automatic parameter selection
+        num_labels, ticks_per_section, minor_per_tick, fmtr, use_minor_symbol = _auto_ruler_params(
+            xmin, xmax, num_cols, genomic
+        )
+        ticks = ticks_per_section
+        minor_ticks = minor_per_tick
+    else:
+        # Use manual parameters
+        num_labels = kwargs.get("num_labels", 5)
+        ticks = kwargs.get("ticks", 5)
+        minor_ticks = kwargs.get("minor_ticks", 5)
+        use_minor_symbol = False
+
+        lbl_delta = ran / (num_labels - 1)
+
+        # Format selection
+        if kwargs.get("fstr"):
+            fmtr = kwargs.get("fstr")
+        elif genomic:
+            fmtr = format_genomic
+        elif abs(ran) > 1e5:
+            fmtr = ".0e"
+        elif abs(ran) < 1e-5:
+            fmtr = ".0e"
+        elif abs(lbl_delta) >= 1 and all(abs(v - round(v)) < 1e-9 for v in [xmin, xmax, lbl_delta]):
+            fmtr = ".0f"
+        elif abs(lbl_delta) >= 1:
+            fmtr = ".1f"
+        else:
+            # For small ranges, determine appropriate decimal places
+            decimals = max(1, int(-np.floor(np.log10(abs(lbl_delta)))) + 1)
+            fmtr = f".{decimals}f"
+
+    ruler, dists = make_ruler(xmin, xmax, num_cols, num_labels=num_labels,
+                             ticks=ticks, minor_ticks=minor_ticks, formatter=fmtr,
+                             use_minor_symbol_for_ticks=use_minor_symbol)
+    sctxt.append(ruler)
+
+    return sctxt, dists
+
+def make_ruler(xmin, xmax, num_cols, num_labels=5, ticks=5, minor_ticks=5, formatter="0.2g", use_minor_symbol_for_ticks=False):
+    """
+    Create a ruler with evenly spaced labels, ticks, and minor ticks.
+
+    Args:
+        xmin: Minimum x value
+        xmax: Maximum x value
+        num_cols: Number of columns in the plot
+        num_labels: Number of labels to place (including endpoints)
+        ticks: Number of major ticks per label interval
+        minor_ticks: Number of minor ticks per major tick interval
+        formatter: Format string or callable for label formatting
+        use_minor_symbol_for_ticks: Use minor tick symbol for ticks (when too dense)
+
+    Returns:
+        (ruler_string, (label_dist, tick_dist, minor_tick_dist))
+    """
+    xran = xmax - xmin
+    num_labels = max(2, num_labels)
+
+    if isinstance(formatter, str):
+        
+        if formatter == "genomic":
+            formatter = format_genomic
+        else:
+            frmstr = formatter
+            formatter = lambda s: format(s, frmstr)
+
+    # Tick markers
+    lbl_marker = "╰"
+    tick_marker = "'" if use_minor_symbol_for_ticks else "╵"
+    minor_marker = "'"
+
+    # Calculate label positions
+    label_positions = []  # (column_pos, x_value, is_last)
+    for i in range(num_labels):
+        x_val = xmin + (xran * i / (num_labels - 1))
+        col_pos = int(round(num_cols * i / (num_labels - 1)))
+        is_last = (i == num_labels - 1)
+        label_positions.append((col_pos, x_val, is_last))
+
+    # Calculate tick positions (between labels)
+    tick_positions = set()
+    if ticks > 0:
+        for label_idx in range(num_labels - 1):
+            start_col = label_positions[label_idx][0]
+            end_col = label_positions[label_idx + 1][0]
+            interval_cols = end_col - start_col
+
+            # Ensure at least 2 columns per tick
+            actual_ticks = min(ticks, interval_cols // 2)
+
+            for t in range(1, actual_ticks + 1):
+                tick_col = start_col + int(round(interval_cols * t / (actual_ticks + 1)))
+                if tick_col not in [lp[0] for lp in label_positions]:
+                    tick_positions.add(tick_col)
+
+    # Calculate minor tick positions (between ticks and labels)
+    minor_positions = set()
+    if minor_ticks > 0 and not use_minor_symbol_for_ticks:
+        # Get all major positions (labels + ticks)
+        major_positions = sorted([lp[0] for lp in label_positions] + list(tick_positions))
+
+        for idx in range(len(major_positions) - 1):
+            start_col = major_positions[idx]
+            end_col = major_positions[idx + 1]
+            interval_cols = end_col - start_col
+
+            # Ensure at least 2 columns per minor tick
+            actual_minor = min(minor_ticks, interval_cols // 2)
+
+            for m in range(1, actual_minor + 1):
+                minor_col = start_col + int(round(interval_cols * m / (actual_minor + 1)))
+                if minor_col not in major_positions:
+                    minor_positions.add(minor_col)
+
+    # Build the ruler string
+    # First, format the final label to know its width
+    final_x_val = label_positions[-1][1]
+    final_label_str = formatter(final_x_val) + "╯"
+    final_label_width = len(final_label_str)
+    final_label_start = num_cols - final_label_width + 1
+
+    ruler = []
+    col = 0
+
+    while col <= num_cols:
+        # Check if we're at the final label position
+        if col == final_label_start:
+            ruler.append(final_label_str)
+            break
+
+        # Check if this column has a non-final label
+        label_here = None
+        for lp in label_positions[:-1]:  # Exclude last label
+            if lp[0] == col:
+                label_here = lp
+                break
+
+        if label_here:
+            col_pos, x_val, _ = label_here
+            label_str = lbl_marker + formatter(x_val)
+            ruler.append(label_str)
+            col += len(label_str)
+        elif col in tick_positions:
+            ruler.append(tick_marker)
+            col += 1
+        elif col in minor_positions:
+            ruler.append(minor_marker)
+            col += 1
+        else:
+            ruler.append(" ")
+            col += 1
+
+    # Calculate actual distances for return value
+    label_dist = xran / (num_labels - 1)
+    tick_dist = label_dist / (ticks + 1) if ticks > 0 else 0
+    minor_tick_dist = tick_dist / (minor_ticks + 1) if minor_ticks > 0 and ticks > 0 else 0
+
+    return "".join(ruler), (label_dist, tick_dist, minor_tick_dist)
+

@@ -11,11 +11,11 @@ import logging
 from dataclasses import dataclass
 from abc import ABC, abstractmethod
 
-from ggene.unified_stream import UnifiedFeature
+from ggene.database.unified_stream import UFeature
 from ggene.seqs import vocab
 
 if TYPE_CHECKING:
-    from ggene.unified_stream import UnifiedFeature
+    from ggene.database.unified_stream import UFeature
 
 logger = logging.getLogger(__name__)
 # logger.setLevel(logging.DEBUG)
@@ -244,7 +244,7 @@ class SequenceStreamWithVariants(BaseSequenceStream):
     def variants_to_deltas(self, variants:List[Any]):
         if not variants:
             return []
-        if isinstance(variants[0], UnifiedFeature):
+        if isinstance(variants[0], UFeature):
             return [(v.start, len(v.attributes.get("ref")), len(v.attributes.get("alt")[0]), v.attributes.get("alt")[0]) for v in variants]
         else:
             return [(v.POS, len(v.REF), len(v.ALT[0]), v.ALT[0]) for v in variants]

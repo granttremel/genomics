@@ -7,9 +7,9 @@ import sys
 import argparse
 import logging
 from ggene import other_paths
-from ggene.genomemanager import GenomeManager
-from ggene.genome_browser import browse_genome as browse_genome_v1
-from ggene.genome_browser_v2 import browse_genome as browse_genome_v2
+from ggene.database.genomemanager import GenomeManager
+from ggene.browser.genome_browser import browse_genome as browse_genome_v1
+from ggene.browser.genome_browser_v2 import browse_genome as browse_genome_v2
 
 logging.basicConfig(level=logging.WARNING)  # Keep it quiet for browsing
 import os
@@ -34,7 +34,7 @@ def main():
     parser.add_argument('--old', '-o', action="store_true",
                        help='do version 1')
     
-    parser.add_argument('--artist-type', type=str, default = "bar")
+    parser.add_argument('--artist-type', type=str, default = "line", help = "normal, seq, line, zoom ... ?")
     
     args = parser.parse_args()
     
@@ -74,7 +74,7 @@ def main():
     # Start the browser
     
     window_sz = args.window
-    if args.artist_type == "bar":
+    if args.artist_type == "line":
         window_sz *= 4
       
     if args.old:

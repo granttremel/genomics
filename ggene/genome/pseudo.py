@@ -2,8 +2,8 @@
 import json
 
 from ggene import DEFAULT_LIBRARY
-from ggene.genomemanager import GenomeManager
-from ggene.unified_stream import UnifiedFeature
+from ggene.database.genomemanager import GenomeManager
+from ggene.database.unified_stream import UFeature
 
 LIB_DIR = "ncache/pseudogenes"
 
@@ -111,7 +111,7 @@ def load_pseudogenes(pg_type, ftag = ""):
     pg_feats = []
     for gd in pgenes:
         gd["feature_type"] = gd.pop("type", "")
-        pg_feats.append(UnifiedFeature(**gd))
+        pg_feats.append(UFeature(**gd))
     
     return pg_feats
 

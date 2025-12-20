@@ -4,7 +4,7 @@ import pysam
 
 import logging
 logger = logging.getLogger(__name__)
-from .features import Feature, Gene
+from ..genome.features import Feature, Gene
 
 def order_chromes(chromes):
     

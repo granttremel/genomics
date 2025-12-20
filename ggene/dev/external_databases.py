@@ -13,7 +13,7 @@ import logging
 from dataclasses import dataclass
 import numpy as np
 
-from unified_stream import UnifiedFeature, AnnotationStream
+from ggene.database.unified_stream import UFeature, AnnotationStream
 
 logger = logging.getLogger(__name__)
 
@@ -125,14 +125,14 @@ class JASPARDatabase:
         self.motifs[matrix_id] = motif
         return motif
     
-    def scan_sequence(self, sequence: str, threshold: float = 0.8) -> List[UnifiedFeature]:
+    def scan_sequence(self, sequence: str, threshold: float = 0.8) -> List[UFeature]:
         """Scan sequence with all loaded motifs."""
         features = []
         
         for matrix_id, motif in self.motifs.items():
             hits = motif.scan(sequence, threshold)
             for start, score, matched_seq, _ in hits:
-                features.append(UnifiedFeature(
+                features.append(UFeature(
                     chrom='',  # Will be set by caller
                     start=start,
                     end=start + len(matched_seq) - 1,
@@ -200,7 +200,7 @@ class ENCODEDatabase:
         
         raise ValueError(f"No peak file found for {experiment_id} on {assembly}")
     
-    def load_chip_peaks(self, target: str, cell_line: str = "K562") -> List[UnifiedFeature]:
+    def load_chip_peaks(self, target: str, cell_line: str = "K562") -> List[UFeature]:
         """Load ChIP-seq peaks for a target."""
         experiments = self.search_experiments(
             biosample=cell_line,
@@ -218,7 +218,7 @@ class ENCODEDatabase:
                         if line.startswith('#'):
                             continue
                         parts = line.strip().split('\t')
-                        features.append(UnifiedFeature(
+                        features.append(UFeature(
                             chrom=parts[0],
                             start=int(parts[1]) + 1,
                             end=int(parts[2]),
@@ -260,7 +260,7 @@ class RfamDatabase:
         filename = f"{rfam_acc}.cm"
         return self.downloader.download_file(url, filename)
     
-    def search_sequence(self, sequence: str, rfam_acc: str) -> List[UnifiedFeature]:
+    def search_sequence(self, sequence: str, rfam_acc: str) -> List[UFeature]:
         """Search sequence for RNA family matches using Infernal."""
         # This would use Infernal's cmsearch
         # For now, return empty list
@@ -283,7 +283,7 @@ class RepeatMaskerDatabase:
         filename = f"{assembly}_repeatmasker.txt.gz"
         return self.downloader.download_file(url, filename)
     
-    def parse_annotations(self, filepath: Path) -> Iterator[UnifiedFeature]:
+    def parse_annotations(self, filepath: Path) -> Iterator[UFeature]:
         """Parse RepeatMasker annotations."""
         with gzip.open(filepath, 'rt') as f:
             for line in f:
@@ -291,7 +291,7 @@ class RepeatMaskerDatabase:
                 if len(parts) < 17:
                     continue
                     
-                yield UnifiedFeature(
+                yield UFeature(
                     chrom=parts[5],
                     start=int(parts[6]) + 1,
                     end=int(parts[7]),
@@ -326,7 +326,7 @@ class ClinVarDatabase:
         filename = f"clinvar_{assembly}.vcf.gz"
         return self.downloader.download_file(url, filename)
     
-    def get_pathogenic_variants(self, chrom: str, start: int, end: int) -> List[UnifiedFeature]:
+    def get_pathogenic_variants(self, chrom: str, start: int, end: int) -> List[UFeature]:
         """Get pathogenic variants in a region."""
         # Would parse VCF and filter for pathogenic
         return []
@@ -383,7 +383,7 @@ class IntegratedDatabaseManager:
                 logger.warning(f"Failed to download {name}: {e}")
     
     def annotate_region(self, chrom: str, start: int, end: int, 
-                       sequence: Optional[str] = None) -> Dict[str, List[UnifiedFeature]]:
+                       sequence: Optional[str] = None) -> Dict[str, List[UFeature]]:
         """Get all annotations for a region."""
         annotations = {}
         

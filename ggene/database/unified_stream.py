@@ -26,7 +26,7 @@ logger.setLevel("CRITICAL")
 
 
 @dataclass
-class UnifiedFeature:
+class UFeature:
     """Common representation for all genomic features.
     
     This is the lingua franca for all annotation sources.
@@ -81,7 +81,7 @@ class UnifiedFeature:
             'attributes': self.attributes
         }
     
-UFeat = UnifiedFeature
+UFeat = UFeature
     
 
 class AnnotationStream(ABC):
@@ -93,18 +93,18 @@ class AnnotationStream(ABC):
         self._buffer = []
         
     @abstractmethod
-    def _parse_line(self, line: str) -> Optional[UnifiedFeature]:
-        """Parse a single line into a UnifiedFeature."""
+    def _parse_line(self, line: str) -> Optional[UFeature]:
+        """Parse a single line into a UFeature."""
         pass
     
     @abstractmethod
     def stream(self, chrom: Optional[str] = None, 
                start: Optional[int] = None,
-               end: Optional[int] = None) -> Iterator[UnifiedFeature]:
+               end: Optional[int] = None) -> Iterator[UFeature]:
         """Stream features, optionally filtered by region."""
         pass
     
-    def query_range(self, chrom: str, start: int, end: int) -> List[UnifiedFeature]:
+    def query_range(self, chrom: str, start: int, end: int) -> List[UFeature]:
         """Query features in a specific range."""
         features = []
         for feature in self.stream(chrom, start, end):
@@ -152,7 +152,7 @@ class GTFStream(AnnotationStream):
             logger.warning(f"No index found for {self.filepath}. Performance will be slow!")
             logger.info(f"Create index with: bgzip -c {self.filepath} > {self.filepath}.gz && tabix -p gff {self.filepath}.gz")
         
-    def _parse_line(self, line: str) -> Optional[UnifiedFeature]:
+    def _parse_line(self, line: str) -> Optional[UFeature]:
         """Parse GTF line."""
         if line.startswith('#'):
             return None
@@ -169,7 +169,7 @@ class GTFStream(AnnotationStream):
                     key, val = attr.strip().split(' ', 1)
                     attr_dict[key] = val.strip('"')
         
-        return UnifiedFeature(
+        return UFeature(
             chrom=parts[0],
             start=int(parts[3]),
             end=int(parts[4]),
@@ -184,7 +184,7 @@ class GTFStream(AnnotationStream):
     
     def stream(self, chrom: Optional[str] = None,
                start: Optional[int] = None,
-               end: Optional[int] = None) -> Iterator[UnifiedFeature]:
+               end: Optional[int] = None) -> Iterator[UFeature]:
         """Stream GTF features using indexed access when available."""
         
         res = self.test(chrom, start)
@@ -258,7 +258,7 @@ class VCFStream(AnnotationStream):
             logger.warning(f"Failed to open VCF with cyvcf2: {e}")
             self.vcf = None
         
-    def _parse_line(self, line: str) -> Optional[UnifiedFeature]:
+    def _parse_line(self, line: str) -> Optional[UFeature]:
         """Parse VCF line."""
         if line.startswith('#'):
             return None
@@ -292,7 +292,7 @@ class VCFStream(AnnotationStream):
             else:
                 variant_types.append('COMPLEX')
         
-        return UnifiedFeature(
+        return UFeature(
             chrom=parts[0],
             start=int(parts[1]),
             end=int(parts[1]) + len(ref) - 1,
@@ -312,8 +312,8 @@ class VCFStream(AnnotationStream):
             }
         )
     
-    def _parse_variant(self, variant) -> Optional[UnifiedFeature]:
-        """Parse cyvcf2 Variant object to UnifiedFeature."""
+    def _parse_variant(self, variant) -> Optional[UFeature]:
+        """Parse cyvcf2 Variant object to UFeature."""
         # Parse INFO field
         info_dict = dict(variant.INFO)
         
@@ -343,7 +343,7 @@ class VCFStream(AnnotationStream):
         else:
             zyg = ""
         
-        return UnifiedFeature(
+        return UFeature(
             chrom=variant.CHROM,
             start=variant.POS,  # VCF is 1-based
             end=variant.POS + len(ref) - 1,
@@ -366,7 +366,7 @@ class VCFStream(AnnotationStream):
     
     def stream(self, chrom: Optional[str] = None,
                start: Optional[int] = None,
-               end: Optional[int] = None) -> Iterator[UnifiedFeature]:
+               end: Optional[int] = None) -> Iterator[UFeature]:
         """Stream VCF features using cyvcf2's efficient indexed access."""
         
         res = self.test(chrom, start)
@@ -448,7 +448,7 @@ class BEDStream(AnnotationStream):
             logger.warning(f"No index found for {self.filepath}. Performance will be slow!")
             logger.info(f"Create index with: tabix -p bed {self.filepath}")
         
-    def _parse_line(self, line: str) -> Optional[UnifiedFeature]:
+    def _parse_line(self, line: str) -> Optional[UFeature]:
         """Parse BED line."""
         if line.startswith('#') or line.startswith('track'):
             return None
@@ -463,7 +463,7 @@ class BEDStream(AnnotationStream):
         else:
             motif = ""
         
-        return UnifiedFeature(
+        return UFeature(
             chrom=parts[0].removeprefix("chr"),
             start=int(parts[1]) + 1,  # BED is 0-based
             end=int(parts[2]),
@@ -480,7 +480,7 @@ class BEDStream(AnnotationStream):
     
     def stream(self, chrom: Optional[str] = None,
                start: Optional[int] = None,
-               end: Optional[int] = None) -> Iterator[UnifiedFeature]:
+               end: Optional[int] = None) -> Iterator[UFeature]:
         """Stream BED features."""
         chrom = str(chrom)
         
@@ -516,13 +516,13 @@ class JASPARStream(AnnotationStream):
         # For now, returning empty dict
         return {}
     
-    def _parse_line(self, line: str) -> Optional[UnifiedFeature]:
+    def _parse_line(self, line: str) -> Optional[UFeature]:
         """Not used for JASPAR - we scan sequences."""
         pass
     
     def stream(self, chrom: Optional[str] = None,
                start: Optional[int] = None,
-               end: Optional[int] = None) -> Iterator[UnifiedFeature]:
+               end: Optional[int] = None) -> Iterator[UFeature]:
         """Stream motif predictions by scanning sequence."""
         if not chrom or not start or not end:
             return
@@ -539,7 +539,7 @@ class JASPARStream(AnnotationStream):
         for motif_id, pwm in self.motifs.items():
             hits = pwm.scan_sequence(seq)
             for hit_start, score, matched_seq in hits:
-                yield UnifiedFeature(
+                yield UFeature(
                     chrom=chrom,
                     start=start + hit_start,
                     end=start + hit_start + len(matched_seq) - 1,
@@ -579,7 +579,7 @@ class RepeatMaskerStream(AnnotationStream):
             logger.warning(f"No index found for {self.filepath}. Performance will be slow!")
             logger.info(f"Create index with: tabix -p bed {self.filepath}")
         
-    def _parse_line(self, line: str) -> Optional[UnifiedFeature]:
+    def _parse_line(self, line: str) -> Optional[UFeature]:
         """Parse BED line."""
         if line.startswith('#') or line.startswith('track'):
             return None
@@ -594,7 +594,7 @@ class RepeatMaskerStream(AnnotationStream):
         else:
             motif = ""
         
-        return UnifiedFeature(
+        return UFeature(
             chrom=parts[0].removeprefix("chr"),
             start=int(parts[1]) + 1,  # BED is 0-based
             end=int(parts[2]),
@@ -611,7 +611,7 @@ class RepeatMaskerStream(AnnotationStream):
     
     def stream(self, chrom: Optional[str] = None,
                start: Optional[int] = None,
-               end: Optional[int] = None) -> Iterator[UnifiedFeature]:
+               end: Optional[int] = None) -> Iterator[UFeature]:
         """Stream BED features."""
         
         chrom = str(chrom)
@@ -644,7 +644,7 @@ class DfamStream(BEDStream):
     def __init__(self, filepath):
         super().__init__(filepath, feature_type = "dfam_hit")
         
-    def _parse_line(self, line: str) -> Optional[UnifiedFeature]:
+    def _parse_line(self, line: str) -> Optional[UFeature]:
         """Parse BED line. Columns:
         # BED: chrom, start, end, name, score(bits), strand, family_acc, e-value, bias, hmm-st, hmm-en, env-st, env-en, sq-len, kimura_div
         """
@@ -662,7 +662,7 @@ class DfamStream(BEDStream):
         else:
             motif = ""
         
-        return UnifiedFeature(
+        return UFeature(
             chrom=parts[0].removeprefix("chr"),
             start=int(parts[1]) + 1,  # BED is 0-based
             end=int(parts[2]),
@@ -777,7 +777,7 @@ class UnifiedGenomeAnnotations:
     
     def stream_all(self, chrom: Optional[str] = None,
                    start: Optional[int] = None,
-                   end: Optional[int] = None) -> Iterator[UnifiedFeature]:
+                   end: Optional[int] = None) -> Iterator[UFeature]:
         """Stream all annotations merged by position.
         
         Uses heapq.merge for efficient sorted merging.
@@ -796,7 +796,7 @@ class UnifiedGenomeAnnotations:
         for feature in heapq.merge(*iterators):
             yield feature
     
-    def query_point(self, chrom: str, position: int) -> List[UnifiedFeature]:
+    def query_point(self, chrom: str, position: int) -> List[UFeature]:
         """Query all features at a specific position."""
         features = []
         for name, stream in self.streams.items():
@@ -807,7 +807,7 @@ class UnifiedGenomeAnnotations:
                 logger.warning(f"Query failed for {name}: {e}")
         return sorted(features)
     
-    def query_range(self, chrom: str, start: int, end: int) -> List[UnifiedFeature]:
+    def query_range(self, chrom: str, start: int, end: int) -> List[UFeature]:
         """Query all features in a range."""
         features = []
         for name, stream in self.streams.items():
@@ -820,7 +820,7 @@ class UnifiedGenomeAnnotations:
     def stream_by_types(self, feature_types: List[str],
                        chrom: Optional[str] = None,
                        start: Optional[int] = None,
-                       end: Optional[int] = None) -> Iterator[UnifiedFeature]:
+                       end: Optional[int] = None) -> Iterator[UFeature]:
         """Stream only specific feature types."""
         for feature in self.stream_all(chrom, start, end):
             if feature.feature_type in feature_types:
@@ -863,7 +863,7 @@ class CachedUnifiedAnnotations(UnifiedGenomeAnnotations):
         self.cache = {}
         self.cache_size = cache_size
         
-    def query_range(self, chrom: str, start: int, end: int) -> List[UnifiedFeature]:
+    def query_range(self, chrom: str, start: int, end: int) -> List[UFeature]:
         """Query with caching."""
         cache_key = (chrom, start, end)
         

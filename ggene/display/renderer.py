@@ -7,12 +7,13 @@ browser view.
 from dataclasses import dataclass, field
 from typing import List, Dict, Optional, Any
 from ggene import draw
+from ggene.draw.colors import Colors
 import numpy as np
 
 from ggene.display.sequence_display import SequenceDisplay
 from ggene.display.feature_display import FeatureDisplay
 from ggene.display.amino_acid_display import AminoAcidDisplay
-from ggene.display.colors import Colors
+# from ggene.display.colors import Colors
 from ggene.processing.feature_processor import FeatureProcessor
 import logging
 
@@ -59,7 +60,7 @@ class DisplayRenderer:
         self.gm = genome_manager
         self.window_size = window_size
 
-        bg, fg = draw.get_color_scheme("test")
+        bg, fg = Colors.get_color_scheme("test")
         self.rstate = RenderState(bg_color = bg, fg_color = fg, fg_color_rc = fg - 6)
         
         # Initialize sub-renderers

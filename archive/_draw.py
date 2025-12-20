@@ -8,7 +8,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 
-from ggene.utils import utils
+from ggene.dev import utils
 from ggene.seqs.bio import reverse_complement, complement
 from ggene.seqs.find import find_subsequence, find_subsequences
 

@@ -10,7 +10,7 @@ from ggene import draw
 from ggene.display.colors import Colors
 from ggene.processing.coordinate_mapper import CoordinateMapper, SequenceRenderer
 from ggene.processing.sequence_processor import SequenceProcessor
-from ggene.unified_stream import UnifiedFeature
+from ggene.database.unified_stream import UFeature
 import logging
 
 logger = logging.getLogger(__name__)
@@ -331,7 +331,7 @@ class SequenceDisplay:
         Returns:
             Feature type string
         """
-        if isinstance(feature, UnifiedFeature):
+        if isinstance(feature, UFeature):
             return feature.feature_type
         elif hasattr(feature, 'feature_type'):
             return feature.feature_type

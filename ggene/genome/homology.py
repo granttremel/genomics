@@ -4,10 +4,10 @@ from typing import Optional, List, Dict, Any, Tuple
 import numpy as np
 
 from ggene import DATA_DIR, other_paths
-from ggene.genomemanager import GenomeManager
+from ggene.database.genomemanager import GenomeManager
 from ggene import draw
 from ggene.display.colors import Colors
-from ggene.scalar_plot import ScalarPlot
+from ggene.draw.scalar_plot import ScalarPlot
 
 from ggene.seqs import process, lambdas, bio, combi, vocab, find, align
     

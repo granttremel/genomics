@@ -4,7 +4,7 @@
 import sys
 sys.path.insert(0, '/home/gront/Documents/python/genomics-prj')
 
-from ggene.genomemanager import GenomeManager
+from ggene.database.genomemanager import GenomeManager
 from ggene.genome_browser_v2 import InteractiveGenomeBrowser
 
 def test_browser_variants():

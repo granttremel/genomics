@@ -5,7 +5,7 @@ Example usage of the GenomeIterator for genomic analysis with variant integratio
 
 import logging
 import sys
-from ggene.genomemanager import GenomeManager
+from ggene.database.genomemanager import GenomeManager
 from ggene.genome_iterator import GenomeIterator, FeatureExtractor
 
 # Configure logging
@@ -97,7 +97,7 @@ def example_feature_extraction():
     if not gene:
         print(f"Could not find gene {gene_name}, using example coordinates")
         # Create a mock feature for demonstration
-        from ggene.features import Feature
+        from ggene.genome.features import Feature
         gene = Feature({
             'feature': 'gene',
             'chrom': 1,

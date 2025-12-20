@@ -4,8 +4,8 @@ import json
 from difflib import SequenceMatcher
 
 from ggene import DEFAULT_LIBRARY
-from ggene.genomemanager import GenomeManager
-from ggene.unified_stream import UnifiedFeature
+from ggene.database.genomemanager import GenomeManager
+from ggene.database.unified_stream import UFeature
 
 LIB_DIR = "ncache/ncrnas"
 
@@ -157,7 +157,7 @@ def load_rna_genes(rna_type, ftag = "", subclasses = None):
     rna_feats = []
     for gd in rna_genes:
         gd["feature_type"] = gd.pop("type", "")
-        feat = UnifiedFeature(**gd)
+        feat = UFeature(**gd)
         
         sc, v = assign_rna_subclass(feat)
         

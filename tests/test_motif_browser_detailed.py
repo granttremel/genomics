@@ -2,8 +2,8 @@
 """Detailed test for motif detection - scan a larger region."""
 
 import logging
-from ggene.genomemanager import GenomeManager
-from ggene.genome_iterator_v2 import UnifiedGenomeIterator
+from ggene.database.genomemanager import GenomeManager
+from ggene.database.genome_iterator import UGenomeIterator
 
 # Setup logging
 logging.basicConfig(
@@ -19,7 +19,7 @@ def scan_for_motifs():
     
     # Create iterator with larger window to find motifs
     print("\nScanning chromosome 1 from position 200000-201000 for motifs...")
-    iterator = UnifiedGenomeIterator(
+    iterator = UGenomeIterator(
         gm,
         chrom='1', 
         start=200000,

@@ -3,8 +3,8 @@ import re
 import json
 
 from ggene import DEFAULT_LIBRARY
-from ggene.genomemanager import GenomeManager
-from ggene.unified_stream import UnifiedFeature
+from ggene.database.genomemanager import GenomeManager
+from ggene.database.unified_stream import UFeature
 
 LIB_DIR = "ncache/TEs"
 
@@ -129,7 +129,7 @@ def load_tes(te_type, ftag = ""):
     te_feats = []
     for gd in tes:
         gd["feature_type"] = gd.pop("type", "")
-        te_feats.append(UnifiedFeature(**gd))
+        te_feats.append(UFeature(**gd))
     
     return te_feats
 

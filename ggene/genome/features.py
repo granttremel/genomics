@@ -13,7 +13,7 @@ import logging
 logger = logging.getLogger(__name__)
 # logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 logging.basicConfig(stream=None, level=logging.CRITICAL)
-from . import utils
+from .. import dev
 
 
 MIN_ATTRIBUTES = [
@@ -107,7 +107,7 @@ class Feature:
         for key, value in feature_data.items():
             if key in ('info', 'feature'):
                 continue
-            setattr(self, key, utils.try_parse_number(value))
+            setattr(self, key, dev.try_parse_number(value))
             self._attributes.append(key)
         
         # Set relative positions
@@ -121,7 +121,7 @@ class Feature:
         # Process info section
         if 'info' in feature_data:
             for key, value in feature_data['info'].items():
-                setattr(self, key, utils.try_parse_number(value))
+                setattr(self, key, dev.try_parse_number(value))
                 self._attributes.append(key)
         
     def set_feature_id(self, feature_id: Union[str, int]) -> None:

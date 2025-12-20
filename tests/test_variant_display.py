@@ -6,8 +6,8 @@ sys.path.insert(0, '/home/gront/Documents/python/genomics-prj')
 
 from ggene import get_paths
 DEFAULT_VCF_PATH, DEFAULT_GTF_PATH, DEFAULT_FASTA_PATH, DEFAULT_LIBRARY = get_paths()
-from ggene.genomemanager import GenomeManager
-from ggene.genome_iterator_v2 import UnifiedGenomeIterator
+from ggene.database.genomemanager import GenomeManager
+from ggene.database.genome_iterator import UGenomeIterator
 import logging
 
 # Enable debug logging
@@ -31,7 +31,7 @@ def test_variant_features():
     print("-" * 60)
     
     # Create iterator
-    iterator = UnifiedGenomeIterator(
+    iterator = UGenomeIterator(
         gm, chrom, start, end,
         window_size=50,
         integrate_variants=True,

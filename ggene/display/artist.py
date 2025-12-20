@@ -5,12 +5,13 @@ from dataclasses import dataclass, field, replace
 import logging
 
 from ggene import draw
-from ggene.utils.utils import format_genomic
-from ggene.ruler import Ruler
+from ggene.draw.format import format_genomic
+from ggene.draw.ruler import Ruler
+from ggene.draw.chars import HLINES
 from ggene.seqs import compare, bio
 
 if TYPE_CHECKING:
-    from ggene.genome_iterator_v2 import GenomeWindow
+    from ggene.database.genome_iterator import GenomeWindow
     from ggene.genome_browser import BrowserState
 
 logger = logging.getLogger(__name__)
@@ -160,7 +161,7 @@ class ProxyArtist(Artist):
 
 
 @dataclass
-class BarArtistParams(ArtistParams):
+class LineArtistParams(ArtistParams):
     display_length:int = 256
     feature_types:Tuple[str] = tuple(["gene","exon","CDS","dfam_hit"])
     display_height:int = 8
@@ -168,13 +169,13 @@ class BarArtistParams(ArtistParams):
     show_alt:bool = False
 
 
-class BarArtist(Artist):
+class LineArtist(Artist):
     
     _lmargin = 4
     _rmargin = 4
     
-    def __init__(self, params:BarArtistParams, **kwargs):
-        self.params:BarArtistParams = params
+    def __init__(self, params:LineArtistParams, **kwargs):
+        self.params:LineArtistParams = params
         
         logger.debug(f"initialized artist {type(self)} with params {self.params}")
         
@@ -223,6 +224,8 @@ class BarArtist(Artist):
         logger.debug(f"enter build_display_lines with show_ruler={show_ruler}")
 
         scale = display_length / (end - start)
+
+        head, body, tail = HLINES.get("head"), HLINES.get("body"), HLINES.get("tail")
 
         # Gray color for HMM consensus extent
         gray_color = "\x1b[38;5;240m"
@@ -321,9 +324,9 @@ class BarArtist(Artist):
                 if tgt_rows[row_idx][i] == " ":
                     tgt_rows[row_idx][i] = gray_color + "·"
             
-            head = "<>"
-            tail = "┤├"
-            body = "─"
+            # head = "<>"
+            # tail = "┤├"
+            # body = "─"
             
             # Draw actual match region in color
             # Start arrowhead
@@ -473,13 +476,13 @@ class SeqArtist(Artist):
         
         all_bar_lines = []
         if not do_seqa or do_both:
-            bars = BarArtist(BarArtistParams(show_ruler = True))
+            bars = LineArtist(LineArtistParams(show_ruler = True))
             bar_lines = bars.render(state2, window2)
             all_bar_lines.extend(bar_lines)
             logger.debug("doing seq b")
             
         if do_seqa or do_both:
-            bars = BarArtist(BarArtistParams(show_ruler = True))
+            bars = LineArtist(LineArtistParams(show_ruler = True))
             bar_lines = bars.render(state, window)
             all_bar_lines.extend(bar_lines)
             logger.debug("doing seq a")

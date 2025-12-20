@@ -1,11 +1,5 @@
 
 
-
-
-
-
-
-
 def format_genomic(index):
     index = int(index)
     fstr = "0.1f"
@@ -20,3 +14,5 @@ def format_genomic(index):
         unit = "b"
         fstr = ""
     return format(index/div, fstr) + unit
+
+

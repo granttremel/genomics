@@ -5,7 +5,7 @@ Shows how to use the browser to explore your personal genome.
 """
 
 import logging
-from ggene.genomemanager import GenomeManager
+from ggene.database.genomemanager import GenomeManager
 
 # Suppress debug output for cleaner display
 logging.basicConfig(level=logging.WARNING)

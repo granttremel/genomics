@@ -9,9 +9,9 @@ import numpy as np
 from tabulate import tabulate
 
 
-from ggene.genomemanager import GenomeManager
+from ggene.database.genomemanager import GenomeManager
 from ggene import draw
-from ggene.scalar_plot import ScalarPlot
+from ggene.draw.scalar_plot import ScalarPlot
 from ggene.seqs import bio, process, find, align, heal
 from ggene.seqs.bio import ALIASES, ALIASES_REV, get_aliases, VOCAB
 

@@ -6,16 +6,20 @@ from draw.py, allowing for easy manipulation of plot options and re-rendering.
 """
 
 from typing import List, Optional, Dict, Any, Union
-from ggene.draw import (
-    scalar_to_text_nb,
-    scalar_to_text_mid,
-    scalar_plot_distribution,
-    get_color_scheme,
-    scrub_ansi,
-    visible_len,
-    visible_slice
-)
-from ggene.ruler import Ruler
+# from ggene.draw import (
+#     scalar_to_text_nb,
+#     scalar_to_text_mid,
+#     scalar_plot_distribution,
+#     get_color_scheme,
+#     scrub_ansi,
+#     visible_len,
+#     visible_slice
+# )
+
+from .colors import Colors, visible_len, visible_slice
+from .chars import SCALE, SCALAR_PLOT, SCALE_H, OTHER
+from .utils import quantize
+from .ruler import Ruler
 
 
 class ScalarPlot:
@@ -317,57 +321,20 @@ class ScalarPlot:
         return self
 
     def set_color_scheme(self, scheme_name: str) -> 'ScalarPlot':
-        """
-        Apply a predefined color scheme.
-
-        Args:
-            scheme_name: Name of the color scheme (e.g., 'vscode', 'gray', 'blue')
-
-        Returns:
-            self for method chaining
-        """
-        bg, fg = get_color_scheme(scheme_name)
+        bg, fg = Colors.get_color_scheme(scheme_name)
         return self.set_color(fg=fg, bg=bg)
 
     def set_bit_depth(self, depth: int) -> 'ScalarPlot':
-        """
-        Set the bit depth (vertical resolution).
-
-        Args:
-            depth: Bit depth (must be multiple of 8)
-
-        Returns:
-            self for method chaining
-        """
         self.options['bit_depth'] = depth
         self.render()
         return self
 
     def set_flip(self, flip: bool) -> 'ScalarPlot':
-        """
-        Set whether to flip the plot vertically.
-
-        Args:
-            flip: True to flip, False otherwise
-
-        Returns:
-            self for method chaining
-        """
         self.options['flip'] = flip
         self.render()
         return self
 
     def set_range(self, minval: Optional[float] = None, maxval: Optional[float] = None) -> 'ScalarPlot':
-        """
-        Set the value range for the plot.
-
-        Args:
-            minval: Minimum value
-            maxval: Maximum value
-
-        Returns:
-            self for method chaining
-        """
         if minval is not None:
             self.options['minval'] = minval
         if maxval is not None:
@@ -376,16 +343,6 @@ class ScalarPlot:
         return self
 
     def enable_range_labels(self, enable: bool = True, fstr: str = '0.2f') -> 'ScalarPlot':
-        """
-        Enable or disable range labels showing min/max values.
-
-        Args:
-            enable: Whether to show range labels
-            fstr: Format string for range labels
-
-        Returns:
-            self for method chaining
-        """
         self.options['add_range'] = enable
         self.options['range_fstr'] = fstr
         self.render()
@@ -439,25 +396,13 @@ class ScalarPlot:
         return self
 
     def disable_ruler(self) -> 'ScalarPlot':
-        """
-        Disable the ruler.
-
-        Returns:
-            self for method chaining
-        """
         self.options['ruler'] = False
         self.render()
         return self
 
     def set_mode(self, mode: str) -> 'ScalarPlot':
         """
-        Set the rendering mode.
-
-        Args:
-            mode: 'normal', 'mid', or 'distribution'
-
-        Returns:
-            self for method chaining
+        mode: 'normal', 'mid', or 'distribution'
         """
         if mode not in ['normal', 'mid', 'distribution']:
             raise ValueError(f"Invalid mode: {mode}. Must be 'normal', 'mid', or 'distribution'")
@@ -467,13 +412,7 @@ class ScalarPlot:
 
     def set_effect(self, effect: Optional[str]) -> 'ScalarPlot':
         """
-        Set text effect.
-
-        Args:
-            effect: Effect name ('border', 'bold', 'dim', etc.) or None
-
-        Returns:
-            self for method chaining
+        ('border', 'bold', 'dim', etc.) or None
         """
         self.options['effect'] = effect
         self.render()
@@ -518,3 +457,219 @@ class ScalarPlot:
         if self.ruler:
             all_rows.extend(self.ruler.get_rows())
         return '\n'.join(all_rows)
+
+
+def scalar_to_text_nb(scalars, minval = None, maxval = None, fg_color = 53, bg_color = 234, bit_depth = 24, flip = False, effect = None, add_range = False, **kwargs):
+    """
+    ok hear me out: plot two quantities together by putting the larger "behind" the smaller using bg. e.g.:
+    wait this doesn't work, two idp quantities cant share the same cell
+    {bg0fg0}██{bg=fg2 fg0}█
+    
+    okay how about: denser labels using longer lines, like
+        ▁▃▂▂█▅
+       1╯││││╰6
+        4╯││╰12   
+         2╯╰3
+    
+    """
+    
+    if flip:
+        bg, fg = Colors.get_colors_fgbg(bg_color, fg_color)
+    else:
+        fg, bg = Colors.get_colors_fgbg(fg_color, bg_color)
+    
+    add_border = False
+    eff = ""
+    if effect:
+        if effect == "border":
+            add_border = True
+        else:
+            eff += str(effect)
+    
+    
+    base_bit_depth = len(SCALE) - 1
+    if not bit_depth % base_bit_depth == 0:
+        return ["no"]
+    
+    nrows = bit_depth // base_bit_depth
+    ncols = len(scalars)
+    nvals = base_bit_depth * nrows
+    
+    rows = [[fg+bg+eff] for r in range(nrows)]
+    
+    bit_ranges = [base_bit_depth*i for i in range(nrows)]
+    
+    if minval is None:
+        minval = min(scalars)
+    if maxval is None:
+        maxval = max(scalars)
+    rng = (maxval - minval)/1
+    c = (minval+ maxval)/2
+    if rng == 0:
+        rng = 2
+        c = minval
+    
+    for s in scalars:
+        sv = int(nvals*((s - c)/rng)) + bit_depth // 2
+            
+        for row, bit_range in zip(rows, bit_ranges):
+            if sv < bit_range:
+                sym = SCALE[0]
+            elif sv >= bit_range + base_bit_depth:
+                sym = SCALE[-1]
+            else:
+                ssv = sv % base_bit_depth
+                sym = SCALE[ssv]
+            row.append(sym)
+    
+    brdc = "\x1b[38;5;6m"
+    outstrs= []
+    for row in rows[::-1]:
+        if add_border:
+            row.insert(0, brdc + OTHER.get("right_eighth",""))
+            row.append(brdc + SCALE_H[1])
+        row.append(Colors.RESET)
+        outstrs.append("".join(row))
+    
+    if add_border:
+        outstrs.insert(0, " " + SCALE[1]*ncols + " ")
+        outstrs.append(f"{brdc} " + OTHER.get("upper_eighth","")*ncols + f" {Colors.RESET}")
+    
+    if add_range:
+        ran_fstr = kwargs.get("range_fstr", "0.2f")
+        hi, lo = SCALAR_PLOT.get("range_hi"), SCALAR_PLOT.get("range_lo")
+        hi, lo = (lo, hi) if flip else (hi, lo)
+        minstr = format(minval, ran_fstr)
+        maxstr = format(maxval, ran_fstr)
+        outstrs[0] += hi + maxstr
+        if bit_depth > 8:
+            outstrs[-1] += lo + minstr
+        
+    if flip:
+        outstrs = flip_scalar_text(outstrs)
+    
+    return outstrs
+
+def scalar_to_text_mid(scalars, center = None, rng = None, fg_color = 53, bg_color = 234,  effect = None):
+    
+    bit_depth = 16
+    
+    ifg, ibg = Colors.get_colors_fgbg(fg_color, bg_color)
+    bg, fg = Colors.get_colors_fgbg(bg_color, fg_color)
+    
+    eff = ""
+    if effect:
+        eff += str(effect)
+    
+    
+    base_bit_depth = len(SCALE) - 1
+    if not bit_depth % base_bit_depth == 0:
+        return ["no"]
+    
+    nrows = bit_depth // base_bit_depth
+    ncols = len(scalars)
+    nvals = base_bit_depth * nrows
+    
+    rows = [[fg+bg+eff],[ifg+ibg+eff]]
+    
+    bit_ranges = [base_bit_depth*i - bit_depth/2 for i in range(nrows)]
+    
+    if not center:
+        c = 0
+    else:
+        c = center
+    
+    if not rng:
+        minval = min(scalars)
+        maxval  = max(scalars)
+        rng = 2*max(abs(minval), abs(maxval))
+    minval, maxval = c-rng/2, c+rng/2
+    
+    neg = False
+    for s in scalars:
+        sv = int(nvals*((s - c)/rng))
+        if sv < 0 and not neg:
+            neg = True
+        elif sv >= 0 and neg:
+            neg = False
+        
+        for row, bit_range in zip(rows, bit_ranges):
+            if sv < bit_range:
+                sym = SCALE[0]
+            elif sv >= bit_range + base_bit_depth:
+                sym = SCALE[-1]
+            else:
+                ssv = sv % base_bit_depth
+                sym = SCALE[ssv]
+            row.append(sym)
+    
+    outstrs= []
+    for row in rows[::-1]:
+        row.append(Colors.RESET)
+        outstrs.append("".join(row))
+        
+    return outstrs
+
+
+def scalar_to_text_8b(scalars, minval = None, maxval = None, fg_color = 53, bg_color = 234, flip = False):
+    return scalar_to_text_nb(scalars, minval = minval, maxval = maxval, fg_color = fg_color, bg_color = bg_color, bit_depth = 8, flip = flip)
+
+def scalar_to_text_16b(scalars, minval = None, maxval = None, fg_color = 53, bg_color = 234, flip = False):
+    return scalar_to_text_nb(scalars, minval = minval, maxval = maxval, fg_color = fg_color, bg_color = bg_color, bit_depth = 16, flip = flip)
+
+
+def scalar_plot_distribution(dist, key_order = [], bit_depth = 8, labels = False, labelfmt = "", add_range = False, **kwargs):
+    
+    if not key_order:
+        key_order = sorted(dist.keys())
+    scalars = [dist[ks] for ks in key_order]
+    space = kwargs.get("space", 0)
+    if space:
+        _scalars = [0]
+        for sc in scalars:
+            _scalars.append(sc)
+            _scalars.extend([0]*space)
+        scalars = _scalars
+    
+    _ = kwargs.pop("minval",None)
+    sctxt = scalar_to_text_nb(scalars, bit_depth = bit_depth, minval = 0, add_range = add_range, **kwargs)
+    
+    if labels:
+        if not labelfmt:
+            labelfmtr = lambda a:str(a)[0].upper()
+        else:
+            labelfmtr = lambda a:format(a,labelfmt)
+        lbls = [] + [" "]*space
+        for k in key_order:
+            lbls.append(labelfmtr(k))
+            lbls.extend([" "]*space)
+        sctxt.append("".join(lbls))
+    
+    return sctxt
+
+
+def flip_scalar_text(sctext):
+    
+    nsyms = len(SCALE)
+    scale_inv = {SCALE[i]:SCALE[nsyms-i-1] for i in range(nsyms)}
+    
+    out = []
+    for row in sctext[::-1]:
+        newrow = []
+        for sym in row:
+            newrow.append(scale_inv.get(sym, sym))
+        out.append("".join(newrow))
+    return out
+
+def hflip_scalar_text(sctext):
+    
+    nsyms = len(SCALE_H)
+    scale_inv = {SCALE_H[i]:SCALE_H[nsyms-i-1] for i in range(nsyms)}
+    
+    out = []
+    for row in sctext[::-1]:
+        newrow = []
+        for sym in row:
+            newrow.append(scale_inv.get(sym, sym))
+        out.append("".join(newrow))
+    return out

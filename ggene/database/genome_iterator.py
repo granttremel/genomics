@@ -17,7 +17,7 @@ import asyncio
 from concurrent.futures import ThreadPoolExecutor
 
 from ggene.seqs.bio import reverse_complement
-from ggene.unified_stream import UnifiedFeature
+from ggene.database.unified_stream import UFeature
 
 if TYPE_CHECKING:
     from .genomemanager import GenomeManager
@@ -91,7 +91,7 @@ class GenomeWindow:
         return max(len(self.ref_seq), len(self.alt_seq))
 
 
-class UnifiedGenomeIterator:
+class UGenomeIterator:
     """Enhanced genome iterator using unified streaming system."""
     
     # Buffer sizes
@@ -213,7 +213,7 @@ class UnifiedGenomeIterator:
                         # mseq = reverse_complement(mseq)
                         mtfstrand = '-' if mtfstrand == '+' else '+'
                     
-                    motif_results[genomic_start].append(UnifiedFeature(
+                    motif_results[genomic_start].append(UFeature(
                         chrom=self.chrom,
                         start=buffer_start + motif_start,
                         end=buffer_start + motif_end - 1,
@@ -466,7 +466,7 @@ class UnifiedGenomeIterator:
         # Get features
         features = self._get_features_in_window(window_start_ref, window_end_ref)
         
-        # Get variant features separately (these are UnifiedFeature objects)
+        # Get variant features separately (these are UFeature objects)
         variant_features = []
         if self.annotations and hasattr(self.annotations, 'streams') and 'variants' in self.annotations.streams:
             # Query the VCF stream for variant features in this window

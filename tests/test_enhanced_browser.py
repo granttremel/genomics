@@ -4,7 +4,7 @@ Test script for the enhanced genome browser.
 Shows off new features like hotkeys, state saving, and improved compression.
 """
 
-from ggene.genomemanager import GenomeManager
+from ggene.database.genomemanager import GenomeManager
 
 def main():
     print("Enhanced Genome Browser Test")
