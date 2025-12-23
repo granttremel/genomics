@@ -21,6 +21,8 @@ MIN_ATTRIBUTES = [
     'transcript_name', 'exon_number', 'protein_version', 'alt', 'ref', 'qual'
 ]
 
+
+
 def shorten_variant(var: Any, keys: Optional[List[str]] = None) -> Dict[str, Any]:
     """Extract key variant information into a dictionary.
     

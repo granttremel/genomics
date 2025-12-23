@@ -1,0 +1,294 @@
+
+from typing import Dict, List, Optional, Tuple, Union, Any, TYPE_CHECKING
+
+from . import register_bindings
+from ggene.browser.commands import CommandRegistry, Command
+
+if TYPE_CHECKING:
+    from ggene.browser.base_browser import BaseBrowserState, BaseBrowser
+    from ggene.database.genome_iterator import BaseWindow, BaseIterator, UGenomeIterator, GenomeWindow
+    from ggene.display.artists.base import BaseArtist
+
+def elicit_input(message, cast_to_type = str, min_val = None, max_val = None, current_val = None):
+    
+    submsg_parts = []
+    if current_val is not None:
+        submsg_parts.append(f"current value {current_val}")
+    
+    if isinstance(cast_to_type, type):
+        submsg_parts.append(f"type {cast_to_type.__name__}")
+    
+    if min_val and max_val:
+        submsg_parts.append(f"between {min_val} and {max_val}")
+    elif min_val:
+        submsg_parts.append(f"greater than {min_val}")
+    elif max_val:
+        submsg_parts.append(f"less than {max_val}")
+    
+    if submsg_parts:
+        full_msg = f"{message} ({", ".join(submsg_parts)}): "
+    else:
+        full_msg = f"{message}: "
+    
+    inp=input(full_msg)
+    
+    try:
+        res = cast_to_type(inp.strip())
+        
+        if max_val:
+            res = min(res, max_val)
+        if min_val:
+            res = max(res, min_val)
+        
+    except:
+        print(f"failed to parse input {inp} to type {cast_to_type}")
+        res = str(inp)
+
+    return res
+
+def elicit_and_change(brws:'BaseBrowser', state, window, param_name, message, cast_to_type, min_val, max_val):
+    
+    curr = getattr(state, param_name, None)
+    res = elicit_input(message, cast_to_type = cast_to_type, min_val = min_val, max_val = max_val, current_val = curr)
+    
+    if res:
+        modify_param(brws, state, window, param_name, res)
+
+def parse_position(pos_str, default = 1000000):
+    
+    fact = 1
+    if pos_str[-1] == "M":
+        fact = int(1e6)
+        pos_str = pos_str[:-1]
+    elif pos_str[-1] == "k":
+        fact = int(1e3)
+        pos_str = pos_str[:-1]
+    return int(fact*float(pos_str.replace(',', '')))
+
+def move(brws:'BaseBrowser', state:'BaseBrowserState', window:'BaseWindow', delta):
+    state.position += delta
+
+def move_forward(brws:'BaseBrowser', state:'BaseBrowserState', window:'BaseWindow', large = False):
+    delta = state.stride * 10 if large else state.stride
+    return move(brws, state, window, delta)
+
+def move_forward_large(brws:'BaseBrowser', state:'BaseBrowserState', window:'BaseWindow'):
+    return move_forward(brws, state, window, large = True)
+
+def move_backward(brws:'BaseBrowser', state:'BaseBrowserState', window:'BaseWindow', large = False):
+    delta = state.stride * 10 if large else state.stride
+    return move(brws, state, window, -delta)
+
+def move_backward_large(brws:'BaseBrowser', state:'BaseBrowserState', window:'BaseWindow'):
+    return move_backward(brws, state, window, large = True)
+
+def goto_position(brws:'BaseBrowser', state:'BaseBrowserState', window:'BaseWindow'):
+    
+    param_name = 'position'
+    message = "Enter position"
+    cast_to_type = str
+    min_val = None
+    max_val = None
+    
+    pos_str = elicit_and_change(brws, state, window, param_name, message, cast_to_type, min_val, max_val)
+    pos = parse_position(pos_str)
+    return pos
+    
+def switch_chromosome(brws:'BaseBrowser', state:'BaseBrowserState', window:'BaseWindow'):
+        
+    param_name = 'chrom'
+    message = "Enter chromosome"
+    cast_to_type = str
+    min_val = None
+    max_val = None
+    
+    return elicit_and_change(brws, state, window, param_name, message, cast_to_type, min_val, max_val)
+
+def change_window_size(brws:'BaseBrowser', state:'BaseBrowserState', window:'BaseWindow'):
+    param_name = 'window_size'
+    message = "Enter new window size"
+    cast_to_type = int
+    min_val = None
+    max_val = None
+    
+    return elicit_and_change(brws, state, window, param_name, message, cast_to_type, min_val, max_val)
+
+def change_stride(brws:'BaseBrowser', state:'BaseBrowserState', window:'BaseWindow'):
+    param_name = 'stride'
+    message = "Enter new stride"
+    cast_to_type = int
+    min_val = None
+    max_val = None
+    return elicit_and_change(brws, state, window, param_name, message, cast_to_type, min_val, max_val)
+
+def change_features(brws:'BaseBrowser', state:'BaseBrowserState', window:'BaseWindow'):
+    param_name = 'feature_types'
+    message = f"Enter feature type to toggle. current: {", ".join(state.feature_types)}"
+    cast_to_type = str
+    
+    toggle_feat = elicit_input(message, cast_to_type)
+    
+    return toggle_param_collection(brws, state, window, param_name, toggle_feat)
+
+def modify_param(brws:'BaseBrowser', state:'BaseBrowserState', window:'BaseWindow', param_name, param_value):
+    
+    if hasattr(state, param_name):
+        v = getattr(state, param_name)
+        
+        try:
+            setattr(state, param_name, param_value)
+        except:
+            print(f"failed to set param {param_name} from {v} to {param_value}")
+
+def toggle_param(brws:'BaseBrowser', state:'BaseBrowserState', window:'BaseWindow', param_name):
+    
+    if hasattr(state, param_name):
+        v = getattr(state, param_name)
+        
+        if isinstance(v, bool):
+            setattr(state, param_name, not v)
+
+    else:
+        print(f"unable to toggle param {param_name}")
+
+def toggle_param_collection(brws:'BaseBrowser', state:'BaseBrowserState', window:'BaseWindow', param_name, param_item):
+    
+    if hasattr(state, param_name):
+        v = list(getattr(state, param_name))
+        
+        if param_item in v:
+            v.remove(param_item)
+        else:
+            v.append(param_item)
+        
+        setattr(state, param_name, tuple(v))
+
+    else:
+        print(f"unable to toggle param {param_name}")
+
+def toggle_panel(brws:'BaseBrowser', state:'BaseBrowserState', window:'BaseWindow'):
+    
+    panel_names = []
+    panels = {}
+    
+    i = 0
+    for cell in brws.renderer.layout.cells:
+        
+        if cell.panel:
+            aname = cell.panel.artist.name
+            panel_names.append(aname)
+            panels[aname] = cell.panel
+            print(f"{i} {aname}: enabled = {cell.panel.enabled}")
+            i += 1
+    
+    res = elicit_input("Select panel to toggle", str)
+    
+    try:
+        ind = int(res)
+        panel = panels[panel_names[ind]]
+    except:
+        panel = panels.get(res)
+    
+    panel.enabled ^= True
+    
+
+def echo_key(brws, state, window):
+    if hasattr(state, "_last_key"):
+        print(f"last keypress: {state._last_key}")
+    else:
+        print("last keypress unknown")
+
+default_bindings = {
+    "right_arrow":{
+        "key":"right_arrow",
+        "name":"move_forward",
+        "method":move_forward.__name__,
+        "description":"Move forward by stride",
+        "_bound_method": move_forward
+    },
+    "up_arrow":{
+        "key":"up_arrow",
+        "name":"move_forward_large",
+        "method":move_forward_large.__name__,
+        "description":"Move forward by 10*stride",
+        "_bound_method": move_forward_large
+    },
+    "left_arrow":{
+        "key":"left_arrow",
+        "name":"move_backward",
+        "method":move_backward.__name__,
+        "description":"Move backward by stride",
+        "_bound_method": move_backward
+    },
+    "down_arrow":{
+        "key":"down_arrow",
+        "name":"move_backward_large",
+        "method":move_backward_large.__name__,
+        "description":"Move backward by 10*stride",
+        "_bound_method": move_backward_large
+    },
+    "g":{
+        "key":"g",
+        "name":"goto",
+        "method":goto_position.__name__,
+        "description":"Go to position",
+        "_bound_method": goto_position
+    },
+    "c":{
+        "key":"c",
+        "name":"switch_chromosome",
+        "method":switch_chromosome.__name__,
+        "description":"Switch to chromosome",
+        "_bound_method": switch_chromosome,
+        "call_update":True,
+    },
+    "w":{
+        "key":"w",
+        "name":"change_window_size",
+        "method":change_window_size.__name__,
+        "description":"Change window size",
+        "_bound_method": change_window_size
+    },
+    "s":{
+        "key":"s",
+        "name":"change_stride",
+        "method":change_stride.__name__,
+        "description":"Change stride",
+        "_bound_method": change_stride
+    },
+    "F":{
+        "key":"F",
+        "name":"change_features",
+        "method":change_features.__name__,
+        "description":"Change feature types to display",
+        "_bound_method":change_features
+    },
+    "m":{
+        "key":"m",
+        "name":"toggle_panel",
+        "method":toggle_panel.__name__,
+        "description":"toggle display state of panel",
+        "_bound_method":toggle_panel
+    }
+}
+
+def bind_defaults(obj, registry:CommandRegistry):
+    binding = register_bindings(obj, registry, default_bindings)
+    return binding
+    
+
+def assign_default_registry(obj):
+    
+    cmdreg = CommandRegistry()
+    
+    for _, cmd_data in default_bindings.items():
+        
+        key = cmd_data.pop("key", "")
+        cmd = Command(**cmd_data)
+        
+        if not hasattr(obj, cmd.method):
+            
+            setattr(obj, cmd.method, cmd._bound_method)
+            cmdreg.register(getattr(obj, cmd.method), cmd.description, category = "default", takes_input = False)
+            
+    return cmdreg

@@ -8,9 +8,25 @@ SCALAR_PLOT = {
 }
 
 HLINES = {
-    "head" : "<>",
+    "head" : "◀▶",       # Filled triangles (recommended)
     "tail" : "┤├",
-    "body" : "─",
+    "body" : "──",
+    "arrow": "⟵⟶",
+    # Alternative arrowheads for different styles:
+    "head_chevron": "<>",      # Simple chevrons (original)
+    "head_triangle": "◁▷",     # Open triangles
+    "head_filled": "◀▶",       # Filled triangles
+    "head_harpoon": "↽⇀",      # Half-arrow harpoons (elegant)
+    "head_arrow": "←→",        # Standard arrows
+    "head_heavy": "⊲⊳",        # Heavy pointing triangles
+    # Vertical connectors for label tracks
+    "vline": "│",
+    "vline_down": "╷",         # Top connector
+    "vline_up": "╵",           # Bottom connector
+    "corner_tl": "╭",          # Top-left corner
+    "corner_tr": "╮",          # Top-right corner
+    "corner_bl": "╰",          # Bottom-left corner
+    "corner_br": "╯",          # Bottom-right corner
 }
 
 RULER={

@@ -2,7 +2,7 @@
 import re
 import json
 
-from ggene import DEFAULT_LIBRARY
+from ggene.config import DEFAULT_LIBRARY
 from ggene.database.genome_manager import GenomeManager
 from ggene.database.annotations import UFeature
 
@@ -12,15 +12,39 @@ te_types = [
 
 
 ]
+"""
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+"""
 
 te_subclass = {
     
     "L1":re.compile(r"L1(P[AB]?|HS|M[123A-E]?||)([A-Ga-z0-9]{0,3}|REC2|15-16)(_[35]end|_orf2)"), # perf
     
-    "L2-4":re.compile(r"(L[234])(.*)"), # perf
-    
-    
+    "L2-4":re.compile(r"(L[234])(.*)"), # 
     
     "AluJ":re.compile(r"AluJ([bor]4?)"), # perf
     "AluS":re.compile(r"AluS([a-z][0-9]?)"), # perf
@@ -61,7 +85,7 @@ te_subclass = {
     
     "X-LINE/DNA":re.compile(r"X([0-9]+[A-Za-z]?)_(LINE|DNA)"),
     
-    'named':re.compile(r'(Zaphod|Charlie|Tigger|Ricksha|Eulor|Kanga|Arthur)_?([A-Za-z0-9]+)?'),
+    'named':re.compile(r'(Zaphod|Charlie|Tigger|Ricksha|Eulor|Kanga|Arthur)_?([A-Za-z0-9]+)?'), # DNA transposons
     'hAT':re.compile(r'hAT-([0-9A-Za-z]*)(?:-|_)(Mam|Ther)|OldhAT1'),
     'tRNA':re.compile(r'tRNA(?:-|_)(?:i|([A-Za-z]{3})(-[ATCGY]{3})?(_v|-i)?)'),
     

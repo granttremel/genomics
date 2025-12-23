@@ -7,7 +7,7 @@ in the terminal interface.
 
 from typing import List, Dict, Tuple, Optional, Any
 from collections import defaultdict
-from ggene.display.colors import Colors
+from ggene.display.colors import FColors
 from ggene.display.formatters import LabelFormatter
 from ggene.processing.coordinate_mapper import CoordinateMapper
 from ggene.processing.feature_processor import FeatureProcessor
@@ -213,23 +213,23 @@ class FeatureDisplay:
 
         if width > 5:
             # Render with label
-            buffer[start] = f"{color}{left_char}{Colors.RESET}"
+            buffer[start] = f"{color}{left_char}{FColors.RESET}"
 
             # Center the label
             label_start = start + (width - len(label)) // 2
             for i, char in enumerate(label):
                 if label_start + i < end:
-                    buffer[label_start + i] = f"{color}{Colors.BOLD}{char}{Colors.RESET}"
+                    buffer[label_start + i] = f"{color}{FColors.BOLD}{char}{FColors.RESET}"
 
             # Fill remaining space
             for i in range(start + 1, label_start):
                 if buffer[i] == ' ':
-                    buffer[i] = f"{color}{fill_char}{Colors.RESET}"
+                    buffer[i] = f"{color}{fill_char}{FColors.RESET}"
             for i in range(label_start + len(label), end):
                 if buffer[i] == ' ':
-                    buffer[i] = f"{color}{fill_char}{Colors.RESET}"
+                    buffer[i] = f"{color}{fill_char}{FColors.RESET}"
 
-            buffer[end] = f"{color}{right_char}{Colors.RESET}"
+            buffer[end] = f"{color}{right_char}{FColors.RESET}"
 
     def _generate_feature_label(self, feature_group: Dict, available_width: int) -> str:
         features = feature_group['features']
@@ -253,7 +253,7 @@ class FeatureDisplay:
         return label
 
     def _get_feature_color(self, feature_type: str) -> str:
-        return Colors.get_feature_color(feature_type)
+        return FColors.get_feature_type_color(feature_type)
 
     def _get_feature_type(self, feature) -> str:
         if hasattr(feature, 'feature_type'):
@@ -301,7 +301,7 @@ class FeatureDisplay:
         for motif_type, motif_list in sorted(motif_groups.items()):
             # Choose color for motif type
             marg = self.rstate._get_margin()
-            lines.append(f"{Colors.MOTIF}{motif_type}{Colors.RESET}")
+            lines.append(f"{FColors.MOTIF}{motif_type}{FColors.RESET}")
             
             for motif in motif_list[:5]:  # Show max 5 instances per type
                 start = motif.get('start')

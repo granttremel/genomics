@@ -1,0 +1,52 @@
+# Default keybindings for genome browser
+# You can use readable names like 'right_arrow', 'ctrl_s', 'shift_up_arrow'
+# or raw escape sequences if you prefer
+
+bindings:
+  # General
+  q: quit
+  '?': show_help
+
+  # Navigation - Arrow keys
+  right_arrow: move_forward
+  left_arrow: move_backward
+  up_arrow: move_forward_large
+  down_arrow: move_backward_large
+  space: move_forward
+
+  # Navigation - Vim style (same commands, different keys)
+  l: move_forward
+  h: move_backward
+  k: move_forward_large
+  j: move_backward_large
+
+  # Navigation with modifiers - for dual-pane view
+  shift_right_arrow: move_forward_second
+  shift_left_arrow: move_backward_second
+  shift_up_arrow: move_forward_large_second
+  shift_down_arrow: move_backward_large_second
+
+  # Jump to features
+  ctrl_right_arrow: next_gene
+  ctrl_left_arrow: prev_gene
+  n: next_feature
+  p: prev_feature
+
+  # Chromosome navigation
+  c: switch_chromosome
+  g: goto_position
+
+  # Display toggles
+  f: toggle_features
+  a: toggle_amino_acids
+  r: toggle_rna
+  '-': toggle_reverse_strand
+
+  # Window controls
+  w: change_window_size
+  s: change_stride
+
+  # Info and utilities
+  i: show_position_info
+  ctrl_h: set_highlight
+  ctrl_s: save_current_view

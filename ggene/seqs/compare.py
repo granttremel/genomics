@@ -9,7 +9,7 @@ import numpy as np
 from tabulate import tabulate
 
 
-from ggene.database.genome_manager import GenomeManager
+# from ggene.database.genome_manager import GenomeManager
 from ggene import draw
 from ggene.draw.scalar_plot import ScalarPlot
 from ggene.seqs import bio, process, find, align, heal

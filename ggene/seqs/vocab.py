@@ -38,6 +38,9 @@ TACG = ╧┴╨╩
 or ╪ ╫
 or ╤ ╥ ╦ ╧ ╨ ╩
 
+okay how about
+⊑ and ⊏, ⊆ and ⊂
+
 
 quads
 _   0000    ----    -

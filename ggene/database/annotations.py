@@ -66,6 +66,12 @@ class UFeature:
         else:
             raise IndexError
     
+    def __eq__(self, other):
+        return other.start==self.start and other.end == self.end and other.feature_type == self.feature_type and other.strand == self.strand
+    
+    def __hash__(self):
+        return hash((self.feature_type, self.start, self.end, self.strand))
+    
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for JSON serialization."""
         return {
@@ -143,7 +149,6 @@ class GTFStream(AnnotationStream):
             if index_file.exists():
                 try:
                     self.tabix = pysam.TabixFile(str(self.filepath))
-                    # self.tabix.
                     logger.info(f"Using indexed access for {self.filepath}")
                 except Exception as e:
                     logger.warning(f"Failed to open tabix index: {e}")
@@ -187,10 +192,10 @@ class GTFStream(AnnotationStream):
                end: Optional[int] = None) -> Iterator[UFeature]:
         """Stream GTF features using indexed access when available."""
         
-        res = self.test(chrom, start)
-        if not res:
-            print(f"tabix fetch failed for {type(self)} with path {self.filepath}")
-            return
+        # res = self.test(chrom, start)
+        # if not res:
+        #     print(f"tabix fetch failed for {type(self)} with path {self.filepath}")
+        #     return
         
         # Use indexed access if available
         if self.tabix and chrom:
@@ -343,6 +348,17 @@ class VCFStream(AnnotationStream):
         else:
             zyg = ""
         
+        atts ={
+                'ref': ref,
+                'alt': alts,
+                'qual': variant.QUAL,
+                'filter': variant.FILTER,
+                'variant_types': variant_types,
+                'genotype': variant.gt_bases[0],
+                'zygosity':zyg
+            }
+        atts.update(info_dict)
+        
         return UFeature(
             chrom=variant.CHROM,
             start=variant.POS,  # VCF is 1-based
@@ -352,16 +368,7 @@ class VCFStream(AnnotationStream):
             score=variant.QUAL if variant.QUAL else None,
             name=variant.ID if variant.ID else None,
             id=variant.ID if variant.ID else None,
-            attributes={
-                'ref': ref,
-                'alt': alts,
-                'qual': variant.QUAL,
-                'filter': variant.FILTER,
-                'info': info_dict,
-                'variant_types': variant_types,
-                'genotype': variant.gt_bases[0],
-                'zygosity':zyg
-            }
+            attributes = atts
         )
     
     def stream(self, chrom: Optional[str] = None,

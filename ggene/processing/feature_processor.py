@@ -48,16 +48,20 @@ class FeatureProcessor:
 
         # Add motifs as features
         if window.motifs:
+            # print(f"{len(window.motifs)} motifs found")
+            
             for motif in window.motifs:
                 # Convert motif to feature format
-                motif_copy = dict(motif)
+                
+                motif_copy = motif.to_dict()
+                
                 if 'sequence' in motif_copy:
                     motif_copy.pop('sequence')
                 motif_copy['feature_type'] = motif_copy.pop('type', 'motif')
                 motif_copy['source'] = 'motif'
 
                 # Create UFeature
-                motif_feat = UFeature(chrom=state.chrom, **motif_copy)
+                motif_feat = UFeature(**motif_copy)
                 features.append(motif_feat)
 
         # Add annotations from genome manager

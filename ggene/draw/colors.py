@@ -3,11 +3,17 @@ import re
 
 class Colors:
     
-    RESET = '\033[0m'
+    # RESET = '\033[38;5;224m\x1b[48;5;234m'
+    RESET = '\x1b[0m\033[38;5;224m\x1b[48;5;234m'
+    
+    TEXT = "\x1b[38;5;224m"
+    
     BOLD = '\033[1m'
     DIM = '\033[2m'
     UNDERLINE = '\033[4m'
     HIGHLIGHT = '\x1b[38;5;148m' # goldish
+
+    RC = '\x1b[38;5;125m'
 
     # Variant colors
     SNP = '\033[91m'        # Red for SNPs
@@ -21,6 +27,7 @@ class Colors:
     CDS = '\033[93m'         # Yellow
     UTR = '\033[90m'         # Gray
     REPEAT = "\x1b[38;5;143m"
+    PSEUDO = '\x1b[38;5;118m'
     
     START_CODON = '\x1b[35m'
     STOP_CODON = '\x1b[35m'
@@ -54,7 +61,10 @@ class Colors:
         
         self.fg_color = fg
         self.bg_color = bg
-        self.effect = effect
+        if isinstance(effect, str):
+            self.effect = self.get_effect_from_name(effect)
+        else:
+            self.effect = effect
     
     def set_color(self, fg = None, bg = None, effect = None):
         
@@ -78,11 +88,16 @@ class Colors:
     
     @property
     def effect_code(self):
-        return self.get_color(self.effect_color, background = False)
+        return self.get_color(self.effect, background = False)
     
     @property
     def code(self):
         return self.effect_code + self.bg_code + self.fg_code
+    
+    @classmethod
+    def colorize_string(cls, string, fg_color = 8, bg_color = 0, effect = 0):
+        clr = cls(fg=fg_color, bg=bg_color, effect=effect)
+        return clr.format_string(string)
     
     @classmethod
     def get_effect(cls, reset = False, bold = False, dim = False, underline = False):
@@ -96,6 +111,12 @@ class Colors:
             return cls.UNDERLINE
         else:
             return cls.RESET    
+    
+    @classmethod
+    def get_effect_from_name(cls, effect_name):
+        
+        if hasattr(cls, effect_name.upper()):
+            return getattr(cls, effect_name.upper())
     
     @classmethod
     def get_color(cls, color_spec, background = False):
@@ -264,14 +285,6 @@ class Colors:
     
     def __str__(self):
         return self.code
-    
-    # @classmethod
-    # def from_specs(cls, text_spec = "", text_bright = False, bg_spec = "", bg_bright = False, effect_spec = ""):
-    #     out = cls()
-    #     out.set_text(text_spec, bright = text_bright)
-    #     out.set_background(bg_spec, bright=bg_bright)
-    #     out.set_effect(effect_spec)
-    #     return out
 
     _color_schemes_8b = ["gray","blue","foggy","dusty","ruddy","icy","vscode","test"]
 
@@ -323,6 +336,13 @@ class Colors:
         elif name == "vscode":
             return [28,28,28], [28,28,28]
 
+    @classmethod
+    def visible_len(cls, line):
+        return visible_len(line)
+    
+    @classmethod
+    def visible_slice(cls, line, start=0, stop=None, step=1):
+        return visible_slice(line, start=start,stop=stop,step=step)
 
 def visible_len(line):
     """Get the length of a string excluding ANSI escape sequences."""

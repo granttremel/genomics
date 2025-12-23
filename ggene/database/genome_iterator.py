@@ -28,6 +28,34 @@ logger.setLevel("CRITICAL")
 # logger.setLevel(logging.DEBUG)
 
 @dataclass
+class BaseWindow:
+    
+    pass
+
+class BaseIterator:
+    
+    def __init__(self):
+        pass
+    
+    def get_window(self)->BaseWindow:
+        pass
+    
+    def get_window_at(self, position)->BaseWindow:
+        pass
+    
+    def step(self, delta: int) -> None:
+        pass
+    
+    def update(self, **kwargs):
+        pass
+    
+    def cleanup(self):
+        pass
+    
+    def __iter__(self):
+        pass
+
+@dataclass
 class CoordinateState:
     """Tracks position in three coordinate systems."""
     ref_pos: int      # Position in reference genome
@@ -103,7 +131,7 @@ class UGenomeIterator:
                  chrom: Union[str, int],
                  start: int,
                  end: Optional[int] = None,
-                 window_size: int = 100,
+                 window_size: int = 240,
                  stride: Optional[int] = None,
                  integrate_variants: bool = True,
                  track_features: bool = True,
@@ -369,6 +397,10 @@ class UGenomeIterator:
         if self.feature_types:
             features = [f for f in features if f.feature_type in self.feature_types]
         
+        feats_unique = list(set(features))
+        
+        logger.debug(f"gathered {len(features)} features, of which {len(feats_unique)} unique")
+        
         # Cache result
         self._feature_cache[cache_key] = features
         return features
@@ -545,6 +577,9 @@ class UGenomeIterator:
                 current_ref_pos, self.coords.alt_pos
             )
     
+    def get_window(self):
+        return self._extract_window(self.start, self.start + self.window_size)
+    
     def get_window_at(self, position):
         return self._extract_window(position, position + self.window_size)
 
@@ -572,6 +607,26 @@ class UGenomeIterator:
 
         logger.debug(f"Stepped by {delta} to position {new_position}")
 
+    def update(self, chrom = None, position = None, window_size = None, stride = None, **kwargs):
+        
+        if chrom:
+            self.update_chromosome(chrom, new_position = position)
+        
+        if position:
+            self.update_position(position)
+        
+        if window_size:
+            self.window_size = window_size
+        
+        if stride:
+            self.stride = stride
+            
+        for k, v in kwargs.items():
+            
+            if hasattr(self, k):
+                setattr(self, k, v)
+        
+            
     def update_position(self, new_position: int) -> None:
         """Update the iterator to a new position without jumping.
 

@@ -3,6 +3,7 @@
 
 from cyvcf2 import VCF
 from cyvcf2 import Variant
+import random
 import numpy as np
 import pysam
 from typing import Dict, List, Optional, Tuple, Union, Iterator, Any, Callable
@@ -18,10 +19,9 @@ logger.setLevel("CRITICAL")
 # logger.setLevel(logging.DEBUG)
 
 from ggene import draw
-# from ggene import shorten_variant
 from ggene import dev
 from ggene.config import get_config, get_paths
-from ggene.database.gene_map import GeneMap
+# from ggene.database.gene_map import GeneMap
 from ggene.genome.features import Gene, Feature, shorten_variant
 from ggene.genome.translate import Ribosome
 from ggene.database.genome_iterator import UGenomeIterator
@@ -76,7 +76,7 @@ class GenomeManager:
             self.library_path = library_path
             
             # Keep old GeneMap for backward compatibility
-            self.gene_map = GeneMap(gtf_path=gtf_path)
+            # self.gene_map = GeneMap(gtf_path=gtf_path)
             
             # print(f"loading sequence from {DEFAULT_FASTA_PATH} (exists = {os.path.exists(DEFAULT_FASTA_PATH)})")
             
@@ -571,190 +571,19 @@ class GenomeManager:
             
         return long_dels, long_inserts
     
-    def get_chromosomal_quantities(self, chr, seq_specs, chunksz = 10e6, start = 1e6, length = None, resample = False, do_rc = False, needs_feats = []):
+    @classmethod
+    def get_random_location(cls, chromes = [], margin = 1e6):
         
-        seq_fns = []
-        for seq_spec in seq_specs:
-            if isinstance(seq_spec, str):
-                seq_fn = lambda_map.get(seq_spec)
-                seq_fns.append(seq_fn)
-            elif callable(seq_spec):
-                seq_fn = seq_spec
-                seq_fns.append(seq_fn)
+        if not chromes:
+            chromes = [chrom for chrom in cls.iter_chromes()]
         
-        if not seq_fns:
-            return None, None
+        chrome = random.choice(chromes)
         
-        if not needs_feats:
-            needs_feats = []
-            for sfn in seq_fns:
-                needs_feats += needs_features(sfn)
-        needs_feats = list(set([v for v in needs_feats if v is not None]))
+        max_index = GTFStream.max_indices.get(chrome, 10e6)
         
-        chrmax = self.gene_map.max_indices.get(str(chr))
-        if not length:
-            length = int(chrmax - start)
-        chunksz = int(chunksz)
-        num_chunks = int(length//chunksz)
-        step = chunksz
-        starts = [[] for qt in seq_fns]
-        qts = [[] for qt in seq_fns]
+        rand_pos = int(random.random()*(max_index - 2*margin) + margin)
         
-        chrstr = str(chr)
-        
-        # print(f"getting quantities for chr{chr} with chunksz {chunksz} and {num_chunks} chunks ({needs_feats})")
-        
-        import time
-        
-        for n in range(num_chunks):
-            end = start + step
-            seq = self.annotations.get_sequence(chrstr, start, end)
-            if do_rc:
-                seq = reverse_complement(seq)
-            if needs_feats:
-                ufeats = list(self.annotations.stream_by_types(needs_feats, chr, start=start, end=end))
-            else:
-                ufeats = []
-            
-            if len(seq) < 1:
-                start = end
-                continue
-            
-            for i,seq_fn in enumerate(seq_fns):
-                qt = seq_fn(seq, ufeats)
-                starts[i].append(start)
-                qts[i].append(qt)
-            start = end
-            
-            # if n%128==0:
-            #     print(f"chunk {n}/{num_chunks}")
-            
-        if resample:
-            rsqts = [[] for i in range(len(seq_fns))]
-            for n in range(1, num_chunks - 1):
-                for i in range(len(seq_fns)):
-                    rsqts[i].append(0.25*qts[i][n-1] + 0.5*qts[i][n] + 0.25*qts[i][n+1])
-            qts = rsqts
-            starts = [st[1:num_chunks-1] for st in starts]
-        
-        return qts, starts
-
-    def get_chromosomal_quantity(self, chr, seq_spec, chunksz = 10e6, start = 1e6, length = None, resample = False, do_rc = False, needs_feats = []):
-        qts, starts = self.get_chromosomal_quantities(chr, [seq_spec], chunksz = chunksz, start = start, length = length, resample = resample, do_rc = do_rc, needs_feats = needs_feats)
-        return qts[0], starts[0]
-        
-    def display_chromosomal_quantity(self, chr, seq_spec, chunksz = 10e6, start = 1e6, max_disp = 256, length = None, resample = False, **kwargs):
-        
-        if not length:
-            length = self.gene_map.max_indices[str(chr)] - start
-        
-        show_hist = kwargs.get("show_hist",False)
-        
-        qts, starts = self.get_chromosomal_quantity(chr, seq_spec, chunksz=chunksz, start = start, length = length, resample = resample)
-        
-        if qts is not None:
-            qt_name = str(seq_spec)
-        else:
-            return
-        
-        lines = self.get_chrom_quantity_lines(chr, qts, qt_name, chunksz = chunksz, start = start, max_disp = max_disp, length = length, suppress = False, resample = resample, **kwargs)
-        
-        if show_hist:
-            
-            data = qts
-            
-            minval = kwargs.get("minval", min(data))
-            maxval = kwargs.get("minval", max(data))
-            
-            hist, bins = np.histogram(data, bins = min(max_disp, int(np.sqrt(len(data)))), range = (minval, maxval))
-            
-            res = draw.scalar_to_text_nb(hist, minval =0, add_range = True)
-            res, _ = draw.add_ruler(res, xmin = bins[0], xmax = bins[-1], num_labels = 5, ticks = 0, minor_ticks = 0)
-            
-            print(f"histogram of {seq_spec}")
-            for r in res:
-                print(r)
-            print()
-            
-        return lines
-    
-    def display_chromosomal_quantities(self, chr, seq_specs, chunksz = 10e6, start = 1e6, max_disp = 256, length = None, resample = False, **kwargs):
-        
-        if not length:
-            length = self.gene_map.max_indices[str(chr)] - start
-        
-        fg_colors = []
-        
-        minvals = kwargs.pop("minvals",[])
-        maxvals = kwargs.pop("maxvals",[])
-        
-        qts, starts = self.get_chromosomal_quantities(chr, seq_specs, chunksz=chunksz, start = start, length = length, resample = resample)
-        qt_names = [str(seq_spec) for seq_spec in seq_specs]
-        num_qts = len(qts)
-        
-        all_lines=[]
-        
-        nice_colors = [65,65-12,173,169,60,131,55,138,91]
-        qt_names_col = []
-        for n in range(len(seq_specs)):
-            qt_names_col.append(f"\x1b[38;5;{nice_colors[n]}m{qt_names[n]}\x1b[0m")
-            
-            minval = None
-            if minvals:
-                minval = minvals[n]
-            maxval = None
-            if maxvals:
-                maxval = maxvals[n]
-            
-            do_flip = bool(n%2)
-            lines = self.get_chrom_quantity_lines(chr, qts[n], qt_names[n], chunksz=chunksz, start=start, max_disp=max_disp, length=length, suppress = True, flip = do_flip, fg_color = nice_colors[n], minval=minval, maxval=maxval, **kwargs)
-            all_lines.append(lines[1:])
-        
-        
-        qt_name_str = f" |  [{", ".join(qt_names_col)}]"
-        num_chunks = length//chunksz
-        num_disp_chunks = max(1, int(num_chunks // max_disp))
-        lines_per_disp = 6
-        
-        for nsect in range(num_disp_chunks):
-            for nqt in range(num_qts):
-                if nqt == 0:
-                    print(all_lines[nqt][nsect*lines_per_disp] + qt_name_str)
-                for nl in range(1, 4):
-                    print(all_lines[nqt][nsect*lines_per_disp + nl])
-                if nqt == num_qts-1:
-                    print(all_lines[nqt][nsect*lines_per_disp + 4])
-                    print()
-            
-    
-    def get_chrom_quantity_lines(self, chr,  qts, qt_name, chunksz = 10e6, start = 1e6, max_disp = 256, length = None, suppress = False, **kwargs):
-        
-        num_chunks = length//chunksz
-        num_disp_chunks = max(1, int(num_chunks // max_disp))
-        
-        minval = kwargs.pop("minval", 0)
-        maxval = kwargs.pop("maxval", max(qts))
-        
-        lines = []
-        lines.append(f"{qt_name} for chr{chr}")
-        for i in range(num_disp_chunks):
-            seq_ran = length // (num_disp_chunks)
-            seq_start = start + i*seq_ran
-            
-            gcs_crop = qts[i*max_disp:(i+1)*max_disp]
-            if len(gcs_crop) == 0:
-                break
-            
-            gc_bars = draw.scalar_to_text_nb(gcs_crop, minval = minval, maxval = maxval, bit_depth = 24, add_range = True, **kwargs)
-            gc_bars, dists = draw.add_ruler(gc_bars, seq_start, seq_start + seq_ran, num_labels = 10, ticks = 2, minor_ticks = 5, genomic = True)
-            lines.append(f"Section {i+1} | {seq_start/1e6:.1f}M - {(seq_start+seq_ran)/1e6:.1f}M (major = {dists[1]/1e3:2.0f}k, minor = {dists[2]/1e3:2.0f}k)")
-            lines.extend(gc_bars)
-            lines.append("\n")
-        
-        if not suppress:
-            for line in lines:
-                print(line)
-        return lines
+        return chrome, rand_pos
     
     def get_sequence(self, chrom: Union[str, int], start: int, end: int, frame = 0) -> Optional[str]:
         """Get genomic sequence for a region.
@@ -1716,7 +1545,8 @@ class GenomeManager:
 
     ###### iterators #######
     
-    def iter_chromes(self, include_mito = False):
+    @classmethod
+    def iter_chromes(cls, include_mito = False):
         
         mt_chr = []
         if include_mito:

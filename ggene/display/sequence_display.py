@@ -7,6 +7,7 @@ codon annotations, and motif underlining.
 
 from typing import List, Dict, Tuple, Optional, Any
 from ggene import draw
+from ggene.draw import highlight
 from ggene.display.colors import Colors
 from ggene.processing.coordinate_mapper import CoordinateMapper, SequenceRenderer
 from ggene.processing.sequence_processor import SequenceProcessor
@@ -203,7 +204,7 @@ class SequenceDisplay:
         
         m_spans = {(m.get("start"), m.get("end")):Colors.MOTIF for m in motifs}
         
-        col_seq = draw.highlight_sequence_by_span(seq, m_spans)
+        col_seq = highlight.highlight_sequence_by_span(seq, m_spans)
         # starts = 
         
         # for i, base in enumerate(seq):

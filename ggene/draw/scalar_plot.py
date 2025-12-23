@@ -6,15 +6,6 @@ from draw.py, allowing for easy manipulation of plot options and re-rendering.
 """
 
 from typing import List, Optional, Dict, Any, Union
-# from ggene.draw import (
-#     scalar_to_text_nb,
-#     scalar_to_text_mid,
-#     scalar_plot_distribution,
-#     get_color_scheme,
-#     scrub_ansi,
-#     visible_len,
-#     visible_slice
-# )
 
 from .colors import Colors, visible_len, visible_slice
 from .chars import SCALE, SCALAR_PLOT, SCALE_H, OTHER
@@ -83,7 +74,7 @@ class ScalarPlot:
             'mode': 'normal',  # 'normal', 'mid', 'distribution'
             'minval': None,
             'maxval': None,
-            'fg_color': 53,
+            'fg_color': 89,
             'bg_color': 234,
             'bit_depth': 24,
             'flip': False,
@@ -163,6 +154,7 @@ class ScalarPlot:
             'bg_color': self.options['bg_color'],
             'effect': self.options['effect'],
         }
+        
         return scalar_to_text_mid(self.scalars, **kwargs)
 
     def _render_distribution(self) -> List[str]:
@@ -246,19 +238,19 @@ class ScalarPlot:
             print()
             
     @classmethod
-    def show_paired(cls, top_plot, btm_plot, chunksz = None, xlabel = None, center_xlabel = False):
+    def show_paired(cls, top_plot, btm_plot, chunksz = None, xlabel = None, center_xlabel = True, suppress = False):
         
         if not chunksz:
             chunksz = len(top_plot.scalars)
         
         line_length = len(top_plot.rows[0])
         
-        num_lines = (line_length // chunksz) + 1
+        num_lines = (line_length // chunksz)
         if top_plot.options.get("maxval") is None:
             top_plot.options["maxval"] = max(top_plot.scalars)
         
         top_plot.options["ruler"] = False
-        top_plot.options["fg_color"] = 65
+        # top_plot.options["fg_color"] = 65
         
         btm_plot.options["flip"] = True
         
@@ -266,41 +258,44 @@ class ScalarPlot:
         btm_xmin = btm_plot.options.get("xmin", -1)
         btm_xmax = btm_plot.options.get("xmax", -1)
         
+        outlines = []
+        
         for n in range(num_lines):
             tsubdata = top_plot.scalars[chunksz*n:chunksz*(n+1)]
             if len(tsubdata) < 1:
                 break
             
             tsubplot = ScalarPlot(tsubdata, **top_plot.options)
-            tsubplot.show()
-            
-            # xlbl = xlabel[n*chunksz:(n+1)*chunksz] if chunksz else xlabel
+            tsubplot.render()
+            outlines.extend(tsubplot.rows)
             
             if center_xlabel and xlabel:
-                # if not isinstance(xlabel, list) or not isinstance(xlabel, tuple):
                 if isinstance(xlabel, str):
                     xlabel = [xlabel]
                 
                 for _xlabel in xlabel:
                     xlbl = visible_slice(_xlabel, start = n*chunksz, stop = (n+1)*chunksz, step = 1)
-                    print(xlbl)
+                    outlines.append(xlbl)
             
             bsubdata = btm_plot.scalars[chunksz*n:chunksz*(n+1)]
             
-            # if btm_ruler:
-                
-            #     xchunk = (btm_xmax - btm_xmin) / 
-            #     new_xmin = btm_xmin + n*chunksz
-                
-            
             bsubplot = ScalarPlot(bsubdata, **btm_plot.options)
-            bsubplot.show()
+            bsubplot.render()
+            outlines.extend(bsubplot.rows)
             
             if not center_xlabel and xlabel:
-                xlbl = visible_slice(xlabel, start = n*chunksz, stop = (n+1)*chunksz, step = 1)
-                print(xlbl)
+                if isinstance(xlabel, str):
+                    xlabel = [xlabel]
+                for _xlabel in xlabel:
+                    xlbl = visible_slice(_xlabel, start = n*chunksz, stop = (n+1)*chunksz, step = 1)
+                    outlines.append(xlbl)
             
+        if not suppress:
+            for line in outlines:
+                print(line)
             print()
+        
+        return outlines
         
     def set_color(self, fg: Optional[int] = None, bg: Optional[int] = None) -> 'ScalarPlot':
         """
@@ -508,6 +503,9 @@ def scalar_to_text_nb(scalars, minval = None, maxval = None, fg_color = 53, bg_c
     if rng == 0:
         rng = 2
         c = minval
+    # print([format(sc, "0.2f") for sc in scalars])
+    # print(f"scalar to text with {minval}, {maxval}, {rng}, {c}")
+    # print(f"data with {min(scalars)}, {max(scalars)}")
     
     for s in scalars:
         sv = int(nvals*((s - c)/rng)) + bit_depth // 2
@@ -539,8 +537,8 @@ def scalar_to_text_nb(scalars, minval = None, maxval = None, fg_color = 53, bg_c
         ran_fstr = kwargs.get("range_fstr", "0.2f")
         hi, lo = SCALAR_PLOT.get("range_hi"), SCALAR_PLOT.get("range_lo")
         hi, lo = (lo, hi) if flip else (hi, lo)
-        minstr = format(minval, ran_fstr)
-        maxstr = format(maxval, ran_fstr)
+        minstr = format(minval, ran_fstr)[:4]
+        maxstr = format(maxval, ran_fstr)[:4]
         outstrs[0] += hi + maxstr
         if bit_depth > 8:
             outstrs[-1] += lo + minstr
@@ -673,3 +671,62 @@ def hflip_scalar_text(sctext):
             newrow.append(scale_inv.get(sym, sym))
         out.append("".join(newrow))
     return out
+
+
+def scalar_to_text_nbh(scalars, minval = None, maxval = None, fg_color = 7, bg_color = 212, bit_depth = 24, flip = False, effect = None):
+    
+    len_sc = len(scalars)
+    
+    if flip:
+        fg = f"\x1b[48;5;{fg_color}m"
+        bg = f"\x1b[38;5;{bg_color}m"
+    else:
+        fg = f"\x1b[38;5;{fg_color}m"
+        bg = f"\x1b[48;5;{bg_color}m"
+    
+    eff = ""
+    if effect:
+        eff += str(effect)
+    
+    base_bit_depth = len(SCALE_H) - 1
+    if not bit_depth % base_bit_depth == 0:
+        return ["no"]
+    
+    ncols = bit_depth // base_bit_depth
+    nvals = base_bit_depth * ncols
+    
+    rows = [[fg+bg+eff] for r in range(len_sc)]
+    
+    bit_ranges = [base_bit_depth*i for i in range(ncols)]
+    
+    if not minval:
+        minval = min(scalars)
+    if not maxval:
+        maxval = max(scalars)
+    rng = max(1, (maxval - minval)/1)
+    c = (minval+ maxval)/2
+    
+    for s, row in zip(scalars, rows):
+        sv = int(nvals*(s - c)/rng) + bit_depth // 2
+        for bit_range in bit_ranges:
+            if sv < bit_range:
+                sym = SCALE_H[0]
+            elif sv >= bit_range + base_bit_depth:
+                sym = SCALE_H[-1]
+            else:
+                ssv = sv % base_bit_depth
+                sym = SCALE_H[ssv]
+            row.append(sym)
+    
+    outstrs= []
+    for row in rows:
+        row.append(Colors.RESET)
+        border_row = ["▁" if r in SCALE else r for r in row]
+        outstrs.append("".join(row))
+        # outstrs.append("".join(border_row))
+        # print(outstrs[-1])
+        
+    if flip:
+        return hflip_scalar_text(outstrs)
+    else:
+        return outstrs

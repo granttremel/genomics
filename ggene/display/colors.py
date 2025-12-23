@@ -7,57 +7,58 @@ visualization of genomic data.
 
 from ggene.draw.colors import Colors
 
+
+
 class FColors(Colors):
     """ANSI color codes for terminal display."""
 
-    # RESET = '\033[0m'
-    # BOLD = '\033[1m'
-    # DIM = '\033[2m'
-    # UNDERLINE = '\033[4m'
+    repeat_colors = {
+        "AluY":141,
+        "AluJ":143,
+        "AluS":106,
+        "Alu":142,
+        
+        "L1MA":53,
+        "L1MB":89,
+        "L1MC":126,
+        "L1MD":161,
+        "L1ME":162,
+        "L1M":125,
+        
+        "L1PA":197,
+        "L1PB":199,
+        "L1P":198,
+        
+        "L1":124,
+        
+        "L2a":161,
+        "L2b":162,
+        "L2c":166,
+        "L2d":167,
+        "L2":160,
+        
+        "L3":88,
+        "L4":52,
+        
+        "SVA_A":95,
+        "SVA_B":97,
+        "SVA_C":60,
+        "SVA_D":132,
+        "SVA":96,
+        
+        "MIRb":107,
+        "MIRc":109,
+        "MIR3":144,
+        "MIR":108,
+        
+        
+        
+        "default":130
+    }
 
-    # # Variant colors
-    # SNP = '\033[91m'        # Red for SNPs
-    # INSERTION = '\033[92m'   # Green for insertions
-    # DELETION = '\033[93m'    # Yellow for deletions
-
-    # # Feature colors
-    # GENE = '\033[94m'        # Blue
-    # TRANSCRIPT = '\033[95m'  # Magenta
-    # EXON = '\033[96m'        # Cyan
-    # CDS = '\033[93m'         # Yellow
-    # UTR = '\033[90m'         # Gray
-    # REPEAT = "\x1b[38;5;143m"
-    
-    # START_CODON = '\x1b[35m'
-    # STOP_CODON = '\x1b[35m'
-
-    # # Motif colors (for underlines)
-    # MOTIF = '\033[38;5;110m'   # Cyan for other motifs
-    # MOTIF_SPL = '\033[38;5;111m'   # Cyan for other motifs
-    # MOTIF_PRO = '\033[38;5;112m'   # Cyan for other motifs
-    # RCMOTIF = '\x1b[38;5;106m'
-    # RCMOTIF_SPL = '\x1b[38;5;107m'
-    # RCMOTIF_PRO = '\x1b[38;5;108m'
-    
-    # HIGHLIGHT = '\x1b[148m' # goldish
-    
-    # # Navigation
-    # POSITION = '\033[97m'    # White
-    
-    # SUBTLE = '\x1b[38;5;240m'
 
     @classmethod
-    def variant_color(cls, ref: str, alt: str) -> str:
-        """Get color based on variant type."""
-        if len(ref) == len(alt):
-            return cls.SNP
-        elif len(ref) > len(alt):
-            return cls.DELETION
-        else:
-            return cls.INSERTION
-
-    @classmethod
-    def get_feature_color(cls, feature_type: str) -> str:
+    def get_feature_type_color(cls, feature_type: str) -> str:
         """Get color for a feature type."""
         feature_type_lower = feature_type.lower()
 
@@ -71,9 +72,42 @@ class FColors(Colors):
             return cls.CDS
         elif 'utr' in feature_type_lower:
             return cls.UTR
+        elif feature_type_lower == "variant":
+            return cls.INSERTION
+        elif feature_type_lower == "motif":
+            return cls.MOTIF
+        elif feature_type_lower in ["repeat","dfam_hit"]:
+            return cls(cls.repeat_colors.get("default", 0)).code
         else:
             return cls.RESET
 
+    @classmethod
+    def get_feature_color(cls, feature):
+        
+        if feature.feature_type in ["motif", "variant", "repeat", "dfam_hit"]:
+            if feature.feature_type=="motif":
+                return cls.get_motif_color(feature)
+            elif feature.feature_type == "variant":
+                return cls.get_variant_color(feature.attributes.get("ref",""), feature.attributes.get("alt",""))
+            else:
+                return cls.get_repeat_color(feature)
+        elif "pseudo" in feature.attributes.get("gene_biotype",""):
+            return cls.PSEUDO
+        else:
+            return cls.get_feature_type_color(feature.feature_type)
+        
+        return cls.RESET
+
+    @classmethod
+    def get_variant_color(cls, ref: str, alt: str) -> str:
+        """Get color based on variant type."""
+        if len(ref) == len(alt):
+            return cls.SNP
+        elif len(ref) > len(alt):
+            return cls.DELETION
+        else:
+            return cls.INSERTION
+    
     @classmethod
     def get_motif_color(cls, motif_feat) -> str:
         """Get color for a motif type."""
@@ -90,9 +124,24 @@ class FColors(Colors):
             return cls.RCMOTIF_SPL if motif_rc else cls.MOTIF_SPL
         elif 'promoter' in motif_class:
             return cls.RCMOTIF_PRO if motif_rc else cls.MOTIF_PRO
-        # elif 'hammerhead' in motif_class:
-        #     return cls.MOTIF
-        # elif 'SRP' in motif_class:
-        #     return cls.MOTIF
         else:
             return cls.RCMOTIF if motif_rc else cls.MOTIF
+        
+    @classmethod
+    def get_repeat_color(cls, rpt_feat):
+        
+        out_col = None
+        name = rpt_feat.name
+        
+        if not name:
+            return cls.get_color(cls.repeat_colors.get("default", 0))
+        
+        for cn, col in cls.repeat_colors.items():
+            if cn in name:
+                out_col = col
+                break
+            
+        if out_col is None:
+            out_col = cls.repeat_colors.get("default", 0)
+        
+        return cls.get_color(out_col)

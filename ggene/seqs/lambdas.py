@@ -78,16 +78,22 @@ def _seq_polyn(seq, feats, b, do_rc = False):
 
 
 def seq_feats(seq, feats):
-    return len(feats)
+    return sum([1 for f in feats])
 
 def seq_genes(seq, feats):
-    return sum([1 for f in feats if f.get("type","") == "gene"])
+    return sum([1 for f in feats if f.feature_type == "gene"])
 
 def seq_exons(seq, feats):
-    return sum([1 for f in feats if f.get("type","") == "exon"])
+    return sum([1 for f in feats if f.feature_type == "exon"])
 
 def seq_motifs(seq, feats):
-    return sum([1 for f in feats if f.get("type","") == "motif"])
+    return sum([1 for f in feats if f.feature_type == "motif"])
+
+def seq_pseudo(seq, feats):
+    return sum([1 for f in feats if f.feature_type == "gene" and "pseudo" in f.attributes.get("gene_biotype","")])
+
+def seq_simple_rpts(seq, feats):
+    return sum([1 for f in feats if f.feature_type == "repeat" and f.attributes.get("type","") == "Simple_repeat"])
 
 def seq_cds_len(seq, feats):
     if not feats:
@@ -96,6 +102,33 @@ def seq_cds_len(seq, feats):
 
 def seq_cds_pct(seq, feats):
     return seq_cds_len(seq, feats) / len(seq)
+
+def _seq_biotype(seq, feats, biotype):
+    
+    min_pos = 1e9
+    max_pos = 0
+    out = 0
+    for f in feats:
+        if f.attributes.get("gene_biotype","") == biotype:
+            out += f.end - f.start
+        
+        min_pos = min(min_pos, f.start)
+        max_pos = max(max_pos, f.end)
+    
+    return out / (max_pos - min_pos)
+
+def seq_pc_bt(seq, feats):
+    """
+    protein coding biotype
+    """
+    return _seq_biotype(seq, feats, "protein_coding")
+
+def seq_lncrna_bt(seq, feats):
+    """
+    long noncoding RNA biotype
+    """    
+    return _seq_biotype(seq, feats, "lncRNA")
+
 
 def seq_max_run(seq, feats):
     # scale = round(np.sqrt(len(seq)))
@@ -124,8 +157,84 @@ def _seq_te(seq, feats, te_name):
 def seq_alu(seq, feats):
     return _seq_te(seq, feats, "Alu")
 
+def seq_aluJ(seq, feats):
+    return _seq_te(seq, feats, "AluJ")
+
+def seq_aluY(seq, feats):
+    return _seq_te(seq, feats, "AluY")
+
+def seq_aluS(seq, feats):
+    return _seq_te(seq, feats, "AluS")
+
 def seq_line1(seq, feats):
     return _seq_te(seq, feats, "L1")
+
+def seq_L1M(seq, feats):
+    return _seq_te(seq, feats, "L1M")
+
+def seq_L1P(seq, feats):
+    return _seq_te(seq, feats, "L1P")
+
+def seq_line2(seq, feats):
+    return _seq_te(seq, feats, "L2")
+
+def seq_LTR(seq, feats):
+    return _seq_te(seq, feats, "LTR")
+
+def seq_MIR(seq, feats):
+    return _seq_te(seq, feats, "MIR")
+
+def seq_SVA(seq, feats):
+    return _seq_te(seq, feats, "SVA")
+
+def seq_ALR(seq, feats):
+    return _seq_te(seq, feats, "ALR")
+
+def seq_MER(seq, feats):
+    return _seq_te(seq, feats, "MER")
+
+def _seq_repeat_motif(seq, feats, motif):
+    dblmotif = motif*2
+    rcdblmotif = reverse_complement(dblmotif)
+    
+    res = 0
+    
+    for f in feats:
+        if f.feature_type != "repeat":
+            continue
+        
+        test_mtf = f.attributes.get("motif","")
+        if not test_mtf:
+            continue
+        
+        if test_mtf in dblmotif or test_mtf in rcdblmotif:
+            res += (f.end - f.start)/len(test_mtf)
+    
+    return res
+
+def seq_ttctt(seq, feats):
+    return _seq_repeat_motif(seq, feats, "TTCTT")
+
+def seq_tataat(seq, feats):
+    return _seq_repeat_motif(seq, feats, "TATAAT")
+
+def seq_tatatc(seq, feats):
+    return _seq_repeat_motif(seq, feats, "TATATC")
+
+def seq_ttga(seq, feats):
+    return _seq_repeat_motif(seq, feats, "TTGA")
+
+def seq_aattaag(seq, feats):
+    return _seq_repeat_motif(seq, feats, "AATTAAG")
+
+def seq_atgt(seq, feats):
+    return _seq_repeat_motif(seq, feats, "ATGT")
+
+def seq_gaggat(seq, feats):
+    return _seq_repeat_motif(seq, feats, "GAGGAT")
+
+def seq_ccctgc(seq, feats):
+    return _seq_repeat_motif(seq, feats, "CCCTGC")
 
 def _seq_pattern(seq, feats, ptrn):
     return len(re.findall(ptrn, seq))
@@ -183,7 +292,7 @@ def needs_features(seq_spec):
     if seq_spec in lambda_map:
         seq_spec = lambda_map.get(seq_spec)
     
-    if seq_spec in [seq_genes]:
+    if seq_spec in [seq_genes, seq_pc_bt, seq_lncrna_bt, seq_pseudo]:
         return ["gene"]
     elif seq_spec in [seq_exons]:
         return ["exon"]
@@ -192,13 +301,15 @@ def needs_features(seq_spec):
     elif seq_spec in [seq_cds_len, seq_cds_pct]:
         return ["CDS"]
     elif seq_spec in [seq_feats]:
-        return []
-    elif seq_spec in [_seq_te, seq_alu, seq_line1]:
+        return ["all"]
+    elif seq_spec in [_seq_te, seq_alu, seq_aluJ, seq_aluY, seq_aluS, seq_line1, seq_L1M, seq_L1P]:
         return ["dfam_hit"]
+    elif seq_spec in [_seq_repeat_motif, seq_ttctt, seq_ttga, seq_tataat, seq_tatatc]:
+        return ["repeat"]
     elif not seq_spec in lambda_map.values():
-        return []
+        return ["all"]
     else:
-        return None
+        return []
 
 lambda_map = {
     "gc":seq_gc,
@@ -217,15 +328,41 @@ lambda_map = {
     "polys":seq_polys,
     "polyw":seq_polyw,
     
+    "features":seq_feats,
     "genes":seq_genes,
     "exons":seq_exons,
     "motifs":seq_motifs,
-    "alu":seq_alu,
-    "line1":seq_line1,
+    "pseudo":seq_pseudo,
+    "simple_repeats":seq_simple_rpts,
+    
+    "Alu":seq_alu,
+    "AluJ":seq_aluJ,
+    "AluY":seq_aluY,
+    "AluS":seq_aluS,
+    "Line1":seq_line1,
+    "L1M":seq_L1M,
+    "L1P":seq_L1P,
+    "L2":seq_line2,
+    "LTR":seq_LTR,
+    "MIR":seq_MIR,
+    "SVA":seq_SVA,
+    
+    "TTCTT":seq_ttctt,
+    "TATAAT":seq_tataat,
+    "TATATC":seq_tatatc,
+    "TTGA":seq_ttga,
+    "AATTAAG":seq_aattaag,
+    "ATGT":seq_atgt,
+    "GAGGAT":seq_gaggat,
+    "CCCTGC":seq_ccctgc,
     
     "cds_len":seq_cds_len,
     "cds_pct":seq_cds_pct,
     "features":seq_feats,
+    "protein_coding":seq_pc_bt,
+    "lncrna":seq_lncrna_bt,
+    
+    
     "max_run":seq_max_run,
     
     "hammerhead_st1": seq_hammerhead_st1,

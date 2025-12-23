@@ -23,7 +23,7 @@ from ggene.database.annotations import UFeature
 # Import new modular components
 from ggene.display.colors import Colors
 from ggene.display.formatters import LabelFormatter
-from ggene.display.renderer import DisplayRenderer
+from ggene.display.display_renderer_old import DisplayRenderer
 from ggene.display.sequence_display import SequenceDisplay
 from ggene.display.feature_display import FeatureDisplay
 from ggene.display.amino_acid_display import AminoAcidDisplay
@@ -32,10 +32,11 @@ from ggene.processing.sequence_processor import SequenceProcessor
 from ggene.processing.feature_processor import FeatureProcessor
 
 if TYPE_CHECKING:
-    from .genomemanager import GenomeManager
+    from ggene import GenomeManager
 
 logger = logging.getLogger(__name__)
-logger.setLevel("DEBUG")
+logger.setLevel("WARNING")
+# logger.setLevel("DEBUG")
 
 # Colors class has been moved to display/colors.py
 
@@ -348,6 +349,8 @@ class InteractiveGenomeBrowser:
         
         if not self.debug:
             print('\033[2J\033[H')  # Clear screen and move to top
+        
+        print(self.window.motifs)
         
         if self.state.show_second:
             disp_lines = self.render.render_full_view(self.window, self.state, second_window = self.window2, second_state = self.state2)

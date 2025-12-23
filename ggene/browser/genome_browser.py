@@ -18,7 +18,6 @@ from ggene import seqs, draw
 from ggene.seqs import vocab as gvc
 from ggene.seqs import bio, find, process
 from ggene.seqs.bio import CODON_TABLE, COMPLEMENT_MAP, to_rna, complement, reverse_complement
-from ggene.seqs import process
 from ggene.genome.features import Gene, Feature
 from ggene.database.genome_iterator import UGenomeIterator
 from ggene.database.annotations import UFeature
@@ -27,7 +26,7 @@ from ggene.database.annotations import UFeature
 # from ggene.draw.FColors import FColors
 from ggene.display.colors import FColors
 from ggene.display.formatters import LabelFormatter
-from ggene.display.renderer import DisplayRenderer
+from ggene.display.display_renderer_old import DisplayRenderer
 from ggene.display.sequence_display import SequenceDisplay
 from ggene.display.feature_display import FeatureDisplay
 from ggene.display.amino_acid_display import AminoAcidDisplay
@@ -35,7 +34,7 @@ from ggene.processing.coordinate_mapper import CoordinateMapper, SequenceRendere
 from ggene.processing.sequence_processor import SequenceProcessor
 from ggene.processing.feature_processor import FeatureProcessor
 
-from ggene.display import artist
+from ggene.display.artists import *
 
 if TYPE_CHECKING:
     from ggene.database.genome_manager import GenomeManager
@@ -60,7 +59,7 @@ class BrowserState:
     show_amino_acids: bool = False
     show_reverse_strand: bool = False
     show_rna: bool = False
-    feature_types: Optional[List[str]] = None
+    feature_types: Optional[Tuple[str]] = None
     show_second:bool = False
     _is_second:bool = False
     
@@ -127,9 +126,9 @@ class InteractiveGenomeBrowser:
         self.iterator = self.iterator2 = None
         self._init_iterator()  # Initialize iterator on first load
         self.window = self.window2 = None
-        self.artist:artist.Artist = self._init_artist(self.state.artist_type, **kwargs)
+        self.artist:BaseArtist = self._init_artist(self.state.artist_type, **kwargs)
         
-        if type(self.artist) == artist.SeqArtist:
+        if type(self.artist) == SeqArtist:
             self.state.show_second = True
         
         self.highlight = ""
@@ -364,18 +363,18 @@ class InteractiveGenomeBrowser:
             def display_handle(state, window) -> List[str]:
                 return self._display_current_view2()
             
-            artst = artist.ProxyArtist(func_handle = display_handle, **kwargs)
+            artst = ProxyArtist("proxy",func_handle = display_handle, **kwargs)
         
         elif artist_type == "line":
             
-            aps = artist.LineArtistParams()
-            artst = artist.LineArtist(aps)
+            aps = LineArtistParams()
+            artst = LineArtist("line",aps)
             # artst.set_params(**kwargs)
             
         elif artist_type == "seq":
             
-            aps = artist.SeqArtistParams()
-            artst = artist.SeqArtist(aps)
+            aps = SeqArtistParams()
+            artst = SeqArtist("seq",aps)
             
         else:
             
@@ -465,7 +464,7 @@ class InteractiveGenomeBrowser:
         
         header, nh = self.get_header_lines(second = False, suppress = True)
         
-        if type(self.artist) == artist.SeqArtist:
+        if type(self.artist) == SeqArtist:
             lines = self.artist.render(self.state, self.window, self.state2, self.window2)
             
         else:
@@ -1204,7 +1203,7 @@ class InteractiveGenomeBrowser:
                 personal_display += f"{FColors.DIM}-{FColors.RESET}"
             elif variant_positions[i] if i < len(variant_positions) else False:
                 # Variant detected
-                color = FColors.variant_color(ref_base, pers_base)
+                color = FColors.get_variant_color(ref_base, pers_base)
                 personal_display += f"{color}{pers_base}{FColors.RESET}"
             elif in_start:
                 personal_display += f"{FColors.INSERTION}{pers_base}{FColors.RESET}"
@@ -1263,7 +1262,6 @@ class InteractiveGenomeBrowser:
         
         # Variant indicator line
         for i in range(len(marker_line)):
-            
             if i < len(variant_positions) and variant_positions[i]:
                 marker_line[i] = f"{FColors.DIM}*{FColors.RESET}"
         

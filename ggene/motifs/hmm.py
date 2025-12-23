@@ -4,7 +4,7 @@ from dataclasses import dataclass
 
 import pyhmmer
 
-from ggene import DATA_DIR
+from ggene.config import DATA_DIR
 from ggene import draw
 from .motif import BaseMotif
 
