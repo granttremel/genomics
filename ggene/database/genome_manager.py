@@ -128,6 +128,8 @@ class GenomeManager:
                     self.annotations.add_repeatmasker(v)
                 if k == "dfam_path":
                     self.annotations.add_dfam(v)
+                if k == "clinvar_path":
+                    self.annotations.add_clinvar(v)
                 
         except Exception as e:
             logger.error(f"Failed to initialize GenomeManager: {e}")

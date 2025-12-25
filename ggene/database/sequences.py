@@ -44,7 +44,7 @@ class BaseSequenceStream(ABC):
     """Abstract base class for sequence streaming."""
     
     @abstractmethod
-    def get_sequence(self, chrom: str, start: int, end: int) -> str:
+    def get_sequence(self, ref: str, start: int = None, end: int = None) -> str:
         """Get reference sequence for a region."""
         pass
     
@@ -86,7 +86,7 @@ class FASTAStream(BaseSequenceStream):
             logger.error(f"Failed to open FASTA file: {e}")
             raise
     
-    def get_sequence(self, chrom: str, start: int, end: int) -> str:
+    def get_sequence(self, ref: str, start: int=None, end: int=None) -> str:
         """Get reference sequence for a region.
         
         Args:
@@ -102,16 +102,13 @@ class FASTAStream(BaseSequenceStream):
         
         try:
             # pysam uses 0-based half-open intervals
-            seq = self.fasta.fetch(str(chrom), start - 1, end)
+            seq = self.fasta.fetch(str(ref), start - 1, end)
             seq = seq.upper()
             if not vocab.VOCAB == vocab.VOCAB_DNA:
                 seq = vocab._convert_seq_vocab(seq, vocab.VOCAB, from_vocab = vocab.VOCAB_DNA)
-            #     print(f"converted vocab from {vocab.VOCAB_DNA} to {vocab.VOCAB}")
-            # else:
-            #     print(f"did not convert vocab: {vocab.VOCAB}")
             return seq
         except Exception as e:
-            logger.debug(f"Failed to fetch sequence {chrom}:{start}-{end}: {e}")
+            logger.debug(f"Failed to fetch sequence {ref}:{start}-{end}: {e}")
             return ""
     
     def get_personal_sequence(self, chrom: str, start: int, end: int,

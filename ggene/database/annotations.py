@@ -24,6 +24,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel("CRITICAL")
 # logger.setLevel(logging.DEBUG)
 
+chr_lens = {'1': 248937043, '10': 133778498, '11': 135075908, '12': 133238549, '13': 114346637, '14': 106879812, '15': 101979093, '16': 90222678, '17': 83240391, '18': 80247514, '19': 58599303, '2': 242175634, '20': 64327972, '21': 46691226, '22': 50799123, '3': 198228376, '4': 190195978, '5': 181472430, '6': 170745977, '7': 159233377, '8': 145066516, '9': 138320835, 'MT': 16023, 'X': 156027877, 'Y': 57214397}
 
 @dataclass
 class UFeature:
@@ -31,11 +32,11 @@ class UFeature:
     
     This is the lingua franca for all annotation sources.
     """
-    chrom: str
-    start: int  # 1-based, inclusive
-    end: int    # 1-based, inclusive
-    feature_type: str  # gene, variant, motif, repeat, etc.
-    source: str  # GTF, VCF, JASPAR, etc.
+    chrom: str = ""
+    start: int = -1  # 1-based, inclusive
+    end: int = -1    # 1-based, inclusive
+    feature_type: str = ""  # gene, variant, motif, repeat, etc.
+    source: str = ""  # GTF, VCF, JASPAR, etc.
     score: Optional[float] = None
     strand: Optional[str] = ""
     name: Optional[str] = ""
@@ -45,6 +46,10 @@ class UFeature:
     @property
     def chr(self):
         return self.chrom
+    
+    @property
+    def length(self):
+        return self.end - self.start
     
     def __lt__(self, other):
         """For heap-based merging."""
@@ -88,7 +93,84 @@ class UFeature:
         }
     
 UFeat = UFeature
+
+##### parsers #####
+
+# def parse_line(line):        
+#     if line.startswith('#'):
+#             return None
+            
+#     parts = line.strip().split('\t')
+#     if len(parts) < 9:
+#         return None
+        
+#     # Parse attributes
+#     attr_dict = {}
+#     for attr in parts[8].split(';'):
+#         if attr.strip():
+#             if ' ' in attr:
+#                 key, val = attr.strip().split(' ', 1)
+#                 attr_dict[key] = val.strip('"')
     
+#     return {        
+#         "chrom":parts[0],
+#         "start":int(parts[3]),
+#         "end":int(parts[4]),
+#         "feature_type":parts[2],
+#         "score":float(parts[5]) if parts[5] != '.' else None,
+#         "strand":parts[6] if parts[6] != '.' else None,
+#         "name":attr_dict.get('gene_name'),
+#         "id":attr_dict.get('gene_id'),
+#         "attributes":attr_dict
+#     }
+
+def parse_line(line, headers, att_headers):
+    if line.startswith('#') or line.startswith('track'):
+        return None
+    
+    hdrs = headers + att_headers
+    
+    parts = line.strip().split('\t')
+    
+    fd = {}
+    atts = {}
+    
+    for hdr, v in zip(hdrs, parts):
+        if hdr in headers:
+            fd[hdr] = v
+        else:
+            atts[hdr] = v
+    
+    fd["attributes"] = atts
+    fd["start"] = int(fd.get("start", -1))
+    fd["end"] = int(fd.get("end", -1))
+    
+    return fd
+
+def parse_line_bed(line):
+    if line.startswith('#') or line.startswith('track'):
+        return None
+        
+    parts = line.strip().split('\t')
+    if len(parts) < 3:
+        return None
+    
+    name = parts[3].strip()
+    if name.endswith(")n"):
+        motif = name.strip("()n")
+    else:
+        motif = ""
+    
+    headers = ["chrom","start","end","score","strand","name","id"]
+    
+    fd = {}
+    attrs = {}
+    for hdr,part in zip(headers, parts):
+        if hdr:
+            v = part.strip()
+            fd[hdr] = v
+    
+    return fd
 
 class AnnotationStream(ABC):
     """Abstract base class for annotation streams."""
@@ -231,14 +313,15 @@ class GTFStream(AnnotationStream):
 class VCFStream(AnnotationStream):
     """Stream VCF variant annotations using cyvcf2 for efficient indexed access."""
     
-    def __init__(self, filepath: str):
+    def __init__(self, filepath: str, min_qual = 20):
         super().__init__("VCF")
         self.filepath = Path(filepath)
+        self.min_qual = min_qual
         
         # Use cyvcf2.VCF which handles indexing internally
         try:
             from cyvcf2 import VCF
-            self.vcf = VCF(str(self.filepath))
+            self.vcf:VCF = VCF(str(self.filepath))
             
             # Check if index exists and set it
             index_files = [
@@ -313,6 +396,7 @@ class VCFStream(AnnotationStream):
                 'filter': parts[6],
                 'info': info_dict,
                 'variant_types': variant_types,
+                'variant_type': variant_types[0],
                 'genotype': ""
             }
         )
@@ -354,6 +438,7 @@ class VCFStream(AnnotationStream):
                 'qual': variant.QUAL,
                 'filter': variant.FILTER,
                 'variant_types': variant_types,
+                'variant_type': variant_types[0],
                 'genotype': variant.gt_bases[0],
                 'zygosity':zyg
             }
@@ -376,34 +461,28 @@ class VCFStream(AnnotationStream):
                end: Optional[int] = None) -> Iterator[UFeature]:
         """Stream VCF features using cyvcf2's efficient indexed access."""
         
-        res = self.test(chrom, start)
-        if not res:
-            print(f"tabix fetch failed for {type(self)} with path {self.filepath}")
-            return
-        
         # Use cyvcf2's efficient querying
         if self.vcf and chrom:
-            chrstr = str(chrom)
             
+            chrstr = str(chrom)
             # Try both with and without chr prefix
             for chrom_format in [f"chr{chrstr}" if not chrstr.startswith('chr') else chrstr,
                                 chrstr.lstrip('chr') if chrstr.startswith('chr') else chrstr]:
                 try:
                     # Create region string for cyvcf2
                     if start and end:
-                        region = f"{chrom_format}:{start}-{end}"
+                        region = f"{chrom_format}:{int(start)}-{int(end)}"
                     elif start:
-                        region = f"{chrom_format}:{start}-"
+                        region = f"{chrom_format}:{int(start)}-"
                     else:
                         region = chrom_format
                     
-                    
+                    found_any = False
                     with warnings.catch_warnings(action="ignore"):
                         # Query using cyvcf2's efficient indexed access
-                        found_any = False
                         for variant in self.vcf(region):
                             feature = self._parse_variant(variant)
-                            if feature:
+                            if feature and feature.get("qual", 0) >= self.min_qual:
                                 found_any = True
                                 yield feature
                     
@@ -435,10 +514,14 @@ class VCFStream(AnnotationStream):
 class BEDStream(AnnotationStream):
     """Stream BED format annotations using indexed access."""
     
+    headers = ["chrom","start","end","name","type","strand"]
+    types = [str, int, int, str, str, str]
+    
     def __init__(self, filepath: str, feature_type: str = "region"):
         super().__init__("BED")
         self.filepath = Path(filepath)
         self.feature_type = feature_type
+        self.chr_frm = "chr{chrstr}"
         
         # Check if file is indexed
         self.tabix = None
@@ -457,6 +540,7 @@ class BEDStream(AnnotationStream):
         
     def _parse_line(self, line: str) -> Optional[UFeature]:
         """Parse BED line."""
+        # logger.debug(line)
         if line.startswith('#') or line.startswith('track'):
             return None
             
@@ -470,42 +554,62 @@ class BEDStream(AnnotationStream):
         else:
             motif = ""
         
-        return UFeature(
-            chrom=parts[0].removeprefix("chr"),
-            start=int(parts[1]) + 1,  # BED is 0-based
-            end=int(parts[2]),
-            feature_type=self.feature_type,
-            source=self.source_name,
-            name=parts[3],
-            score= -1,
-            strand=parts[5] if len(parts) > 5 else None,
-            attributes={
-                "type": parts[4],
-                "motif":motif,
-            }
-        )
+        fd = {}
+        attrs = {}
+        for hdr, tp, part in zip(self.headers, self.types, parts):
+            if hdr:
+                v = part.strip()
+                try:
+                    v = tp(v)
+                except:
+                    pass
+                if hasattr(UFeature, hdr):
+                    fd[hdr] = v
+                else:
+                    attrs[hdr] = v
+        
+        fd["attributes"] = attrs
+        
+        return UFeature(feature_type = self.feature_type, source = "BED", **fd)
+
     
     def stream(self, chrom: Optional[str] = None,
                start: Optional[int] = None,
                end: Optional[int] = None) -> Iterator[UFeature]:
         """Stream BED features."""
-        chrom = str(chrom)
         
-        # res = self.test(chrom, start)
-        # if not res:
-        #     return
+        chrom_str, chrom = self.get_chrom_str(chrom)
         
-        tbichrom = chrom if chrom.startswith("chr") else "chr" + chrom
-        for line in self.tabix.fetch(tbichrom, start=start, end=end):
-            feature = self._parse_line(line)
-            if feature:
-                if chrom and feature.chrom != chrom:
-                    continue
-                if start and feature.end < start:
-                    continue
-                if end and feature.start > end:
-                    continue
-                yield feature
+        # logger.debug(f"streaming at {chrom}:{int(start)}-{int(end)}")
+        
+        if start:
+            start = int(start)
+        else:
+            start = 1
+        
+        if end:
+            end = int(end)
+        else:
+            end = chr_lens.get(chrom)
+        
+        try:
+            for line in self.tabix.fetch(chrom_str, start=start, end=end):
+                feature = self._parse_line(line)
+                
+                if feature:
+                    if chrom and feature.chrom != chrom:
+                        continue
+                    if start and feature.end < start:
+                        continue
+                    if end and feature.start > end:
+                        continue
+                    yield feature
+        except Exception as e:
+            print(f"error encountered while fetching at {chrom}:{start}-{end}: {str(e)}")
+            
+    def get_chrom_str(self, chr_input):
+        chr_raw = str(chr_input).removeprefix("chr")
+        return self.chr_frm.format(chrstr = chr_raw), chr_raw
 
 
 class JASPARStream(AnnotationStream):
@@ -650,6 +754,7 @@ class DfamStream(BEDStream):
     
     def __init__(self, filepath):
         super().__init__(filepath, feature_type = "dfam_hit")
+        self.chr_frm = "chr{chrstr}"
         
     def _parse_line(self, line: str) -> Optional[UFeature]:
         """Parse BED line. Columns:
@@ -686,9 +791,23 @@ class DfamStream(BEDStream):
                 "kimura_div":float(parts[7]),
                 "start_hmm":int(parts[9]),
                 "end_hmm":int(parts[10]),
-                # "raw_line":line
             }
         )
+
+class ClinvarStream(BEDStream):
+    
+    chr_frm = "{chrstr}"
+    headers = ["chrom","start","end","id"]
+    att_headers = ["ref","alt","clnsig","clndn","gene","clnvc","af_esp","af_exac","af_tgp","clndnincl","mc"]
+    
+    def __init__(self, filepath):
+        super().__init__(filepath, feature_type = "clinical_variant")
+        self.chr_frm = "{chrstr}"
+        
+    def _parse_line(self, line: str) -> Optional[UFeature]:
+        fd = parse_line(line, self.headers, self.att_headers)
+        return UFeature(feature_type = self.feature_type, source = "ClinVar", **fd)
+
 
 class UGenomeAnnotations:
     """Unified interface for all genomic annotations and sequences.
@@ -781,6 +900,9 @@ class UGenomeAnnotations:
     
     def add_dfam(self, filepath, name="dfam"):
         self.add_source(name, DfamStream(filepath))
+    
+    def add_clinvar(self, filepath, name = "clinvar"):
+        self.add_source(name, ClinvarStream(filepath))
     
     def stream_all(self, chrom: Optional[str] = None,
                    start: Optional[int] = None,
