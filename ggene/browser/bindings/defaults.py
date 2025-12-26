@@ -190,7 +190,13 @@ def toggle_panel(brws:'BaseBrowser', state:'BaseBrowserState', window:'BaseWindo
         panel = panels.get(res)
     
     panel.enabled ^= True
+
+def save_state(brws:'BaseBrowser', state:'BaseBrowserState', window:'BaseWindow'):
+    brws.add_to_history()
+    brws.save_state()
     
+def save_to_history(brws:'BaseBrowser', state:'BaseBrowserState', window:'BaseWindow'):
+    brws.add_to_history()
 
 def echo_key(brws, state, window):
     if hasattr(state, "_last_key"):
@@ -255,6 +261,20 @@ default_bindings = {
         "method":change_stride.__name__,
         "description":"Change stride",
         "_bound_method": change_stride
+    },
+    "ctrl_s":{
+        "key":"ctrl_s",
+        "name":"save_state",
+        "method":save_state.__name__,
+        "description":"Save browser state",
+        "_bound_method": save_state
+    },
+    "h":{
+        "key":"h",
+        "name":"save_to_history",
+        "method":save_to_history.__name__,
+        "description":"Take snapshot of current view and store in history",
+        "_bound_method": save_to_history
     },
     "F":{
         "key":"F",

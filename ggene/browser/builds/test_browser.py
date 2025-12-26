@@ -26,11 +26,11 @@ from ggene.display.colors import FColors
 @dataclass
 class TestBrowserState(BrowserState, BaseBrowserState):
     mm_height:int = 8
-    seq_height:int = 7
-    sc_height:int = 9
-    line_height:int = 15
-    text_height:int = 8
-    feature_types:Optional[Tuple[str]] = ("gene", "exon", "CDS", "motif", "dfam_hit", "repeat")
+    seq_height:int = 5
+    sc_height:int = 7
+    line_height:int = 18
+    text_height:int = 10
+    feature_types:Optional[Tuple[str]] = ("gene", "exon", "CDS", "motif", "variant", "dfam_hit", "repeat")
     
     def get_height(self, artist):
         
@@ -56,12 +56,13 @@ class TestBrowser(BaseBrowser):
         self.gm = GenomeManager()
         
         state = TestBrowserState(kwargs.get("chrom", "1"), kwargs.get("position", 10e6), kwargs.get("window_size", 240), kwargs.get("stride", 20), kwargs.get("display_height", 32))
+        
         state.update(**kwargs)
         iterator = UGenomeIterator(self.gm, state.chrom, state.position, window_size = state.window_size, stride = state.stride)
         
         super().__init__(state = state, iterator = iterator, **kwargs)
         
-        dw = kwargs.get("display_width", 240)
+        dw = kwargs.get("display_width", 256)
         artists = self.build_artists(display_width = dw)
         rndr = self.build_renderer_mini(artists, display_height = 32, display_width = dw, full_display_width = dw)
         
@@ -193,11 +194,11 @@ class TestBrowser(BaseBrowser):
         
         seqa = artists.get("feature_artist")
         height = self.state.get_height(seqa)
-        rndr.add_full_width_row(seqa, height = height, top_label = seqa.top_label, valign = VAlignment.CENTER, fixed_height = height)
+        rndr.add_full_width_row(seqa, height = height, top_label = seqa.top_label, valign = VAlignment.CENTER)
         
         seqa = artists.get("text_artist")
         height = self.state.get_height(seqa)
-        rndr.add_full_width_row(seqa, height = height, top_label = seqa.top_label)
+        rndr.add_full_width_row(seqa, height = height, top_label = seqa.top_label, fixed_height = True)
         
         return rndr
         

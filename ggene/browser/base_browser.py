@@ -10,6 +10,9 @@ import logging
 import numpy as np
 import time
 from pathlib import Path
+from datetime import datetime
+import yaml
+import uuid
 
 from ggene.browser.commands import CommandRegistry, KeybindingManager
 from ggene.browser.bindings.defaults import bind_defaults
@@ -48,12 +51,17 @@ class BaseBrowser:
             logger.setLevel("DEBUG")
         else:
             logger.setLevel("WARNING")
-            
+        self.session_id = str(uuid.uuid4())[:6]
         
-        self.state:BaseBrowserState = kwargs.get("state", BaseBrowserState())
-        self.window:BaseWindow = None
+        load_state = kwargs.get("load",False)
+        if load_state:
+            self.load_last_state()
+        else:
+            self.state:BaseBrowserState = kwargs.get("state", BaseBrowserState())
+            self.window:BaseWindow = None
 
-        self.iterator:'BaseIterator' = kwargs.get("iterator")
+            self.iterator:'BaseIterator' = kwargs.get("iterator")
+        
         self.renderer: Union['BaseArtist','ArtistRenderer'] = kwargs.get("renderer")
         
         # Command system
@@ -74,6 +82,9 @@ class BaseBrowser:
             self.keybindings.load_from_file(keybinding_file)
 
         self._rendered_view:List[str] = []
+
+        # History tracking
+        self.history:List[Dict[str, Any]] = []
     
     def set_state(self, state:BaseBrowserState):
         self.state = state
@@ -106,6 +117,7 @@ class BaseBrowser:
             # Handle input and check for quit
             result = self.handle_input(key)
             if result == "quit":
+                self.add_to_history()
                 break
 
         self.cleanup()
@@ -482,3 +494,165 @@ class BaseBrowser:
         lines.append(f"Parameters: {len(self.params._params)}")
 
         return "\n".join(lines)
+
+    # ===== History and State Management =====
+
+    def take_snapshot(self, include_view: bool = True) -> Dict[str, Any]:
+        """
+        Take a snapshot of the current browser state.
+
+        Args:
+            include_view: Whether to include the rendered view in the snapshot
+
+        Returns:
+            Dictionary containing the snapshot data
+        """
+        snapshot = {
+            'timestamp': datetime.now().isoformat(),
+            'state': self._serialize_object(self.state, max_depth=3),
+            'window': self._serialize_object(self.window, max_depth=3),
+        }
+
+        if include_view:
+            from ggene.display.colors import FColors
+            snapshot['view'] = [FColors.scrub_codes(line) for line in self._rendered_view]
+
+        return snapshot
+
+    def add_to_history(self, include_view: bool = True):
+        """
+        Add current state to the history.
+
+        Args:
+            include_view: Whether to include the rendered view in the snapshot
+        """
+        snapshot = self.take_snapshot(include_view=include_view)
+        self.history.append(snapshot)
+
+    def save_state(self, directory: str = "./data/browser/states") -> str:
+        """
+        Save the current browser state to a YAML file with timestamp.
+
+        Args:
+            directory: Directory to save state files
+
+        Returns:
+            Path to the saved file
+        """
+        Path(directory).mkdir(parents=True, exist_ok=True)
+
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"{type(self).__name__}_state_{timestamp}.yaml"
+        filepath = Path(directory) / filename
+
+        state_data = {
+            'timestamp': datetime.now().isoformat(),
+            'session_id':self.session_id,
+            'browser_type': type(self).__name__,
+            'state': self._serialize_object(self.state, max_depth=3),
+            'iterator': {
+                '_type': type(self.iterator).__name__,
+                'chrom': getattr(self.iterator, 'chrom', None),
+                'position': getattr(self.iterator, 'position', None),
+                'window_size': getattr(self.iterator, 'window_size', None),
+                'stride': getattr(self.iterator, 'stride', None),
+            },
+            'features':self.window.features,
+        }
+
+        with open(filepath, 'w') as f:
+            yaml.dump(state_data, f, default_flow_style=False, sort_keys=False, allow_unicode=True)
+
+        logger.info(f"Browser state saved to {filepath}")
+        return str(filepath)
+
+    def load_state(self, filepath: str):
+        """
+        Load browser state from a YAML file and update the browser.
+
+        Args:
+            filepath: Path to the saved state file
+        """
+        with open(filepath, 'r') as f:
+            state_data = yaml.safe_load(f)
+
+        if 'state' in state_data:
+            state_dict = state_data['state']
+            for key, value in state_dict.items():
+                if key != '_type' and hasattr(self.state, key):
+                    setattr(self.state, key, value)
+
+        if 'iterator' in state_data:
+            iter_dict = state_data['iterator']
+            if hasattr(self.iterator, 'chrom') and 'chrom' in iter_dict:
+                self.iterator.chrom = iter_dict['chrom']
+            if hasattr(self.iterator, 'position') and 'position' in iter_dict:
+                self.iterator.position = iter_dict['position']
+            if hasattr(self.iterator, 'window_size') and 'window_size' in iter_dict:
+                self.iterator.window_size = iter_dict['window_size']
+            if hasattr(self.iterator, 'stride') and 'stride' in iter_dict:
+                self.iterator.stride = iter_dict['stride']
+
+        self.update()
+
+        logger.info(f"Browser state loaded from {filepath}")
+
+    def load_last_state(self):
+        
+        state_dir = Path("./data/browser/states")
+        self_class = type(self).__name__
+        max_ts = 0
+        max_state_file = ""
+        
+        for stf in state_dir.iterdir():
+            
+            parts = stf.stem.split("_")
+            
+            if not parts[0] == self_class:
+                continue
+            
+            ts = int(parts[2]) * 1e7 + int(parts[3])
+            
+            if ts > max_ts:
+                max_ts = ts
+                max_state_file = str(stf)
+            
+            if max_state_file:
+                return self.load_state(max_state_file)
+            else:
+                return None
+
+    def save_history(self, directory: str = "./data/browser/histories") -> str:
+        """
+        Save the entire browser history to a YAML file with timestamp.
+        Includes all snapshots with their views for debugging/inspection.
+
+        Args:
+            directory: Directory to save history files
+
+        Returns:
+            Path to the saved file
+        """
+        Path(directory).mkdir(parents=True, exist_ok=True)
+
+        # timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"browser_history_{self.session_id}.yaml"
+        filepath = Path(directory) / filename
+
+        history_data = {
+            'saved_at': datetime.now().isoformat(),
+            'browser_type': type(self).__name__,
+            'num_snapshots': len(self.history),
+            'snapshots': self.history
+        }
+
+        with open(filepath, 'w') as f:
+            yaml.dump(history_data, f, default_flow_style=False, sort_keys=False, allow_unicode=True)
+
+        logger.info(f"Browser history ({len(self.history)} snapshots) saved to {filepath}")
+        return str(filepath)
+
+    def clear_history(self):
+        """Clear the browser history."""
+        self.history.clear()
+        logger.info("Browser history cleared")

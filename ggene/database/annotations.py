@@ -519,14 +519,17 @@ class BEDStream(AnnotationStream):
     
     def __init__(self, filepath: str, feature_type: str = "region"):
         super().__init__("BED")
-        self.filepath = Path(filepath)
+        self.filepath = Path(filepath).absolute()
+        logger.debug(f"initialized with filepath {self.filepath}")
         self.feature_type = feature_type
         self.chr_frm = "chr{chrstr}"
         
         # Check if file is indexed
         self.tabix = None
         if self.filepath.suffix == '.gz':
-            index_file = Path(str(self.filepath) + '.tbi')
+            index_file = Path(str(self.filepath.absolute()) + '.tbi')
+            
+            logger.debug(f"gettgin index from {index_file}")
             if index_file.exists():
                 try:
                     self.tabix = pysam.TabixFile(str(self.filepath))

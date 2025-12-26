@@ -18,10 +18,12 @@ DEFAULT_VARIANTS_PATH = DATA_DIR / cfg.get("variants_filename","")
 DEFAULT_GENES_PATH = DATA_DIR / cfg.get("genes_filename","")
 DEFAULT_SEQUENCE_PATH = DATA_DIR / cfg.get("sequence_filename","")
 
-other_paths = {
-    "repeatmasker_path":  DATA_DIR / "repeatmasker" / "repeats.sorted.bed.gz",
-    "dfam_path": DATA_DIR / "dfam/hg38_dfam.nrph.bed.gz"
-}
+other_paths = {k: DATA_DIR / v for k,v in cfg.get("other_paths", {}).items()}
+# other_paths = {
+#     "repeatmasker_path":  DATA_DIR / cfg.get("other_paths"),
+#     "dfam_path": DATA_DIR / "dfam/hg38_dfam.nrph.bed.gz"m
+#     ""
+# }
 
 def get_paths():
     return str(DEFAULT_VARIANTS_PATH), str(DEFAULT_GENES_PATH), str(DEFAULT_SEQUENCE_PATH), str(DEFAULT_LIBRARY), other_paths

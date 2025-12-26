@@ -130,6 +130,7 @@ class GenomeManager:
                     self.annotations.add_dfam(v)
                 if k == "clinvar_path":
                     self.annotations.add_clinvar(v)
+                    logger.debug(f"added clinvar from path {v}")
                 
         except Exception as e:
             logger.error(f"Failed to initialize GenomeManager: {e}")
