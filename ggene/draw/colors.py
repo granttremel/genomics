@@ -16,9 +16,9 @@ class Colors:
     RC = '\x1b[38;5;125m'
 
     # Variant colors
-    SNP = '\033[91m'        # Red for SNPs
-    INSERTION = '\033[92m'   # Green for insertions
-    DELETION = '\033[93m'    # Yellow for deletions
+    SNP = '\033[38;5;214m'        # Red for SNPs
+    INSERTION = '\033[38;5;220m'   # Green for insertions
+    DELETION = '\033[38;5;202m'    # Yellow for deletions
 
     # Feature colors
     GENE = '\033[94m'        # Blue
@@ -27,7 +27,7 @@ class Colors:
     CDS = '\033[93m'         # Yellow
     UTR = '\033[90m'         # Gray
     REPEAT = "\x1b[38;5;143m"
-    PSEUDO = '\x1b[38;5;118m'
+    PSEUDO = '\x1b[38;5;30m'
     
     START_CODON = '\x1b[35m'
     STOP_CODON = '\x1b[35m'
@@ -57,7 +57,7 @@ class Colors:
     _24bi = 2
     _8bi = 5
     
-    def __init__(self, fg = 8, bg = 0, effect = 0):
+    def __init__(self, fg = 8, bg = None, effect = None):
         
         self.fg_color = fg
         self.bg_color = bg
@@ -84,7 +84,7 @@ class Colors:
     
     @property
     def bg_code(self):
-        return self.get_color(self.bg_color, background = False)
+        return self.get_color(self.bg_color, background = True)
     
     @property
     def effect_code(self):
@@ -126,6 +126,8 @@ class Colors:
         elif isinstance(color_spec, list) or isinstance(color_spec, tuple):
             if len(color_spec) == 3:
                 return cls._get_color_24b(color_spec, background = background)
+        elif color_spec is None:
+            return ""
         else:
             return cls.RESET
     

@@ -15,6 +15,7 @@ if TYPE_CHECKING:
 genecard_frm="https://www.genecards.org/cgi-bin/carddisp.pl?gene={name}"
 wiki_frm="https://en.wikipedia.org/wiki/{name}"
 ensembl_frm = "http://www.ensembl.org/Homo_sapiens/geneview?gene={gene_id};db=core"
+snp_frm = "https://www.ncbi.nlm.nih.gov/snp/rs{snp_id}"
 
 def open_genecard(brws:'BaseBrowser', state:'BaseBrowserState', window:'BaseWindow'):
     
@@ -27,19 +28,11 @@ def open_genecard(brws:'BaseBrowser', state:'BaseBrowserState', window:'BaseWind
                 break
     
     if gene is None:
-        # logger.debug("no gene cache, returning")
         return
-    # atts = gene.get("attributes",{})
-    # if not atts:
-    #     atts = gene.get("info",{})
-    
-    # name = atts.get("name","")
     
     if not gene.name:
-        # logger.debug(f"no name on {gene}")
         return 
     
-    # logger.debug(f"opening gene card with gene name {name}")
     subprocess.run(["firefox",genecard_frm.format(name=gene.name)])
 
     
@@ -54,19 +47,11 @@ def open_wiki(brws:'BaseBrowser', state:'BaseBrowserState', window:'BaseWindow')
                 break
     
     if gene is None:
-        # logger.debug("no gene cache, returning")
         return
-    # atts = gene.get("attributes",{})
-    # if not atts:
-    #     atts = gene.get("info",{})
-    
-    # name = atts.get("name","")
     
     if not gene.name:
-        # logger.debug(f"no name on {gene}")
         return 
         
-    # logger.debug(f"opening wiki with gene name {name}")
     subprocess.run(["firefox",wiki_frm.format(name=gene.name)])
     
         
@@ -87,14 +72,14 @@ def open_ensembl(brws:'BaseBrowser', state:'BaseBrowserState', window:'BaseWindo
 
 info_bindings = {
     "r":{
-        "key":"q",
+        "key":"r",
         "name":"open_genecard",
         "method":open_genecard.__name__,
         "description":"Open genecard of gene in view",
         "_bound_method": open_genecard
     },
-    "w":{
-        "key":"w",
+    "t":{
+        "key":"t",
         "name":"open_wiki",
         "method":open_wiki.__name__,
         "description":"Open wiki page of gene in view",

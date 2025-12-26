@@ -225,7 +225,7 @@ class BaseArtist:
         rlr_rows = rlr.get_rows()
         return [rlr_rows]
     
-    def collect_features(self, features, feature_types, unique_spans = False, unique_startends = False, rm_only_simple = True):
+    def collect_features(self, features, feature_types, unique_spans = False, unique_startends = False, rm_only_simple = True, predicate = None):
         
         spans = set()
         starts = set()
@@ -245,6 +245,9 @@ class BaseArtist:
                     continue
                 
                 if feat.source == "RepeatMasker" and feat.attributes.get("type") != "Simple_repeat":
+                    continue
+                
+                if predicate and not predicate(feat):
                     continue
                 
                 starts.add(skey)

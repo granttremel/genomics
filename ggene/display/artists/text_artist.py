@@ -16,6 +16,7 @@ class TextArtistParams(BaseArtistParams):
     display_height:int = 8
     use_global_features:bool = True
     feature_types:Tuple[str] = ("gene","exon","CDS","motif","dfam_hit","repeat", "variant")
+    biotypes:Tuple[str] = ("protein_coding","lncRNA","processed_pseudogene")
 
 class TextArtist(BaseArtist):
     
@@ -45,8 +46,12 @@ class TextArtist(BaseArtist):
         
         txtlines = []
         
+        # pred = lambda f:f.get("gene_biotype") in self.params.biotypes or f.get("transcript_biotype") in self.params.biotypes
         
-        features_filt = self.collect_features(features, feature_types, unique_startends= True )
+        num_feats = len(features)
+        num_hidden = num_feats
+        
+        features_filt = self.collect_features(features, feature_types, unique_startends= True)
         features_ft = {f.feature_type:[] for f in features_filt}
         
         for f in features_filt:
@@ -56,20 +61,31 @@ class TextArtist(BaseArtist):
         
         for ftype in feature_types:
             
+            if ftype == "CDS":
+                continue
+            
             col = FColors.get_feature_type_color(ftype)
             feats = features_ft.get(ftype, [])
             
             if not feats:
                 continue
-            fi = 0
+            
+            if ftype == "variant":
+                print(feats[0])
+            
             txtlines.append(f"{FColors.BOLD}{col}{ftype}:{FColors.RESET}")
-            for f in feats:
-                fline = self.describe_feature(f)
-                flines = self.wrap_line(fline, self.params.display_width, tabs = 1)
+            if len(feats) > max_feat_per_type:
+                flines = self.summarize_features(ftype, feats, tabs= 1)
                 txtlines.extend(flines)
-                fi += 1
-                if fi > max_feat_per_type:
-                    break
+            else:
+                for f in feats:
+                    fline = self.describe_feature(f)
+                    flines = self.wrap_line(fline, self.params.display_width, tabs = 1)
+                    txtlines.extend(flines)
+                
+            num_hidden -= len(feats)
+        
+        txtlines.append(f"({num_hidden} features hidden)")
         
         return txtlines
     
@@ -98,10 +114,71 @@ class TextArtist(BaseArtist):
             outlines.append(" ".join(split_lines))
         
         return outlines
+    
+    def summarize_features(self, ftype, feats, tabs = 1):
+        
+        if ftype in ["gene","transcript","exon","CDS"]:
+            atts = self.get_feature_atts(ftype)
+            return self.summarize_genomic_features(feats, atts, tabs=tabs)
+        else:
             
+            summary_att = "name" if not ftype=="variant" else "variant_type"
+            return self.summarize_simple_features(feats, summary_att, tabs=tabs)
+
+    
+    def summarize_genomic_features(self, feats, atts, tabs = 1):
+        
+        tabstr = "  "*tabs
+        other_feats = []
+        genefeats = {}
+        for f in feats:
+            gn = f.get("gene_name")
+            if gn:
+                if not gn in genefeats:
+                    genefeats[gn] = []
+                genefeats[gn].append(f)
+            else:
+                other_feats.append(f)
+        
+        outstrs = []
+        
+        for gene in genefeats:
+            fs = genefeats[gene]
+            
+            parts = []
+            for att in atts:
+                vals = set()
+                for f in fs:
+                    v = f.get(att)
+                    if v:
+                        vals.add(str(v))
+                
+                parts.append(f"{att}=[{",".join(vals)}]")
+            
+            outstrs.append(f"{tabstr}{gene}: {", ".join(parts)}")
+        
+        return outstrs
+    
+    def summarize_simple_features(self, feats, summary_att, tabs):
+        
+        tabstr = "  "*tabs
+        cts = {}
+        
+        for f in feats:
+            v = f.get(summary_att)
+            if not v in cts:
+                cts[v] = 0
+            cts[v] += 1
+        
+        parts = []
+        for name, ct in cts.items():
+            parts.append(f"{ct}x {name}")
+        
+        return [tabstr+", ".join(parts)]
+    
     def describe_feature(self, feat, tabs = 1):
         
-        atts = ["feature_type","strand", "id"] + list(feat.attributes.keys())
+        atts = self.get_feature_atts(feat.feature_type) + ['id']
         tabstr = "  "*tabs
         
         fname = feat.get("name","?")
@@ -122,3 +199,21 @@ class TextArtist(BaseArtist):
         
         return f"{tabstr}{fname}: "+", ".join(parts)
     
+    def get_feature_atts(self, feature_type):
+        
+        if feature_type == "gene":
+            return ["start","end","length","strand","gene_name", "gene_source", "gene_biotype"]
+        elif feature_type == "transcript":
+            return ["start","end","length","transcript_name","transcript_source","transcript_biotype"]
+        elif feature_type == "exon":
+            return ["start","end","length","transcript_name","exon_number","transcript_source","transcript_biotype"]
+        elif feature_type == "CDS":
+            return []
+        elif feature_type == "variant":
+            return ["start","end","length","ref","genotype","qual"]
+        elif feature_type == "repeat":
+            return ["start","end","length","type","motif"]
+        elif feature_type == "dfam_hit":
+            return ["start","end","length","bits","family_acc","e-value","bias","kimura_div","start_hmm","end_hmm"]
+        else:
+            return []

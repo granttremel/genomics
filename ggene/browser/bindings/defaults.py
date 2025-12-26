@@ -63,6 +63,7 @@ def parse_position(pos_str, default = 1000000):
     elif pos_str[-1] == "k":
         fact = int(1e3)
         pos_str = pos_str[:-1]
+    
     return int(fact*float(pos_str.replace(',', '')))
 
 def move(brws:'BaseBrowser', state:'BaseBrowserState', window:'BaseWindow', delta):
@@ -84,14 +85,26 @@ def move_backward_large(brws:'BaseBrowser', state:'BaseBrowserState', window:'Ba
 
 def goto_position(brws:'BaseBrowser', state:'BaseBrowserState', window:'BaseWindow'):
     
+    pos = state.position
+    
     param_name = 'position'
     message = "Enter position"
     cast_to_type = str
     min_val = None
     max_val = None
     
-    pos_str = elicit_and_change(brws, state, window, param_name, message, cast_to_type, min_val, max_val)
-    pos = parse_position(pos_str)
+    pos_str = elicit_input(message, cast_to_type, min_val, max_val)
+    
+    try:
+        pos = parse_position(pos_str)
+        modify_param(brws, state, window, param_name, pos)
+    except:
+        if pos_str == 'r':
+            chrom, pos = brws.gm.get_random_location()
+        
+        state.chrom = chrom
+        state.position = pos
+    
     return pos
     
 def switch_chromosome(brws:'BaseBrowser', state:'BaseBrowserState', window:'BaseWindow'):
@@ -129,6 +142,33 @@ def change_features(brws:'BaseBrowser', state:'BaseBrowserState', window:'BaseWi
     toggle_feat = elicit_input(message, cast_to_type)
     
     return toggle_param_collection(brws, state, window, param_name, toggle_feat)
+
+def focus_on_feature(brws:'BaseBrowser', state:'BaseBrowserState', window:'BaseWindow'):
+    
+    if hasattr(state, "_feature_types"):
+        state.feature_types = state._feature_types
+        del state._feature_types
+        return
+    else:
+        featmap = {"g":"gene","t":"transcript","e":"exon","c":"CDS","v":"variant","r":"repeat","d":"dfam_hit","m":"motif"}
+        
+        message = f"Enter feature type to focus on (or comma separated list). g=gene, e=exon, c=cds, v=variant, r=repeat, d=dfam_hit. current: {", ".join(state.feature_types)}"
+        
+        inp_focus_feat = elicit_input(message)
+        
+        focus_feats = inp_focus_feat.split(",")
+        full_feats = []
+        
+        for focus_feat in focus_feats:
+            if focus_feat in featmap:
+                focus_feat = featmap[focus_feat]
+        
+            if focus_feat in featmap.values():
+                full_feats.append(focus_feat)
+        
+        if full_feats:
+            state._feature_types = state.feature_types
+            state.feature_types = tuple(full_feats)
 
 def modify_param(brws:'BaseBrowser', state:'BaseBrowserState', window:'BaseWindow', param_name, param_value):
     
@@ -282,6 +322,13 @@ default_bindings = {
         "method":change_features.__name__,
         "description":"Change feature types to display",
         "_bound_method":change_features
+    },
+    "f":{
+        "key":"f",
+        "name":"focus_on_feature",
+        "method":focus_on_feature.__name__,
+        "description":"Focus on a single feature type",
+        "_bound_method":focus_on_feature
     },
     "m":{
         "key":"m",

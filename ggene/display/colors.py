@@ -77,7 +77,7 @@ class FColors(Colors):
         elif feature_type_lower == "motif":
             return cls.MOTIF
         elif feature_type_lower in ["repeat","dfam_hit"]:
-            return cls(cls.repeat_colors.get("default", 0)).code
+            return cls(cls.repeat_colors.get("default", 0)).fg_code
         else:
             return cls.RESET
 

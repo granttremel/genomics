@@ -2,7 +2,7 @@
 from typing import List, Tuple, Dict, Any, Optional, TYPE_CHECKING
 from dataclasses import dataclass, field, replace
 
-from ggene.draw.chars import HLINES
+from ggene.draw.chars import HLINES, FSYMS
 from ggene.draw.colors import Colors
 from ggene.display.colors import FColors
 from ggene.display.artists.base import BaseArtistParams, BaseArtist, logger
@@ -24,7 +24,7 @@ class LineArtistParams(BaseArtistParams):
     show_label_tracks:bool = True       # Enable label tracks for small features
     min_label_width:int = 20            # Min display chars to show inline label
     min_arrow_width:int = 3             # Below this, use single arrow char
-    arrowhead_style:str = "head_filled" # head_filled, head_triangle, head_harpoon, etc.
+    arrowhead_style:str = "head" # head_filled, head_triangle, head_harpoon, etc.
 
 
 class LineArtist(BaseArtist):
@@ -67,6 +67,9 @@ class LineArtist(BaseArtist):
         - Label tracks for small features
         - Vertical connectors from labels to features
         - Larger features (genes, transcripts) closer to central ruler
+        
+        ooh okay what if.. "nested" features get alternating colors .. ?
+        
         """
         logger.debug(f"enter build_display_lines with show_ruler={self.params.show_ruler}")
 
@@ -127,7 +130,7 @@ class LineArtist(BaseArtist):
 
         return sorted(features, key=get_display_width, reverse=True)
 
-    def _build_strand_track(self, features, start, end, display_width, scale,
+    def _build_strand_track(self, features, disp_start, disp_end, display_width, scale,
                             display_rev, is_reverse):
         """
         Build feature and label rows for a single strand.
@@ -148,6 +151,9 @@ class LineArtist(BaseArtist):
         head = HLINES.get(arrowhead_key, HLINES.get("head"))
         body = HLINES.get("body")
         tail = HLINES.get("tail")
+        small = HLINES.get("small")
+        tiny = HLINES.get("tiny")
+        cont = HLINES.get("cont")
         vline = HLINES.get("vline", "│")
         vline_up = HLINES.get("vline_up", "╵")
         vline_down = HLINES.get("vline_down", "╷")
@@ -155,7 +161,7 @@ class LineArtist(BaseArtist):
         gray_color = "\x1b[38;5;240m"
         dim_color = "\x1b[2m"
 
-        min_label_width = getattr(self.params, 'min_label_width', 20)
+        min_label_width = getattr(self.params, 'min_label_width', 0)
         min_arrow_width = getattr(self.params, 'min_arrow_width', 3)
         show_label_tracks = getattr(self.params, 'show_label_tracks', True)
 
@@ -174,13 +180,18 @@ class LineArtist(BaseArtist):
         # Assign features to rows (larger features processed first, get row 0)
         for f in features:
             f_type, f_start, f_end, f_len, _, name = self.get_feature_data(
-                f, start, display_width, display_rev=display_rev
+                f, disp_start, display_width, display_rev=display_rev
             )
 
             # Calculate display coordinates
             hmm_start_d, hmm_end_d, match_start_d, match_end_d = self._get_display_coords(
-                f, f_start, f_end, f_len, start, scale, display_width
+                f, f_start, f_end, f_len, disp_start, scale, display_width
             )
+            
+            hmm_start_d = match_start_d
+            hmm_end_d = match_end_d
+            
+            # feature_width = match_end_d - match_start_d
             feature_width = match_end_d - match_start_d
             needs_label = show_label_tracks and feature_width < min_label_width
 
@@ -211,8 +222,8 @@ class LineArtist(BaseArtist):
         # Draw features
         for feat_row, f, needs_label in feat_assignments:
             self._draw_feature(
-                feat_rows[feat_row], f, start, scale, display_width, display_rev,
-                is_reverse, needs_label, head, body, tail, gray_color, min_arrow_width
+                feat_rows[feat_row], f, disp_start, scale, display_width, display_rev,
+                is_reverse, needs_label, head, body, tail, small, tiny, cont, gray_color, min_arrow_width
             )
 
         # Draw labels and connectors
@@ -225,18 +236,30 @@ class LineArtist(BaseArtist):
 
         return feat_rows, label_rows
 
-    def _get_display_coords(self, f, f_start, f_end, f_len, start, scale, display_width):
+    # def _get_display_coords(self, f, f_start, f_end, f_len, start, scale, display_width):
+    #     """Calculate display coordinates for a feature."""
+    #     hmm_full_start = f.start - f_start
+    #     hmm_full_end = f.end + (f_len - f_end)
+    #     hmm_start_d = max(0, int(scale * (hmm_full_start - start)))
+    #     hmm_end_d = min(display_width - 1, int(scale * (hmm_full_end - start)))
+    #     match_start_d = max(0, int(scale * (f.start - start)))
+    #     match_end_d = min(display_width - 1, int(scale * (f.end - start)))
+    #     return hmm_start_d, hmm_end_d, match_start_d, match_end_d
+    
+    def _get_display_coords(self, f, f_start, f_end, f_len, disp_start, scale, display_width):
         """Calculate display coordinates for a feature."""
-        hmm_full_start = f.start - f_start
-        hmm_full_end = f.end + (f_len - f_end)
-        hmm_start_d = max(0, int(scale * (hmm_full_start - start)))
-        hmm_end_d = min(display_width - 1, int(scale * (hmm_full_end - start)))
-        match_start_d = max(0, int(scale * (f.start - start)))
-        match_end_d = min(display_width - 1, int(scale * (f.end - start)))
+        # hmm_full_start = f.start - f.get("hmm_start", 0)
+        # hmm_full_end = f.start + (f_len - f.get("hmm_end", 0))
+        hmm_full_start = f.start
+        hmm_full_end = f.end
+        hmm_start_d = max(0, int(scale * (hmm_full_start - disp_start)))
+        hmm_end_d = min(display_width - 1, int(scale * (hmm_full_end - disp_start)))
+        match_start_d = max(0, int(scale * (f.start - disp_start)))
+        match_end_d = min(display_width - 1, int(scale * (f.end - disp_start)))
         return hmm_start_d, hmm_end_d, match_start_d, match_end_d
 
     def _draw_feature(self, row, f, start, scale, display_width, display_rev,
-                      is_reverse, needs_label, head, body, tail, gray_color, min_arrow_width):
+                      is_reverse, needs_label, head, body, tail, small, tiny, cont, gray_color, min_arrow_width):
         """Draw a single feature onto a row."""
         f_type, f_start, f_end, f_len, _, name = self.get_feature_data(
             f, start, display_width, display_rev=display_rev
@@ -244,29 +267,49 @@ class LineArtist(BaseArtist):
         hmm_start_d, hmm_end_d, match_start_d, match_end_d = self._get_display_coords(
             f, f_start, f_end, f_len, start, scale, display_width
         )
-        feature_width = match_end_d - match_start_d
-        col = self.get_display_color(f)
 
         # Draw HMM extent in gray
         for i in range(hmm_start_d, hmm_end_d + 1):
             if 0 <= i < display_width and row[i] == " ":
-                row[i] = gray_color + "·"
-
+                row[i] = gray_color + "⋯" # "·"
+        
+        # hmm_start_d = match_start_d
+        # hmm_end_d = match_end_d
+        
+        feature_width = match_end_d - match_start_d
+        col = self.get_display_color(f) + FColors.BOLD
+        
         # Very small: single arrow
         if feature_width < min_arrow_width:
-            arrow_char = head[0] if is_reverse else head[1]
+            if f.end - f.start <= 1:
+                arrow_char = tiny[0] if is_reverse else tiny[1]
+            else:
+                arrow_char = small[0] if is_reverse else small[1]
             mid_pos = match_start_d + feature_width // 2
             if 0 <= mid_pos < display_width:
                 row[mid_pos] = col + arrow_char + Colors.RESET
         else:
             # Draw line with arrowheads
-            if 0 <= match_start_d < display_width:
+            if 0 < match_start_d < display_width:
                 row[match_start_d] = col + (head[0] if is_reverse else tail[1])
-            if 0 <= match_end_d < display_width:
+            elif match_start_d == 0:
+                row[match_start_d] = col + (cont[0] if is_reverse else cont[1])
+            
+            if 0 < match_end_d < display_width-1:
                 row[match_end_d] = (tail[0] if is_reverse else head[1]) + Colors.RESET
+            elif match_end_d == display_width-1:
+                row[match_end_d] = (cont[0] if is_reverse else cont[1]) + Colors.RESET
+            
             for i in range(match_start_d + 1, match_end_d):
                 if 0 <= i < display_width:
                     row[i] = body[0]
+            
+            for j in range(hmm_start_d, hmm_end_d):
+                if 0 <= j < display_width:
+                    if not row[j]:
+                        row[j] = "⋯"
+                
+                pass
 
             # Overlay name if not using label track
             if not needs_label:
@@ -372,23 +415,37 @@ class LineArtist(BaseArtist):
             elif feat_type == 'exon':
                 name = self._format_exon(f)
             elif feat_type == 'CDS':
-                name = self._format_CDS(f)        
-
+                name = self._format_CDS(f)
+        
+        elif feat_type == "variant":
+            return self._format_var(f)
+        elif feat_type == "dfam_hit":
+            name = feat_name
         else:  
-            name = feat_name      
-            if feat_type == "dfam_hit":
-                paren.append("dfam")
-            else:
-                paren.append(feat_type)
+            name = feat_name
+            paren.append(feat_type)
             
-            if shorter:
-                paren = []
+        if shorter:
+            paren = []
             
         if paren:
             return f" {name} ({", ".join(paren)}) "
         else:
             return f" {name} "
+    
+    def _format_gene(self, f):
         
+        bt = f.attributes.get("gene_biotype","")
+        
+        if bt == "protein_coding":
+            return f.name
+        elif bt == "lncRNA":
+            return "lncRNA"
+        else:
+            return f"{f.id} ({bt})"
+        
+        pass
+    
     def _format_transcript(self, f):
         
         gn = f.attributes.get("gene_name", "?")
@@ -409,3 +466,12 @@ class LineArtist(BaseArtist):
         exnum = f.attributes.get("exon_number", -1)
         
         return f"{tn}, CDS {exnum}"
+    
+    def _format_var(self, f):
+        
+        ref = f.attributes.get("ref","")
+        alt = f.attributes.get("alt",[""])[0]
+        gt =f.attributes.get("genotype","")
+        
+        return f"{ref}->{gt}"
+        

@@ -33,13 +33,13 @@ class ScalarBrowser(BaseBrowser):
     
     def __init__(self, **kwargs):
         
-        self.gm = GenomeManager()
+        gm = GenomeManager()
         
         state = ScalarBrowserState(kwargs.get("chrom", "1"), kwargs.get("position", 10e6), kwargs.get("window_size", 240), kwargs.get("stride", 20), kwargs.get("display_height", 32))
         state.update(**kwargs)
-        iterator = UGenomeIterator(self.gm, state.chrom, state.position, window_size = state.window_size, stride = state.stride)
+        iterator = UGenomeIterator(gm, state.chrom, state.position, window_size = state.window_size, stride = state.stride)
         
-        super().__init__(state = state, iterator = iterator, **kwargs)
+        super().__init__(gm, state = state, iterator = iterator, **kwargs)
         
         dw = kwargs.get("display_width", 240)
         artists = self.build_artists(display_width = dw)

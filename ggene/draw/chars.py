@@ -1,6 +1,6 @@
 
-SCALE = " ▁▂▃▄▅▆▇█"
-SCALE_H = " ▏▎▍▌▋▊▉█"
+SCALE = " ▁▂▃▄▅▆▇█"     # ⎺ ⎽ ⎯
+SCALE_H = " ▏▎▍▌▋▊▉█"   # ⎸⎹
 
 SCALAR_PLOT = {
     "range_hi":"⌝", # hilo = "⎴⎵", "⏋⏌"
@@ -8,10 +8,32 @@ SCALAR_PLOT = {
 }
 
 HLINES = {
-    "head" : "◀▶",       # Filled triangles (recommended)
-    "tail" : "┤├",
-    "body" : "──",
+    # "head" : "◀▶",       # Filled triangles (recommended)
+    # "head": "⊲⊳",
+    # "head": "⋳⋻",
+    "head": "⋖⋗", # math
+    # "head": "≺≻", # math
+    # "head": "ᗕᗒ", # indig
+    # "head": "ᗏᗌ", # indig
+    # "ᓬᕒ"
+    # "tail":"ᗧᗤ", # indig, almost too good
+    # "tail":"⎨⎬",
+    "tail":"⚟⚞",
+    # "tail" : "┤├",
+    
+    # "body":"−−",
+    "body":"――",    # horizontal bar, punctuation
+    # "body" : "──",    # box
+    # "body": "⋯⋯",
+    "body_dash" : "╌╌",
+    "body_double" : "══",
+    
     "arrow": "⟵⟶",
+    "tiny": "◂▸",
+    "small": "ᗏᗌ",
+    # "cont": "⋯⋯",
+    "cont": "≪≫",
+    
     # Alternative arrowheads for different styles:
     "head_chevron": "<>",      # Simple chevrons (original)
     "head_triangle": "◁▷",     # Open triangles
@@ -19,6 +41,8 @@ HLINES = {
     "head_harpoon": "↽⇀",      # Half-arrow harpoons (elegant)
     "head_arrow": "←→",        # Standard arrows
     "head_heavy": "⊲⊳",        # Heavy pointing triangles
+    "head_tip":"╾╼",
+    
     # Vertical connectors for label tracks
     "vline": "│",
     "vline_down": "╷",         # Top connector
@@ -29,11 +53,29 @@ HLINES = {
     "corner_br": "╯",          # Bottom-right corner
 }
 
+MAP = {
+    "pointer_top":"▼",
+    "fella":"ᘝ"
+    
+}
+
 RULER={
     "tick":"╵",
     "minor_tick":"'",
     "llabel_marker":"╰",
     "rlabel_marker":"╯"
+}
+
+FSYMS = {
+    "gene":"◯",
+    "transcript":"◉",
+    "exon":"◎",
+    "cds":"☉",
+    
+    "repeat":"▪",
+    "motif":"▱",
+    
+    
 }
 
 OTHER={
@@ -51,6 +93,54 @@ OTHER={
 
 BOX = " ╵╶└╷│┌├╴┘─┴┐┤┬┼"
 _box = "⊢⊣⊤⊥"
+
+CHARS = {
+    "star1":"⋆",
+    "star2":"⊹",
+    "star3":"∗",
+    "star4":"★",
+    "star5":"⚹",
+    
+    "inf":"∞",
+    
+    "hex":"⌬",
+    
+    "fella":"ᘝ",
+}
+
+"""
+https://cloford.com/resources/charcodes/utf-8_geometric.htm
+https://cloford.com/resources/charcodes/utf-8_misc-symbols.htm
+https://cloford.com/resources/charcodes/utf-8_mathematical.htm
+https://cloford.com/resources/charcodes/utf-8_technical.htm
+
+https://cloford.com/resources/charcodes/utf-8_box-drawing.htm
+https://cloford.com/resources/charcodes/utf-8_block-elements.htm
+
+https://cloford.com/resources/charcodes/utf-8_arrows.htm
+https://cloford.com/resources/charcodes/utf-8_punctuation.htm
+
+"""
+
+can_abo = {
+    "ᐃ":{
+        "ᐃ":"ᐃᐄ ᐎᐏᐐᐑᐬᐂ",
+        "ᐁ":"ᐁ  ᐌᐍ",
+        "ᐅ":"ᐅᐆᐇᐒᐓᐔᐕᐭ ᐖ",
+        "ᐊ":"ᐊ ᐗᐘᐙᐚᐮ ᐛ",
+    },
+    "ᐱ":{
+        "ᐱ":"ᐱ",
+        "ᐯ":"ᐯ",
+    },
+    "ᑎ":{
+        "ᑎ":"ᑎ",
+        "ᑌ":"ᑌ",
+    },
+    "diacritics":"",
+    "misc":"",
+}
+
 
 marker = "╵"
 

@@ -1,8 +1,8 @@
 **/data/*
-# **/genome
 **/.venv
 out/*
 analysis/*
+*.png
 
 gene
 **/genenv

@@ -14,6 +14,7 @@ from datetime import datetime
 import yaml
 import uuid
 
+from ggene import GenomeManager
 from ggene.browser.commands import CommandRegistry, KeybindingManager
 from ggene.browser.bindings.defaults import bind_defaults
 from ggene.browser.config_menu import ParameterRegistry, ConfigMenu
@@ -43,7 +44,7 @@ class BaseBrowser:
 
     footer_text = "press a key to do stuff!"
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, genome_manager, *args, **kwargs):
 
         self.debug = kwargs.get("debug", False)
         
@@ -52,6 +53,8 @@ class BaseBrowser:
         else:
             logger.setLevel("WARNING")
         self.session_id = str(uuid.uuid4())[:6]
+        
+        self.gm:GenomeManager = genome_manager
         
         load_state = kwargs.get("load",False)
         if load_state:

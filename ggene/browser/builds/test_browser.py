@@ -28,9 +28,9 @@ class TestBrowserState(BrowserState, BaseBrowserState):
     mm_height:int = 8
     seq_height:int = 5
     sc_height:int = 7
-    line_height:int = 18
-    text_height:int = 10
-    feature_types:Optional[Tuple[str]] = ("gene", "exon", "CDS", "motif", "variant", "dfam_hit", "repeat")
+    line_height:int = 20
+    text_height:int = 8
+    feature_types:Optional[Tuple[str]] = ("gene", "exon", "CDS", "three_prime_utr", "five_prime_utr", "variant", "motif", "dfam_hit", "repeat")
     
     def get_height(self, artist):
         
@@ -53,14 +53,14 @@ class TestBrowser(BaseBrowser):
     
     def __init__(self, **kwargs):
         
-        self.gm = GenomeManager()
+        gm = GenomeManager()
         
         state = TestBrowserState(kwargs.get("chrom", "1"), kwargs.get("position", 10e6), kwargs.get("window_size", 240), kwargs.get("stride", 20), kwargs.get("display_height", 32))
         
         state.update(**kwargs)
-        iterator = UGenomeIterator(self.gm, state.chrom, state.position, window_size = state.window_size, stride = state.stride)
+        iterator = UGenomeIterator(gm, state.chrom, state.position, window_size = state.window_size, stride = state.stride)
         
-        super().__init__(state = state, iterator = iterator, **kwargs)
+        super().__init__(gm, state = state, iterator = iterator, **kwargs)
         
         dw = kwargs.get("display_width", 256)
         artists = self.build_artists(display_width = dw)
@@ -103,16 +103,18 @@ class TestBrowser(BaseBrowser):
         line_height = self.state.line_height
         text_height = self.state.text_height
         
-        scale = 500
+        scale = 0.01
         ps = [
-            [0.05, "genes", "pseudo"],
-            [0.05, "protein_coding", "lncrna"],
-            [0.05, "polya", "cpg"]
+            [scale, "genes", "pseudo"],
+            [scale, "protein_coding", "lncrna"],
+            [scale, "polya", "cpg"]
         ]
         
         num_split = 3
         tmmgp = []
-        for scale, qt1, qt2 in ps:
+        # for scale, qt1, qt2 in ps:
+        for i in range(len(ps)):
+            scale, qt1, qt2 = ps[i]
             seq_gen, feat_gen = MapArtist.get_generators(self.gm, seq_specs = [qt1,qt2])
             arth = MapArtist(
                 f"map_{qt1}-{qt2}",
@@ -122,7 +124,9 @@ class TestBrowser(BaseBrowser):
                     quantity = qt1, 
                     quantity2 = qt2,
                     scale = scale,
-                    show_ruler = True), 
+                    show_ruler = True,
+                    show_fella = i==0
+                    ), 
                     sequence_generator = seq_gen, feature_generator = feat_gen, 
                     top_label = f"{qt1}/{qt2} overmap ({scale}x)"
                 )
@@ -156,7 +160,6 @@ class TestBrowser(BaseBrowser):
         artists["text_artist"] = txta
         
         return artists
-    
 
     def build_renderer(self, artists, display_height, full_display_width):
         

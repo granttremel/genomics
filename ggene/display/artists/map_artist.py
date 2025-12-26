@@ -2,7 +2,7 @@
 from typing import List, Tuple, Dict, Any, Union, Optional, TYPE_CHECKING
 from dataclasses import dataclass, field, replace
 
-from ggene.draw.chars import HLINES
+from ggene.draw.chars import MAP
 from ggene.draw.colors import Colors
 from ggene.draw import ScalarPlot
 from ggene.processing.chrome_mapper import ChromeMapper
@@ -27,6 +27,7 @@ class MapArtistParams(BaseArtistParams):
     bit_depth:int = 16
     show_range:bool = True
     show_ruler:bool = True
+    show_fella:bool = False
     show_paired:bool = True
     fg1:int = 52
     fg2:int = 96
@@ -38,7 +39,8 @@ class MapArtist(BaseArtist):
     _lmargin = 4
     _rmargin = 4
     
-    pointer = "▼" 
+    pointer = MAP.get("pointer_top","")
+    fella = MAP.get("fella","")
     
     def __init__(self, name, params:MapArtistParams, **kwargs):
         super().__init__(name, params, **kwargs)
@@ -90,10 +92,13 @@ class MapArtist(BaseArtist):
         if self.params.quantity2:
             qts.append(self.params.quantity2)
         
-        map_lines = self.get_map_lines(self.seq_gen, self.feat_gen, qts, state.chrom, start, length, num_chunks)
+        marker_pos = max(0, min(num_chunks-1, int(num_chunks * (state.position - start) / length)))
+        # pos_ind = max(0, min(pos_ind, num_chunks - 1))
+        
+        map_lines = self.get_map_lines(self.seq_gen, self.feat_gen, qts, state.chrom, start, length, num_chunks, marker_pos = marker_pos)
         out_lines.extend(map_lines)
         
-        marker_row = self.get_marker_row(state.position, start, length, num_chunks)
+        marker_row = self.get_marker_row(marker_pos, num_chunks)
         out_lines.insert(0, marker_row)
         
         if self.params.show_ruler:
@@ -109,7 +114,7 @@ class MapArtist(BaseArtist):
         super().update(**kwargs)
         self._data_cache = {}
     
-    def get_map_lines(self, seq_gen, feat_gen, qts, chrom, start, length, num_chunks):
+    def get_map_lines(self, seq_gen, feat_gen, qts, chrom, start, length, num_chunks, marker_pos = None):
 
         cm = ChromeMapper(seq_gen, feat_gen)
         
@@ -144,19 +149,18 @@ class MapArtist(BaseArtist):
         else:
             lines = self.format_scalar_plot_single(stitched_data[0])
         
+        if marker_pos and self.params.show_fella:
+            # lines = self.add_fella(lines, marker_pos-1)
+            lines = self.add_fella(lines, marker_pos)
+            # lines = self.add_fella(lines, marker_pos+1)
+        
         return lines
     
-    def get_marker_row(self, state_pos, data_pos, length, num_chunks):
+    def get_marker_row(self, marker_index, num_chunks):
 
         marker = [" "] * num_chunks
 
-        # Calculate where the current position falls within the data range
-        pos_ind = int(num_chunks * (state_pos - data_pos) / length)
-
-        # Clamp to valid range
-        pos_ind = max(0, min(pos_ind, num_chunks - 1))
-
-        marker[pos_ind] = Colors.HIGHLIGHT + Colors.BOLD + self.pointer + Colors.RESET
+        marker[marker_index] = Colors.HIGHLIGHT + Colors.BOLD + self.pointer + Colors.RESET
 
         return ["".join(marker)]
         
@@ -177,6 +181,38 @@ class MapArtist(BaseArtist):
         plot_lines = ScalarPlot.show_paired(sc1, sc2, chunksz = self.params.display_width, suppress = True)
         
         return plot_lines
+    
+    def add_fella(self, sc_rows, marker_pos):
+        
+        cfella = self.fella
+        for i in range(len(sc_rows)//2-1, -1, -1):
+            row = sc_rows[i]
+            curr_char = FColors.scrub_codes(FColors.visible_slice(row, start = marker_pos, stop = marker_pos + 1))
+            print(f"row {i} with char {repr(curr_char)}")
+            
+            if curr_char == " ":
+                
+                col = FColors(fg = 148, bg = 234).code
+                prevcol = FColors(fg = self.params.fg1, bg = 234).code
+                cfella = col + self.fella + prevcol
+                
+                new_row = FColors.visible_slice(row, start = 0, stop = marker_pos) + cfella + FColors.visible_slice(row, start = marker_pos+1, stop = FColors.visible_len(row))
+                sc_rows[i] = new_row
+                break
+            elif curr_char == "█":
+                
+                col = FColors(fg = 148, bg = self.params.fg1).code
+                prevcol = FColors(fg = self.params.fg1, bg = 234).code
+                cfella = col + self.fella + prevcol
+                
+                new_row = FColors.visible_slice(row, start = 0, stop = marker_pos) + cfella + FColors.visible_slice(row, start = marker_pos+1, stop = FColors.visible_len(row))
+                sc_rows[i] = new_row
+                break
+        
+        # print(f"attempted to add fella {cfella} to row {i} which had char {curr_char} at {marker_pos}")
+        
+        return sc_rows
+
     
     def cache_data(self, data):
         self._data_cache[(self.current_chrom, self.current_pos)] = data
