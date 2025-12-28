@@ -8,5 +8,7 @@ variant_sequence_filename: "" # FASTQ
 
 
 other_paths:
-  repeatmasker_filename: ""
-  dfam_filename: ""
+  repeatmasker_path: ""
+  dfam_path: ""
+  clinvar_path: ""
+  jaspar_path: ""

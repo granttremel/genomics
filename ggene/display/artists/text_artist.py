@@ -34,7 +34,8 @@ class TextArtist(BaseArtist):
         else:
             fts = self.params.feature_types
         
-        txtlines = self.get_text_lines(window.features, fts)
+        features = window.features + window.motifs
+        txtlines = self.get_text_lines(features, fts)
         
         if not txtlines:
             txtlines = ["no features in here"]
@@ -61,8 +62,8 @@ class TextArtist(BaseArtist):
         
         for ftype in feature_types:
             
-            if ftype == "CDS":
-                continue
+            # if ftype == "CDS":
+            #     continue
             
             col = FColors.get_feature_type_color(ftype)
             feats = features_ft.get(ftype, [])
@@ -117,15 +118,12 @@ class TextArtist(BaseArtist):
     
     def summarize_features(self, ftype, feats, tabs = 1):
         
+        atts = self.get_feature_atts(ftype)
         if ftype in ["gene","transcript","exon","CDS"]:
-            atts = self.get_feature_atts(ftype)
             return self.summarize_genomic_features(feats, atts, tabs=tabs)
         else:
-            
-            summary_att = "name" if not ftype=="variant" else "variant_type"
-            return self.summarize_simple_features(feats, summary_att, tabs=tabs)
+            return self.summarize_simple_features(feats, atts[0], tabs=tabs)
 
-    
     def summarize_genomic_features(self, feats, atts, tabs = 1):
         
         tabstr = "  "*tabs
@@ -178,10 +176,12 @@ class TextArtist(BaseArtist):
     
     def describe_feature(self, feat, tabs = 1):
         
-        atts = self.get_feature_atts(feat.feature_type) + ['id']
+        atts = self.get_feature_atts(feat.feature_type)
+        name_att = atts.pop(0)
+        fname = feat.get(name_att, "?")
+        
         tabstr = "  "*tabs
         
-        fname = feat.get("name","?")
         parts = []
         
         for att in atts:
@@ -191,7 +191,7 @@ class TextArtist(BaseArtist):
                 v = getattr(feat, att, "?")
             
             if isinstance(v, float):
-                vstr = format(v, "0.1f")
+                vstr = format(v, "0.2f")
             else:
                 vstr = str(v)
             
@@ -202,18 +202,21 @@ class TextArtist(BaseArtist):
     def get_feature_atts(self, feature_type):
         
         if feature_type == "gene":
-            return ["start","end","length","strand","gene_name", "gene_source", "gene_biotype"]
+            return ["name","start","end","length","strand","gene_name", "gene_source", "gene_biotype"]
         elif feature_type == "transcript":
-            return ["start","end","length","transcript_name","transcript_source","transcript_biotype"]
+            return ["name","start","end","length","transcript_name","transcript_source","transcript_biotype"]
         elif feature_type == "exon":
-            return ["start","end","length","transcript_name","exon_number","transcript_source","transcript_biotype"]
+            return ["name","start","end","length","transcript_name","exon_number","transcript_source","transcript_biotype"]
         elif feature_type == "CDS":
-            return []
+            return ["name","start","end","length","id"]
         elif feature_type == "variant":
-            return ["start","end","length","ref","genotype","qual"]
+            return ["name","start","end","length","ref","genotype","qual"]
         elif feature_type == "repeat":
-            return ["start","end","length","type","motif"]
+            return ["name","start","end","length","type","motif"]
         elif feature_type == "dfam_hit":
-            return ["start","end","length","bits","family_acc","e-value","bias","kimura_div","start_hmm","end_hmm"]
+            return ["family_name", "start","end","length","bits","family_acc","e-value","bias","kimura_div","start_hmm","end_hmm"]
+        elif feature_type == "tf_binding":
+            return ["name","start","end","length","id","match_seq","score"]
         else:
-            return []
+            return ["name","start","end","length","id"]
+    

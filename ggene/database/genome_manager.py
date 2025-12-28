@@ -15,8 +15,8 @@ import json
 import logging
 
 logger = logging.getLogger(__name__)
-logger.setLevel("CRITICAL")
-# logger.setLevel(logging.DEBUG)
+# logger.setLevel("CRITICAL")
+logger.setLevel(logging.DEBUG)
 
 from ggene import draw
 from ggene import dev
@@ -93,16 +93,6 @@ class GenomeManager:
             if vcf_path:
                 self.annotations.add_variants(vcf_path)
             
-            # Add GTF annotations
-            # if gtf_path and os.path.exists(gtf_path):
-            #     self.annotations.add_gtf(gtf_path, "genes")
-            #     logger.info(f"Added GTF annotations: {gtf_path}")
-            
-            # Add VCF annotations separately for annotation track
-            # if vcf_path and os.path.exists(vcf_path):
-            #     self.annotations.add_vcf(vcf_path, "variants")
-            #     logger.info(f"Added VCF annotations: {vcf_path}")
-            
             # Initialize motif detector
             self.motif_detector = MotifDetector()
             self._setup_default_motifs()
@@ -138,6 +128,11 @@ class GenomeManager:
                 if k == "clinvar_path":
                     self.annotations.add_clinvar(v)
                     logger.debug(f"added clinvar from path {v}")
+                if k=="jaspar_path":
+                    from ggene.database.motifs import JasparStream
+                    jaspars = JasparStream(v)
+                    jaspars.load()
+                    self.annotations.add_motifs(jaspars, name = "jaspars")
                 
         except Exception as e:
             logger.error(f"Failed to initialize GenomeManager: {e}")

@@ -1,6 +1,7 @@
 
 from typing import List, Tuple, Dict, Any, Optional, TYPE_CHECKING
 from dataclasses import dataclass, field, replace
+import logging
 
 from ggene.draw.chars import HLINES
 from ggene.draw.colors import Colors
@@ -14,18 +15,22 @@ if TYPE_CHECKING:
     from ggene.database.genome_iterator import GenomeWindow
     from ggene.browser.genome_browser import BrowserState
     
+logger = logging.getLogger(__name__)
+# logger.setLevel("WARNING")
+logger.setLevel("DEBUG")
+
 @dataclass
 class SeqArtistParams(BaseArtistParams):
     display_width = 256
     display_height = 6
     seqa_name:str = "ref" # "ref", "alt"
-    seqb_name:str = "alt"
+    seqb_name:str = ""
     
-    display_strategy:str = "crop" # "fold"
+    display_strategy:str = "fold" # "crop", "fold"
     show_marker_line:bool = True
-    highlight_details:bool = False
+    highlight_details:bool = True
     highlight_match:bool = False
-    highlight_rcmatch:bool = True
+    highlight_rcmatch:bool = False
     
     color_bg:bool = False
     color:int = 71
@@ -49,7 +54,10 @@ class SeqArtist(BaseArtist):
         
         # seqb = window.alt_seq
         
-        feats, spans = self.get_detail_features(window.features, window.start_ref)
+        feats, spans = self.get_detail_features(window.motifs, window.start_ref)
+        
+        # logger.debug(f"found {len(feats)} detail features")
+        
         # if self.params.display_strategy == "crop":
         #     seqa_len = len(seqa)
         #     seqb_len = len(seqb)
@@ -58,13 +66,16 @@ class SeqArtist(BaseArtist):
         #         seqb = seqb[(seqb_len - self.params.display_width)//2:(seqb_len + self.params.display_width)//2]
         
         # seqa = self.crop_seq(window.ref_seq, self.params.display_width)
+        
+        # logger.debug(f"detail features: {len(feats)}")
+        
         seqa = self.get_seq(self.params.seqa_name, window)
         
         if self.params.seqb_name:
             seqb = self.get_seq(self.params.seqb_name, window)
             seq_lines = self.render_dual_seq(seqa, seqb, feats, spans, state.position)
         else:    
-            seq_lines = self.render_single_seq(seqa)
+            seq_lines = self.render_single_seq(seqa, feats, spans)
         
         if self.params.display_strategy == "fold":
             seq_lines = self.break_lines(seq_lines, self.params.display_width)
@@ -74,9 +85,21 @@ class SeqArtist(BaseArtist):
         
         return result_rows
     
-    def render_single_seq(self, seq):
+    def render_single_seq(self, seq, detail_feats, detail_spans):
         
-        return [seq]
+        seq = seq.replace("-","")
+        
+        if self.params.highlight_details:
+            
+            # colors = {k:highlight.ColorSpec(fg=FColors.get_feature_type_color(k)) for k in detail_spans.keys()}
+            colors = {k: 28 for k in detail_spans.keys()}
+            
+            hseq = highlight.ColoredSequence(seq, default_color = highlight.ColorSpec(250))
+            hseq = highlight.highlight_features(hseq, detail_spans, colors=colors)
+        
+        # logger.debug(f"hseq rendered: {repr(hseq.render())}")
+        
+        return [hseq.render()]
     
     def render_dual_seq(self, seqa, seqb, feats, spans, position):
         
@@ -98,7 +121,7 @@ class SeqArtist(BaseArtist):
     
     def get_detail_features(self, features, window_start):
         
-        ftypes = ["variant","motif"]
+        ftypes = ["variant","motif", "tf_binding"]
         
         feats = []
         spans = {ft:[] for ft in ftypes}

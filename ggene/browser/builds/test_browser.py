@@ -2,6 +2,7 @@
 from typing import Tuple, Optional
 import argparse
 import random
+import logging
 
 from dataclasses import dataclass
 
@@ -23,14 +24,21 @@ from ggene.display.renderer import ArtistRenderer
 from ggene.display.layout import Label, FullWidthRow, Alignment, VAlignment
 from ggene.display.colors import FColors
 
+logger = logging.getLogger(__name__)
+# logger.setLevel("WARNING")
+logger.setLevel("DEBUG")
+
 @dataclass
-class TestBrowserState(BrowserState, BaseBrowserState):
+class TestBrowserState(BaseBrowserState):    
+    # feature_types:Optional[Tuple[str]] = ("gene", "exon", "CDS", "three_prime_utr", "five_prime_utr", "variant", "motif", "dfam_hit", "repeat")
+    feature_types:Optional[Tuple[str]] = ("gene", "exon", "CDS", "motif", "dfam_hit", "pseudogene", "lncRNA", "ncRNA", "tf_binding")
+    _detect_motifs_once:bool = False
+    
     mm_height:int = 8
     seq_height:int = 5
     sc_height:int = 7
     line_height:int = 20
-    text_height:int = 8
-    feature_types:Optional[Tuple[str]] = ("gene", "exon", "CDS", "three_prime_utr", "five_prime_utr", "variant", "motif", "dfam_hit", "repeat")
+    text_height:int = 16
     
     def get_height(self, artist):
         
@@ -46,6 +54,18 @@ class TestBrowserState(BrowserState, BaseBrowserState):
         elif at == "TextArtist":
             return self.text_height
     
+    def to_dict(self):
+        
+        out_dict = self.__dict__
+        
+        if self._detect_motifs_once:
+            out_dict["detect_motifs"] = True
+            self._detect_motifs_once = False
+        else:
+            out_dict["detect_motifs"] = False
+        
+        return out_dict
+    
     
 class TestBrowser(BaseBrowser):
     
@@ -55,12 +75,19 @@ class TestBrowser(BaseBrowser):
         
         gm = GenomeManager()
         
-        state = TestBrowserState(kwargs.get("chrom", "1"), kwargs.get("position", 10e6), kwargs.get("window_size", 240), kwargs.get("stride", 20), kwargs.get("display_height", 32))
+        state = TestBrowserState(
+            chrom = kwargs.get("chrom", "1"), 
+            position = kwargs.get("position", 10e6), 
+            window_size = kwargs.get("window_size", 240), 
+            stride = kwargs.get("stride", int(kwargs.get("window_size")/8)), 
+        )
         
         state.update(**kwargs)
+        # print()
         iterator = UGenomeIterator(gm, state.chrom, state.position, window_size = state.window_size, stride = state.stride)
         
         super().__init__(gm, state = state, iterator = iterator, **kwargs)
+        self.logger = logger
         
         dw = kwargs.get("display_width", 256)
         artists = self.build_artists(display_width = dw)
@@ -74,6 +101,22 @@ class TestBrowser(BaseBrowser):
         self.iterator.update(chrom = self.state.chrom, position=self.state.position, window_size = self.state.window_size, stride = self.state.stride)
         self.renderer.update(**kwargs)
         self.renderer.update_all(**kwargs)
+    
+    def update(self):
+        super().update()
+        # logger.debug("features in iterator window:")
+        
+        # feats = {}
+        # for feat in self.window.features:
+        #     if not feat.feature_type in feats:
+        #         feats[feat.feature_type] = []
+            
+        #     feats[feat.feature_type].append(feat)
+        
+        # for ft in feats:
+        #     print(f"features of type {ft}: {len(feats[ft])}")
+        
+        # logger.debug(f"detect motifs: {self.iterator.detect_motifs}")
     
     def register_parameters(self):
         

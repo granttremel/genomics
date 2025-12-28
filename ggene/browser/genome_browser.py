@@ -42,9 +42,6 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 logger.setLevel("DEBUG")
 
-# FColors class has been moved to display/FColors.py
-
-
 @dataclass
 class BrowserState:
     """Current state of the genome browser."""

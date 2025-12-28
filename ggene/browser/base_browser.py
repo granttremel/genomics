@@ -30,6 +30,13 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class BaseBrowserState:
+    chrom:str = ""
+    position:int = -1
+    window_size:int = -1
+    stride:int = -1
+    feature_types:Optional[Tuple[str]] = tuple()
+    show_reverse_strand = False
+    show_rna = False
 
     def copy(self):
         return type(self)(**self.__dict__)
@@ -38,6 +45,9 @@ class BaseBrowserState:
         for k,v in kwargs.items():
             if hasattr(self, k):
                 setattr(self, k, v)
+                
+    def to_dict(self):
+        return self.__dict__
 
 class BaseBrowser:
     """Base class for interactive genome browsers with extensible keybindings."""
@@ -46,12 +56,13 @@ class BaseBrowser:
 
     def __init__(self, genome_manager, *args, **kwargs):
 
+        self.logger = logger
         self.debug = kwargs.get("debug", False)
         
         if self.debug:
-            logger.setLevel("DEBUG")
+            self.logger.setLevel("DEBUG")
         else:
-            logger.setLevel("WARNING")
+            self.logger.setLevel("WARNING")
         self.session_id = str(uuid.uuid4())[:6]
         
         self.gm:GenomeManager = genome_manager
@@ -135,12 +146,15 @@ class BaseBrowser:
     
     def update(self):
         
-        # update iterator
-        self.iterator.update(**self.state.__dict__)
-        self.window = self.iterator.get_window()
+        # print(self.state.__dict__)
         
-        # render
-        # self.render()
+        update_dict = self.state.to_dict()
+        
+        self.logger.debug(f"state dict during udpate: {update_dict}")
+        
+        # update iterator
+        self.iterator.update(**update_dict)
+        self.window = self.iterator.get_window()
         
     
     def render(self):
@@ -337,6 +351,7 @@ class BaseBrowser:
 
         # Handle numpy arrays
         if hasattr(obj, 'tolist'):
+            return
             return {'_type': 'ndarray', 'shape': list(obj.shape), 'dtype': str(obj.dtype)}
 
         # Handle dataclasses and objects with __dict__

@@ -24,7 +24,7 @@ from ggene.display.layout import Label, FullWidthRow, Alignment, VAlignment
 from ggene.display.colors import FColors
 
 @dataclass
-class SeqsBrowserState(BrowserState, BaseBrowserState):
+class SeqsBrowserState(BaseBrowserState):
     seq_height:int = 32
     sc_height:int = 8
     feats_height:int = 5

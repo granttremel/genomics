@@ -126,7 +126,7 @@ class MapArtist(BaseArtist):
         if end_ind > start_ind:
             fetch_start = start + start_ind * chunksz
             fetch_length = (end_ind - start_ind) * chunksz
-            print(f"doing quantities {qts}")
+            # print(f"doing quantities {qts}")
             new_data, _ = cm.get_chromosomal_quantities(chrom, qts, chunksz=chunksz, start=fetch_start, length=fetch_length)
 
             # Fill in the missing chunks
@@ -188,7 +188,6 @@ class MapArtist(BaseArtist):
         for i in range(len(sc_rows)//2-1, -1, -1):
             row = sc_rows[i]
             curr_char = FColors.scrub_codes(FColors.visible_slice(row, start = marker_pos, stop = marker_pos + 1))
-            print(f"row {i} with char {repr(curr_char)}")
             
             if curr_char == " ":
                 
@@ -208,8 +207,6 @@ class MapArtist(BaseArtist):
                 new_row = FColors.visible_slice(row, start = 0, stop = marker_pos) + cfella + FColors.visible_slice(row, start = marker_pos+1, stop = FColors.visible_len(row))
                 sc_rows[i] = new_row
                 break
-        
-        # print(f"attempted to add fella {cfella} to row {i} which had char {curr_char} at {marker_pos}")
         
         return sc_rows
 

@@ -24,8 +24,8 @@ if TYPE_CHECKING:
     from .annotations import UGenomeAnnotations
 
 logger = logging.getLogger(__name__)
-logger.setLevel("CRITICAL")
-# logger.setLevel(logging.DEBUG)
+# logger.setLevel("CRITICAL")
+logger.setLevel(logging.DEBUG)
 
 @dataclass
 class BaseWindow:
@@ -392,19 +392,41 @@ class UGenomeIterator:
         
         # Query features
         features = self.annotations.query_range(self.chrom, start, end)
+        # features = [f for f in self.annotations.stream_all(self.chrom, start, end)]
         
         # Filter by type if specified
         if self.feature_types:
             features = [f for f in features if f.feature_type in self.feature_types]
         
-        feats_unique = list(set(features))
-        
-        logger.debug(f"gathered {len(features)} features, of which {len(feats_unique)} unique")
-        
         # Cache result
         self._feature_cache[cache_key] = features
         return features
     
+    def _get_motifs_in_window(self, start:int, end:int):
+        if not self.detect_motifs:
+            # logger.debug("skipping motifs")
+            return []
+        
+        # logger.debug("detecting motifs")
+        
+        # Check cache
+        # cache_key = (start, end)
+        # if cache_key in self._feature_cache:
+        #     return self._feature_cache[cache_key]
+        
+        # Query motifs
+        motifs = self.annotations.query_motifs(self.chrom, start, end)
+        
+        # logger.debug(f"identified {len(motifs)} motifs")
+        
+        # Filter by type if specified
+        if self.feature_types:
+            motifs = [f for f in motifs if f.feature_type in self.feature_types]
+        
+        # Cache result
+        # self._feature_cache[cache_key] = features
+        return motifs
+        
     def _calculate_display_coordinate(self, ref_pos: int, alt_pos: int) -> int:
         """Calculate display coordinate based on variant deltas.
         
@@ -510,21 +532,22 @@ class UGenomeIterator:
             except Exception as e:
                 logger.debug(f"Failed to get variant features: {e}")
         
+        window_motifs = self._get_motifs_in_window(window_start_ref, window_end_ref)
         # Get motifs in this window from cache
-        window_motifs = []
-        if self.detect_motifs and self._motif_cache:
-            for pos in range(window_start_ref, window_end_ref + 1):
-                if pos in self._motif_cache:
-                    # Filter motifs that actually overlap with the window
-                    for motif in self._motif_cache[pos]:
-                        if motif['start'] < window_end_ref and motif['end'] > window_start_ref:
-                            # Only add if not already in list (avoid duplicates)
-                            if motif not in window_motifs:
-                                window_motifs.append(motif)
+        # window_motifs = []
+        # if self.detect_motifs and self._motif_cache:
+        #     for pos in range(window_start_ref, window_end_ref + 1):
+        #         if pos in self._motif_cache:
+        #             # Filter motifs that actually overlap with the window
+        #             for motif in self._motif_cache[pos]:
+        #                 if motif['start'] < window_end_ref and motif['end'] > window_start_ref:
+        #                     # Only add if not already in list (avoid duplicates)
+        #                     if motif not in window_motifs:
+        #                         window_motifs.append(motif)
             
-            # Sort motifs by position for display
-            window_motifs.sort(key=lambda m: m['start'])
-            logger.debug(f"Found {len(window_motifs)} motifs in window {window_start_ref}-{window_end_ref}")
+        #     # Sort motifs by position for display
+        #     window_motifs.sort(key=lambda m: m['start'])
+        #     logger.debug(f"Found {len(window_motifs)} motifs in window {window_start_ref}-{window_end_ref}")
         
         # Calculate coordinate positions
         alt_start = window_start_ref + delta_before
@@ -545,7 +568,7 @@ class UGenomeIterator:
             features=features,
             variant_deltas=variants_in_window,
             variant_features=variant_features,
-            motifs=window_motifs if window_motifs else None
+            motifs=window_motifs
         )
     
     def __iter__(self) -> Iterator[GenomeWindow]:
@@ -622,7 +645,6 @@ class UGenomeIterator:
             self.stride = stride
             
         for k, v in kwargs.items():
-            
             if hasattr(self, k):
                 setattr(self, k, v)
         

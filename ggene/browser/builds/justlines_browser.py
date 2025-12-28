@@ -23,7 +23,7 @@ from ggene.display.layout import Label, FullWidthRow, Alignment, VAlignment
 from ggene.display.colors import FColors
 
 @dataclass
-class JustLinesBrowserState(BrowserState, BaseBrowserState):
+class JustLinesBrowserState(BaseBrowserState):
     # mm_height = 8
     feature_height = 40
     feature_types = ('gene','exon', 'dfam_hit', 'repeat')

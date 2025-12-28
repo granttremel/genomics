@@ -612,6 +612,7 @@ class UGenomeAnnotations:
     
     def get_sequence(self, chrom: str, start: int, end: int) -> str:
         """Get reference sequence for a region."""
+        # logger.debug("get_sequence called on UGenomeAnnotations")
         if self.sequence_stream:
             return self.sequence_stream.get_sequence(chrom, start, end)
         return ""
@@ -658,28 +659,56 @@ class UGenomeAnnotations:
     def add_clinvar(self, filepath, name = "clinvar"):
         self.add_source(name, ClinvarStream(filepath))
     
-    def add_motifs(self, motif_stream, name:str = "motifs"):
-        
-        
-        pass
+    def add_motifs(self, motif_stream, name: str = "motifs"):
+        """Register a motif stream for sequence scanning.
+
+        The motif stream is bound to this object's sequence getter so it can
+        fetch sequences during scanning. Motif streams are included in stream_all().
+
+        Args:
+            motif_stream: A MotifStream subclass instance (JasparStream, PatternStream, etc.)
+            name: Name for this motif source
+        """
+        from ggene.database.motifs import MotifStream
+
+        if not isinstance(motif_stream, MotifStream):
+            raise TypeError(f"Expected MotifStream, got {type(motif_stream)}")
+
+        if not self.sequence_stream:
+            logger.warning(f"No sequence stream configured. Motif stream '{name}' "
+                          "will fail until setup_sequence_stream() is called.")
+
+        # Bind our sequence getter to the motif stream
+        motif_stream.bind_sequence_getter(self.get_sequence)
+        self.motif_streams[name] = motif_stream
+        logger.info(f"Added motif source: {name}")
     
     def stream_all(self, chrom: Optional[str] = None,
                    start: Optional[int] = None,
                    end: Optional[int] = None) -> Iterator[UFeature]:
-        """Stream all annotations merged by position.
-        
-        Uses heapq.merge for efficient sorted merging.
+        """Stream all annotations and motifs merged by position.
+
+        Uses heapq.merge for efficient sorted merging. Annotation streams
+        query indexed files while motif streams scan sequences in chunks.
         """
-        # Create iterators for each source
         iterators = []
+
+        # Add annotation stream iterators
         for name, stream in self.streams.items():
             try:
                 iterator = stream.stream(chrom, start, end)
-                # Wrap each iterator to handle exhaustion
                 iterators.append(iterator)
             except Exception as e:
-                logger.warning(f"Failed to create stream for {name}: {e}")
-                
+                logger.warning(f"Failed to create annotation stream for {name}: {e}")
+
+        # Add motif stream iterators (they'll scan sequences lazily)
+        for name, stream in self.motif_streams.items():
+            try:
+                iterator = stream.stream(chrom, start, end)
+                iterators.append(iterator)
+            except Exception as e:
+                logger.warning(f"Failed to create motif stream for {name}: {e}")
+
         # Merge all iterators by position
         for feature in heapq.merge(*iterators):
             yield feature
@@ -704,6 +733,18 @@ class UGenomeAnnotations:
             except Exception as e:
                 logger.warning(f"Query failed for {name}: {e}")
         return sorted(features)
+    
+    def query_motifs(self, chrom:str, start: int, end:int):
+        
+        seq = self.get_sequence(chrom, start, end)
+        
+        motifs = []
+        
+        for name, mstream in self.motif_streams.items():
+            mtfs = mstream.scan_sequence(seq, chrom, start)
+            motifs.extend(mtfs)
+        
+        return motifs
     
     def stream_by_types(self, feature_types: List[str],
                        chrom: Optional[str] = None,

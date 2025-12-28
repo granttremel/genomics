@@ -430,7 +430,7 @@ class LineArtist(BaseArtist):
         elif feat_type == "variant":
             return self._format_var(f)
         elif feat_type == "dfam_hit":
-            name = feat_name
+            name = f.family_name
         else:  
             name = feat_name
             paren.append(feat_type)
@@ -442,19 +442,6 @@ class LineArtist(BaseArtist):
             return f" {name} ({", ".join(paren)}) "
         else:
             return f" {name} "
-    
-    def _format_gene(self, f):
-        
-        bt = f.attributes.get("gene_biotype","")
-        
-        if bt == "protein_coding":
-            return f.name
-        elif bt == "lncRNA":
-            return "lncRNA"
-        else:
-            return f"{f.id} ({bt})"
-        
-        pass
     
     def _format_transcript(self, f):
         

@@ -12,6 +12,11 @@ Key design:
 from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Optional, Iterator, List, Tuple, Dict, Any, Callable
+import logging
+
+logger = logging.getLogger(__name__)
+# logger.setLevel("WARNING")
+logger.setLevel("DEBUG")
 
 from ggene.database.ufeature import UFeature
 
@@ -77,11 +82,13 @@ class MotifStream(ABC):
             raise RuntimeError("MotifStream not bound to sequence getter. "
                               "Register with UGenomeAnnotations first.")
 
+        # logger.debug(f"stream called on MotifStream {type(self).__name__}")
+
         if not self._loaded:
             self.load()
             self._loaded = True
 
-        if not chrom or start is None or end is None:
+        if not chrom or start is None or end is None: # hmm
             return
 
         # Generator state
@@ -90,6 +97,7 @@ class MotifStream(ABC):
 
         def scan_next_chunk():
             nonlocal scanned_up_to, buffer
+            # logger.debug("enter scan_next_chunk")
 
             chunk_start = scanned_up_to
             chunk_end = min(chunk_start + self.chunk_size, end + self.overlap)
@@ -125,10 +133,15 @@ class MotifStream(ABC):
             scanned_up_to = chunk_end - self.overlap
             return True
 
+        # logger.debug(f"before scan_next_chunk")
         # Initial scan
         scan_next_chunk()
 
+        # logger.debug(f"after scan_next_chunk")
         while True:
+            
+            # logger.debug("enter MotifStream.stream loop")
+            
             # If buffer empty and more to scan, scan ahead
             while not buffer and scanned_up_to < end:
                 if not scan_next_chunk():
@@ -157,10 +170,10 @@ class JasparStream(MotifStream):
         self.min_score = min_score
         self.motifs = None  # JasparLibrary
 
-    def load(self):
+    def load(self, max_motifs = None):
         """Load JASPAR PWM library from directory."""
         from ggene.motifs import jaspar
-        self.motifs = jaspar.Jaspar.from_path(self.filepath)
+        self.motifs = jaspar.Jaspar.from_path(self.filepath, max_motifs = max_motifs)
 
     def scan_sequence(self, seq: str, chrom: str, offset: int, strand: str = "+") -> List[UFeature]:
         """Scan sequence with all loaded PWMs."""
@@ -170,43 +183,25 @@ class JasparStream(MotifStream):
         features = []
         instances = self.motifs.find_instances(seq, min_score=self.min_score)
 
-        for (mtf_id, mtf_name), inst_data in instances.items():
-            for positions in inst_data:
-                # inst_data is list of (start_indices,) tuples from numpy nonzero
-                if isinstance(positions, tuple):
-                    # Handle numpy nonzero output
-                    for rel_start in positions:
-                        mtf_len = self.motifs.jaspars[mtf_id].num_pos
-                        features.append(UFeature({
-                            'chrom': chrom,
-                            'start': offset + int(rel_start),
-                            'end': offset + int(rel_start) + mtf_len - 1,
-                            'feature_type': self.feature_type,
-                            'source': self.source_name,
-                            'name': mtf_name,
-                            'id': mtf_id,
-                            'strand': strand,
-                            'score': self.min_score,  # Could track actual score
-                            'motif_id': mtf_id,
-                        }))
-                else:
-                    # Handle (start, end, score) tuple format
-                    rel_start, rel_end, score = positions
-                    features.append(UFeature({
-                        'chrom': chrom,
-                        'start': offset + int(rel_start),
-                        'end': offset + int(rel_end),
-                        'feature_type': self.feature_type,
-                        'source': self.source_name,
-                        'name': mtf_name,
-                        'id': mtf_id,
-                        'strand': strand,
-                        'score': float(score),
-                        'motif_id': mtf_id,
-                    }))
+        for mtf_id, inst_data in instances.items():
+            for match in inst_data:
+                
+                features.append(UFeature({
+                    'chrom': chrom,
+                    'start': offset + match.start,
+                    'end': offset + match.end,
+                    'feature_type': self.feature_type,
+                    'source': self.source_name,
+                    'name': match.name,
+                    'id': mtf_id,
+                    'strand': strand,
+                    'score': match.score, 
+                    'match_seq': match.seq
+                }))
+
+        # logger.debug(f"JasparStream scanned sequence and identified {len(features)} features")
 
         return features
-
 
 class PatternStream(MotifStream):
     """Stream for regex pattern motif detection."""
@@ -214,11 +209,12 @@ class PatternStream(MotifStream):
     feature_type = "pattern"
     source_name = "Pattern"
 
-    def __init__(self, patterns: Optional[Dict[str, str]] = None):
+    def __init__(self, motif_detector):
         """Initialize with pattern dict: {name: regex_pattern}."""
         super().__init__()
-        self._pattern_defs = patterns or {}
-        self._compiled = {}
+        self.motifs = motif_detector
+        # self._pattern_defs = patterns or {}
+        # self._compiled = {}
 
     def add_pattern(self, name: str, pattern: str):
         """Add a regex pattern."""
@@ -226,26 +222,46 @@ class PatternStream(MotifStream):
 
     def load(self):
         """Compile regex patterns."""
-        import re
-        for name, pattern in self._pattern_defs.items():
-            self._compiled[name] = re.compile(pattern, re.IGNORECASE)
+        pass
+        # import re
+        # for name, pattern in self._pattern_defs.items():
+        #     self._compiled[name] = re.compile(pattern, re.IGNORECASE)
 
     def scan_sequence(self, seq: str, chrom: str, offset: int, strand: str = "+") -> List[UFeature]:
         """Find all pattern matches in sequence."""
         features = []
+        
+        insts = self.motifs.identify(seq)
 
-        for name, regex in self._compiled.items():
-            for match in regex.finditer(seq):
+        for mtf_name, mtf_insts in insts.items():
+            
+            for match in mtf_insts:
                 features.append(UFeature({
                     'chrom': chrom,
-                    'start': offset + match.start(),
-                    'end': offset + match.end() - 1,
+                    'start': offset + match.start,
+                    'end': offset + match.end,
                     'feature_type': self.feature_type,
                     'source': self.source_name,
-                    'name': name,
+                    'name': match.name,
+                    'id': "",
                     'strand': strand,
-                    'matched_seq': match.group(),
+                    'score': match.score, 
+                    'match_seq': match.seq
                 }))
+                
+
+        # for name, regex in self._compiled.items():
+        #     for match in regex.finditer(seq):
+        #         features.append(UFeature({
+        #             'chrom': chrom,
+        #             'start': offset + match.start(),
+        #             'end': offset + match.end() - 1,
+        #             'feature_type': self.feature_type,
+        #             'source': self.source_name,
+        #             'name': name,
+        #             'strand': strand,
+        #             'matched_seq': match.group(),
+        #         }))
 
         return features
 

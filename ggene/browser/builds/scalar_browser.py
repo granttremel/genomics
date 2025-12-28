@@ -23,7 +23,7 @@ from ggene.display.layout import Label, FullWidthRow, Alignment, VAlignment
 from ggene.display.colors import FColors
 
 @dataclass
-class ScalarBrowserState(BrowserState, BaseBrowserState):
+class ScalarBrowserState(BaseBrowserState):
     mm_height = 8
     feature_height = 24
     

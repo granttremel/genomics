@@ -6,6 +6,7 @@ from pathlib import Path
 import numpy as np
 
 from ggene.seqs import bio
+from ggene.motifs.motif import MatchResult
 
 class Jaspar:
     
@@ -23,7 +24,6 @@ class Jaspar:
     @classmethod
     def from_file(cls, file_path):
         
-        # pwm = {}
         bases = []
         all_wgts = None
         
@@ -66,7 +66,6 @@ class Jaspar:
         file_path = Path(file_path).absolute()
         
         jlib = JasparLibrary()
-        # jlib = {}
         
         nj = 0
         for jasp in file_path.iterdir():
@@ -74,19 +73,19 @@ class Jaspar:
             
             if jasp.suffix == ".jaspar":
                 
-                jsp = cls.from_file(str(jasp))
+                try:
+                    jsp = cls.from_file(str(jasp))
+                except Exception as e:
+                    print(f"error encountered with jasper at {str(jasp)}: {str(e)}")
+                    continue
                 
                 if not jsp:
                     continue
                 
-                # jsps[jsp.id]=jsp
                 jlib.add_jaspar(jsp)
-                # jlib[jsp.id] = jsp
             
             if max_motifs and jlib.num_jaspars >= max_motifs:
                 break
-        
-        # print(f"checked {nj} jaspar files")
         
         return jlib
     
@@ -189,6 +188,7 @@ class JasparLibrary:
     def __init__(self):
         self.jaspars:Dict[str, Jaspar] = {}
         self.jaspar_ids:List[str] = []
+        self.big_pwm = None
         
     @property
     def num_jaspars(self):
@@ -200,7 +200,7 @@ class JasparLibrary:
     def add_jaspar(self, jaspar):
         self.jaspars[jaspar.id] = jaspar
         self.jaspar_ids.append(jaspar.id)
-        
+        self.big_pwm = None
     
     def score_many(self, seq):
         
@@ -216,7 +216,6 @@ class JasparLibrary:
             npos = jsp.num_pos
             pwms[i, :, :npos] = jsp.pwm
         
-        # subseq = seq_oh[:, :max_npos][None, :]
         subseq = seq_oh[:, :max_npos]
         
         for n in range(len(self.jaspars)):
@@ -224,48 +223,102 @@ class JasparLibrary:
             prod = pwm * subseq
             score = np.sum(prod)
             scores.append(score)
-        # prod = pwms * subseq
-        # scores = np.sum(prod, axis = (1,2))
             
         return np.array(scores)
 
     def scan_many(self, seq):
         
-        seq_oh = self.seq_to_onehot(seq)
+        seq_len = len(seq)
         
-        all_scores = {}
+        big_pwm, pwm_lens = self.assemble_pwms()
+        pwm_len = big_pwm.shape[2]
+        scores = np.zeros((big_pwm.shape[0], seq_len))
         
-        for _id, jsp in self.jaspars.items():
+        len_mask = np.ones((big_pwm.shape[0]))
+        
+        seq_oh = self.seq_to_onehot(seq, len_fill = pwm_len)
+        
+        for p in range(len(seq)):
             
-            scores = jsp.scan(seq)
-            all_scores[(_id, jsp.name)] = scores
-        
-        return all_scores
+            len_mask = (pwm_lens <= seq_len - p)
+            subseq = seq_oh[:, p:p+pwm_len]
+            subseq_exp = subseq[None,:]
+            
+            prod = big_pwm * subseq_exp
+            score = np.sum(prod, axis = (1,2))
+            pscore = len_mask * score
+            scores[:, p] = pscore
+            
+        scores /= pwm_lens[:,None]
     
-    def find_instances(self, seq, min_score = 0.95):
+        return scores
+    
+    def find_instances(self, seq, min_score = 0.85) -> Dict[str,List[MatchResult]]:
         
         all_scores:np.ndarray = self.scan_many(seq)
         
         insts=  {}
         
-        for (_id, name), scores in all_scores.items():
-            mtf_len = self.jaspars[_id].num_pos
-            jis = (scores > min_score).nonzero()
-            insts[(_id, name)] = [(ji, ji + mtf_len, scores[ji]) for ji in jis]
+        # for (_id, name), scores in all_scores.items():
+        for i in range(all_scores.shape[0]):
+            _id = self.jaspar_ids[i]
+            jspr = self.jaspars[_id]
+            name = jspr.name
+            mtf_len = jspr.num_pos
+            
+            scores = all_scores[i]
+            
+            jis = np.argwhere(scores > min_score)
+            if not jis.size > 0:
+                continue
+            matches = []
+            for ji in jis:
+                start = ji.item()
+                end = start + mtf_len
+                score = scores[ji].item()
+                subseq = seq[start:end]
+                
+                mres = MatchResult("", start, end, score, name, seq=subseq)
+                matches.append(mres)
+            
+            insts[_id] = matches
         
         return insts
         
-        
     @classmethod
-    def seq_to_onehot(cls, seq):
+    def seq_to_onehot(cls, seq, len_fill = 0):
         
-        oh = np.zeros((4, len(seq)))
+        oh = np.zeros((4, len(seq) + len_fill))
         
         for i, b in enumerate(seq):
-            bi = cls.bases.index(b)
-            oh[bi, i] = 1
+            if b in cls.bases:
+                bi = cls.bases.index(b)
+                oh[bi, i] = 1
         
         return oh
+    
+    def get_assembled_pwm(self):
+        
+        if self.big_pwm is None:
+            self.big_pwm = self.assemble_pwms()
+        return self.big_pwm
+    
+    def assemble_pwms(self):
+        
+        num_pwms = len(self.jaspars)
+        max_len = max([jsp.num_pos for jsp in self.jaspars.values()])
+        
+        big_pwm = np.zeros((num_pwms, len(self.bases), max_len))
+        pwm_lens = np.zeros((num_pwms,))
+        
+        for i,jsp_id in enumerate(self.jaspar_ids):
+            
+            jsp = self.jaspars[jsp_id]
+            
+            big_pwm[i, :, :jsp.num_pos] = jsp.pwm
+            pwm_lens[i] = jsp.num_pos
+        
+        return big_pwm, pwm_lens
     
     def print(self, chunksz = 256):
         

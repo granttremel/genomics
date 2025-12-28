@@ -1,7 +1,7 @@
 
 import re
 from ggene.seqs.find import consensus_to_re, reverse_complement_re
-from .motif import BaseMotif
+from .motif import BaseMotif, MatchResult
 
 class PatternMotif(BaseMotif):
     
@@ -15,7 +15,11 @@ class PatternMotif(BaseMotif):
         self.score_func = scoring_function
         self.allow_rc = allow_rc
         self.motif_class = motif_class
-        
+    
+    @property
+    def id(self):
+        return self.name
+    
     def __call__(self, seq):
         res = re.search(self.pattern, seq)
         if res:
@@ -58,8 +62,30 @@ class PatternMotif(BaseMotif):
             # Calculate score for this match
             score = self.score_func(matched_seq) if self.score_func else 1.0
             
+            res = MatchResult("", start, end, score, self.name, seq = matched_seq)
+            
             # Apply threshold if provided
             if threshold is None or score >= threshold:
-                instances.append((start, end, score))
+                # instances.append((start, end, score))
+                instances.append(res)
         
         return instances
+
+class PatternLibrary:
+    
+    def __init__(self):
+        self.patterns = {}
+        self.pattern_ids = []
+        
+    def add_pattern(self, pattern):
+        self.patterns[pattern.id] = pattern
+        self.pattern_ids.append(pattern.id)
+        
+    def score_many(self, seq):
+        pass
+    
+    def scan_many(self, seq):
+        pass
+    
+    
+    

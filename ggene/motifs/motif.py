@@ -1,11 +1,24 @@
 
-from ggene.seqs.bio import to_rna, reverse_complement, is_rna, is_dna
+from typing import List, Dict, Tuple, Optional, Any, Union
+from dataclasses import dataclass
 from abc import ABC, abstractmethod
 import numpy as np
 import re
 
+from ggene.seqs.bio import to_rna, reverse_complement, is_rna, is_dna
 from .motifio import MotifIO
 from ..seqs.find import consensus_to_re
+
+@dataclass
+class MatchResult:
+    chrom:str
+    start:int
+    end:int
+    score:float
+    name:str
+    strand:str = "+"
+    seq:str = ""
+
 
 def calculate_significance(self, seq, motif_score):
       """Calculate p-value for motif occurrence"""
@@ -38,16 +51,12 @@ class MotifDetector:
             if not motif_name in all_insts:
                 all_insts[motif_name] = []
             
-            for motif_start, motif_end, score in motif.find_instances(seq):
-                mtf_dict = {"start":motif_start, "end":motif_end, "score":score, "is_rc":False, "class":motif.motif_class}
-                # all_insts[motif_name].append((motif_start, motif_end, score, False, motif.motif_class))
-                all_insts[motif_name].append(mtf_dict)
+            for res in motif.find_instances(seq):
+                all_insts[motif_name].append(res)
             
             if motif.allow_rc:
-                for rcmotif_start, rcmotif_end, score in motif.find_instances(rcseq):
-                    mtf_dict = {"start":rcmotif_start, "end":rcmotif_end, "score":score, "is_rc":True, "class":motif.motif_class}
-                    # all_insts[motif_name].append((seq_len - rcmotif_end, seq_len - rcmotif_start,  score, True, motif.motif_class))
-                    all_insts[motif_name].append(mtf_dict)
+                for res in motif.find_instances(rcseq):
+                    all_insts[motif_name].append(res)
         
         return all_insts
     
@@ -73,7 +82,7 @@ class MotifDetector:
             self.add_motif(hmm)
             
     
-    def setup_default_patterns(self, class_names):
+    def setup_default_patterns(self, class_names=[]):
         if not class_names:
             class_names = motif_classes.keys()
         
@@ -128,7 +137,7 @@ class BaseMotif(ABC):
         pass
     
     @abstractmethod
-    def find_instances(self, seq, threshold=None):
+    def find_instances(self, seq, threshold=None) -> List[MatchResult]:
         """Return list of (start, end, score) tuples"""
         return []
     

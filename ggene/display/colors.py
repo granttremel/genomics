@@ -76,6 +76,8 @@ class FColors(Colors):
             return cls.INSERTION
         elif feature_type_lower == "motif":
             return cls.MOTIF
+        elif feature_type_lower == "tf_binding":
+            return cls.MOTIF_TF
         elif feature_type_lower in ["repeat","dfam_hit"]:
             return cls(cls.repeat_colors.get("default", 0)).fg_code
         else:
@@ -85,7 +87,7 @@ class FColors(Colors):
     def get_feature_color(cls, feature):
         
         if feature.feature_type in ["motif", "variant", "repeat", "dfam_hit"]:
-            if feature.feature_type=="motif":
+            if feature.feature_type in ["motif", "tf_binding"]:
                 return cls.get_motif_color(feature)
             elif feature.feature_type == "variant":
                 return cls.get_variant_color(feature.attributes.get("ref",""), feature.attributes.get("alt",""))
@@ -113,12 +115,16 @@ class FColors(Colors):
         """Get color for a motif type."""
         # motif_type_lower = motif_class.lower()
 
-        if isinstance(motif_feat, dict):
-            motif_class = motif_feat.get("attributes",{}).get("","")
-            motif_rc = motif_feat.get("attributes",{}).get("is_rc",False)
-        else:
-            motif_class = motif_feat.attributes.get("","")
-            motif_rc = motif_feat.attributes.get("is_rc",False)
+        # if isinstance(motif_feat, dict):
+        #     motif_class = motif_feat.get("attributes",{}).get("","")
+        #     motif_rc = motif_feat.get("attributes",{}).get("is_rc",False)
+        # else:
+        motif_type = motif_feat.feature_type
+        motif_class = motif_feat.attributes.get("","")
+        motif_rc = motif_feat.attributes.get("is_rc",False)
+
+        if motif_type == "tf_binding":
+            return cls.MOTIF_TF
 
         if 'splice' in motif_class:
             return cls.RCMOTIF_SPL if motif_rc else cls.MOTIF_SPL

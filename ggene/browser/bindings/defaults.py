@@ -170,6 +170,13 @@ def focus_on_feature(brws:'BaseBrowser', state:'BaseBrowserState', window:'BaseW
             state._feature_types = state.feature_types
             state.feature_types = tuple(full_feats)
 
+def find_motifs(brws:'BaseBrowser', state:'BaseBrowserState', window:'BaseWindow'):
+    
+    state._detect_motifs_once = True
+    brws.logger.debug(f"updating motifs once.. {state.__dict__}")
+    
+    return state
+
 def modify_param(brws:'BaseBrowser', state:'BaseBrowserState', window:'BaseWindow', param_name, param_value):
     
     if hasattr(state, param_name):
@@ -332,11 +339,19 @@ default_bindings = {
     },
     "m":{
         "key":"m",
-        "name":"toggle_panel",
-        "method":toggle_panel.__name__,
-        "description":"toggle display state of panel",
-        "_bound_method":toggle_panel
+        "name":"find_motifs",
+        "method":find_motifs.__name__,
+        "description":"Identify motifs (once)",
+        "call_update":True,
+        "_bound_method":find_motifs
     }
+    # "m":{
+    #     "key":"m",
+    #     "name":"toggle_panel",
+    #     "method":toggle_panel.__name__,
+    #     "description":"toggle display state of panel",
+    #     "_bound_method":toggle_panel
+    # }
 }
 
 def bind_defaults(obj, registry:CommandRegistry):

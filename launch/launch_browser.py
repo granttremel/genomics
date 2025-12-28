@@ -28,7 +28,7 @@ def main():
                         help="Chromosome (1-23, X, Y, MT)")
     parser.add_argument("--position", "-p", default = int(1e6), type = int,
                         help="Window size, in bp (default 4096)")
-    parser.add_argument("--window", "-w", default = 4096, 
+    parser.add_argument("--window", "-w", default = 4096, type = int,
                         help="Window size, in bp (default 4096)", dest = "window_size")
     parser.add_argument("--stride", "-s", default = 256, type = int, 
                         help="Window size, in bp (default 4096)")
@@ -36,6 +36,8 @@ def main():
                         help="Choose random chromosome and position")
     parser.add_argument("--load", "-l", default = False, action = "store_true", 
                         help="Load last state")
+    parser.add_argument("--debug", "-d", default = False, action = "store_true", 
+                        help="Debug mode")
     parser.add_argument("--browser-type", "-b", default = "test", type = str, 
                         help="Browser type (test, scalar, lines, seqs)")
     
@@ -58,7 +60,7 @@ def main():
     brws = get_browser(btp, **argdict)
     brws.start(**argdict)
     
-    brws.save_state()
+    # brws.save_state()
     
     # res = input("save browser?")
     # if "y" in res.lower():

@@ -6,7 +6,8 @@ from ggene.draw.chars import SCALE
 class Colors:
     
     # RESET = '\033[38;5;224m\x1b[48;5;234m'
-    RESET = '\x1b[0m\033[38;5;224m\x1b[48;5;234m'
+    # RESET = '\x1b[0m\033[38;5;224m\x1b[48;5;234m'
+    RESET = '\x1b[0m'
     
     TEXT = "\x1b[38;5;224m"
     
@@ -40,6 +41,7 @@ class Colors:
     # Motif colors (for underlines)
     MOTIF_SPL = '\033[38;5;111m'   # Cyan for other motifs
     MOTIF_PRO = '\033[38;5;112m'   # Cyan for other motifs
+    MOTIF_TF = "\x1b[38;5;28m"
     RCMOTIF = '\x1b[38;5;106m'
     RCMOTIF_SPL = '\x1b[38;5;107m'
     RCMOTIF_PRO = '\x1b[38;5;108m'
