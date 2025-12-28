@@ -225,7 +225,7 @@ class ScalarPlot:
     def show_chunks(self, chunksz = 256):
         
         line_length = len(self.rows[0])
-        num_lines = (line_length // chunksz) + 1
+        num_lines = int(line_length / chunksz) + 1
         if self.options.get("maxval") is None:
             self.options["maxval"] = max(self.scalars)
         

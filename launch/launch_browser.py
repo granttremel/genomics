@@ -60,9 +60,9 @@ def main():
     
     brws.save_state()
     
-    res = input("save browser?")
-    if "y" in res.lower():
-        brws.save_history()
+    # res = input("save browser?")
+    # if "y" in res.lower():
+    #     brws.save_history()
     
 
 if __name__=="__main__":

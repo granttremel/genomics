@@ -21,6 +21,7 @@ class LineArtistParams(BaseArtistParams):
     show_ruler:bool = False
     show_alt:bool = False
     # Label track settings
+    orientation:str = "out" # "in"
     show_label_tracks:bool = True       # Enable label tracks for small features
     min_label_width:int = 20            # Min display chars to show inline label
     min_arrow_width:int = 3             # Below this, use single arrow char
@@ -111,12 +112,17 @@ class LineArtist(BaseArtist):
         # Reverse: label_rows (far) + feat_rows (near) -> flip so near is at bottom
         # Forward: feat_rows (near) + label_rows (far) -> near is at top
         rev_combined = rev_feat_rows + rev_label_rows  # far to near
-        rev_combined.reverse()  # now near to far (near at bottom, adjacent to ruler)
 
         fwd_combined = fwd_feat_rows + fwd_label_rows  # near to far (near at top)
 
-        # Center/pad to display height
-        rev_combined, fwd_combined = self._center_tracks(rev_combined, fwd_combined)
+        if self.params.orientation == "out":
+            rev_combined.reverse()  # now near to far (near at bottom, adjacent to ruler)
+            # Center/pad to display height
+            rev_combined, fwd_combined = self._center_tracks(rev_combined, fwd_combined)
+        elif self.params.orientation == "in":
+            fwd_combined.reverse()
+            # fwd_combined, rev_combined = self._center_tracks(fwd_combined, rev_combined)
+            fwd_combined, rev_combined = self._center_tracks(rev_combined, fwd_combined)
 
         result_rows = rev_combined + mid_rows + fwd_combined
         return result_rows
@@ -233,6 +239,10 @@ class LineArtist(BaseArtist):
                 f, label_start, connector_col, label_text,
                 vline, vline_up, vline_down, dim_color, display_width
             )
+        
+        # if self.params.orientation == "in":
+        #     feat_rows = list(reversed(feat_rows))
+        #     label_rows = list(reversed(label_rows))
 
         return feat_rows, label_rows
 

@@ -146,6 +146,7 @@ class TestBrowser(BaseBrowser):
             display_width = display_width, 
             display_height = line_height, 
             show_ruler = True,
+            # orientation = "in",
             # use_global_features = False,
             # feature_types = ('gene','transcript','exon','CDS')
         ), top_label = "Genomic Features")

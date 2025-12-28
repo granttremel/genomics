@@ -10,8 +10,8 @@ Without indexing, queries will be extremely slow on large files.
 
 import heapq
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
-from typing import Iterator, Dict, Any, List, Optional, Tuple, Union
+from dataclasses import dataclass
+from typing import Iterator, Dict, Any, List, Optional, Tuple, Union, Callable, TypeVar
 import gzip
 import json
 from pathlib import Path
@@ -20,157 +20,69 @@ import pysam
 import os
 import warnings
 
+from ggene.database.ufeature import UFeature
+
 logger = logging.getLogger(__name__)
+
+T = TypeVar('T')
+
 logger.setLevel("CRITICAL")
 # logger.setLevel(logging.DEBUG)
 
 chr_lens = {'1': 248937043, '10': 133778498, '11': 135075908, '12': 133238549, '13': 114346637, '14': 106879812, '15': 101979093, '16': 90222678, '17': 83240391, '18': 80247514, '19': 58599303, '2': 242175634, '20': 64327972, '21': 46691226, '22': 50799123, '3': 198228376, '4': 190195978, '5': 181472430, '6': 170745977, '7': 159233377, '8': 145066516, '9': 138320835, 'MT': 16023, 'X': 156027877, 'Y': 57214397}
 
 @dataclass
-class UFeature:
-    """Common representation for all genomic features.
-    
-    This is the lingua franca for all annotation sources.
+class ColumnSpec:
+    """Specification for parsing a column from tabular data.
+
+    Attributes:
+        name: Column/attribute name
+        type_: Type converter function (int, float, str, etc.)
+        default: Default value if parsing fails or value is missing
+        target: Where to store - 'core' for UFeature fields, 'attribute' for attributes dict
+        formatter: Optional custom parser function (receives raw string, returns parsed value)
     """
-    chrom: str = ""
-    start: int = -1  # 1-based, inclusive
-    end: int = -1    # 1-based, inclusive
-    feature_type: str = ""  # gene, variant, motif, repeat, etc.
-    source: str = ""  # GTF, VCF, JASPAR, etc.
-    score: Optional[float] = None
-    strand: Optional[str] = ""
-    name: Optional[str] = ""
-    id: Optional[str] = ""
-    attributes: Dict[str, Any] = field(default_factory=dict)
-    
-    @property
-    def chr(self):
-        return self.chrom
-    
-    @property
-    def length(self):
-        return self.end - self.start
-    
-    def __lt__(self, other):
-        """For heap-based merging."""
-        return (self.chrom, self.start, self.end) < (other.chrom, other.start, other.end)
-    
-    def overlaps(self, start: int, end: int) -> bool:
-        """Check if feature overlaps with given range."""
-        return not (self.end < start or self.start > end)
-    
-    def get(self, att, default=None):
-        if hasattr(self, att):
-            return getattr(self, att)
-        else:
-            return self.attributes.get(att,default)
-    
-    def __getitem__(self, att):
-        if isinstance(att, str):
-            return self.get(att)
-        else:
-            raise IndexError
-    
-    def __eq__(self, other):
-        return other.start==self.start and other.end == self.end and other.feature_type == self.feature_type and other.strand == self.strand
-    
-    def __hash__(self):
-        return hash((self.feature_type, self.start, self.end, self.strand))
-    
-    def to_dict(self) -> Dict[str, Any]:
-        """Convert to dictionary for JSON serialization."""
-        return {
-            'chrom': self.chrom,
-            'start': self.start,
-            'end': self.end,
-            'type': self.feature_type,
-            'source': self.source,
-            'score': self.score,
-            'strand': self.strand,
-            'name': self.name,
-            'id': self.id,
-            'attributes': self.attributes
-        }
-    
-UFeat = UFeature
+    name: str
+    type_: Callable[[str], T] = str
+    default: Any = None
+    target: str = "attribute"  # 'core' or 'attribute'
+    formatter: Optional[Callable[[str], Any]] = None
 
-##### parsers #####
+    def parse(self, value: str) -> Any:
+        """Parse a string value according to this spec."""
+        if value is None or value == "" or value == ".":
+            return self.default
 
-# def parse_line(line):        
-#     if line.startswith('#'):
-#             return None
-            
-#     parts = line.strip().split('\t')
-#     if len(parts) < 9:
-#         return None
-        
-#     # Parse attributes
-#     attr_dict = {}
-#     for attr in parts[8].split(';'):
-#         if attr.strip():
-#             if ' ' in attr:
-#                 key, val = attr.strip().split(' ', 1)
-#                 attr_dict[key] = val.strip('"')
-    
-#     return {        
-#         "chrom":parts[0],
-#         "start":int(parts[3]),
-#         "end":int(parts[4]),
-#         "feature_type":parts[2],
-#         "score":float(parts[5]) if parts[5] != '.' else None,
-#         "strand":parts[6] if parts[6] != '.' else None,
-#         "name":attr_dict.get('gene_name'),
-#         "id":attr_dict.get('gene_id'),
-#         "attributes":attr_dict
-#     }
+        try:
+            if self.formatter:
+                return self.formatter(value)
+            return self.type_(value)
+        except (ValueError, TypeError):
+            return self.default
 
-def parse_line(line, headers, att_headers):
-    if line.startswith('#') or line.startswith('track'):
-        return None
-    
-    hdrs = headers + att_headers
-    
-    parts = line.strip().split('\t')
-    
-    fd = {}
-    atts = {}
-    
-    for hdr, v in zip(hdrs, parts):
-        if hdr in headers:
-            fd[hdr] = v
-        else:
-            atts[hdr] = v
-    
-    fd["attributes"] = atts
-    fd["start"] = int(fd.get("start", -1))
-    fd["end"] = int(fd.get("end", -1))
-    
-    return fd
 
-def parse_line_bed(line):
-    if line.startswith('#') or line.startswith('track'):
-        return None
-        
-    parts = line.strip().split('\t')
-    if len(parts) < 3:
-        return None
-    
-    name = parts[3].strip()
-    if name.endswith(")n"):
-        motif = name.strip("()n")
-    else:
-        motif = ""
-    
-    headers = ["chrom","start","end","score","strand","name","id"]
-    
-    fd = {}
-    attrs = {}
-    for hdr,part in zip(headers, parts):
-        if hdr:
-            v = part.strip()
-            fd[hdr] = v
-    
-    return fd
+@dataclass
+class DerivedSpec:
+    """Specification for a derived/computed attribute.
+
+    The compute function receives the UFeature after initial construction
+    and returns the computed value.
+
+    Attributes:
+        name: Attribute name to store the computed value
+        compute: Function that takes UFeature and returns the derived value
+        default: Default value if computation fails
+    """
+    name: str
+    compute: Callable[['UFeature'], Any]
+    default: Any = None
+
+    def evaluate(self, feature: 'UFeature') -> Any:
+        """Compute the derived value for a feature."""
+        try:
+            return self.compute(feature)
+        except Exception:
+            return self.default
 
 class AnnotationStream(ABC):
     """Abstract base class for annotation streams."""
@@ -181,7 +93,7 @@ class AnnotationStream(ABC):
         self._buffer = []
         
     @abstractmethod
-    def _parse_line(self, line: str) -> Optional[UFeature]:
+    def parse_line(self, line: str) -> Optional[UFeature]:
         """Parse a single line into a UFeature."""
         pass
     
@@ -200,618 +112,463 @@ class AnnotationStream(ABC):
                 features.append(feature)
         return features
 
-    def test(self, chrom, pos):
-        
-        if not hasattr(self, "tabix"):
-            return True
-        
-        try:
-            self.tabix.fetch(chrom, pos, pos+1)
-        except:
-            logger.debug("tabix fetch failed... maybe?")
-            pass
-            # return False
-        
-        return True
 
-class GTFStream(AnnotationStream):
-    """Stream GTF/GFF annotations using indexed access."""
+class TabularStream(AnnotationStream):
+    """Base class for tabular file streams using ColumnSpec pattern.
+
+    Subclasses define columns and derived attributes as class attributes,
+    and this base class handles the parsing automatically.
+
+    Example:
+        class MyStream(TabularStream):
+            columns = [
+                ColumnSpec("chrom", str, "", "core"),
+                ColumnSpec("start", int, -1, "core"),
+                ColumnSpec("end", int, -1, "core"),
+                ColumnSpec("score", float, None, "attribute"),
+            ]
+            derived = [
+                DerivedSpec("length", lambda uf: uf.end - uf.start),
+            ]
+    """
     
-    max_indices = {'1': 248937043, '10': 133778498, '11': 135075908, '12': 133238549, '13': 114346637, '14': 106879812, '15': 101979093, '16': 90222678, '17': 83240391, '18': 80247514, '19': 58599303, '2': 242175634, '20': 64327972, '21': 46691226, '22': 50799123, '3': 198228376, '4': 190195978, '5': 181472430, '6': 170745977, '7': 159233377, '8': 145066516, '9': 138320835, 'MT': 16023, 'X': 156027877, 'Y': 57214397}
+    core_columns: Dict[str, ColumnSpec] = {
+        "chrom":ColumnSpec("chrom", str, "", "core", formatter = lambda s: TabularStream.format_chrom(s)[1]),
+        "start":ColumnSpec("start", int, -1, "core"),
+        "end":ColumnSpec("end", int, -1, "core"),
+        "name":ColumnSpec("name", str, "", "core"),
+        "score":ColumnSpec("score", float, None, "core"),
+        "strand":ColumnSpec("strand", str, "", "core"),
+        "id":ColumnSpec("id", str, "", "core"),
+    }
+    
+    # Subclasses override these
+    columns: List[Union[ColumnSpec, str]] = []
+    derived: List[DerivedSpec] = []
+    feature_type: str = "region"
+    comment_chars: Tuple[str, ...] = ('#', 'track')
+    delimiter: str = '\t'
+    chr_format: str = "{chrstr}"  # or "chr{chrstr}"
+
+    fe_delimiter:str = ';'
+    fe_kv_delimiter:str = " "
+
+    def __init__(self, filepath: str, source_name: str = "Tabular"):
+        super().__init__(source_name)
+        self.filepath = Path(filepath).absolute()
+
+        # Setup tabix for indexed access
+        self.tabix = None
+        if self.filepath.suffix == '.gz':
+            index_file = Path(str(self.filepath) + '.tbi')
+            if index_file.exists():
+                try:
+                    self.tabix = pysam.TabixFile(str(self.filepath))
+                    logger.info(f"Using indexed access for {self.filepath}")
+                except Exception as e:
+                    logger.warning(f"Failed to open tabix index: {e}")
+
+        if not self.tabix and self.filepath.suffix == '.gz':
+            logger.warning(f"No index found for {self.filepath}.")
+            
+    def stream(self, chrom: Optional[str] = None,
+               start: Optional[int] = None,
+               end: Optional[int] = None) -> Iterator[UFeature]:
+        """Stream features using indexed access."""
+        if not self.tabix:
+            logger.warning(f"No tabix index for {self.filepath}")
+            return
+
+        chr_formatted, chr_raw = self.format_chrom(chrom) if chrom else ("", "")
+
+        query_start = int(start) if start else 1
+        query_end = int(end) if end else chr_lens.get(chr_raw, 999999999)
+
+        try:
+            for line in self.tabix.fetch(chr_formatted, start=query_start, end=query_end):
+                feature = self.parse_line(line)
+                if self.validate_feature(feature):
+                    # Apply region filter
+                    if chrom and feature.chrom != chr_raw:
+                        continue
+                    if start and feature.end < start:
+                        continue
+                    if end and feature.start > end:
+                        continue
+                    yield feature
+        except Exception as e:
+            logger.error(f"Error fetching {chr_formatted}:{query_start}-{query_end}: {e}")
+
+    def validate_feature(self, feature):
+        return bool(feature)
+
+    def preparse_line(self, line:str):
+        parts = line.strip().split(self.delimiter)
+        return parts, {}
+
+    def parse_line(self, line: str) -> Optional[UFeature]:
+        """Parse a line using column specs."""
+        # Skip comments
+        if any(line.startswith(c) for c in self.comment_chars):
+            return None
+        
+        parts, fe_dict = self.preparse_line(line)
+        
+        uf_cols = []
+        
+        # Build data dict from parts
+        data = {}
+        for i, col in enumerate(self.columns):
+            if isinstance(col, str):
+                col = self.core_columns.get(col)
+            if col is None:
+                continue
+            
+            uf_cols.append(col)
+            try:
+                if i < len(parts):
+                    v = col.parse(parts[i])
+                    data[col.name] = v
+                else:
+                    data[col.name] = ""
+                    break
+            except Exception as e:
+                print(f"exception on column {col}: {str(e)}")
+        
+        for j, col in enumerate(self.columns[i:]):
+            
+            if col and col.name in fe_dict:
+                data[col.name] = fe_dict[col.name]
+                uf_cols.append(col)
+            
+        # Add feature_type and source
+        # Add feature_type if not already set from columns
+        if 'feature_type' not in data:
+            data['feature_type'] = self.feature_type
+        data['source'] = self.source_name
+
+        # Create UFeature with flat data and compute derived attributes
+        return UFeature.from_parsed(data, columns=uf_cols, derived=self.derived, raw_line = line)
+
+
+    def format_group_entry(self, group_entry:str):
+        
+        fparts = group_entry.split(self.fe_delimiter)
+        
+        feparts = {}
+        
+        for p in fparts:
+            kv = p.strip().split(self.fe_kv_delimiter)
+            if len(kv) > 2:
+                k = kv[0].strip()
+                v = " ".join(kv[1:])
+            elif len(kv) == 2:
+                k, v = kv
+            else:
+                k = v = ""
+            
+            if k and v:
+                
+                k = k.strip()
+                v = v.strip().strip('"')
+                
+                if k in feparts:
+                    vlist = feparts[k]
+                    if not isinstance(vlist, list):
+                        vlist = [vlist]
+                    vlist.append(v)
+                    feparts[k] = vlist
+                else:
+                    feparts[k] = v
+            else:
+                # logger.debug(f"skipped part {p} with kv {kv}")
+                pass
+        
+        return feparts
+    
+    @classmethod
+    def format_chrom(cls, chrom: str) -> Tuple[str, str]:
+        """Format chromosome for tabix query and internal use."""
+        chr_raw = str(chrom).removeprefix("chr")
+        chr_formatted = cls.chr_format.format(chrstr=chr_raw)
+        return chr_formatted, chr_raw
+            
+def get_gs_feature_type(f):
+    
+    fts = []
+    
+    if "pseudo" in f.gene_biotype:
+        ft = "pseudogene"
+    elif "lncRNA" in f.gene_biotype:
+        ft = "lncRNA"
+    elif "RNA" in f.gene_biotype:
+        return "ncRNA"
+    else:
+        ft = f.feature_type
+    
+    fts.append(ft)
+    
+    if "nonsense" in f.gene_biotype:
+        fts.append("NMD")
+    
+    return "_".join(fts)
+    
+def get_gs_feature_name(f):
+    
+    if f.transcript_name:
+        parname = f.transcript_name
+        if f.feature_type == "exon":
+            return parname + f'-ex{f.exon_number}'
+        elif f.feature_type == "CDS":
+            return parname + f"-CDS{f.exon_number}"
+        elif f.feature_type == "three_prime_utr":
+            return parname + '-3pUTR'
+        elif f.feature_type == "five_prime_utr":
+            return parname + '-5pUTR'
+        elif f.feature_type == "stop_codon":
+            return parname + '-stop'
+        elif f.feature_type == "start_codon":
+            return parname + '-start'
+        else:
+            return parname
+    elif f.gene_name:
+        return f.gene_name
+    
+class GeneStream(TabularStream):
+    
+    feature_type = ""
+    chr_format = "{chrstr}"
+    fe_delimiter = ";"
+    fe_kv_delimiter = " "
+    
+    columns = [
+        "chrom","source",
+        # "feature_type",
+        ColumnSpec("feature_type", str, ""),
+        "start","end", None, "strand", None,
+        ColumnSpec("gene_id", str, ""),
+        ColumnSpec("gene_name", str, ""),
+        ColumnSpec("gene_source", str, ""),
+        ColumnSpec("gene_biotype", str, ""),
+        ColumnSpec("gene_version", str, ""),
+        
+        ColumnSpec("transcript_id", str, ""),
+        ColumnSpec("ccds_id", str, ""),
+        ColumnSpec("transcript_name", str, ""),
+        ColumnSpec("transcript_source", str, ""),
+        ColumnSpec("transcript_biotype", str, ""),
+        ColumnSpec("transcript_version", str, ""),
+        
+        ColumnSpec("exon_id", str, ""),
+        ColumnSpec("exon_number", int, ""),
+        ColumnSpec("exon_version", str, ""),
+        
+        ColumnSpec("protein_id", str, ""),
+        ColumnSpec("protein_version", str, ""),
+        
+        ColumnSpec("tag", str, ""),
+    ]
+    # other cols
+    # ColumnSpec("transcript_support_level", str, ""),
+    
+    derived = [
+        DerivedSpec("feature_type", get_gs_feature_type, default = "gene"),
+        DerivedSpec("name", get_gs_feature_name, default = "?"),
+    ]
     
     def __init__(self, filepath: str):
-        super().__init__("GTF")
-        self.filepath = Path(filepath)
+        super().__init__(filepath, source_name="GTF")
         
-        # Check if file is indexed
-        self.tabix = None
-        if self.filepath.suffix == '.gz':
-            # Check for index file
-            index_file = Path(str(self.filepath) + '.tbi')
-            if index_file.exists():
-                try:
-                    self.tabix = pysam.TabixFile(str(self.filepath))
-                    logger.info(f"Using indexed access for {self.filepath}")
-                except Exception as e:
-                    logger.warning(f"Failed to open tabix index: {e}")
+    def preparse_line(self, line:str):
         
-        if not self.tabix:
-            logger.warning(f"No index found for {self.filepath}. Performance will be slow!")
-            logger.info(f"Create index with: bgzip -c {self.filepath} > {self.filepath}.gz && tabix -p gff {self.filepath}.gz")
+        parts = line.split(self.delimiter)
         
-    def _parse_line(self, line: str) -> Optional[UFeature]:
-        """Parse GTF line."""
-        if line.startswith('#'):
-            return None
-            
-        parts = line.strip().split('\t')
-        if len(parts) < 9:
-            return None
-            
-        # Parse attributes
-        attr_dict = {}
-        for attr in parts[8].split(';'):
-            if attr.strip():
-                if ' ' in attr:
-                    key, val = attr.strip().split(' ', 1)
-                    attr_dict[key] = val.strip('"')
+        fpart = parts[-1]
+        parts = parts[:-1]
         
-        return UFeature(
-            chrom=parts[0],
-            start=int(parts[3]),
-            end=int(parts[4]),
-            feature_type=parts[2],
-            source=self.source_name,
-            score=float(parts[5]) if parts[5] != '.' else None,
-            strand=parts[6] if parts[6] != '.' else None,
-            name=attr_dict.get('gene_name'),
-            id=attr_dict.get('gene_id'),
-            attributes=attr_dict
-        )
-    
-    def stream(self, chrom: Optional[str] = None,
-               start: Optional[int] = None,
-               end: Optional[int] = None) -> Iterator[UFeature]:
-        """Stream GTF features using indexed access when available."""
+        fe_dict = self.format_group_entry(fpart)
         
-        # res = self.test(chrom, start)
-        # if not res:
-        #     print(f"tabix fetch failed for {type(self)} with path {self.filepath}")
-        #     return
-        
-        # Use indexed access if available
-        if self.tabix and chrom:
-            try:
-                # Tabix uses 0-based half-open intervals
-                query_start = (start - 1) if start else 0
-                query_end = end if end else 999999999
-                
-                for line in self.tabix.fetch(chrom, query_start, query_end):
-                    feature = self._parse_line(line)
-                    if feature:
-                        yield feature
-                return
-            except Exception as e:
-                logger.debug(f"Tabix fetch failed, falling back to linear scan: {e}")
-        
-        # Fallback to linear scan (slow!)
-        open_func = gzip.open if self.filepath.suffix == '.gz' else open
-        with open_func(self.filepath, 'rt') as f:
-            for line in f:
-                feature = self._parse_line(line)
-                if feature:
-                    # Filter by region if specified
-                    if chrom and feature.chrom != chrom:
-                        continue
-                    if start and feature.end < start:
-                        continue
-                    if end and feature.start > end:
-                        continue
-                    yield feature
+        return parts, fe_dict
 
+def get_genotype(f):
+    
+    gts = {"0":f.ref, "1":f.alt[0], "2":f.alt[1]}
+    
+    gt = f.GT
+    
+    for k, gtb in gts.items():
+        gt = gt.replace(k, gtb)
+    
+    return gt
+    
 
-class VCFStream(AnnotationStream):
-    """Stream VCF variant annotations using cyvcf2 for efficient indexed access."""
+class VariantStream(TabularStream):
+    """
+    chr1	1078047	.	G	A	5.67	PASS	AC=1;AF=0.5;AN=2;DP=6;FS=0;MQ=20.88;MQRankSum=0.72;QD=4.11;ReadPosRankSum=-1.38;SOR=2.303;FractionInformativeReads=1	GT:AD:AF:DP:F1R2:F2R1:GQ:PL:GP:PRI:SB:MB	0/1:4,2:0.333:6:4,1:0,1:4:38,0,2:5.6683,2.4607,7.9203:0,34.77,37.78:2,2,0,2:2,2,1,1
+    """
+    feature_type: str = "variant"
+    chr_format = "chr{chrstr}"
     
-    def __init__(self, filepath: str, min_qual = 20):
-        super().__init__("VCF")
-        self.filepath = Path(filepath)
-        self.min_qual = min_qual
-        
-        # Use cyvcf2.VCF which handles indexing internally
-        try:
-            from cyvcf2 import VCF
-            self.vcf:VCF = VCF(str(self.filepath))
-            
-            # Check if index exists and set it
-            index_files = [
-                Path(str(self.filepath) + '.tbi'),
-                Path(str(self.filepath) + '.csi')
-            ]
-            for index_file in index_files:
-                if index_file.exists():
-                    try:
-                        self.vcf.set_index(str(index_file))
-                        logger.info(f"Using indexed VCF access for {self.filepath}")
-                    except:
-                        pass  # VCF might auto-detect the index
-                    break
-            else:
-                logger.warning(f"No index found for {self.filepath}. Create with: tabix -p vcf {self.filepath}")
-                
-        except ImportError:
-            logger.error("cyvcf2 not installed. Install with: pip install cyvcf2")
-            self.vcf = None
-        except Exception as e:
-            logger.warning(f"Failed to open VCF with cyvcf2: {e}")
-            self.vcf = None
-        
-    def _parse_line(self, line: str) -> Optional[UFeature]:
-        """Parse VCF line."""
-        if line.startswith('#'):
-            return None
-            
-        parts = line.strip().split('\t')
-        if len(parts) < 8:
-            return None
-        
-        # Parse INFO field
-        info_dict = {}
-        if parts[7] != '.':
-            for item in parts[7].split(';'):
-                if '=' in item:
-                    key, val = item.split('=', 1)
-                    info_dict[key] = val
-                else:
-                    info_dict[item] = True
-        
-        # Determine variant type
-        ref = parts[3]
-        alts = parts[4].split(',')
-        
-        variant_types = []
-        for alt in alts:
-            if len(ref) == len(alt) == 1:
-                variant_types.append('SNP')
-            elif len(ref) > len(alt):
-                variant_types.append('DEL')
-            elif len(ref) < len(alt):
-                variant_types.append('INS')
-            else:
-                variant_types.append('COMPLEX')
-        
-        return UFeature(
-            chrom=parts[0],
-            start=int(parts[1]),
-            end=int(parts[1]) + len(ref) - 1,
-            feature_type='variant',
-            source=self.source_name,
-            score=float(parts[5]) if parts[5] != '.' else None,
-            name=parts[2] if parts[2] != '.' else None,
-            id=parts[2] if parts[2] != '.' else None,
-            attributes={
-                'ref': ref,
-                'alt': alts,
-                'qual': parts[5],
-                'filter': parts[6],
-                'info': info_dict,
-                'variant_types': variant_types,
-                'variant_type': variant_types[0],
-                'genotype': ""
-            }
-        )
+    fe_delimiter = ";"
+    fe_kv_delimiter = "="
     
-    def _parse_variant(self, variant) -> Optional[UFeature]:
-        """Parse cyvcf2 Variant object to UFeature."""
-        # Parse INFO field
-        info_dict = dict(variant.INFO)
+    columns = [
+        "chrom", "start", None,
+        ColumnSpec("ref", str, ""),
+        ColumnSpec("alt", str, "", formatter = lambda s: ",".split(s) if ',' in s else (s,s)),
+        ColumnSpec("qual", float, ""),
+        ColumnSpec("depth_result", str, ""),
         
-        # Determine variant type
-        ref = variant.REF
-        alts = variant.ALT if variant.ALT else []
+        ColumnSpec("AD", str, ""), # Allelic depths        
+        ColumnSpec("AC", str, ""), # Allele count
+        ColumnSpec("AF", str, ""), # Allele frequency
+        ColumnSpec("AN", str, ""), # Allele number
+        ColumnSpec("GQ", str, ""), # genotype quality
+        ColumnSpec("GT", str, ""), # Genotype
+        ColumnSpec("PS", str, ""), # Physical phasing ID information
+        ColumnSpec("SQ", str, ""), # somatic quality
+        ColumnSpec("DP", str, ""), # read depth, approximate, unfiltered
         
-        variant_types = []
-        for alt in alts:
-            if alt is None:
-                continue
-            if len(ref) == len(alt) == 1:
-                variant_types.append('SNP')
-            elif len(ref) > len(alt):
-                variant_types.append('DEL')
-            elif len(ref) < len(alt):
-                variant_types.append('INS')
-            else:
-                variant_types.append('COMPLEX')
-        
-        if variant.num_het > 0:
-            zyg = "heterozygous"
-        elif variant.num_hom_alt > 0:
-            zyg = "homozygous alt"
-        elif variant.num_hom_ref > 0:
-            zyg = "homozygous ref"
-        else:
-            zyg = ""
-        
-        atts ={
-                'ref': ref,
-                'alt': alts,
-                'qual': variant.QUAL,
-                'filter': variant.FILTER,
-                'variant_types': variant_types,
-                'variant_type': variant_types[0],
-                'genotype': variant.gt_bases[0],
-                'zygosity':zyg
-            }
-        atts.update(info_dict)
-        
-        return UFeature(
-            chrom=variant.CHROM,
-            start=variant.POS,  # VCF is 1-based
-            end=variant.POS + len(ref) - 1,
-            feature_type='variant',
-            source=self.source_name,
-            score=variant.QUAL if variant.QUAL else None,
-            name=variant.ID if variant.ID else None,
-            id=variant.ID if variant.ID else None,
-            attributes = atts
-        )
+        # ColumnSpec("F1R2", str, ""), # Count of reads in F1R2 pair orientation supporting each allele
+        # ColumnSpec("F2R1", str, ""), # same ^ 
+        # ColumnSpec("GP", str, ""), # Phred-scaled posterior p for genotypes
+        # ColumnSpec("MB", str, ""), # Per-sample component statistics
+        # ColumnSpec("PL", str, ""), # Normalized, phred-scaled likelihoods for genotypes
+        # ColumnSpec("PRI", str, ""), # Phred-scaled prior probabilities for genotypes
+        # ColumnSpec("SB", str, ""), # per-sample component statistics
+        # ColumnSpec("FS", float, ""),  # phred-scaled p-value, Fisher's exact test (strand bias)
+        # ColumnSpec("MQ", float, ""), # RMS mapping quality
+        # ColumnSpec("MQRankSum", float, ""), # Z-score for wilcoxon rank sum test of alt vs ref read mapping qualities
+        # ColumnSpec("ReadPosRankSum", float, ""),  # same but for read position bias
+        # ColumnSpec("SOR", float, ""), # symmetric odds ratio of 2x2 contigency table (strand bias)
+        # ColumnSpec("FractionInformativeReads", float, ""),
+    ]
     
-    def stream(self, chrom: Optional[str] = None,
-               start: Optional[int] = None,
-               end: Optional[int] = None) -> Iterator[UFeature]:
-        """Stream VCF features using cyvcf2's efficient indexed access."""
-        
-        # Use cyvcf2's efficient querying
-        if self.vcf and chrom:
-            
-            chrstr = str(chrom)
-            # Try both with and without chr prefix
-            for chrom_format in [f"chr{chrstr}" if not chrstr.startswith('chr') else chrstr,
-                                chrstr.lstrip('chr') if chrstr.startswith('chr') else chrstr]:
-                try:
-                    # Create region string for cyvcf2
-                    if start and end:
-                        region = f"{chrom_format}:{int(start)}-{int(end)}"
-                    elif start:
-                        region = f"{chrom_format}:{int(start)}-"
-                    else:
-                        region = chrom_format
-                    
-                    found_any = False
-                    with warnings.catch_warnings(action="ignore"):
-                        # Query using cyvcf2's efficient indexed access
-                        for variant in self.vcf(region):
-                            feature = self._parse_variant(variant)
-                            if feature and feature.get("qual", 0) >= self.min_qual:
-                                found_any = True
-                                yield feature
-                    
-                    if found_any:
-                        return  # Successfully found variants, stop trying
-                except Exception as e:
-                    logger.debug(f"VCF query failed for {region}: {e}")
-                    continue  # Try next format
-        
-        # Fallback to using pysam if cyvcf2 isn't available
-        # This is much slower but works as a backup
-        if not self.vcf:
-            logger.warning("Falling back to slow VCF parsing without cyvcf2")
-            open_func = gzip.open if self.filepath.suffix == '.gz' else open
-            
-            with open_func(self.filepath, 'rt') as f:
-                for line in f:
-                    feature = self._parse_line(line)
-                    if feature:
-                        if chrom and feature.chrom != chrom:
-                            continue
-                        if start and feature.end < start:
-                            continue
-                        if end and feature.start > end:
-                            continue
-                        yield feature
-
-
-class BEDStream(AnnotationStream):
-    """Stream BED format annotations using indexed access."""
-    
-    headers = ["chrom","start","end","name","type","strand"]
-    types = [str, int, int, str, str, str]
-    
-    def __init__(self, filepath: str, feature_type: str = "region"):
-        super().__init__("BED")
-        self.filepath = Path(filepath).absolute()
-        logger.debug(f"initialized with filepath {self.filepath}")
-        self.feature_type = feature_type
-        self.chr_frm = "chr{chrstr}"
-        
-        # Check if file is indexed
-        self.tabix = None
-        if self.filepath.suffix == '.gz':
-            index_file = Path(str(self.filepath.absolute()) + '.tbi')
-            
-            logger.debug(f"gettgin index from {index_file}")
-            if index_file.exists():
-                try:
-                    self.tabix = pysam.TabixFile(str(self.filepath))
-                    logger.info(f"Using indexed access for {self.filepath}")
-                except Exception as e:
-                    logger.warning(f"Failed to open tabix index: {e}")
-        
-        if not self.tabix and self.filepath.suffix == '.gz':
-            logger.warning(f"No index found for {self.filepath}. Performance will be slow!")
-            logger.info(f"Create index with: tabix -p bed {self.filepath}")
-        
-    def _parse_line(self, line: str) -> Optional[UFeature]:
-        """Parse BED line."""
-        # logger.debug(line)
-        if line.startswith('#') or line.startswith('track'):
-            return None
-            
-        parts = line.strip().split('\t')
-        if len(parts) < 3:
-            return None
-        
-        name = parts[3].strip()
-        if name.endswith(")n"):
-            motif = name.strip("()n")
-        else:
-            motif = ""
-        
-        fd = {}
-        attrs = {}
-        for hdr, tp, part in zip(self.headers, self.types, parts):
-            if hdr:
-                v = part.strip()
-                try:
-                    v = tp(v)
-                except:
-                    pass
-                if hasattr(UFeature, hdr):
-                    fd[hdr] = v
-                else:
-                    attrs[hdr] = v
-        
-        fd["attributes"] = attrs
-        
-        return UFeature(feature_type = self.feature_type, source = "BED", **fd)
-
-    
-    def stream(self, chrom: Optional[str] = None,
-               start: Optional[int] = None,
-               end: Optional[int] = None) -> Iterator[UFeature]:
-        """Stream BED features."""
-        
-        chrom_str, chrom = self.get_chrom_str(chrom)
-        
-        # logger.debug(f"streaming at {chrom}:{int(start)}-{int(end)}")
-        
-        if start:
-            start = int(start)
-        else:
-            start = 1
-        
-        if end:
-            end = int(end)
-        else:
-            end = chr_lens.get(chrom)
-        
-        try:
-            for line in self.tabix.fetch(chrom_str, start=start, end=end):
-                feature = self._parse_line(line)
-                
-                if feature:
-                    if chrom and feature.chrom != chrom:
-                        continue
-                    if start and feature.end < start:
-                        continue
-                    if end and feature.start > end:
-                        continue
-                    yield feature
-        except Exception as e:
-            print(f"error encountered while fetching at {chrom}:{start}-{end}: {str(e)}")
-            
-    def get_chrom_str(self, chr_input):
-        chr_raw = str(chr_input).removeprefix("chr")
-        return self.chr_frm.format(chrstr = chr_raw), chr_raw
-
-
-class JASPARStream(AnnotationStream):
-    """Stream JASPAR motif predictions."""
-    
-    def __init__(self, jaspar_file: str, genome_sequence_getter):
-        super().__init__("JASPAR")
-        self.jaspar_file = jaspar_file
-        self.get_sequence = genome_sequence_getter
-        self.motifs = self._load_jaspar_motifs()
-        
-    def _load_jaspar_motifs(self) -> Dict:
-        """Load JASPAR PWMs."""
-        # This would parse JASPAR format files
-        # For now, returning empty dict
-        return {}
-    
-    def _parse_line(self, line: str) -> Optional[UFeature]:
-        """Not used for JASPAR - we scan sequences."""
-        pass
-    
-    def stream(self, chrom: Optional[str] = None,
-               start: Optional[int] = None,
-               end: Optional[int] = None) -> Iterator[UFeature]:
-        """Stream motif predictions by scanning sequence."""
-        if not chrom or not start or not end:
-            return
-        
-        res = self.test(chrom, start)
-        if not res:
-            print(f"tabix fetch failed for {type(self)} with path {self.filepath}")
-            return
-        
-        # Get sequence for region
-        seq = self.get_sequence(chrom, start, end)
-        
-        # Scan with each motif
-        for motif_id, pwm in self.motifs.items():
-            hits = pwm.scan_sequence(seq)
-            for hit_start, score, matched_seq in hits:
-                yield UFeature(
-                    chrom=chrom,
-                    start=start + hit_start,
-                    end=start + hit_start + len(matched_seq) - 1,
-                    feature_type='tf_binding',
-                    source=self.source_name,
-                    score=score,
-                    name=motif_id,
-                    id=f"{motif_id}_{chrom}_{start + hit_start}",
-                    attributes={
-                        'sequence': matched_seq,
-                        'motif_id': motif_id
-                    }
-                )
-
-
-class RepeatMaskerStream(AnnotationStream):
-    """Stream RepeatMasker annotations using indexed access."""
-    
-    def __init__(self, filepath: str, feature_type: str = "repeat"):
-        super().__init__("BED")
-        self.filepath = Path(filepath)
-        self.feature_type = feature_type
-        self.source_name = "RepeatMasker"
-        
-        # Check if file is indexed
-        self.tabix = None
-        if self.filepath.suffix == '.gz':
-            index_file = Path(str(self.filepath) + '.tbi')
-            if index_file.exists():
-                try:
-                    self.tabix = pysam.TabixFile(str(self.filepath))
-                    logger.info(f"Using indexed access for {self.filepath}")
-                except Exception as e:
-                    logger.warning(f"Failed to open tabix index: {e}")
-        
-        if not self.tabix and self.filepath.suffix == '.gz':
-            logger.warning(f"No index found for {self.filepath}. Performance will be slow!")
-            logger.info(f"Create index with: tabix -p bed {self.filepath}")
-        
-    def _parse_line(self, line: str) -> Optional[UFeature]:
-        """Parse BED line."""
-        if line.startswith('#') or line.startswith('track'):
-            return None
-            
-        parts = line.strip().split('\t')
-        if len(parts) < 3:
-            return None
-        
-        name = parts[3].strip()
-        if name.endswith(")n"):
-            motif = name.strip("()n")
-        else:
-            motif = ""
-        
-        return UFeature(
-            chrom=parts[0].removeprefix("chr"),
-            start=int(parts[1]) + 1,  # BED is 0-based
-            end=int(parts[2]),
-            feature_type=self.feature_type,
-            source=self.source_name,
-            name=parts[3],
-            score= -1,
-            strand=parts[5] if len(parts) > 5 else None,
-            attributes={
-                "type": parts[4],
-                "motif":motif,
-            }
-        )
-    
-    def stream(self, chrom: Optional[str] = None,
-               start: Optional[int] = None,
-               end: Optional[int] = None) -> Iterator[UFeature]:
-        """Stream BED features."""
-        
-        chrom = str(chrom)
-        tbichrom = chrom if chrom.startswith("chr") else "chr" + chrom
-        
-        res = self.test(chrom, start)
-        if not res:
-            print(f"tabix fetch failed for {type(self)} with path {self.filepath}")
-            return
-        
-        try:
-            self.tabix.fetch(tbichrom, start=start, end=start+1)
-        except:
-            logger.error(f"index {start} not contained within index file!")
-            return
-        
-        for line in self.tabix.fetch(tbichrom, start=start, end=end):
-            feature = self._parse_line(line)
-            if feature:
-                if chrom and feature.chrom != chrom:
-                    continue
-                if start and feature.end < start:
-                    continue
-                if end and feature.start > end:
-                    continue
-                yield feature
-
-class DfamStream(BEDStream):
+    derived = [
+        DerivedSpec("end", lambda uf:uf.start + 1),
+        DerivedSpec("delta", lambda uf: max(len(a) for a in uf.alt)-len(uf.ref)),
+        DerivedSpec("genotype", get_genotype),
+    ]
     
     def __init__(self, filepath):
-        super().__init__(filepath, feature_type = "dfam_hit")
-        self.chr_frm = "chr{chrstr}"
-        
-    def _parse_line(self, line: str) -> Optional[UFeature]:
-        """Parse BED line. Columns:
-        # BED: chrom, start, end, name, score(bits), strand, family_acc, e-value, bias, hmm-st, hmm-en, env-st, env-en, sq-len, kimura_div
-        """
-        
-        if line.startswith('#') or line.startswith('track'):
-            return None
-            
-        parts = line.strip().split('\t')
-        if len(parts) < 3:
-            return None
-        
-        name = parts[3].strip()
-        if name.endswith(")n"):
-            motif = name.strip("()n")
-        else:
-            motif = ""
-        
-        return UFeature(
-            chrom=parts[0].removeprefix("chr"),
-            start=int(parts[1]) + 1,  # BED is 0-based
-            end=int(parts[2]),
-            feature_type=self.feature_type,
-            source=self.source_name,
-            name=parts[3],
-            score= -1,
-            strand=parts[5] if len(parts) > 5 else None,
-            attributes={
-                "bits":float(parts[4]),
-                "family_acc":parts[6],
-                "e-value":float(parts[7]),
-                "bias":float(parts[7]),
-                "kimura_div":float(parts[7]),
-                "start_hmm":int(parts[9]),
-                "end_hmm":int(parts[10]),
-            }
-        )
-
-class ClinvarStream(BEDStream):
+        super().__init__(filepath, source_name = "Variants")
     
-    chr_frm = "{chrstr}"
-    headers = ["chrom","start","end","id"]
-    att_headers = ["ref","alt","clnsig","clndn","gene","clnvc","af_esp","af_exac","af_tgp","clndnincl","mc"]
-    
-    def __init__(self, filepath):
-        super().__init__(filepath, feature_type = "clinical_variant")
-        self.chr_frm = "{chrstr}"
+    def preparse_line(self, line:str):
         
-    def _parse_line(self, line: str) -> Optional[UFeature]:
-        fd = parse_line(line, self.headers, self.att_headers)
-        return UFeature(feature_type = self.feature_type, source = "ClinVar", **fd)
+        parts = line.split(self.delimiter)
+        
+        fe0, fe1ks, fe1vs = parts[-3:]
+        parts = parts[:-3]
+        
+        fedict = self.format_group_entry(fe0)
+        
+        for k, v in zip(fe1ks.split(":"), fe1vs.split(":")):
+            fedict[k.strip()] = v.strip()
+        
+        return parts, fedict
 
+class RepeatMaskerStream(TabularStream):
+    
+    feature_type = "dfam_hit"
+    chr_format = "chr{chrstr}"
+    
+    columns = [
+        "chrom", "start", "end",
+        ColumnSpec("name", str, None),
+        ColumnSpec("repeat_type", str, None),
+        ColumnSpec("strand", str, formatter = lambda s:"-" if s == "C" else s)
+    ]
+    
+    def __init__(self, filepath: str):
+        super().__init__(filepath, source_name="RepeatMasker")
 
+class SimpleRepeatStream(RepeatMaskerStream):
+    
+    feature_type = "simple_repeat"
+    
+    columns = RepeatMaskerStream.columns + [
+        ColumnSpec("motif", str, "",
+            formatter=lambda s: s.strip("()n") if s.endswith(")n") else s),
+    ]
+    
+    derived = [
+        DerivedSpec("motif", lambda uf: uf.name.strip("()n")),
+        DerivedSpec("repeat_count",
+            lambda uf: (uf.end - uf.start) / len(uf.motif),
+            default=None
+        ),
+    ]
+    
+    def __init__(self, filepath: str):
+        super().__init__(filepath)
+        
+    def validate_feature(self, feature):
+        res = bool(feature) and feature.repeat_type == "Simple_repeat"
+        return res
+        
+class DfamStream(TabularStream):
+    
+    feature_type = "dfam_hit"
+    chr_format = "chr{chrstr}"
+    
+    columns = [
+        "chrom", "start", "end",
+        ColumnSpec("family_name", str, None),
+        ColumnSpec("bits", float, None),
+        "strand",
+        ColumnSpec("family_acc", str, None),
+        ColumnSpec("e-value", float, None),
+        ColumnSpec("bias", float, None),
+        ColumnSpec("start_hmm", int, None),
+        ColumnSpec("end_hmm", int, None),
+        ColumnSpec("start_ali", int, None),
+        ColumnSpec("end_ali", int, None),
+        ColumnSpec("sq-len", float, None),
+        ColumnSpec("kimura_div", float, None),
+    ]
+    
+    def __init__(self, filepath: str):
+        super().__init__(filepath, source_name="Dfam")
+        
+
+class ClinvarStream(TabularStream):
+    """Stream ClinVar clinical variant annotations.
+
+    Uses the new TabularStream/ColumnSpec pattern for clean column definitions.
+    """
+    feature_type = "clinical_variant"
+    chr_format = "{chrstr}"
+
+    # Define columns with types and targets
+    columns = [
+        "chrom", "start", "end", "id",
+        ColumnSpec("ref", str, ""),
+        ColumnSpec("alt", str, ""),
+        ColumnSpec("clnsig", str, ""),
+        ColumnSpec("clndn", str, ""),  # Clinical disease name
+        ColumnSpec("loc", str, ""),
+        ColumnSpec("clnvc", str, ""),  # Variant class
+        ColumnSpec("af_esp", float, None, formatter = lambda s:s.lstrip("C=")),
+        ColumnSpec("af_exac", float, None, formatter = lambda s:s.lstrip("C=")),
+        ColumnSpec("af_tgp", float, None, formatter = lambda s:s.lstrip("C=")),
+        ColumnSpec("clndnincl", str, ""),   # empty ?
+        ColumnSpec("mc", str, ""),  # Molecular consequence
+    ]
+
+    # Example derived attributes
+    derived = [
+        DerivedSpec('gene_name',
+            lambda uf: uf.loc.split(":")[0]
+        ),
+        DerivedSpec("is_pathogenic",
+            lambda uf: "pathogenic" in uf.get("clnsig", "").lower()
+        ),
+    ]
+
+    def __init__(self, filepath: str):
+        super().__init__(filepath, source_name="ClinVar")
+
+    
 class UGenomeAnnotations:
     """Unified interface for all genomic annotations and sequences.
     
@@ -819,14 +576,14 @@ class UGenomeAnnotations:
     """
     
     def __init__(self, fasta_path: Optional[str] = None, vcf_path: Optional[str] = None):
-        self.streams = {}
+        self.streams = {}  # Annotation streams (tabix-indexed)
+        self.motif_streams = {}  # Motif streams (sequence-scanning)
         self.indices = {}  # For fast range queries
         self.sequence_stream = None
-        
+
         # Initialize sequence streaming if FASTA provided
         if fasta_path:
             self.setup_sequence_stream(fasta_path, vcf_path)
-            # print("annotations set up sequence stream")
         
     def setup_sequence_stream(self, fasta_path: str, vcf_path: Optional[str] = None,
                             min_qual: float = 5.0):
@@ -884,19 +641,13 @@ class UGenomeAnnotations:
         """Add an annotation source."""
         self.streams[name] = stream
         logger.info(f"Added annotation source: {name}")
+    
+    def add_genes(self, filepath:str, name:str = "genes"):
+        self.add_source(name, GeneStream(filepath))
         
-    def add_gtf(self, filepath: str, name: str = "genes"):
-        """Add GTF annotation source."""
-        self.add_source(name, GTFStream(filepath))
-        
-    def add_vcf(self, filepath: str, name: str = "variants"):
-        """Add VCF annotation source."""
-        self.add_source(name, VCFStream(filepath))
-        
-    def add_bed(self, filepath: str, name: str, feature_type: str = "region"):
-        """Add BED annotation source."""
-        self.add_source(name, BEDStream(filepath, feature_type))
-        
+    def add_variants(self, filepath:str, name:str = "variants"):
+        self.add_source(name, VariantStream(filepath))
+    
     def add_repeatmasker(self, filepath: str, name: str = "repeats"):
         """Add RepeatMasker annotation source."""
         self.add_source(name, RepeatMaskerStream(filepath))
@@ -906,6 +657,11 @@ class UGenomeAnnotations:
     
     def add_clinvar(self, filepath, name = "clinvar"):
         self.add_source(name, ClinvarStream(filepath))
+    
+    def add_motifs(self, motif_stream, name:str = "motifs"):
+        
+        
+        pass
     
     def stream_all(self, chrom: Optional[str] = None,
                    start: Optional[int] = None,

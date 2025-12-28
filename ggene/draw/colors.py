@@ -1,6 +1,8 @@
 
 import re
 
+from ggene.draw.chars import SCALE
+
 class Colors:
     
     # RESET = '\033[38;5;224m\x1b[48;5;234m'
@@ -49,7 +51,7 @@ class Colors:
     
     _color_frm = '\x1b[{c}m'
     _color_frm_8b = '\x1b[{b_or_f};5;{c}m'
-    _color_frm_24b = '\x1b[{b_or_f};2;{c}m'
+    _color_frm_24b = '\x1b[{b_or_f};2;{c[0]};{c[1]};{c[2]}m'
     
     _fgi = 38
     _bgi = 48
@@ -137,7 +139,8 @@ class Colors:
     
     @classmethod
     def _get_color_24b(cls, color_spec, background = False):
-        return cls._color_frm_24b.format(b_or_f = cls._bgi if background else cls._fgi ,c=color_spec)
+        
+        return cls._color_frm_24b.format(b_or_f = cls._bgi if background else cls._fgi, c=color_spec)
         
     @classmethod
     def get_colors_fgbg(cls, fg_color_spec, bg_color_spec):
@@ -345,6 +348,22 @@ class Colors:
     @classmethod
     def visible_slice(cls, line, start=0, stop=None, step=1):
         return visible_slice(line, start=start,stop=stop,step=step)
+    
+    # @classmethod
+    # def show_colors(cls):
+        
+    #     for i in range(2**8):
+            
+    #         # fgcol = cls.get_color(i, background = False)
+    #         # bgcol = cls.get_color(i, background = True)
+    #         fgcol = "\x1b[38;5;{i}m".format(i=int(i))
+    #         bgcol = "\x1b[48;5;{i}m".format(i=int(i))
+            
+    #         printstrs = [str(i), fgcol, "this is the color of fg", SCALE, cls.RESET, bgcol, SCALE[::-1], "this is the color of bg", cls.RESET]
+    #         printstr = " ".join(printstrs)
+    #         print(printstr)
+    #         print(repr(printstr))
+
 
 def visible_len(line):
     """Get the length of a string excluding ANSI escape sequences."""

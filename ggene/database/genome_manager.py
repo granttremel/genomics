@@ -26,7 +26,9 @@ from ggene.genome.features import Gene, Feature, shorten_variant
 from ggene.genome.translate import Ribosome
 from ggene.database.genome_iterator import UGenomeIterator
 from ggene.browser.genome_browser_v2 import InteractiveGenomeBrowser
-from ggene.database.annotations import UGenomeAnnotations, GTFStream, VCFStream, UFeature
+from ggene.database.annotations import UGenomeAnnotations
+from ggene.database.ufeature import UFeature
+# from ggene.database.annotations import UGenomeAnnotations, GTFStream, VCFStream, UFeature
 from ggene.motifs import MotifDetector, PatternMotif, RepeatMotif
 from ggene.seqs.lambdas import needs_features
 from ggene.seqs.bio import reverse_complement, to_rna, to_dna, is_rna, is_dna, COMPLEMENT_MAP
@@ -86,15 +88,20 @@ class GenomeManager:
                 vcf_path=vcf_path if vcf_path and os.path.exists(vcf_path) else None
             )
             
+            if gtf_path:
+                self.annotations.add_genes(gtf_path)
+            if vcf_path:
+                self.annotations.add_variants(vcf_path)
+            
             # Add GTF annotations
-            if gtf_path and os.path.exists(gtf_path):
-                self.annotations.add_gtf(gtf_path, "genes")
-                logger.info(f"Added GTF annotations: {gtf_path}")
+            # if gtf_path and os.path.exists(gtf_path):
+            #     self.annotations.add_gtf(gtf_path, "genes")
+            #     logger.info(f"Added GTF annotations: {gtf_path}")
             
             # Add VCF annotations separately for annotation track
-            if vcf_path and os.path.exists(vcf_path):
-                self.annotations.add_vcf(vcf_path, "variants")
-                logger.info(f"Added VCF annotations: {vcf_path}")
+            # if vcf_path and os.path.exists(vcf_path):
+            #     self.annotations.add_vcf(vcf_path, "variants")
+            #     logger.info(f"Added VCF annotations: {vcf_path}")
             
             # Initialize motif detector
             self.motif_detector = MotifDetector()
@@ -150,25 +157,25 @@ class GenomeManager:
         # Add more motifs as needed
         logger.info("Initialized default motifs")
     
-    def add_annotation_source(self, name: str, filepath: str, source_type: str = "bed"):
-        """Add a new annotation source to the unified system.
+    # def add_annotation_source(self, name: str, filepath: str, source_type: str = "bed"):
+    #     """Add a new annotation source to the unified system.
         
-        Args:
-            name: Name for this annotation source
-            filepath: Path to the annotation file
-            source_type: Type of file (bed, gff, vcf, etc.)
-        """
-        if source_type.lower() == "bed":
-            from .annotations import BEDStream
-            self.annotations.add_source(name, BEDStream(filepath))
-        elif source_type.lower() in ["gff", "gtf"]:
-            self.annotations.add_gtf(filepath, name)
-        elif source_type.lower() == "vcf":
-            self.annotations.add_vcf(filepath, name)
-        else:
-            raise ValueError(f"Unknown source type: {source_type}")
+    #     Args:
+    #         name: Name for this annotation source
+    #         filepath: Path to the annotation file
+    #         source_type: Type of file (bed, gff, vcf, etc.)
+    #     """
+    #     if source_type.lower() == "bed":
+    #         from .annotations import BEDStream
+    #         self.annotations.add_source(name, BEDStream(filepath))
+    #     elif source_type.lower() in ["gff", "gtf"]:
+    #         self.annotations.add_gtf(filepath, name)
+    #     elif source_type.lower() == "vcf":
+    #         self.annotations.add_vcf(filepath, name)
+    #     else:
+    #         raise ValueError(f"Unknown source type: {source_type}")
         
-        logger.info(f"Added annotation source '{name}' from {filepath}")
+    #     logger.info(f"Added annotation source '{name}' from {filepath}")
     
     def get_all_annotations(self, chrom: str, start: int, end: int,
                            include_motifs: bool = True) -> List[UFeature]:
@@ -582,7 +589,9 @@ class GenomeManager:
         
         chrome = random.choice(chromes)
         
-        max_index = GTFStream.max_indices.get(chrome, 10e6)
+        from ggene.database.annotations import chr_lens
+        
+        max_index = chr_lens.get(chrome, 10e6)
         
         rand_pos = int(random.random()*(max_index - 2*margin) + margin)
         
