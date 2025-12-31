@@ -18,6 +18,7 @@ from ggene.browser.bindings.nav import bind_nav_commands
 
 from ggene.database.genome_iterator import UGenomeIterator
 from ggene.database.genome_manager import GenomeManager
+from ggene.database.annotations import get_experiment_stream
 from ggene.draw.colors import visible_len, visible_slice
 from ggene.display.artists import *
 from ggene.display.renderer import ArtistRenderer
@@ -29,18 +30,18 @@ logger = logging.getLogger(__name__)
 logger.setLevel("DEBUG")
 
 @dataclass
-class TestBrowserState(BaseBrowserState):    
+class ExpBrowserState(BaseBrowserState):    
     # feature_types:Optional[Tuple[str]] = ("gene", "exon", "CDS", "three_prime_utr", "five_prime_utr", "variant", "motif", "dfam_hit", "repeat")
     feature_types:Optional[Tuple[str]] = ("gene", "exon", "CDS", "motif", "dfam_hit", "pseudogene", "lncRNA", "ncRNA", "tf_binding")
     detect_motifs:bool = False
     _detect_motifs_once:bool = False
     
     mm_height:int = 8
-    seq_height:int = 7
+    seq_height:int = 5
     sc_height:int = 7
     line_height:int = 20
-    text_height:int = 8
-    log_height:int = 8
+    text_height:int = 24
+    log_height:int = 0
     
     def get_height(self, artist):
         
@@ -71,16 +72,23 @@ class TestBrowserState(BaseBrowserState):
         return out_dict
     
     
-class TestBrowser(BaseBrowser):
+class ExpBrowser(BaseBrowser):
     
     footer_text = "[←/→: move | ↑/↓: jump | g: goto | ?: help | q: quit]"
     
-    def __init__(self, gm = None, **kwargs):
+    def __init__(self, exp_path, gm = None, **kwargs):
         
         if not gm:
             gm = GenomeManager()
         
-        state = TestBrowserState(
+        min_exp = kwargs.pop("min_exp", 0.5)
+        filter = lambda f: f.mean_exp > min_exp
+        
+        self.exp_stream = get_experiment_stream(exp_path, kwargs.get("source_name","exp"), kwargs.get("feature_type", "exp_read"), filter=filter, gm=gm)
+        
+        logger.debug(f"{self.exp_stream.feature_type}")
+        
+        state = ExpBrowserState(
             chrom = kwargs.get("chrom", "1"), 
             position = kwargs.get("position", 10e6), 
             window_size = kwargs.get("window_size", 240), 
@@ -88,11 +96,15 @@ class TestBrowser(BaseBrowser):
         )
         
         state.update(**kwargs)
+        state.feature_types = tuple([self.exp_stream.feature_type]) + state.feature_types
+        
         iterator = UGenomeIterator(gm, state.chrom, state.position, window_size = state.window_size, stride = state.stride)
         
         super().__init__(gm, state = state, iterator = iterator, **kwargs)
         self.logger = logger
         self._log_artist = None
+        
+        self.logger.debug(f"feature_types: {self.state.feature_types}")
         
         dw = kwargs.get("display_width", 256)
         artists = self.build_artists(display_width = dw)
@@ -108,7 +120,14 @@ class TestBrowser(BaseBrowser):
         self.renderer.update_all(**kwargs)
         
         self.log_to_display("finished with init!", "TestBrowser.intialize", skip_update = True)
-        logger.debug(f"initted with position chr{self.state.chrom}:{self.state.position}, window_size = {self.state.window_size}")
+    
+    def start(self, **kwargs):
+        
+        for f in self.exp_stream.stream("2", start = 1, end = 101e6):
+            logger.debug(f)
+            
+        super().start(**kwargs)
+        pass
     
     def log_to_display(self, message, caller, skip_update = False):
         
@@ -117,8 +136,16 @@ class TestBrowser(BaseBrowser):
             if not skip_update:
                 self.refresh_display()
         
-    def startup(self, **kwargs):
-        super().startup(skip = True)
+    
+    def update(self):
+        super().update()
+        
+        for f in self.window.features:
+            logger.debug(f)
+        
+        logger.debug(self.iterator.feature_types)
+        
+        pass
     
     def register_parameters(self):
         
@@ -149,28 +176,20 @@ class TestBrowser(BaseBrowser):
         text_height = self.state.text_height
         log_height = self.state.log_height
         
+        seq_feat = lambda seq, feats: sum(1 for f in feats if f.feature_type == self.exp_stream.feature_type and self.exp_stream.validate_feature(f))
+        
         scale = 0.01
         ps = [
-            [-1, "genes", "gc"],
-            [0.05, "genes", "gc"],
-            [0.01, "genes", "gc"],
-            # [5*scale, "protein_coding", "lncrna"],
-            # [scale, "polya", "cpg"]
-            # [scale, "ncRNA", "lncRNA"]
+            [0.05, "genes", seq_feat],
+            [0.01, "genes", seq_feat],
+            [0.002, "genes", seq_feat]
         ]
         
         num_split = 3
         tmmgp = []
-        
-        seq_specs = set()
-        for _,qt1,qt2 in ps:
-            seq_specs.add(qt1)
-            seq_specs.add(qt2)
-        
-        seq_gen, feat_gen = MapArtist.get_generators(self.gm, seq_specs = tuple(seq_specs), needs_feats=['gene','pseudogene','ncRNA','lncRNA'])
-        
         for i in range(len(ps)):
             scale, qt1, qt2 = ps[i]
+            seq_gen, feat_gen = MapArtist.get_generators(self.gm, seq_specs = [qt1,qt2], needs_feats = [self.exp_stream.feature_type])
             arth = MapArtist(
                 f"map_{qt1}-{qt2}",
                 MapArtistParams(
@@ -189,7 +208,7 @@ class TestBrowser(BaseBrowser):
         
         artists["top_minimap_group"] = tmmgp
         
-        sqa = SeqArtist("seq",SeqArtistParams(display_width = display_width, display_height =seq_height, display_strategy = "fold"), top_label = "Sequences:")
+        sqa = SeqArtist("seq",SeqArtistParams(display_width = display_width, display_height =seq_height, display_strategy = "crop"), top_label = "Sequences:")
         artists["sequence_artist"] = sqa
         
         scalar_qts = ["correlation"]

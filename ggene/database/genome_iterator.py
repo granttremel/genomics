@@ -24,8 +24,8 @@ if TYPE_CHECKING:
     from .annotations import UGenomeAnnotations
 
 logger = logging.getLogger(__name__)
-# logger.setLevel("CRITICAL")
-logger.setLevel(logging.DEBUG)
+logger.setLevel("CRITICAL")
+# logger.setLevel(logging.DEBUG)
 
 @dataclass
 class BaseWindow:
@@ -390,9 +390,18 @@ class UGenomeIterator:
         if cache_key in self._feature_cache:
             return self._feature_cache[cache_key]
         
+
+        streams = list(self.annotations.streams.keys())
+        logger.debug(f"available streams: {streams}")
+                
         # Query features
-        features = self.annotations.query_range(self.chrom, start, end)
-        # features = [f for f in self.annotations.stream_all(self.chrom, start, end)]
+        # features = self.annotations.query_range(self.chrom, start, end)
+        features = [f for f in self.annotations.stream_all(self.chrom, start, end)]
+        
+        fts = set()
+        for f in features:
+            fts.add(f.feature_type)
+        logger.debug(f"feature types in window: {list(fts)}")
         
         # Filter by type if specified
         if self.feature_types:

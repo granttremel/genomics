@@ -181,25 +181,21 @@ class JasparStream(MotifStream):
             return []
 
         features = []
-        instances = self.motifs.find_instances(seq, min_score=self.min_score)
 
-        for mtf_id, inst_data in instances.items():
-            for match in inst_data:
-                
-                features.append(UFeature({
-                    'chrom': chrom,
-                    'start': offset + match.start,
-                    'end': offset + match.end,
-                    'feature_type': self.feature_type,
-                    'source': self.source_name,
-                    'name': match.name,
-                    'id': mtf_id,
-                    'strand': strand,
-                    'score': match.score, 
-                    'match_seq': match.seq
-                }))
-
-        # logger.debug(f"JasparStream scanned sequence and identified {len(features)} features")
+        # New interface: find_all_instances yields MatchResult objects directly
+        for match in self.motifs.find_all_instances(seq, threshold=self.min_score):
+            features.append(UFeature({
+                'chrom': chrom,
+                'start': offset + match.start,
+                'end': offset + match.end,
+                'feature_type': self.feature_type,
+                'source': self.source_name,
+                'name': match.name,
+                'id': match.motif_id,
+                'strand': strand,
+                'score': match.score,
+                'match_seq': match.seq
+            }))
 
         return features
 
@@ -209,10 +205,10 @@ class PatternStream(MotifStream):
     feature_type = "pattern"
     source_name = "Pattern"
 
-    def __init__(self, motif_detector):
+    def __init__(self, pattern_lib):
         """Initialize with pattern dict: {name: regex_pattern}."""
         super().__init__()
-        self.motifs = motif_detector
+        self.motifs = pattern_lib
         # self._pattern_defs = patterns or {}
         # self._compiled = {}
 
@@ -231,37 +227,65 @@ class PatternStream(MotifStream):
         """Find all pattern matches in sequence."""
         features = []
         
-        insts = self.motifs.identify(seq)
+        insts = self.motifs.find_all_instances(seq)
 
-        for mtf_name, mtf_insts in insts.items():
-            
-            for match in mtf_insts:
-                features.append(UFeature({
-                    'chrom': chrom,
-                    'start': offset + match.start,
-                    'end': offset + match.end,
-                    'feature_type': self.feature_type,
-                    'source': self.source_name,
-                    'name': match.name,
-                    'id': "",
-                    'strand': strand,
-                    'score': match.score, 
-                    'match_seq': match.seq
-                }))
-                
+        for match in insts:
+            features.append(UFeature({
+                'chrom': chrom,
+                'start': offset + match.start,
+                'end': offset + match.end,
+                'feature_type': self.feature_type,
+                'source': self.source_name,
+                'name': match.name,
+                'id': "",
+                'strand': strand,
+                'score': match.score, 
+                'match_seq': match.seq
+            }))
 
-        # for name, regex in self._compiled.items():
-        #     for match in regex.finditer(seq):
-        #         features.append(UFeature({
-        #             'chrom': chrom,
-        #             'start': offset + match.start(),
-        #             'end': offset + match.end() - 1,
-        #             'feature_type': self.feature_type,
-        #             'source': self.source_name,
-        #             'name': name,
-        #             'strand': strand,
-        #             'matched_seq': match.group(),
-        #         }))
+
+        return features
+
+
+class LibraryMotifStream(MotifStream):
+    """Stream adapter for MotifLibrary instances.
+
+    This bridges the MotifLibrary interface to the streaming interface
+    expected by UGenomeAnnotations.
+
+    Usage:
+        library = PWMLibrary()
+        library.load("/path/to/jaspar/")
+        stream = LibraryMotifStream(library, min_score=0.9)
+        annotations.add_motifs(stream, "pwm")
+    """
+    feature_type = "motif"
+    source_name = "MotifLibrary"
+
+    def __init__(self, library, min_score: float = 0.0, feature_type = "motif", source_name = "MotifLibrary"):
+        super().__init__()
+        self.library = library
+        self.min_score = min_score
+        # Set overlap based on max motif length
+        self.overlap = max(library.max_length + 10, 64)
+        self.feature_type = feature_type
+        self.source_name = source_name
+
+    def load(self):
+        """Library is already loaded, nothing to do."""
+        pass
+
+    def scan_sequence(self, seq: str, chrom: str, offset: int, strand: str = "+") -> List[UFeature]:
+        """Scan using the library's batch scanning."""
+        features = []
+
+        for result in self.library.find_all_instances(
+            seq, threshold=self.min_score, chrom=chrom, offset=offset
+        ):
+            features.append(result.to_ufeature(
+                feature_type=self.feature_type,
+                source=self.source_name
+            ))
 
         return features
 

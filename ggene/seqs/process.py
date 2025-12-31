@@ -5,7 +5,7 @@ import numpy as np
 import itertools
 
 from typing import Optional, Dict, List, Tuple, Any
-from .bio import reverse_complement, get_aliases
+from .bio import reverse_complement, ALIASES, ORDER, ALIASES_REV
 from .vocab import VOCAB
 
 def rotate_seq(seq, nr = 1):
@@ -61,6 +61,209 @@ def stretch_sequence(seq, step, keep, frame = 0, to_length = None, fill_char = "
         out_seq = out_seq[ltrim:len(out_seq) - rtrim]
     
     return out_seq
+
+def crop_sequence(seq, to_length, mode = "center"):
+    
+    seq_len = len(seq)
+    rhalf = (seq_len - to_length)//2
+    
+    if rhalf < 0:
+        return seq
+    
+    if mode == "center":
+        offset = rhalf
+    elif mode == "left":
+        offset = 0
+    elif mode == "right":
+        offset = 2*rhalf
+    elif mode == "random":
+        offset = random.randint(0, 2*rhalf)
+    
+    return seq[offset:offset+to_length]
+
+def get_inter_matrix(seqa, seqb, cmp_func = None, score_func = None):
+    
+    if not cmp_func:
+        cmp_func = lambda a, b: a==b
+    
+    if not score_func:
+        score_func = lambda a, b: 1
+    
+    mat = np.zeros((len(seqa), len(seqb)))
+    rcseqb = reverse_complement(seqb)
+    
+    for i in range(len(seqa)):
+        
+        bi = seqa[i]
+        
+        for j in range(len(seqb)):
+            
+            bj = seqb[j]
+            rcbj = rcseqb[j]
+            # rcbj = bio.complement(bj)
+            
+            if cmp_func(bi, bj):
+                mat[i, j] = score_func(bi, bj)
+            elif cmp_func(bi, rcbj):
+                mat[i,j] = -score_func(bi, rcbj)
+            
+    return mat
+
+def get_combined_inter_matrix(seqa, seqb):
+
+    fmat = get_full_inter_matrix(seqa, seqb)
+    inds = np.array([0,1,2,3])[:, None, None, None]
+
+    return np.sum(fmat*inds, axis=0)
+
+
+# Precomputed lookup tables for get_full_inter_matrix
+# Base indices: N=0, A=1, T=2, G=3, C=4
+_BASE_TO_IDX = {'N': 0, 'A': 1, 'T': 2, 'G': 3, 'C': 4}
+_IDX_TO_BASE = {0: 'N', 1: 'A', 2: 'T', 3: 'G', 4: 'C'}
+
+def _build_inter_matrix_luts():
+    """Build lookup tables for fast inter-matrix computation."""
+    # alias_to_ind mapping
+    alias_to_ind = {
+        "A": 0, "T": 0, "G": 0, "C": 0, "N": 0,
+        "R": 1, "Y": -1, "S": 2, "W": -2, "M": 3, "K": -3,
+    }
+    base_to_ind = {"N": 0, "A": 1, "T": 2, "G": 3, "C": 4}
+
+    # LUTs: [bi_idx, bj_idx] -> (alias_bucket, value)
+    alias_bucket_lut = np.zeros((5, 5), dtype=np.int8)
+    alias_value_lut = np.zeros((5, 5), dtype=np.float32)
+
+    for bi_idx in range(5):
+        bi = _IDX_TO_BASE[bi_idx]
+        for bj_idx in range(5):
+            bj = _IDX_TO_BASE[bj_idx]
+
+            # Compute alias
+            ali = ALIASES_REV.get(bi + bj, ALIASES_REV.get(bj + bi, bi))
+            find = alias_to_ind[ali]
+
+            # Compute value
+            if find:
+                v = 1.0 if find > 0 else -1.0
+            else:
+                v = float(base_to_ind.get(bi, 0))
+
+            alias_bucket_lut[bi_idx, bj_idx] = abs(find)
+            alias_value_lut[bi_idx, bj_idx] = v
+
+    return alias_bucket_lut, alias_value_lut
+
+_ALIAS_BUCKET_LUT, _ALIAS_VALUE_LUT = _build_inter_matrix_luts()
+
+
+def get_full_inter_matrix(seqa, seqb):
+    """
+    Compute mutation-type inter-matrix between two sequences.
+
+    Uses precomputed lookup tables and numpy vectorization for performance.
+    Returns a (4, 2, len(seqa), len(seqb)) matrix where:
+        - axis 0: alias bucket (0=same/N, 1=Y/R, 2=S/W, 3=M/K)
+        - axis 1: strand (0=forward, 1=reverse complement)
+        - axes 2,3: position in seqa, seqb
+    """
+    len_a = len(seqa)
+    len_b = len(seqb)
+
+    # Convert sequences to index arrays
+    seqa_idx = np.array([_BASE_TO_IDX.get(b, 0) for b in seqa], dtype=np.int8)
+    seqb_idx = np.array([_BASE_TO_IDX.get(b, 0) for b in seqb], dtype=np.int8)
+
+    # Compute reverse complement indices
+    rcseqb = reverse_complement(seqb)
+    rcseqb_idx = np.array([_BASE_TO_IDX.get(b, 0) for b in rcseqb], dtype=np.int8)
+
+    # Create 2D index grids for all pairs: (len_a, len_b)
+    a_grid = seqa_idx[:, np.newaxis]  # (len_a, 1)
+    b_grid = seqb_idx[np.newaxis, :]  # (1, len_b)
+    rcb_grid = rcseqb_idx[np.newaxis, :]  # (1, len_b)
+
+    # Look up alias buckets and values for all pairs at once
+    fwd_buckets = _ALIAS_BUCKET_LUT[a_grid, b_grid]  # (len_a, len_b)
+    fwd_values = _ALIAS_VALUE_LUT[a_grid, b_grid]
+    rc_buckets = _ALIAS_BUCKET_LUT[a_grid, rcb_grid]
+    rc_values = _ALIAS_VALUE_LUT[a_grid, rcb_grid]
+
+    # Build output using one-hot encoding for bucket dimension
+    # Create masks for each bucket and multiply by values
+    mat = np.zeros((4, 2, len_a, len_b), dtype=np.float32)
+
+    for bucket in range(4):
+        fwd_mask = (fwd_buckets == bucket)
+        rc_mask = (rc_buckets == bucket)
+        mat[bucket, 0] = np.where(fwd_mask, fwd_values, 0)
+        mat[bucket, 1] = np.where(rc_mask, rc_values, 0)
+
+    return mat
+
+
+def get_full_inter_matrix_slow(seqa, seqb):
+    """Original implementation for reference/validation."""
+    base_to_ind = {
+        "N":0,
+        "A":1,
+        "T":2,
+        "G":3,
+        "C":4,
+    }
+
+    alias_to_ind = {
+        "A":0, "T":0, "G":0, "C":0, "N":0,
+        "Y":1,
+        "R":-1,
+        "S":2,
+        "W":-2,
+        "M":3,
+        "K":-3,
+    }
+
+    mat = np.zeros((4, 2, len(seqa), len(seqb)))
+
+    rcseqb = reverse_complement(seqb)
+
+    for i in range(len(seqa)):
+        bi = seqa[i]
+
+        for j in range(len(seqb)):
+            bj = seqb[j]
+            rcbj = rcseqb[j]
+
+            ali = ALIASES_REV.get(bi+bj, ALIASES_REV.get(bj+bi, bi))
+            rcali = ALIASES_REV.get(bi+rcbj, ALIASES_REV.get(rcbj+bi, bi))
+
+            find = alias_to_ind[ali]
+            rcfind = alias_to_ind[rcali]
+
+            v = find/abs(find) if find else base_to_ind.get(bi,0)
+            rcv = rcfind/abs(rcfind) if rcfind else base_to_ind.get(bi, 0)
+
+            mat[abs(find), 0, i, j] = v
+            mat[abs(find), 1, i, j] = rcv
+
+    return mat
+
+def shear_matrix(mat, axis = 0, fill = 0):
+    
+    if axis == 1:
+        mat = mat.T
+        
+    r,c = mat.shape
+    bigmat = np.zeros((r+c, c)) + fill
+    
+    for i in range(r):
+        for j in range(c):
+            bigmat[c-j-1+i, j] = mat[i, j]
+        
+    if axis == 1:
+        bigmat = bigmat.T
+    
+    return bigmat
 
 def normalize_sequence(seq):
     """

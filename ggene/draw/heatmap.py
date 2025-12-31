@@ -79,7 +79,12 @@ class Heatmap:
             'center': None,  # If set, creates symmetric range around center
 
             # Colors
+            'colors': None,
             'color_scheme': 'terra',
+            'brightness': 1.0,
+            'contrast': 1.0,
+            'hue_shift': 1.0,
+            'saturation':1.0,
             'symmetric_color': True,
             'num_colors': 24,
 
@@ -111,7 +116,7 @@ class Heatmap:
 
     def _calculate_range(self):
         """Calculate min/max values from data."""
-        flat_data = [val for row in self.data for val in row if val is not None]
+        flat_data = [val for row in self.data for val in row if val is not None and not np.isnan(val)]
 
         if not flat_data:
             self._minval = 0
@@ -138,25 +143,34 @@ class Heatmap:
 
     def _build_color_scale(self):
         """Build the color scale for value mapping."""
-        min_color, max_color = Colors.get_color_scheme_24b(self.options['color_scheme'])
-        mid_color, _ = Colors.get_color_scheme_24b("vscode")
-
-        num_colors = self.options['num_colors']
+        
+        if self.options['colors']:
+            cols = self.options['colors']
+        else:
+            min_color, max_color = Colors.get_color_scheme_24b(
+                self.options['color_scheme'], 
+                brightness = self.options['brightness'],
+                contrast = self.options['contrast'],
+                hue_shift = self.options['hue_shift'],
+                saturation = self.options['saturation'])
+            
+            cols = Colors.add_middle(min_color, max_color, saturation = 0.5)
+        
+        # num_colors = self.options['num_colors']
         colors = Colors()
+        num_colors = len(cols)
+        
 
         if self.options['symmetric_color'] and self.options['center'] is not None:
-            # Symmetric scale: mid -> min, mid -> max
-            cs1 = colors.get_color_scale_24b(mid_color, min_color, num_colors // 2)
-            cs2 = colors.get_color_scale_24b(mid_color, max_color, num_colors // 2)
-            self._color_scale = cs1[::-1] + cs2
+            self._color_scale = colors.get_color_scale_24b(num_colors, *cols)
         else:
             # Linear scale: min -> max
-            self._color_scale = colors.get_color_scale_24b(min_color, max_color, num_colors)
+            self._color_scale = colors.get_color_scale_24b(num_colors, *cols)
 
     def _value_to_color(self, val: float) -> Tuple[int, int, int]:
         """Map a value to an RGB color tuple."""
-        if val is None:
-            return (0, 0, 0)  # Black for None values
+        if val is None or np.isnan(val):
+            return (20, 20, 20)  # Black for None values
 
         normalized = (val - self._minval) / self._range
         color_idx = int(normalized * (len(self._color_scale) - 1))
@@ -171,7 +185,7 @@ class Heatmap:
         col_labels = self.options['col_labels']
 
         max_row_label_len = max(len(str(lbl)) for lbl in row_labels) if row_labels else 0
-        row_fmt = "{:<%s}{}" % str(max_row_label_len + 1)
+        row_fmt = "{:<%s}{}" % str(max_row_label_len + 2)
 
         col_width = self.options['col_width']
         col_space = self.options['col_space']
@@ -252,7 +266,7 @@ class Heatmap:
                 if i < len(row_labels):
                     upper_lbl = str(row_labels[i])
                     lower_lbl = str(row_labels[i + 1]) if i + 1 < len(row_labels) else ""
-                    row_lbl = f"{upper_lbl}/{lower_lbl}".ljust(max_row_label_len)
+                    row_lbl = f"{upper_lbl} {lower_lbl}".ljust(max_row_label_len)
 
             line = self._make_half_block_row(upper_row, lower_row, col_width, col_space, half_block)
             self.rows.append(row_fmt.format(row_lbl, line))
@@ -385,7 +399,7 @@ class Heatmap:
         self.render()
         return self
 
-    def set_color_scheme(self, scheme: str) -> 'Heatmap':
+    def set_color_scheme(self, scheme: str, brightness = None, contrast = None, hue = None) -> 'Heatmap':
         """Set color scheme."""
         self.options['color_scheme'] = scheme
         self._build_color_scale()
@@ -498,11 +512,9 @@ def heatmap(data, row_labels=None, col_labels=None, minval=None, maxval=None, ce
             max_color = 226
     
     if symmetric_color:
-        cs1 = colors.get_color_scale_24b(mid_color, min_color, num_colors//2)
-        cs2 = colors.get_color_scale_24b(mid_color, max_color, num_colors//2)
-        color_scale = cs1[::-1] + cs2
+        color_scale = colors.get_color_scale_24b(num_colors//2, min_color, mid_color, max_color)
     else:
-        color_scale = colors.get_color_scale_24b(min_color, max_color, num_colors)
+        color_scale = colors.get_color_scale_24b(num_colors, min_color, max_color)
     
     
     def value_to_color(val):

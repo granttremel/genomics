@@ -34,6 +34,7 @@ class BaseBrowserState:
     position:int = -1
     window_size:int = -1
     stride:int = -1
+    display_height:int = 32
     feature_types:Optional[Tuple[str]] = tuple()
     show_reverse_strand = False
     show_rna = False
@@ -112,6 +113,8 @@ class BaseBrowser:
     def start(self, **kwargs):
 
         self.initialize(**kwargs)
+        
+        self.startup()
 
         try:
             self.run_browser()
@@ -146,12 +149,8 @@ class BaseBrowser:
     
     def update(self):
         
-        # print(self.state.__dict__)
-        
         update_dict = self.state.to_dict()
-        
-        self.logger.debug(f"state dict during udpate: {update_dict}")
-        
+        # print(update_dict)
         # update iterator
         self.iterator.update(**update_dict)
         self.window = self.iterator.get_window()
@@ -167,7 +166,10 @@ class BaseBrowser:
         
         for line in self._rendered_view:
             print(line + Colors.RESET)
-        
+    
+    def refresh_display(self):
+        self.render()
+        self.display()
     
     def get_input(self):
         k = utils.get_user_keypress()
@@ -295,9 +297,22 @@ class BaseBrowser:
         """
         pass
 
+    def startup(self, **kwargs):
+        
+        if self.debug:
+            return
+        
+        utils.startup_splash(self.renderer.params.display_height, self.renderer.params.display_width, **kwargs)
+
+        
     def cleanup(self):
         """Cleanup on browser exit. Override to add cleanup logic."""
-        pass
+        
+        print("Exiting genome browser. goodbye!")
+        time.sleep(0.25)
+        if not self.debug:
+            print("\x1b[?1049l", end="")
+        
 
     # ===== YAML Serialization =====
 
@@ -507,9 +522,9 @@ class BaseBrowser:
                         lines.append(f"      params: {artist.params}")
 
         lines.append("")
-        lines.append(f"Commands: {len(self.registry._commands)}")
-        lines.append(f"Keybindings: {len(self.keybindings._bindings)}")
-        lines.append(f"Parameters: {len(self.params._params)}")
+        lines.append(f"Commands: {len(self.registry.commands)}")
+        lines.append(f"Keybindings: {len(self.keybindings.bindings)}")
+        lines.append(f"Parameters: {len(self.params.params)}")
 
         return "\n".join(lines)
 

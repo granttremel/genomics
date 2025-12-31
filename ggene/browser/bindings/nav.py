@@ -70,7 +70,23 @@ def map_zoom_in(brws:'BaseBrowser', state:'BaseBrowserState', window:'BaseWindow
 def map_zoom_out(brws:'BaseBrowser', state:'BaseBrowserState', window:'BaseWindow'):
     z = 1/default_map_zoom
     return _map_zoom(brws, state, window, z)
-        
+
+def next_feature(brws:'BaseBrowser', state:'BaseBrowserState', window:'BaseWindow'):
+    
+    brws.log_to_display("Called command next_feature", "commands.next_feature")
+    f = elicit_input("Feature type?", str, default = 'gene')
+    
+    cond = {"feature_type": f}
+    
+    fgen = brws.gm.search.feature_search(state.chrom, state.position, None, cond)
+    
+    f = next(iter(fgen))
+    state.position = f.start - state.window_size//2
+    
+    brws.log_to_display(f"moving to feature {f}", "commands.next_feature")
+    
+    return state
+    
 
 nav_bindings = {
     "z":{
@@ -120,6 +136,13 @@ nav_bindings = {
         "_bound_method": map_zoom_out
     },
     
+    "n":{
+        "key":"n",
+        "name":"next_feature",
+        "method":next_feature.__name__,
+        "description":"Move to next feature of desired type",
+        "_bound_method": next_feature
+    },
 }
 
 def bind_nav_commands(obj, registry:CommandRegistry):

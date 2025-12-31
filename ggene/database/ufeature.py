@@ -68,7 +68,8 @@ class UFeature:
             for k, v in data['attributes'].items():
                 if v not in (None, "", []):
                     self.attributes[k] = v
-            
+    
+    
     @classmethod
     def from_parsed(cls, data: Dict[str, Any],
                     columns: Optional[List['ColumnSpec']] = None,
@@ -89,15 +90,18 @@ class UFeature:
         if derived:
             for spec in derived:
                 result = spec.evaluate(feature)
+                
                 if result is not None:
                     # Derived can override core fields too
                     if spec.name in cls._core_fields:
+                        prev = getattr(feature, spec.name)
                         object.__setattr__(feature, spec.name, result)
+                        curr = getattr(feature, spec.name)
                     else:
                         feature.attributes[spec.name] = result
                     canonical.add(spec.name)
 
-        feature.attributes["_raw_line"] = raw_line
+        # feature.attributes["_raw_line"] = raw_line
 
         return feature
 
@@ -176,6 +180,8 @@ class UFeature:
             'strand': self.strand,
             'name': self.name,
             'id': self.id,
+            'chr': self.chrom,
+            'gene_id': self.id,
             'attributes': self.attributes
         }
 

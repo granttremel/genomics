@@ -1,25 +1,53 @@
+"""Metric-based motif detection (GC content, etc)."""
 
-from .motif import BaseMotif
+import numpy as np
+from typing import List
+from .motif import BaseMotif, MatchResult
+
 
 class MetricMotif(BaseMotif):
-    
-    def __init__(self, name, id_function, scoring_function):
-        super().__init__(name)
-        self.identify_func = id_function
-        self.score_func=scoring_function
-    
-    def score(self, seq, return_positions=False):
-        
-        return self.score_func(seq)
-    
-    def find_instances(self, seq, threshold=None):
-        
-        
-        
-        pass
-    
-    def __call__(self, seq):
-        return self.func(seq)
+    """Compute sequence metrics (GC content, etc).
 
-gcfunc = lambda seq: (seq.count('G') + seq.count('C'))/len(seq)
-gcpattern = MetricMotif('gc_content', gcfunc, gcfunc)
+    Unlike pattern motifs, metric motifs compute a value for a window
+    rather than finding discrete instances.
+    """
+
+    def __init__(self, name: str, scoring_function, window_size: int = 1):
+        super().__init__(name, motif_id=name)
+        self.score_func = scoring_function
+        self._window_size = window_size
+
+    @property
+    def length(self) -> int:
+        return self._window_size
+
+    def scan(self, seq: str) -> np.ndarray:
+        """Compute metric at each position."""
+        if self._window_size == 1:
+            # Per-base metric
+            return np.array([self.score_func(seq)])
+        else:
+            # Sliding window
+            scores = []
+            for i in range(len(seq) - self._window_size + 1):
+                window = seq[i:i + self._window_size]
+                scores.append(self.score_func(window))
+            return np.array(scores) if scores else np.array([])
+
+    def find_instances(self, seq: str, threshold: float = 0.0,
+                      chrom: str = "", offset: int = 0) -> List[MatchResult]:
+        """Metric motifs don't have discrete instances."""
+        return []
+
+    def __call__(self, seq: str) -> float:
+        return self.score_func(seq)
+
+
+def gc_content(seq: str) -> float:
+    """Compute GC content of sequence."""
+    if not seq:
+        return 0.0
+    return (seq.upper().count('G') + seq.upper().count('C')) / len(seq)
+
+
+gcpattern = MetricMotif('gc_content', gc_content)

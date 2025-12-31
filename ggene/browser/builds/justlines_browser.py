@@ -32,9 +32,10 @@ class JustLinesBrowser(BaseBrowser):
     
     footer_text = "[←/→: move | ↑/↓: jump | g: goto | ?: help | q: quit]"
     
-    def __init__(self, **kwargs):
+    def __init__(self, gm = None, **kwargs):
         
-        gm = GenomeManager()
+        if not gm:
+            gm = GenomeManager()
         
         state = JustLinesBrowserState(kwargs.get("chrom", "1"), kwargs.get("position", 10e6), kwargs.get("window_size", 240), kwargs.get("stride", 20), kwargs.get("display_height", 40))
         state.update(**kwargs)

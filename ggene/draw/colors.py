@@ -263,17 +263,20 @@ class Colors:
         mincol = (2**16 - d**3)//2
         maxcol = 2**16 - mincol
         return self._get_color_scale(startrgb, endrgb, num_values, d, mincol,maxcol)
-    
-    def get_color_scale_24b(self, startrgb, endrgb, num_values):
-        
+
+    @classmethod
+    def get_color_scale_24b(cls, num_values, *rgbs):
         color_scale = []
         
-        for n in range(num_values):
-            cn = []
-            for cs, ce in zip(startrgb, endrgb):
-                col = min(255, max(0, round(n * (ce - cs) / num_values + cs)))
-                cn.append(col)
-            color_scale.append(cn)
+        for i in range(1, len(rgbs)):
+            startrgb = rgbs[i-1]
+            endrgb = rgbs[i]
+            for n in range(num_values):
+                cn = []
+                for cs, ce in zip(startrgb, endrgb):
+                    col = min(255, max(0, round(n * (ce - cs) / num_values + cs)))
+                    cn.append(col)
+                color_scale.append(cn)
         
         return color_scale
 
@@ -319,29 +322,202 @@ class Colors:
         else:
             return 0,1
 
-    _color_schemes_24b = ["gray","coolwarm","sweet","lava","energy","deep","terra","unterra","vscode"]
+    _color_schemes_24b = {
+        # Original schemes
+        "gray": ([36, 36, 36], [220, 220, 220]),
+        "coolwarm": ([26, 158, 229], [250, 144, 50]),
+        "sweet": ([63, 36, 97], [255, 92, 131]),
+        "peachy": ([251, 129, 124], [254, 55, 200]),
+        "lava": ([28, 55, 57], [196, 55, 57]),
+        "energy": ([36, 71, 122], [245, 178, 37]),
+        "deep": ([20, 34, 78], [180, 34, 78]),
+        "deepp": ([76, 18, 43], [14, 67, 124]),
+        "bug": ([19, 118, 83], [244, 143, 35]),
+        "terra": ([79,68,31],[30, 205, 40]),
+        "terra_light": ([118, 55, 30], [49, 158, 83]),
+        "unterra": ([19, 118, 83], [125, 25, 125]),
+        "sunset": ([14, 131, 158], [234, 42, 38]),
+        "aqua_vitae": ([11, 11, 160], [176, 24, 13]),
+        "aqua_vitae_soft": ([33, 33, 182], [192, 58, 37]),
+        "bluegreen": ([36, 17, 162], [63, 126, 7]),
+        "sandy": ([79, 68, 31], [182, 171, 79]),
+        "minty": ([68, 105, 46], [132, 227, 245]),
+        "hott": ([121, 0, 69], [250, 11, 9]),
+        "desert": ([135, 65, 38], [110, 135, 67]),
+        "desert_dawn": ([119, 66, 105], [193, 130, 27]),
+        "desert_dusk": ([73, 54, 43], [187, 88, 28]),
+        "orangey": ([178, 91, 13], [255, 149, 25]),
+        "dusky": ([30, 38, 74], [77, 53, 162]),
+        "alpine": ([54, 244, 88], [108, 37, 164]),
+        "vscode": ([28, 28, 28], [28, 28, 28]),
+
+        # Ocean & Water themes
+        "abyssal": ([8, 24, 58], [45, 149, 182]),
+        "tideline": ([22, 78, 99], [167, 219, 216]),
+        "bioluminescent": ([5, 15, 45], [72, 209, 204]),
+        "coral_reef": ([255, 127, 80], [64, 224, 208]),
+        "frozen_fjord": ([45, 55, 72], [176, 224, 230]),
+
+        # Fire & Heat themes
+        "ember_glow": ([45, 12, 8], [255, 140, 0]),
+        "solar_flare": ([89, 13, 34], [255, 215, 0]),
+        "magma_flow": ([25, 8, 8], [255, 69, 0]),
+        "phoenix": ([75, 0, 30], [255, 191, 0]),
+        "campfire": ([40, 20, 10], [255, 160, 50]),
+
+        # Nature themes
+        "moss": ([22, 38, 24], [144, 190, 109]),
+        "autumn_canopy": ([62, 39, 35], [208, 134, 67]),
+        "twilight_grove": ([28, 42, 58], [126, 188, 137]),
+        "lichen": ([58, 63, 48], [168, 198, 134]),
+        "fern": ([15, 42, 28], [119, 178, 85]),
+        "geosmin": ([52, 61, 70], [134, 150, 167]),
+
+        # Cosmic themes
+        "nebula": ([20, 10, 38], [147, 88, 172]),
+        "pulsar": ([10, 8, 28], [100, 149, 237]),
+        "event_horizon": ([5, 5, 15], [88, 28, 135]),
+        "aurora_borealis": ([18, 38, 58], [100, 255, 150]),
+        "supernova": ([28, 18, 48], [255, 100, 120]),
+        "dark_matter": ([12, 12, 18], [68, 68, 102]),
+
+        # Warm Earth tones
+        "terracotta": ([110, 47, 35], [215, 133, 95]),
+        "saharan": ([92, 64, 38], [222, 184, 135]),
+        "canyon_wall": ([75, 45, 35], [188, 143, 108]),
+        "clay_kiln": ([58, 32, 28], [178, 102, 68]),
+        "burnt_umber": ([48, 28, 18], [138, 75, 38]),
+
+        # Cool & Muted themes
+        "overcast": ([68, 72, 82], [148, 158, 172]),
+        "slate_rain": ([48, 58, 68], [118, 138, 158]),
+        "morning_fog": ([82, 88, 95], [178, 188, 198]),
+        "glacier": ([58, 78, 98], [168, 208, 228]),
+        "moonstone": ([48, 52, 68], [158, 168, 188]),
+
+        # Vibrant & Bold themes
+        "synthwave": ([28, 18, 58], [255, 20, 147]),
+        "neon_jungle": ([15, 38, 28], [57, 255, 20]),
+        "electric_dreams": ([18, 8, 48], [138, 43, 226]),
+        "vaporwave": ([48, 28, 88], [255, 113, 206]),
+        "cyberpunk": ([15, 12, 28], [0, 255, 255]),
+
+        # Biological & Scientific themes
+        "mitochondria": ([38, 58, 48], [158, 208, 88]),
+        "chloroplast": ([28, 48, 28], [128, 208, 48]),
+        "membrane": ([68, 48, 58], [218, 168, 188]),
+        "nucleotide": ([28, 38, 68], [108, 158, 228]),
+        "ribosome": ([58, 48, 38], [188, 158, 108]),
+
+        # Gem & Mineral themes
+        "amethyst": ([48, 28, 58], [153, 102, 204]),
+        "malachite": ([18, 38, 28], [80, 200, 120]),
+        "obsidian": ([15, 15, 18], [58, 58, 68]),
+        "citrine": ([68, 48, 18], [228, 178, 48]),
+        "sapphire": ([15, 28, 68], [65, 105, 225]),
+        "opal": ([58, 58, 68], [188, 178, 198]),
+
+        # Atmospheric themes
+        "stratosphere": ([18, 28, 58], [88, 148, 208]),
+        "smog": ([58, 55, 52], [138, 128, 118]),
+        "golden_hour": ([68, 48, 38], [255, 183, 77]),
+        "blue_hour": ([28, 38, 68], [98, 128, 188]),
+        "thunderhead": ([38, 42, 52], [108, 118, 138]),
+    }
 
     @classmethod
-    def get_color_scheme_24b(cls, name):
+    def _adjust_brightness(cls, rgb, factor):
+        """Adjust brightness of an RGB color. factor > 1 brightens, < 1 darkens."""
+        return [min(255, max(0, int(c * factor))) for c in rgb]
+
+    @classmethod
+    def _adjust_contrast(cls, rgb, factor):
+        """Adjust contrast relative to middle gray (128). factor > 1 increases contrast."""
+        return [min(255, max(0, int(128 + (c - 128) * factor))) for c in rgb]
+
+    @classmethod
+    def _shift_hue(cls, rgb, degrees):
+        """Shift hue by degrees (0-360). Converts RGB->HSV->RGB."""
+        import colorsys
+        r, g, b = [c / 255.0 for c in rgb]
+        h, s, v = colorsys.rgb_to_hsv(r, g, b)
+        h = (h + degrees / 360.0) % 1.0
+        r, g, b = colorsys.hsv_to_rgb(h, s, v)
+        return [int(r * 255), int(g * 255), int(b * 255)]
+
+    @classmethod
+    def _adjust_saturation(cls, rgb, factor):
+        """Adjust saturation. factor > 1 increases, < 1 decreases (towards gray)."""
+        import colorsys
+        r, g, b = [c / 255.0 for c in rgb]
+        h, s, v = colorsys.rgb_to_hsv(r, g, b)
+        s = min(1.0, max(0.0, s * factor))
+        r, g, b = colorsys.hsv_to_rgb(h, s, v)
+        return [int(r * 255), int(g * 255), int(b * 255)]
+
+    @classmethod
+    def _adjust_color(cls, rgb, brightness=1.0, contrast=1.0, hue_shift=0, saturation=1.0):
+        nrgb = rgb
         
-        if name == "gray":
-            return [63,36,97], [255,92,131]
-        elif name == "coolwarm":
-            return [26,158,229], [250,144,50]
-        elif name == "sweet":
-            return [63,36,97], [255,92,131]
-        elif name == "lava":
-            return [28,55,57], [196,55,57] 
-        elif name == "energy":
-            return [36,71,122], [245,178,37]
-        elif name == "deep":
-            return [20,34,78], [180,34,78]
-        elif name == "terra":
-            return [19,118,83], [244,143,35]
-        elif name == "unterra":
-            return [19,118,83], [125,25,125]
-        elif name == "vscode":
-            return [28,28,28], [28,28,28]
+        # order ?
+        if hue_shift != 0:
+            nrgb = cls._shift_hue(nrgb, hue_shift)
+        if saturation != 1.0:
+            nrgb = cls._adjust_saturation(nrgb, saturation)
+        if contrast != 1.0:
+            nrgb = cls._adjust_contrast(nrgb, contrast)
+        if brightness != 1.0:
+            nrgb = cls._adjust_brightness(nrgb, brightness)
+        
+        return nrgb
+
+    @classmethod
+    def add_middle(cls, startrgb, endrgb, num_mid = 1, brightness = 1.0, contrast = 1.0, hue_shift = 0, saturation = 1.0):
+        
+        mids = []
+        n = num_mid + 1
+        for nm in range(num_mid):
+            cmid = [int((nm+1)*(c1 + c2)/n) for c1,c2 in zip(startrgb, endrgb)]
+            
+            cmid = cls._adjust_color(cmid, brightness=brightness, contrast = contrast, hue_shift = hue_shift, saturation=saturation)
+            mids.append(cmid)
+        
+        return startrgb, *mids, endrgb
+
+    @classmethod
+    def get_color_scheme_24b(cls, name, brightness=1.0, contrast=1.0, hue_shift=0, saturation=1.0):
+        """
+        Get a 24-bit color scheme by name with optional adjustments.
+
+        Args:
+            name: Name of the color scheme
+            brightness: Brightness multiplier (>1 brighter, <1 darker)
+            contrast: Contrast multiplier (>1 more contrast, <1 less)
+            hue_shift: Hue rotation in degrees (0-360)
+            saturation: Saturation multiplier (>1 more saturated, <1 more muted)
+
+        Returns:
+            Tuple of (start_rgb, end_rgb) color lists
+        """
+        if name not in cls._color_schemes_24b:
+            print(name)
+            return None, None
+
+        start, end = cls._color_schemes_24b[name]
+        start, end = list(start), list(end)
+
+        # Apply adjustments if any are non-default
+        
+        start = cls._adjust_color(start, brightness=brightness, contrast=contrast, hue_shift=hue_shift, saturation=saturation)
+        end = cls._adjust_color(end, brightness=brightness, contrast=contrast, hue_shift=hue_shift, saturation=saturation)
+
+        return start, end
+
+    @classmethod
+    def list_color_schemes_24b(cls):
+        """Return list of available 24-bit color scheme names."""
+        return list(cls._color_schemes_24b.keys())
+
 
     @classmethod
     def visible_len(cls, line):

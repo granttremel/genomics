@@ -54,6 +54,9 @@ class SeqArtist(BaseArtist):
         
         # seqb = window.alt_seq
         
+        if not window:
+            return []
+        
         feats, spans = self.get_detail_features(window.motifs, window.start_ref)
         
         # logger.debug(f"found {len(feats)} detail features")

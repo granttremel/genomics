@@ -9,7 +9,7 @@ if TYPE_CHECKING:
     from ggene.database.genome_iterator import BaseWindow, BaseIterator, UGenomeIterator, GenomeWindow
     from ggene.display.artists.base import BaseArtist
 
-def elicit_input(message, cast_to_type = str, min_val = None, max_val = None, current_val = None):
+def elicit_input(message, cast_to_type = str, min_val = None, max_val = None, current_val = None, default = None):
     
     submsg_parts = []
     if current_val is not None:
@@ -33,7 +33,10 @@ def elicit_input(message, cast_to_type = str, min_val = None, max_val = None, cu
     inp=input(full_msg)
     
     try:
-        res = cast_to_type(inp.strip())
+        if cast_to_type is bool:
+            res = 'y' in inp.lower()
+        else:
+            res = cast_to_type(inp.strip())
         
         if max_val:
             res = min(res, max_val)
@@ -42,7 +45,10 @@ def elicit_input(message, cast_to_type = str, min_val = None, max_val = None, cu
         
     except:
         print(f"failed to parse input {inp} to type {cast_to_type}")
-        res = str(inp)
+        return default
+
+    if not res:
+        return default
 
     return res
 
@@ -55,6 +61,9 @@ def elicit_and_change(brws:'BaseBrowser', state, window, param_name, message, ca
         modify_param(brws, state, window, param_name, res)
 
 def parse_position(pos_str, default = 1000000):
+    
+    if not pos_str:
+        return default
     
     fact = 1
     if pos_str[-1] == "M":
@@ -96,14 +105,14 @@ def goto_position(brws:'BaseBrowser', state:'BaseBrowserState', window:'BaseWind
     pos_str = elicit_input(message, cast_to_type, min_val, max_val)
     
     try:
-        pos = parse_position(pos_str)
+        pos = parse_position(pos_str) - state.window_size//2
         modify_param(brws, state, window, param_name, pos)
     except:
         if pos_str == 'r':
             chrom, pos = brws.gm.get_random_location()
         
         state.chrom = chrom
-        state.position = pos
+        state.position = pos - state.window_size//2
     
     return pos
     
@@ -174,6 +183,49 @@ def find_motifs(brws:'BaseBrowser', state:'BaseBrowserState', window:'BaseWindow
     
     state._detect_motifs_once = True
     brws.logger.debug(f"updating motifs once.. {state.__dict__}")
+    
+    return state
+
+def search_for_feature(brws:'BaseBrowser', state:'BaseBrowserState', window:'BaseWindow'):
+    
+    chrom = elicit_input("Chromosome?", str)
+    start = elicit_input("Starting position?", str)
+    end = elicit_input("Ending position?", str)
+    query = elicit_input("Input search query as k1=v1 k2=v2 k3=v3 ...")
+
+    start = parse_position(start)
+    end = parse_position(end, None)
+    
+    conds = {}
+    
+    condstrs = query.strip().split(" ")
+    for cond in condstrs:
+        kv = cond.split("=")
+        if len(kv) == 2:
+            k,v = kv
+            k = k.strip(",").strip()
+            v = v.strip(",").strip()
+            
+            conds[k] = v
+    f = None
+    for f in brws.gm.search.feature_search(chrom, start, end, conds):
+        
+        if not f:
+            break
+        
+        brws.log_to_display(f"feature identified:{f}", "commands.search_for_feature")
+        res = elicit_input("go to feature?", cast_to_type = bool)
+    
+        if res:
+            break
+        else:
+            start = f.end + 1
+
+    if f:
+        state.chrom = f.chrom
+        state.position = f.start - state.window_size//2
+    else:
+        brws.log_to_display("failed to identify a suitable feature.", "commands.search_for_feature")
     
     return state
 
@@ -315,6 +367,13 @@ default_bindings = {
         "method":save_state.__name__,
         "description":"Save browser state",
         "_bound_method": save_state
+    },
+    "S":{
+        "key":"S",
+        "name":"search_for_feature",
+        "method":search_for_feature.__name__,
+        "description":"Search for feature",
+        "_bound_method": search_for_feature
     },
     "h":{
         "key":"h",

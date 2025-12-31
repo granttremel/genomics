@@ -74,6 +74,11 @@ class FASTAStream(BaseSequenceStream):
         # Open FASTA file
         try:
             self.fasta = pysam.FastaFile(str(self.filepath))
+            
+            # self.fasta.fetch()
+            # self.fasta.lengths
+            # self.fasta.
+            
             logger.info(f"Opened FASTA file: {filepath}")
             
             # Check if indexed
@@ -85,6 +90,10 @@ class FASTAStream(BaseSequenceStream):
         except Exception as e:
             logger.error(f"Failed to open FASTA file: {e}")
             raise
+    
+    @property
+    def references(self):
+        return self.fasta.references
     
     def get_sequence(self, ref: str, start: int=None, end: int=None) -> str:
         """Get reference sequence for a region.

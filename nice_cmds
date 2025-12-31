@@ -38,3 +38,7 @@ zcat hg38_dfam.nrph.hits.gz | \
     print $1, start, end, $3, $4, $9, $2, $5, $6, $7, $8, $12, $13, $14, $15
   }' | \
   sort -k1,1 -k2,2n > hg38_dfam.nrph.bed
+
+
+# change from gzip to bgzip while sorting, creating index
+zcat {fname}.bed.gz | sort -k1,1 -k2,2n | bgzip -c > {fname}.bed.gz && tabix -p bed {fname}.bed.gz

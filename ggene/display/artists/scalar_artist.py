@@ -19,6 +19,7 @@ class ScalarArtistParams(BaseArtistParams):
     display_width:int = 256
     display_height:int = 8
     quantity:str = "correlation" # "correlation" , "longest_run", ""
+    max_sequence_length: int = 256
     show_single:bool = False
     bit_depth:int = 24
     show_range:bool = True
@@ -43,8 +44,11 @@ class ScalarArtist(BaseArtist):
         
         num_chunks = self.params.display_width - (5 if self.params.show_range else 0)
         
-        ref = window.ref_seq[:num_chunks]
-        alt = window.alt_seq[:num_chunks]
+        ref = process.crop_sequence(window.ref_seq, self.params.max_sequence_length)
+        alt = process.crop_sequence(window.alt_seq, self.params.max_sequence_length)
+        
+        # ref = window.ref_seq[:num_chunks]
+        # alt = window.alt_seq[:num_chunks]
         
         display_lines = self.get_scalar_plot(ref, alt, self.params.quantity, self.params.bit_depth, self.params.show_range, num_chunks, self.params.show_xlabel)
         out_lines.extend(display_lines)

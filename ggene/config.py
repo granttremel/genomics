@@ -17,6 +17,7 @@ DEFAULT_LIBRARY = DATA_DIR / cfg.get("library_dir","")
 DEFAULT_VARIANTS_PATH = DATA_DIR / cfg.get("variants_filename","")
 DEFAULT_GENES_PATH = DATA_DIR / cfg.get("genes_filename","")
 DEFAULT_SEQUENCE_PATH = DATA_DIR / cfg.get("sequence_filename","")
+DEFAULT_CHRDATA_CACHE_PATH = DEFAULT_LIBRARY / "dcache"
 
 other_paths = {k: DATA_DIR / v for k,v in cfg.get("other_paths", {}).items()}
 

@@ -3,7 +3,7 @@ import re
 import json
 from difflib import SequenceMatcher
 
-from ggene import DEFAULT_LIBRARY
+from ggene.config import DEFAULT_LIBRARY
 from ggene.database.genome_manager import GenomeManager
 from ggene.database.annotations import UFeature
 

@@ -1,36 +1,301 @@
+"""Base classes for motif detection.
 
-from typing import List, Dict, Tuple, Optional, Any, Union
-from dataclasses import dataclass
+This module defines the core interfaces for motif detection:
+- MatchResult: Standardized result for motif matches
+- BaseMotif: Interface for individual motif definitions
+- MotifLibrary: Interface for collections with batch operations
+
+Concrete implementations:
+- pattern.py: PatternMotif, PatternLibrary (regex-based)
+- pwm.py: PWMMotif, PWMLibrary (position weight matrices)
+- hmm.py: HMMMotif, HMMLibrary (hidden Markov models)
+
+Integration with UGenomeAnnotations:
+- database/motifs.py: MotifStream classes that use these libraries
+"""
+
+from typing import List, Dict, Tuple, Optional, Any, Iterator, TYPE_CHECKING
+from dataclasses import dataclass, field
 from abc import ABC, abstractmethod
 import numpy as np
-import re
 
-from ggene.seqs.bio import to_rna, reverse_complement, is_rna, is_dna
-from .motifio import MotifIO
-from ..seqs.find import consensus_to_re
+if TYPE_CHECKING:
+    from ggene.database.ufeature import UFeature
+
 
 @dataclass
 class MatchResult:
-    chrom:str
-    start:int
-    end:int
-    score:float
-    name:str
-    strand:str = "+"
-    seq:str = ""
+    """Standardized result for a motif match.
+
+    Attributes:
+        start: Start position in scanned sequence (0-based)
+        end: End position in scanned sequence (0-based, exclusive)
+        score: Match score (interpretation depends on motif type)
+        name: Motif name
+        motif_id: Unique motif identifier
+        strand: Strand of match ('+' or '-')
+        seq: Matched sequence
+        chrom: Chromosome (set when converting to genomic coordinates)
+    """
+    start: int
+    end: int
+    score: float
+    name: str
+    motif_id: str = ""
+    strand: str = "+"
+    seq: str = ""
+    chrom: str = ""
+
+    def to_genomic(self, chrom: str, offset: int) -> 'MatchResult':
+        """Convert to genomic coordinates.
+
+        Args:
+            chrom: Chromosome name
+            offset: Genomic position of seq[0] (1-based)
+        """
+        return MatchResult(
+            start=offset + self.start,
+            end=offset + self.end,
+            score=self.score,
+            name=self.name,
+            motif_id=self.motif_id,
+            strand=self.strand,
+            seq=self.seq,
+            chrom=chrom,
+        )
+
+    def to_ufeature(self, feature_type: str = "motif",
+                    source: str = "Motif") -> 'UFeature':
+        """Convert to UFeature for streaming integration."""
+        from ggene.database.ufeature import UFeature
+        return UFeature({
+            'chrom': self.chrom,
+            'start': self.start,
+            'end': self.end - 1,  # UFeature uses inclusive end
+            'score': self.score,
+            'name': self.name,
+            'id': self.motif_id,
+            'strand': self.strand,
+            'feature_type': feature_type,
+            'source': source,
+            'matched_seq': self.seq,
+        })
 
 
-def calculate_significance(self, seq, motif_score):
-      """Calculate p-value for motif occurrence"""
-      # Shuffle sequence to create null distribution
-      # Or use pre-computed background model
-      pass
+class BaseMotif(ABC):
+    """Base class for individual motif definitions.
+
+    Subclasses implement different motif types:
+    - PatternMotif: Regex patterns
+    - PWMMotif: Position weight matrices
+    - HMMMotif: Hidden Markov models
+
+    Attributes:
+        name: Human-readable motif name
+        id: Unique identifier
+        allow_rc: Whether to also scan reverse complement
+        motif_class: Category/class of motif (e.g., "promoter", "splice")
+    """
+    name: str
+    id: str
+    allow_rc: bool = True
+    motif_class: str = ""
+
+    def __init__(self, name: str, motif_id: str = "",
+                 allow_rc: bool = True, motif_class: str = ""):
+        self.name = name
+        self.id = motif_id or name
+        self.allow_rc = allow_rc
+        self.motif_class = motif_class
+
+    @property
+    @abstractmethod
+    def length(self) -> int:
+        """Expected/typical motif length (for overlap calculation in chunked scanning)."""
+        pass
+
+    @abstractmethod
+    def scan(self, seq: str) -> np.ndarray:
+        """Score each position in sequence.
+
+        Args:
+            seq: DNA/RNA sequence to scan
+
+        Returns:
+            Array of scores, length = len(seq) - self.length + 1
+        """
+        pass
+
+    def find_instances(self, seq: str, threshold: float = 0.0,
+                      chrom: str = "", offset: int = 0) -> List[MatchResult]:
+        """Find all matches above threshold.
+
+        Args:
+            seq: Sequence to scan
+            threshold: Minimum score threshold
+            chrom: Chromosome for genomic coordinates (optional)
+            offset: Genomic offset for coordinates (optional)
+
+        Returns:
+            List of MatchResult objects
+        """
+        scores = self.scan(seq)
+        results = []
+
+        for i, score in enumerate(scores):
+            if score >= threshold:
+                end = i + self.length
+                result = MatchResult(
+                    start=offset + i if offset else i,
+                    end=offset + end if offset else end,
+                    score=float(score),
+                    name=self.name,
+                    motif_id=self.id,
+                    strand="+",
+                    seq=seq[i:end],
+                    chrom=chrom,
+                )
+                results.append(result)
+
+        return results
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}({self.name!r}, len={self.length})"
+
+
+class MotifLibrary(ABC):
+    """Base class for motif collections with batch operations.
+
+    Libraries provide efficient batch scanning across many motifs.
+    Subclasses can optimize using vectorization (numpy), FFT convolution, etc.
+
+    Usage:
+        library = PWMLibrary()
+        library.load("/path/to/jaspar/")
+
+        # Scan sequence with all motifs
+        for result in library.find_all_instances(seq, threshold=0.9):
+            print(result.name, result.start, result.score)
+
+        # Integrate with UGenomeAnnotations
+        stream = library.to_stream()
+        annotations.add_motifs(stream, "pwm")
+    """
+
+    @property
+    @abstractmethod
+    def motif_ids(self) -> List[str]:
+        """List of motif IDs in this library."""
+        pass
+
+    @property
+    def num_motifs(self) -> int:
+        """Number of motifs in library."""
+        return len(self.motif_ids)
+
+    @property
+    def max_length(self) -> int:
+        """Maximum motif length (for chunked scanning overlap)."""
+        return max((self.get_motif(mid).length for mid in self.motif_ids), default=0)
+
+    @abstractmethod
+    def add(self, motif: BaseMotif) -> None:
+        """Add a motif to the library."""
+        pass
+
+    @abstractmethod
+    def get_motif(self, motif_id: str) -> BaseMotif:
+        """Get a motif by ID."""
+        pass
+
+    @abstractmethod
+    def scan_all(self, seq: str) -> Dict[str, np.ndarray]:
+        """Scan sequence with all motifs.
+
+        Args:
+            seq: Sequence to scan
+
+        Returns:
+            Dict mapping motif_id -> score array
+        """
+        pass
+
+    def find_all_instances(self, seq: str, threshold: float = 0.0,
+                          chrom: str = "", offset: int = 0) -> Iterator[MatchResult]:
+        """Find instances of all motifs above threshold.
+
+        Args:
+            seq: Sequence to scan
+            threshold: Minimum score threshold
+            chrom: Chromosome for genomic coordinates
+            offset: Genomic offset for coordinates
+
+        Yields:
+            MatchResult objects sorted by position
+        """
+        all_scores = self.scan_all(seq)
+        results = []
+
+        for motif_id, scores in all_scores.items():
+            motif = self.get_motif(motif_id)
+            for i, score in enumerate(scores):
+                if score >= threshold:
+                    end = i + motif.length
+                    results.append(MatchResult(
+                        start=offset + i if offset else i,
+                        end=offset + end if offset else end,
+                        score=float(score),
+                        name=motif.name,
+                        motif_id=motif_id,
+                        strand="+",
+                        seq=seq[i:end],
+                        chrom=chrom,
+                    ))
+
+        # Sort by position for heapq.merge compatibility
+        results.sort(key=lambda r: (r.start, r.end))
+        yield from results
+
+    def to_stream(self, feature_type:str, source_name:str, min_score: float = 0.0):
+        """Create a MotifStream for UGenomeAnnotations integration.
+
+        Args:
+            min_score: Minimum score threshold for matches
+
+        Returns:
+            A MotifStream instance bound to this library
+        """
+        from ggene.database.motifs import LibraryMotifStream
+        return LibraryMotifStream(self, min_score=min_score, feature_type = feature_type, source_name = source_name)
+
+    def __len__(self) -> int:
+        return self.num_motifs
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}({self.num_motifs} motifs)"
+
+
+# =============================================================================
+# Legacy code below - kept for backwards compatibility
+# =============================================================================
+
+# Legacy imports
+try:
+    from ggene.seqs.bio import reverse_complement
+    from .motifio import MotifIO
+    from ..seqs.find import consensus_to_re
+    _LEGACY_IMPORTS_OK = True
+except ImportError:
+    _LEGACY_IMPORTS_OK = False
+
 
 class MotifDetector:
+    """Legacy motif detector - use MotifLibrary subclasses instead."""
 
     def __init__(self):
-        self.motifs={}
-        self.io = MotifIO()
+        self.motifs = {}
+        if _LEGACY_IMPORTS_OK:
+            self.io = MotifIO()
     
     def add_motif(self, motif):
         self.motifs[motif.name]=motif
@@ -40,8 +305,7 @@ class MotifDetector:
         returns dict: motif_name -> list[(motif_start, motif_end, score, is_rc)]
         """
         
-        seq_len = len(seq)
-        if not rcseq:
+        if not rcseq and _LEGACY_IMPORTS_OK:
             rcseq = reverse_complement(seq)
         
         all_insts = {}
@@ -91,12 +355,14 @@ class MotifDetector:
             cls_motifs = motif_classes[k1]
             for k2 in cls_motifs:
                 motif = default_motifs.get(k2)
-                if motif:
+                if motif and _LEGACY_IMPORTS_OK:
                     motif_re = consensus_to_re(motif)
                     try:
-                        pm = PatternMotif(k2, motif_re, lambda a:1.0, allow_rc = True, motif_class = k1)
+                        pm = PatternMotif(k2, motif_re, scoring_function=lambda _: 1.0,
+                                         allow_rc=True, motif_class=k1)
                     except Exception as e:
-                        print("failed to initialize pattern:",k1, k2, motif, motif_re, f"with error {str(e)}")
+                        print("failed to initialize pattern:", k1, k2, motif, motif_re,
+                              f"with error {str(e)}")
                         continue
                     self.add_motif(pm)
             
@@ -126,26 +392,6 @@ class IndexedMotifDetector:
         """Build suffix array or BWT for O(m) searches"""
         pass
 
-class BaseMotif(ABC):
-    
-    def __init__(self, name):
-        self.name=name
-        
-    @abstractmethod
-    def score(self, seq, return_positions=False):
-        
-        pass
-    
-    @abstractmethod
-    def find_instances(self, seq, threshold=None) -> List[MatchResult]:
-        """Return list of (start, end, score) tuples"""
-        return []
-    
-    def to_features(self, seq, window_size=None):
-        """Convert to ML-ready features"""
-        if window_size:
-            return self._windowed_features(seq, window_size)
-        return self._sequence_features(seq)
 
 default_motifs = {
     

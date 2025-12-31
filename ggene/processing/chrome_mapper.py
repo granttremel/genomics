@@ -1,4 +1,6 @@
 
+from typing import TYPE_CHECKING
+
 import time
 
 import numpy as np
@@ -7,6 +9,9 @@ from ggene.seqs.lambdas import lambda_map, needs_features
 from ggene.seqs.bio import reverse_complement
 
 from ggene.draw import add_ruler, ScalarPlot
+
+if TYPE_CHECKING:
+    from ggene.database.genome_manager import GenomeManager
 
 
 class ChromeMapper:
@@ -39,7 +44,7 @@ class ChromeMapper:
         if not length:
             length = int(chrmax - start)
         chunksz = int(chunksz)
-        num_chunks = int(length//chunksz)+1
+        num_chunks = int(length/chunksz)+1
         step = chunksz
         starts = [[] for qt in seq_fns]
         qts = [[] for qt in seq_fns]
@@ -50,26 +55,27 @@ class ChromeMapper:
         
         for n in range(num_chunks):
             end = start + step
-            # seq = self.seq_gen(chrstr, start, end)
             seq = full_seq[n*chunksz:(n+1)*chunksz]
             if do_rc:
                 seq = reverse_complement(seq)
             
-            # if needs_feats or True:
-            #     ufeats = self.feat_gen(chrstr, start, start+step)
-            # else:
-            #     ufeats = []
+            if needs_feats:
+                ufeats =[uf for uf in self.feat_gen(chrstr, start, start+step, needs_feats)]
+            else:
+                ufeats = []
             
             if len(seq) < 1:
                 start = end
                 continue
             
             for i,seq_fn in enumerate(seq_fns):
-                ufeats = self.feat_gen(chrstr, start, start+step)
                 qt = seq_fn(seq, ufeats)
                 starts[i].append(start)
                 qts[i].append(qt)
             start = end
+            
+            if n%int(num_chunks/10)==0:
+                print(f"n={n}/{num_chunks}")
             
         if resample:
             rsqts = [[] for i in range(len(seq_fns))]
@@ -84,7 +90,6 @@ class ChromeMapper:
     def get_chromosomal_quantity(self, chr, seq_spec, chunksz = 10e6, start = 1e6, length = None, resample = False, do_rc = False, needs_feats = []):
         qts, starts = self.get_chromosomal_quantities(chr, [seq_spec], chunksz = chunksz, start = start, length = length, resample = resample, do_rc = do_rc, needs_feats = needs_feats)
         return qts[0], starts[0]
-    
     
     def display_chromosomal_quantity(self, chr, seq_spec, chunksz = 10e6, start = 1e6, max_disp = 256, length = None, resample = False, **kwargs):
         
@@ -180,7 +185,7 @@ class ChromeMapper:
         lines = []
         lines.append(f"{qt_name} for chr{chr}")
         for i in range(num_disp_chunks):
-            seq_ran = length // (num_disp_chunks)
+            seq_ran = int(length / num_disp_chunks)
             seq_start = start + i*seq_ran
             
             gcs_crop = qts[i*max_disp:(i+1)*max_disp]
@@ -206,4 +211,21 @@ class ChromeMapper:
             for line in lines:
                 print(line)
         return lines
-    
+
+    @classmethod
+    def get_generators(cls, gm:'GenomeManager', seq_specs):
+        
+        sg = lambda chrom, start, end: gm.get_sequence(chrom, start, end)
+        
+        # fg_streams = {}
+        # for sp in seq_specs:
+            
+        #     needs = needs_features(sp)
+            
+        #     for need in needs:
+        #         if need not in fg_streams:
+        #             fg_streams[need] = gm.annotations.streams.get(need, None)
+        
+        fg = lambda chrom, start, end, feature_types: gm.annotations.stream_by_types(feature_types, chrom, start, end)
+        
+        return sg, fg

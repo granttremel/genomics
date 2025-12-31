@@ -1,5 +1,6 @@
 
 
+import random
 import sys
 import tty
 import termios
@@ -51,3 +52,44 @@ def get_user_keypress():
         termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
 
 
+
+def startup_splash(display_height, display_width, splash_type = "canabo", **kwargs):
+    
+    print("\x1b[?1049h", end="")  # enter different terminal view sta
+    
+    if kwargs.get("skip", True):
+        return
+    
+    if splash_type == "canabo":
+        _splash_canabo(display_height, display_width)
+    
+    input("Press enter to continue...")
+    
+def _splash_canabo(display_height, display_width):
+    cac = [chr(i) for i in range(0x1400, 0x1680)]
+    
+    def get_fill(n):
+        return "".join([random.choice(cac) for i in range(n)])
+    
+    
+    display_height += display_height%2
+    
+    msg= "genome browser"
+    
+    nh = (display_width//2-len(msg))//2 
+    nb = (display_width//4 - 1)
+    ns = display_height//4
+    nf = (display_height - ns)//2
+    
+    for i in range(nf):
+        print(get_fill(display_width))
+    
+    for i in range(ns):
+        if i==ns//2-1:
+            print(get_fill(nb) + " "*nh + msg + " "*nh + get_fill(nb))
+        else:
+            print(get_fill(nb) + " "*(display_width//2), get_fill(nb))
+        
+    for i in range(nf):
+        print(get_fill(display_width))
+    

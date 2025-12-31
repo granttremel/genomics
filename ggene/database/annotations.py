@@ -19,6 +19,7 @@ import logging
 import pysam
 import os
 import warnings
+import gzip
 
 from ggene.database.ufeature import UFeature
 
@@ -178,7 +179,10 @@ class TabularStream(AnnotationStream):
         if not self.tabix:
             logger.warning(f"No tabix index for {self.filepath}")
             return
-
+        
+        # clsname = type(self).__name__
+        # if clsname == "VariantStream":
+        #     print("entered stream")
         chr_formatted, chr_raw = self.format_chrom(chrom) if chrom else ("", "")
 
         query_start = int(start) if start else 1
@@ -188,6 +192,7 @@ class TabularStream(AnnotationStream):
             for line in self.tabix.fetch(chr_formatted, start=query_start, end=query_end):
                 feature = self.parse_line(line)
                 if self.validate_feature(feature):
+                    
                     # Apply region filter
                     if chrom and feature.chrom != chr_raw:
                         continue
@@ -195,6 +200,8 @@ class TabularStream(AnnotationStream):
                         continue
                     if end and feature.start > end:
                         continue
+                    
+                    
                     yield feature
         except Exception as e:
             logger.error(f"Error fetching {chr_formatted}:{query_start}-{query_end}: {e}")
@@ -292,15 +299,121 @@ class TabularStream(AnnotationStream):
         chr_raw = str(chrom).removeprefix("chr")
         chr_formatted = cls.chr_format.format(chrstr=chr_raw)
         return chr_formatted, chr_raw
+    
+    @classmethod
+    def get_headers(cls):
+        hdrs = []
+        for c in cls.columns + cls.derived:
+            if isinstance(c, str):
+                c = cls.core_columns.get(c, "")
+            if not c:
+                continue
+            hdrs.append(c.name)
+        # hdrs= [c.name for c in cls.columns] + [c.name for c in cls.derived]
+        return hdrs
+
+
+class MiniStream(TabularStream):
+    
+    delimiter = "\t"
+    columns = [
+        "chrom","start","end",
+        ColumnSpec("id", str, "", target="core"),
+        ColumnSpec("type", str),
+        "name", "strand", 
+        ColumnSpec("mean_exp", float),
+        ColumnSpec("total_exp", float),
+        ColumnSpec("num_experiments", int),
+        ColumnSpec("num_expressed", int),
+    ]
+    
+    chr_format = "chr{chrstr}"
+    
+    def __init__(self, file_path, source_name, feature_type, filter = None):
+        super().__init__(source_name)
+        self.file_path =Path(file_path)
+        self.feature_type = feature_type
+        self._data = {}
+        self.load_data()
+        self._filter = filter
             
+    def stream(self, chrom: Optional[str] = None, 
+               start: Optional[int] = None,
+               end: Optional[int] = None) -> Iterator[UFeature]:
+        
+        if not chrom:
+            return []
+        
+        clsname = type(self).__name__
+        
+        chrom = chrom.removeprefix("chr")
+        
+        query_start = int(start) if start else 1
+        query_end = int(end) if end else chr_lens.get(chrom, 999999999)
+        
+        feats = self._data.get(chrom, [])
+        
+        for feature in feats:               
+            if self.validate_feature(feature):
+                # Apply region filter
+                # logger.debug(f"feature passed validation: {feature.name}")
+                
+                if clsname == "VariantStream":
+                    pass
+                
+                if chrom and feature.chrom != chrom:
+                    continue
+                if query_start and feature.end < query_start:
+                    continue
+                if query_end and feature.start > query_end:
+                    continue
+                logger.debug(f"feature passed all challenges: {feature.name}")
+                yield feature
+    
+    def validate_feature(self, feature):        
+        if self._filter:
+            return self._filter(feature)
+        else:
+            return bool(feature)
+    
+    def load_data(self):
+        
+        if '.gz' in self.file_path.suffixes:
+            with gzip.open(self.file_path) as f:
+                data = f.readlines()
+            data = [d.decode("utf-8") for d in data]
+        else:
+            with open(self.file_path, "r") as f:
+                data = f.readlines()
+        
+        feats = {}
+        for i,line in enumerate(data):
+            if i==0: continue
+            
+            f = self.parse_line(line)
+            if not f.chrom in feats:
+                feats[f.chrom] = []
+            feats[f.chrom].append(f)
+        ddict = {}
+        for chrom, fs in feats.items():
+            fs_srt = list(sorted(fs, key = lambda f:f.start))
+            ddict[chrom] = fs_srt
+        
+        logger.setLevel("DEBUG")
+        logger.debug(fs_srt[0])
+        self._data = ddict
+
 def get_gs_feature_type(f):
     
     fts = []
     
     if "pseudo" in f.gene_biotype:
-        ft = "pseudogene"
+        return "pseudogene"
     elif "lncRNA" in f.gene_biotype:
-        ft = "lncRNA"
+        if f.feature_type == 'gene':
+            ft = 'lncRNA'
+        else:
+            ft = "lncRNA" +'_'+ f.feature_type
     elif "RNA" in f.gene_biotype:
         return "ncRNA"
     else:
@@ -333,7 +446,38 @@ def get_gs_feature_name(f):
             return parname
     elif f.gene_name:
         return f.gene_name
+
+def get_gs_gene_id(f):
     
+    fd = f.to_dict()
+    
+    fid = ""
+    
+    if f.gene_id:
+        fid = f.gene_id
+    elif f.transcript_id:
+        fid = f.transcript_id
+    else:
+        fid = f"{f.feature_type}:chr{f.chrom}:{f.start}-{f.end}"
+    
+    # if 'id' in fd and fd.get('id'):
+    #     # print("id")
+    #     fid = fd['id']
+    # elif 'gene_id' in fd:
+    #     fid = fd['gene_id']
+    #     # print("gene_id")
+    # elif 'gene_id' in fd.get('attributes',{}):
+    #     fid = fd['attributes']['gene_id']
+    #     # print("gene_id in atts")
+    # elif 'transcript_id' in fd:
+    #     fid = fd['transcript_id']
+    #     # print("transcript_id")
+    
+    # if "lncRNA" in f.feature_type:
+    #     print(f"get_gs_gene_id called producing id {fid} with {f.to_dict()}")
+    
+    return fid
+
 class GeneStream(TabularStream):
     
     feature_type = ""
@@ -373,12 +517,22 @@ class GeneStream(TabularStream):
     
     derived = [
         DerivedSpec("feature_type", get_gs_feature_type, default = "gene"),
+        DerivedSpec("id", get_gs_gene_id, default = "[no_id]"),
         DerivedSpec("name", get_gs_feature_name, default = "?"),
     ]
     
     def __init__(self, filepath: str):
         super().__init__(filepath, source_name="GTF")
+        # print(self.derived)
+    
+    def parse_line(self, line:str):
+        f = super().parse_line(line)
+        # if f.feature_type == 'lncRNA':
+        #     print(f"parse_line {f.to_dict()}")
         
+        return f
+        
+    
     def preparse_line(self, line:str):
         
         parts = line.split(self.delimiter)
@@ -453,7 +607,11 @@ class VariantStream(TabularStream):
     def __init__(self, filepath):
         super().__init__(filepath, source_name = "Variants")
     
+    
+    
     def preparse_line(self, line:str):
+        
+        # print("call to preparse_line")
         
         parts = line.split(self.delimiter)
         
@@ -469,7 +627,7 @@ class VariantStream(TabularStream):
 
 class RepeatMaskerStream(TabularStream):
     
-    feature_type = "dfam_hit"
+    feature_type = "repeat"
     chr_format = "chr{chrstr}"
     
     columns = [
@@ -513,10 +671,10 @@ class DfamStream(TabularStream):
     
     columns = [
         "chrom", "start", "end",
-        ColumnSpec("family_name", str, None),
+        ColumnSpec("name", str, None),
         ColumnSpec("bits", float, None),
         "strand",
-        ColumnSpec("family_acc", str, None),
+        ColumnSpec("id", str, None),
         ColumnSpec("e-value", float, None),
         ColumnSpec("bias", float, None),
         ColumnSpec("start_hmm", int, None),
@@ -568,7 +726,13 @@ class ClinvarStream(TabularStream):
     def __init__(self, filepath: str):
         super().__init__(filepath, source_name="ClinVar")
 
+def get_experiment_stream(file_path, source_name, feature_type, filter = None, gm = None):
     
+    mstream = MiniStream(file_path, source_name, feature_type, filter = filter)
+    if gm:
+        gm.annotations.add_source(source_name, mstream)
+    return mstream
+
 class UGenomeAnnotations:
     """Unified interface for all genomic annotations and sequences.
     
@@ -702,12 +866,12 @@ class UGenomeAnnotations:
                 logger.warning(f"Failed to create annotation stream for {name}: {e}")
 
         # Add motif stream iterators (they'll scan sequences lazily)
-        for name, stream in self.motif_streams.items():
-            try:
-                iterator = stream.stream(chrom, start, end)
-                iterators.append(iterator)
-            except Exception as e:
-                logger.warning(f"Failed to create motif stream for {name}: {e}")
+        # for name, stream in self.motif_streams.items():
+        #     try:
+        #         iterator = stream.stream(chrom, start, end)
+        #         iterators.append(iterator)
+        #     except Exception as e:
+        #         logger.warning(f"Failed to create motif stream for {name}: {e}")
 
         # Merge all iterators by position
         for feature in heapq.merge(*iterators):

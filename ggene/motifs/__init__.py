@@ -9,12 +9,14 @@ machine learning-based motifs.
 from .motif import BaseMotif, MotifDetector, IndexedMotifDetector
 
 # Specific motif types
-from .pattern import PatternMotif
+from .pattern import PatternMotif, PatternLibrary
 from .repeat import RepeatMotif
 from .metric import MetricMotif, gcpattern
 from .mlmotif import MLMotif
 from .structural import StructuralMotif
 from .pwm import PWM
+
+from .jaspar import Jaspar, JasparLibrary
 
 # Utilities
 from .motifio import MotifIO
@@ -34,6 +36,11 @@ __all__ = [
     
     # Motif types
     'PatternMotif',
+    'PatternLibrary',
+    
+    'Jaspar',
+    'JasparLibrary',
+    
     'RepeatMotif',
     'MetricMotif',
     'MLMotif',
@@ -45,9 +52,4 @@ __all__ = [
     # 'string_to_re',
     # 'repeat_to_re',
     
-    # Pre-defined motifs
-    'gcpattern',
-    # 'splice_donor_motif',
-    # 'splice_branch_motif',
-    # 'splice_acceptor_motif',
 ]

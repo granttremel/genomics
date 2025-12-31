@@ -5,7 +5,10 @@ from dataclasses import dataclass, field, replace
 from ggene.draw.chars import MAP
 from ggene.draw.colors import Colors
 from ggene.draw import ScalarPlot
+
+from ggene.database.cache import GenomeCache
 from ggene.processing.chrome_mapper import ChromeMapper
+
 from ggene.display.colors import FColors
 from ggene.display.artists.base import BaseArtistParams, BaseArtist, logger
 
@@ -51,6 +54,10 @@ class MapArtist(BaseArtist):
         self.current_chrom = ""
         self._data_cache = {}
         self.top_label = self.get_top_label()
+        
+        self.gnm_cache = GenomeCache()
+        self.samplers = {}
+            
             
     def get_top_label(self):
         
@@ -87,15 +94,18 @@ class MapArtist(BaseArtist):
         length = min(max_length, length)
         
         num_chunks = self.params.display_width - (5 if self.params.show_range else 0)
+        chunksz = int(length / num_chunks)
         
         qts = [self.params.quantity]
         if self.params.quantity2:
             qts.append(self.params.quantity2)
         
-        marker_pos = max(0, min(num_chunks-1, int(num_chunks * (state.position - start) / length)))
-        # pos_ind = max(0, min(pos_ind, num_chunks - 1))
+        marker_pos = max(0, min(num_chunks - 1, int(num_chunks * (state.position - start) / length)))
         
-        map_lines = self.get_map_lines(self.seq_gen, self.feat_gen, qts, state.chrom, start, length, num_chunks, marker_pos = marker_pos)
+        map_lines = self.get_map_lines(self.seq_gen, self.feat_gen, qts, state.chrom, start, length, chunksz, marker_pos = marker_pos)
+        
+        map_lines = ["".join(ml) for ml in map_lines]
+        
         out_lines.extend(map_lines)
         
         marker_row = self.get_marker_row(marker_pos, num_chunks)
@@ -114,48 +124,72 @@ class MapArtist(BaseArtist):
         super().update(**kwargs)
         self._data_cache = {}
     
-    def get_map_lines(self, seq_gen, feat_gen, qts, chrom, start, length, num_chunks, marker_pos = None):
+    def get_map_lines(self, seq_gen, feat_gen, qts, chrom, start, length, chunksz, marker_pos = None):
 
-        cm = ChromeMapper(seq_gen, feat_gen)
-        
-        chunksz = int(length / num_chunks)
-
-        stitched_data, start_ind, end_ind = self.stitch_data(self.current_pos, length, len(qts), num_chunks)
-        
-        # Only fetch data for the missing range
-        if end_ind > start_ind:
-            fetch_start = start + start_ind * chunksz
-            fetch_length = (end_ind - start_ind) * chunksz
-            # print(f"doing quantities {qts}")
-            new_data, _ = cm.get_chromosomal_quantities(chrom, qts, chunksz=chunksz, start=fetch_start, length=fetch_length)
-
-            # Fill in the missing chunks
-            for nd in range(len(new_data)):
-                for i in range(end_ind - start_ind):
-                    stitched_data[nd][start_ind + i] = new_data[nd][i]
-        
-        # Cache the complete dataset for this position
-        self.cache_data(stitched_data)
+        data = self.get_data(qts, seq_gen, feat_gen, chrom, start, length, chunksz)
         
         if len(qts) > 1:
             if self.params.show_paired:
-                lines = self.format_scalar_plot_double(stitched_data[0], stitched_data[1])
+                lines = self.format_scalar_plot_double(data[0], data[1])
             else:
                 lines = []
                 for n in range(len(qts)):
-                    plot_lines = self.format_scalar_plot_single(stitched_data[n])
+                    plot_lines = self.format_scalar_plot_single(data[n])
                     lines.extend(plot_lines)
                 
         else:
-            lines = self.format_scalar_plot_single(stitched_data[0])
+            lines = self.format_scalar_plot_single(data[0])
         
         if marker_pos and self.params.show_fella:
-            # lines = self.add_fella(lines, marker_pos-1)
             lines = self.add_fella(lines, marker_pos)
-            # lines = self.add_fella(lines, marker_pos+1)
-        
+            
         return lines
     
+    def get_data(self, qts, seq_gen, feat_gen, chrom, start, length, chunksz):
+        
+        datas = {}
+        ssps = qts.copy()
+        
+        for seq_spec in qts:
+            
+            if seq_spec in self.samplers:
+                
+                sampler = self.samplers[seq_spec]
+                
+                data = sampler.sample(chrom, start, length, chunksz)
+                datas[seq_spec] = data
+                ssps.remove(seq_spec)
+                # logger.debug(f"sampler returned data {type(data)}, {len(data)} with {type(data[0])}")
+            
+            else:
+                
+                cseq_specs = self.gnm_cache.list_cached_specs(chrom)
+                
+                if seq_spec in cseq_specs:
+                
+                    sampler = self.gnm_cache.get_sampler(seq_spec) 
+                    self.samplers[seq_spec] = sampler
+                    
+                    data = sampler.sample(chrom, start, length, chunksz)
+                    datas[seq_spec] = data
+                    ssps.remove(seq_spec)
+                    # logger.debug(f"sampler returned data {type(data)}, {len(data)} with {type(data[0])}")
+        
+        if ssps:    
+            data = self.compute_data(ssps, seq_gen, feat_gen, chrom, start, length, chunksz)
+            datas.update(data)
+        
+        return [datas.get(qt, []) for qt in qts]
+    
+    def compute_data(self, qts, seq_gen, feat_gen, chrom, start, length, chunksz):
+        
+        cm = ChromeMapper(seq_gen, feat_gen)
+        
+        new_data, _ = cm.get_chromosomal_quantities(chrom, qts, chunksz=chunksz, start=start, length=length)
+        
+        datas = {qt:data for qt, data in zip(qts, new_data)}
+        return datas
+        
     def get_marker_row(self, marker_index, num_chunks):
 
         marker = [" "] * num_chunks
@@ -210,6 +244,33 @@ class MapArtist(BaseArtist):
         
         return sc_rows
 
+
+    @classmethod
+    def get_generators(cls, gm:'GenomeManager', seq_specs = [], needs_feats = []):
+        
+        for seq_spec in seq_specs:
+            feats = needs_features(seq_spec)
+            needs_feats.extend(feats)
+        
+        needs_feats = list(set(needs_feats))
+        
+        seq_gen = lambda chr, start, end: gm.get_sequence(chr, start, end = end)
+        feat_gen = lambda chr, start, end, feature_types: gm.annotations.stream_by_types(feature_types, chr, start, end=end)
+        
+        return seq_gen, feat_gen
+    
+    @classmethod
+    def full_map(cls, qt1, qt2, seq_gen, feat_gen, **kwargs):
+        
+        params = MapArtistParams(quantity1 = qt1, quantity2 = qt2)
+        kwargs["scale"] = -1
+        params.update(**kwargs)
+        
+        artist = MapArtist(params, sequence_generator = seq_gen, feature_generator = feat_gen)
+        
+        return artist
+    
+    ############ no longer used but could be useful tbh ########################
     
     def cache_data(self, data):
         self._data_cache[(self.current_chrom, self.current_pos)] = data
@@ -289,30 +350,3 @@ class MapArtist(BaseArtist):
         
         return self.current_pos
     
-    @classmethod
-    def get_generators(cls, gm:'GenomeManager', seq_specs = []):
-        
-        needs_feats = []
-        
-        for seq_spec in seq_specs:
-            feats = needs_features(seq_spec)
-            needs_feats.extend(feats)
-        
-        needs_feats = list(set(needs_feats))
-        
-        seq_gen = lambda chr, start, end: gm.get_sequence(chr, start, end = end)
-        feat_gen = lambda chr, start, end: gm.annotations.query_range(chr, start, end=end)
-        
-        return seq_gen, feat_gen
-    
-    
-    @classmethod
-    def full_map(cls, qt1, qt2, seq_gen, feat_gen, **kwargs):
-        
-        params = MapArtistParams(quantity1 = qt1, quantity2 = qt2)
-        kwargs["scale"] = -1
-        params.update(**kwargs)
-        
-        artist = MapArtist(params, sequence_generator = seq_gen, feature_generator = feat_gen)
-        
-        return artist

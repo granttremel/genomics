@@ -128,6 +128,8 @@ https://cloford.com/resources/charcodes/utf-8_punctuation.htm
 
 """
 
+_can_abo_chars = [chr(i) for i in range(0x1400, 0x1680)] + [chr(i) for i in range(0x18B0, 0x18F6)]
+
 can_abo = {
     "ᐃ":{
         "ᐃ":"ᐃᐄ ᐎᐏ ᐐᐑ ᐬᐂ",
@@ -288,7 +290,6 @@ _curves = [
     "⎡","⎢","⎣","","","","","","","","","","","","","",
 ]
 
-_sick_chars = [chr(i) for i in range(0x1400, 0x1680)] + [chr(i) for i in range(0x18B0, 0x18F6)]
 
 
 _protein_metavocab = "".join(["☉","☼","⚙","⚛","❁","✾"])

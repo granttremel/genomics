@@ -15,24 +15,25 @@ import json
 import logging
 
 logger = logging.getLogger(__name__)
-# logger.setLevel("CRITICAL")
-logger.setLevel(logging.DEBUG)
+logger.setLevel("CRITICAL")
+# logger.setLevel(logging.DEBUG)
 
 from ggene import draw
 from ggene import dev
 from ggene.config import get_config, get_paths
-# from ggene.database.gene_map import GeneMap
+from ggene.database.search import GenomeSearch
 from ggene.genome.features import Gene, Feature, shorten_variant
 from ggene.genome.translate import Ribosome
 from ggene.database.genome_iterator import UGenomeIterator
 from ggene.browser.genome_browser_v2 import InteractiveGenomeBrowser
 from ggene.database.annotations import UGenomeAnnotations
 from ggene.database.ufeature import UFeature
-# from ggene.database.annotations import UGenomeAnnotations, GTFStream, VCFStream, UFeature
-from ggene.motifs import MotifDetector, PatternMotif, RepeatMotif
+from ggene.motifs import MotifDetector, PatternMotif, PatternLibrary, Jaspar, JasparLibrary
 from ggene.seqs.lambdas import needs_features
 from ggene.seqs.bio import reverse_complement, to_rna, to_dna, is_rna, is_dna, COMPLEMENT_MAP
 from ggene.seqs.lambdas import lambda_map
+
+from ggene.database.motifs import JasparStream, MotifStream, PatternStream, HMMStream
 
 class GenomeManager:
     """Main class for managing genomic data including VCF and GTF files."""
@@ -77,9 +78,7 @@ class GenomeManager:
         try:
             self.library_path = library_path
             
-            # Keep old GeneMap for backward compatibility
-            # self.gene_map = GeneMap(gtf_path=gtf_path)
-            
+            self.search = GenomeSearch(self)
             # print(f"loading sequence from {DEFAULT_FASTA_PATH} (exists = {os.path.exists(DEFAULT_FASTA_PATH)})")
             
             # Initialize new unified annotation system with sequence streaming
@@ -90,12 +89,12 @@ class GenomeManager:
             
             if gtf_path:
                 self.annotations.add_genes(gtf_path)
-            if vcf_path:
+            if vcf_path and not kwargs.get("skip_variants"):
                 self.annotations.add_variants(vcf_path)
             
             # Initialize motif detector
             self.motif_detector = MotifDetector()
-            self._setup_default_motifs()
+            # self._setup_default_motifs()
             
             self.ribo = Ribosome()
             self.genes: Dict[str, 'Gene'] = {}
@@ -121,56 +120,29 @@ class GenomeManager:
             other_paths.update(kwargs)
             
             for k, v in other_paths.items():
-                if k == "repeatmasker_path":
+                if k == "repeatmasker_path" and not kwargs.get("skip_repeatmasker"):
                     self.annotations.add_repeatmasker(v)
-                if k == "dfam_path":
+                if k == "dfam_path" and not kwargs.get("skip_dfam"):
                     self.annotations.add_dfam(v)
-                if k == "clinvar_path":
+                if k == "clinvar_path" and not kwargs.get("skip_clinvar"):
                     self.annotations.add_clinvar(v)
                     logger.debug(f"added clinvar from path {v}")
-                if k=="jaspar_path":
-                    from ggene.database.motifs import JasparStream
+                if k=="jaspar_path" and kwargs.get("load_jaspars"):
                     jaspars = JasparStream(v)
                     jaspars.load()
                     self.annotations.add_motifs(jaspars, name = "jaspars")
+            
+            if not kwargs.get("skip_patterns"):
                 
+                pattern_lib = PatternLibrary()
+                pattern_lib.load_defaults()
+                ptrn_stream = pattern_lib.to_stream("pattern","grant's re's")
+                
+                self.annotations.add_motifs(ptrn_stream, name = "patterns")
+            
         except Exception as e:
             logger.error(f"Failed to initialize GenomeManager: {e}")
             raise
-    
-    def _setup_default_motifs(self):
-        """Setup default motifs for detection."""
-        
-        # self.motif_detector.setup_default_motifs()
-        # self.motif_detector.setup_default_motifs(pattern_classes = ["splice","promoter"], hmm_classes = ["Alu"])
-        self.motif_detector.setup_default_motifs(pattern_classes = ["splice","promoter"], hmm_classes = [])
-        
-        # self.motif_detector.setup_default_motifs(class_names = ["splice","promoter"])
-        # self.motif_detector.setup_default_motifs(class_names = ["hammerhead", "SRP", "pseudoknot","msat"])
-        # self.motif_detector.setup_default_motifs(class_names = ["SRP_S"])
-
-        # Add more motifs as needed
-        logger.info("Initialized default motifs")
-    
-    # def add_annotation_source(self, name: str, filepath: str, source_type: str = "bed"):
-    #     """Add a new annotation source to the unified system.
-        
-    #     Args:
-    #         name: Name for this annotation source
-    #         filepath: Path to the annotation file
-    #         source_type: Type of file (bed, gff, vcf, etc.)
-    #     """
-    #     if source_type.lower() == "bed":
-    #         from .annotations import BEDStream
-    #         self.annotations.add_source(name, BEDStream(filepath))
-    #     elif source_type.lower() in ["gff", "gtf"]:
-    #         self.annotations.add_gtf(filepath, name)
-    #     elif source_type.lower() == "vcf":
-    #         self.annotations.add_vcf(filepath, name)
-    #     else:
-    #         raise ValueError(f"Unknown source type: {source_type}")
-        
-    #     logger.info(f"Added annotation source '{name}' from {filepath}")
     
     def get_all_annotations(self, chrom: str, start: int, end: int,
                            include_motifs: bool = True) -> List[UFeature]:

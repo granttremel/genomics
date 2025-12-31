@@ -2,6 +2,7 @@
 
 import re
 import regex
+import functools
 
 from ggene import seqs
 from ggene.seqs.bio import reverse_complement
@@ -59,14 +60,20 @@ def seq_polys(seq, feats):
 def seq_polyw(seq, feats):
     return _seq_polyn(seq, feats, "W", do_rc = False)
 
-def _seq_polyn(seq, feats, b, do_rc = False):
+@functools.lru_cache(maxsize = 32)
+def _get_polyn_pattern(b, do_rc):
     
     bs = [b]
     if do_rc:
         bs.append(reverse_complement(b))
     
     ptrn = "|".join([consensus_to_re("(%s{5,})" % bb) for bb in bs])
-    ptrn = re.compile(ptrn)
+    
+    return re.compile(ptrn)
+
+def _seq_polyn(seq, feats, b, do_rc = False):
+    
+    ptrn = _get_polyn_pattern(b, do_rc)
     
     ms = re.finditer(ptrn, seq)
     
@@ -76,24 +83,33 @@ def _seq_polyn(seq, feats, b, do_rc = False):
         max_run = max(max_run, en-st)
     return max_run
 
-
 def seq_feats(seq, feats):
-    return sum([1 for f in feats])
+    return sum(1 for f in feats)
 
 def seq_genes(seq, feats):
-    return sum([1 for f in feats if f.feature_type == "gene"])
+    return sum(1 for f in feats if f.feature_type == "gene")
 
 def seq_exons(seq, feats):
-    return sum([1 for f in feats if f.feature_type == "exon"])
+    return sum(1 for f in feats if f.feature_type == "exon")
 
 def seq_motifs(seq, feats):
-    return sum([1 for f in feats if f.feature_type == "motif"])
+    return sum(1 for f in feats if f.feature_type == "motif")
 
 def seq_pseudo(seq, feats):
-    return sum([1 for f in feats if f.feature_type == "gene" and "pseudo" in f.attributes.get("gene_biotype","")])
+    return sum(1 for f in feats if f.feature_type == "pseudogene")
+
+def seq_lncrna(seq, feats):
+    return sum(1 for f in feats if f.feature_type == "lncRNA")
+
+def seq_ncrna(seq, feats):
+    return sum(1 for f in feats if f.feature_type == "ncRNA")
+
+# ?
+def seq_nongenes(seq, feats):
+    return sum(1 for f in feats if f.feature_type in ["lncRNA","ncRNA","pseudogene"])
 
 def seq_simple_rpts(seq, feats):
-    return sum([1 for f in feats if f.feature_type == "repeat" and f.attributes.get("type","") == "Simple_repeat"])
+    return sum(1 for f in feats if f.feature_type == "repeat" and f.attributes.get("type","") == "Simple_repeat")
 
 def seq_cds_len(seq, feats):
     if not feats:
@@ -292,8 +308,14 @@ def needs_features(seq_spec):
     if seq_spec in lambda_map:
         seq_spec = lambda_map.get(seq_spec)
     
-    if seq_spec in [seq_genes, seq_pc_bt, seq_lncrna_bt, seq_pseudo]:
+    if seq_spec in [seq_genes, seq_pc_bt]:
         return ["gene"]
+    elif seq_spec == seq_pseudo:
+        return ["pseudogene"]
+    elif seq_spec == "nongenes":
+        return ["pseudogene","ncRNA","lncRNA"]
+    elif seq_spec in [seq_lncrna_bt, seq_ncrna]:
+        return ["ncRNA", "lncRNA"]
     elif seq_spec in [seq_exons]:
         return ["exon"]
     elif seq_spec in [seq_motifs]:
@@ -333,6 +355,9 @@ lambda_map = {
     "exons":seq_exons,
     "motifs":seq_motifs,
     "pseudo":seq_pseudo,
+    "lncRNA":seq_lncrna,
+    "ncRNA":seq_ncrna,
+    "nongenes":seq_nongenes,
     "simple_repeats":seq_simple_rpts,
     
     "Alu":seq_alu,
@@ -361,7 +386,6 @@ lambda_map = {
     "features":seq_feats,
     "protein_coding":seq_pc_bt,
     "lncrna":seq_lncrna_bt,
-    
     
     "max_run":seq_max_run,
     

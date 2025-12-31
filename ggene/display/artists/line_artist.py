@@ -72,9 +72,11 @@ class LineArtist(BaseArtist):
         ooh okay what if.. "nested" features get alternating colors .. ?
         
         """
-        logger.debug(f"enter build_display_lines with show_ruler={self.params.show_ruler}")
+        logger.debug(f"enter build_display_lines with num features {len(feature_insts)}")
 
         scale = display_width / (end - start)
+        
+        # print(feature_insts, start, end)
 
         # Separate features by strand
         rev_features = []
@@ -93,6 +95,8 @@ class LineArtist(BaseArtist):
         rev_features = self._sort_by_size(rev_features, start, scale)
         fwd_features = self._sort_by_size(fwd_features, start, scale)
 
+        # print(rev_features, fwd_features)
+
         # Build each strand track independently
         # Returns: (feature_rows, label_rows) ordered from near-ruler to far-from-ruler
         rev_feat_rows, rev_label_rows = self._build_strand_track(
@@ -101,6 +105,8 @@ class LineArtist(BaseArtist):
         fwd_feat_rows, fwd_label_rows = self._build_strand_track(
             fwd_features, start, end, display_width, scale, display_rev, is_reverse=False
         )
+
+        # print(rev_feat_rows, fwd_feat_rows)
 
         # Build ruler rows
         mid_rows = []
@@ -125,6 +131,9 @@ class LineArtist(BaseArtist):
             fwd_combined, rev_combined = self._center_tracks(rev_combined, fwd_combined)
 
         result_rows = rev_combined + mid_rows + fwd_combined
+        
+        
+
         return result_rows
 
     def _sort_by_size(self, features, start, scale):
