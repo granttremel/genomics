@@ -3,6 +3,7 @@ import numpy as np
 
 from ggene import seqs
 from ggene import draw
+from ggene.draw import Heatmap, ScalarPlot
 from ggene.seqs import bio, find, process, manipulate
 from .bio import reverse_complement
 from .vocab import VOCAB
@@ -200,19 +201,46 @@ def convert_mutation_spectrum(mutation_spec, aliases):
     
     return new_ms
 
-def plot_mutation_spectrum(mutation_spec, do_heatmap = False, aliases = "", **kwargs):
+def make_mutation_spec_relative(mutation_spec, mutation_rate = None):
+    
+    mtn_spc_rel = {}
+    
+    num_mtns = len(mutation_spec)
+    
+    if not mutation_rate:
+        mutation_rate = sum(mutation_spec.values())
+    
+    for mt, r in mutation_spec.items():
+        
+        rr = r / mutation_rate - 1/num_mtns 
+        mtn_spc_rel[mt] = rr
+    
+    return mtn_spc_rel
+
+def plot_mutation_spectrum(mutation_spec, do_heatmap = False, aliases = "", relative = True, suppress = False, **kwargs):
+    """
+    for dist, first line is "to", second line is "from"
+    
+    """
     
     if aliases:
         mutation_spec = convert_mutation_spectrum(mutation_spec, aliases)
         kwargs["ab"] = aliases
     
+    if relative:
+        mutation_spec = make_mutation_spec_relative(mutation_spec)
+        kwargs['center'] = None
+        kwargs['minval'] = None
+        kwargs['symmetric_color'] = True
+    
     if do_heatmap:
-        _mutation_heatmap(mutation_spec, **kwargs)
+        plt = _mutation_heatmap(mutation_spec, suppress=suppress, **kwargs)
     else:
-        _mutation_dist(mutation_spec, **kwargs)
-    pass
+        plt = _mutation_dist(mutation_spec, suppress=suppress, **kwargs)
+    
+    return plt
 
-def _mutation_heatmap(mutation_spec, **kwargs):
+def _mutation_heatmap(mutation_spec, suppress = False, **kwargs):
     
     hm_data = []
     
@@ -223,6 +251,7 @@ def _mutation_heatmap(mutation_spec, **kwargs):
     kwargs["row_height"] = kwargs.pop("row_height", 1)
     kwargs["row_space"] = kwargs.pop("row_space", 0)
     kwargs["symmetric_color"] = kwargs.pop("symmetric_color", False)
+    kwargs["colorbar"] = kwargs.get("colorbar", True)
     
     ab = kwargs.get("ab", VOCAB)
     
@@ -232,11 +261,14 @@ def _mutation_heatmap(mutation_spec, **kwargs):
             hm_row.append(mutation_spec.get(b + bb))
         hm_data.append(hm_row)
     
-    draw.heatmap(hm_data, row_labels = ab, col_labels = ab, **kwargs)
+    hm = draw.Heatmap(hm_data, row_labels = ab, col_labels = ab, **kwargs)
+    hm.show(suppress = suppress)
     print()
     
+    return hm
+    
 
-def _mutation_dist(mutation_spec, **kwargs):
+def _mutation_dist(mutation_spec, suppress = False, **kwargs):
     
     data = []
     lbl1s = []
@@ -258,12 +290,73 @@ def _mutation_dist(mutation_spec, **kwargs):
         lbl1s.append(b+" "*(len(ab)-1))
         lbl2s.append(" ")
     
-    scd = draw.scalar_to_text_nb(data, minval=minval, add_range = True, **kwargs)
+    scd = ScalarPlot(data, minval=minval, add_range = True, **kwargs)
+    scd.show(suppress = suppress)
     
-    for r in scd:
-        print(r)
+    if not suppress:
+        print("".join(lbl2s))
+        print("".join(lbl1s))
+        print()
     
-    print("".join(lbl2s))
-    print("".join(lbl1s))
-    print()
+    return scd
+
+def get_variant_data(vars, subs = {}, ins = [], dels = []):
     
+    for var in vars:
+        ref = var.ref
+        try:
+            alt0, alt1 = var.alt
+        except:
+            print(f"failed to get alts from variant {var}")
+            print(f"var raw line: {var.attributes.get("_raw_line","")}")
+            continue
+        
+        if len(ref) == len(alt0):
+            sub = ref + alt0
+            if not sub in subs:
+                subs[sub] = 0
+            subs[sub] += 1
+        else:
+            if len(ref) > len(alt0):
+                dels.append(ref[1:])
+            else:
+                ins.append(alt0[1:])
+    
+    return subs, ins, dels
+
+def show_variant_data(vars = [], subs = {}, ins = [], dels = [], suppress = False):
+    
+    if not subs:
+        subs, ins, dels = get_variant_data(vars)
+    
+    # plot_mutation_spectrum(subs, do_heatmap = True, relative = False, color_scheme = 'ember_glow', add_middle = False)
+    plt = plot_mutation_spectrum(subs, do_heatmap = True, relative = True, color_scheme = "moss", suppress = suppress, colorbar = False)
+    
+    mean_ins= np.mean([len(i) for i in ins])
+    mean_del= np.mean([len(d) for d in dels])
+    
+    ins_comps = {b:0 for b in "ATGC"}
+    del_comps = {b:0 for b in "ATGC"}
+   
+    for i in ins:
+        for b in i:
+            ins_comps[b] += 1
+    
+    for d in dels:
+        for b in d:
+            del_comps[b] += 1
+    
+    sum_ins = sum(ins_comps.values())
+    sum_dels = sum(del_comps.values())
+    ins_comps = {b:v/sum_ins for b, v in ins_comps.items()}
+    del_comps = {b:v/sum_dels for b, v in del_comps.items()}
+    
+    print(f"Insertions: mean length {mean_ins:0.1f}")
+    sc_ins = ScalarPlot(ins_comps, mode = "distribution", labels = list('ATGC'), key_order = 'ATGC', space = 1, add_range = True)
+    sc_ins.show(suppress=suppress)
+    
+    print(f"Deletions: mean length {mean_del:0.1f}")
+    sc_dels = ScalarPlot(del_comps, mode = "distribution", labels = list('ATGC'), key_order = 'ATGC', space = 1, add_range = True)
+    sc_dels.show(suppress=suppress)
+    
+    return plt, sc_ins, sc_dels

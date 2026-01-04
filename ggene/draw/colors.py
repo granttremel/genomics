@@ -158,7 +158,7 @@ class Colors:
     @classmethod
     def code_to_tuple(cls, code:str):
         
-        code_re = re.compile(r"\x1b[([0-9]+;)?(;[0-9]+;)?([0-9]+)m")
+        code_re = re.compile(r"\x1b\[([0-9]+;)?([0-9]+;)?([0-9]+)m")
         
         m = re.match(code_re, code)
         if m:
@@ -168,7 +168,6 @@ class Colors:
                 vv = ""
                 if v:
                     vv = str(v)
-                
                 try:
                     vv = int(v)
                 except:

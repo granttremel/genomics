@@ -174,6 +174,7 @@ class UFeature:
             'chrom': self.chrom,
             'start': self.start,
             'end': self.end,
+            'length':self.length,
             'type': self.feature_type,
             'source': self.source,
             'score': self.score,

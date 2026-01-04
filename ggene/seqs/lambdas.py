@@ -185,11 +185,17 @@ def seq_aluS(seq, feats):
 def seq_line1(seq, feats):
     return _seq_te(seq, feats, "L1")
 
-def seq_L1M(seq, feats):
-    return _seq_te(seq, feats, "L1M")
+def seq_L1HS(seq, feats):
+    return _seq_te(seq, feats, "L1HS")
+
+def seq_L1PA(seq, feats):
+    return _seq_te(seq, feats, "L1PA")
 
 def seq_L1P(seq, feats):
     return _seq_te(seq, feats, "L1P")
+
+def seq_L1M(seq, feats):
+    return _seq_te(seq, feats, "L1M")
 
 def seq_line2(seq, feats):
     return _seq_te(seq, feats, "L2")
@@ -324,10 +330,10 @@ def needs_features(seq_spec):
         return ["CDS"]
     elif seq_spec in [seq_feats]:
         return ["all"]
-    elif seq_spec in [_seq_te, seq_alu, seq_aluJ, seq_aluY, seq_aluS, seq_line1, seq_L1M, seq_L1P]:
+    elif seq_spec in [_seq_te, seq_alu, seq_aluJ, seq_aluY, seq_aluS, seq_line1, seq_L1M, seq_L1P, seq_L1HS, seq_L1PA]:
         return ["dfam_hit"]
-    elif seq_spec in [_seq_repeat_motif, seq_ttctt, seq_ttga, seq_tataat, seq_tatatc]:
-        return ["repeat"]
+    elif seq_spec in [_seq_repeat_motif, seq_ttctt, seq_ttga, seq_tataat, seq_tatatc, seq_aattaag, seq_atgt, seq_gaggat, seq_ccctgc]:
+        return ["repeat","simple_repeat"]
     elif not seq_spec in lambda_map.values():
         return ["all"]
     else:
@@ -365,8 +371,10 @@ lambda_map = {
     "AluY":seq_aluY,
     "AluS":seq_aluS,
     "Line1":seq_line1,
-    "L1M":seq_L1M,
+    "L1HS":seq_L1HS,
+    "L1PA":seq_L1PA,
     "L1P":seq_L1P,
+    "L1M":seq_L1M,
     "L2":seq_line2,
     "LTR":seq_LTR,
     "MIR":seq_MIR,

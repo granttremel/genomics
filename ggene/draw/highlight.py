@@ -35,14 +35,18 @@ import regex
 from ggene.seqs.bio import complement
 from ggene.seqs.find import find_subsequence, find_subsequences
 from .colors import Colors
+from .color import Color, StyledColor, Layer
 from .colored_sequence import (
-    ColoredSequence, ColorSpec, Layer, DEFAULT_COLORS,
+    ColoredSequence, DEFAULT_COLORS,
     highlight_subsequence, highlight_comparison, highlight_features_in_sequence
 )
 
+# Alias for backward compatibility
+ColorSpec = StyledColor
+
 # Re-export for convenience
 __all__ = [
-    'ColoredSequence', 'ColorSpec', 'Layer', 'DEFAULT_COLORS',
+    'ColoredSequence', 'StyledColor', 'ColorSpec', 'Layer', 'DEFAULT_COLORS',
     'highlight', 'highlight_pattern', 'highlight_patterns',
     'highlight_fuzzy', 'highlight_features', 'highlight_spans',
     'highlight_comparison', 'highlight_dyads',
@@ -61,13 +65,14 @@ def _ensure_colored_sequence(seq: Union[str, ColoredSequence]) -> ColoredSequenc
     return ColoredSequence(seq)
 
 
-def _ensure_color_spec(color: Union[int, ColorSpec, None],
-                      layer: int = Layer.MATCH) -> ColorSpec:
-    """Convert int or None to ColorSpec."""
+def _ensure_color_spec(color: Union[int, StyledColor, None],
+                      layer: int = Layer.MATCH) -> StyledColor:
+    """Convert int or None to StyledColor."""
     if color is None:
-        return ColorSpec(fg=random.randint(20, 230), layer=layer)
+        hue = random.randint(0, 360)
+        return StyledColor(fg=Color.from_hsl(hue, 0.6, 0.5), layer=layer)
     if isinstance(color, int):
-        return ColorSpec(fg=color, layer=layer)
+        return StyledColor.from_8bit(fg=color, layer=layer)
     return color
 
 
@@ -141,7 +146,7 @@ def highlight_patterns(seq: Union[str, ColoredSequence],
         if pattern in colors:
             color_spec = _ensure_color_spec(colors[pattern])
         else:
-            color_spec = ColorSpec(fg=random.randint(20, 230), layer=Layer.MATCH)
+            color_spec = StyledColor.from_8bit(fg=random.randint(20, 230), layer=Layer.MATCH)
             colors[pattern] = color_spec
 
         cs.color_matches(pattern, color_spec, name=pattern)
@@ -195,6 +200,7 @@ def highlight_features(seq: Union[str, ColoredSequence],
     if colors:
         for name, color in colors.items():
             color_specs[name] = _ensure_color_spec(color, layer=Layer.FEATURE)
+            # print(f"validated color {color} to {color_specs[name]}")
 
     cs.color_features(features, color_specs, auto_color=True)
     return cs
@@ -263,7 +269,7 @@ def highlight_dyads(seq: Union[str, ColoredSequence],
     cs = _ensure_colored_sequence(seq)
 
     for dyad in dyads:
-        color = ColorSpec(fg=random.randint(20, 230), layer=Layer.MOTIF)
+        color = StyledColor.from_8bit(fg=random.randint(20, 230), layer=Layer.MOTIF)
         start = dyad.stem_start
         end = dyad.end_position
         cs.color_range(start, end + 1, color)

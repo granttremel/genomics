@@ -27,6 +27,7 @@ if TYPE_CHECKING:
     from ggene.display.renderer import ArtistRenderer
 
 logger = logging.getLogger(__name__)
+# logger.setLevel("DEBUG")
 
 @dataclass
 class BaseBrowserState:
@@ -125,10 +126,21 @@ class BaseBrowser:
         """Main browser loop."""
 
         while True:
+            
+            t0 = time.perf_counter()
             self.update()
+            
+            dt = time.perf_counter()
+            logger.debug(f"spent {1000*(dt-t0):0.1f}ms on updating")
+            
             self.render()
+            dtt = time.perf_counter()
+            logger.debug(f"and {1000*(dtt - dt):0.1f}ms on rendering")
+            
             self.display()
-
+            dttt = time.perf_counter()
+            logger.debug(f"and {1000*(dttt - dtt):0.1f}ms on display")
+            
             key = self.get_input()
 
             # Handle input and check for quit
@@ -169,7 +181,12 @@ class BaseBrowser:
     
     def refresh_display(self):
         self.render()
+        dt = time.perf_counter()
+        
         self.display()
+        dtt = time.perf_counter()
+        
+        logger.debug(f"spent {1000*(dt-t0):0.1f}ms on rendering and {1000*(dtt - dt):0.1f}ms on display")
     
     def get_input(self):
         k = utils.get_user_keypress()

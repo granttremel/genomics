@@ -4,6 +4,7 @@ from dataclasses import dataclass, field, replace
 
 from ggene.draw.chars import HLINES, FSYMS
 from ggene.draw.colors import Colors
+from ggene.draw.color import RESET, BOLD
 from ggene.display.colors import FColors
 from ggene.display.artists.base import BaseArtistParams, BaseArtist, logger
 
@@ -23,7 +24,7 @@ class LineArtistParams(BaseArtistParams):
     # Label track settings
     orientation:str = "out" # "in"
     show_label_tracks:bool = True       # Enable label tracks for small features
-    min_label_width:int = 20            # Min display chars to show inline label
+    min_label_width:int = 8            # Min display chars to show inline label
     min_arrow_width:int = 3             # Below this, use single arrow char
     arrowhead_style:str = "head" # head_filled, head_triangle, head_harpoon, etc.
 
@@ -35,7 +36,7 @@ class LineArtist(BaseArtist):
     
     def __init__(self, name, params:LineArtistParams, **kwargs):
         super().__init__(name, params, **kwargs)
-        
+        # logger.setLevel("DEBUG")
         
     def render(self, state:'BrowserState', window:'GenomeWindow', **kwargs):
         
@@ -49,8 +50,25 @@ class LineArtist(BaseArtist):
         else:
             fts = self.params.feature_types
         
+        import time
+        
+        logger.debug(f"num features: {len(window.features)}")
+        t0 = time.perf_counter()
         display_feats = self.collect_features(window.features, fts, unique_startends = True)
+        dt = time.perf_counter() - t0
+        logger.debug(f"spent {1000*dt:0.1f}ms collecting features")
+        
+        # for f in window.features:
+        #     if f.feature_type == "dfam_hit":
+        #         logger.debug(f"dfam: {f}")
+        #         break
+        
+        t0 = time.perf_counter()
         display_lines = self.build_display_lines(display_feats, start, end, self.params.display_width)
+        
+        dt = time.perf_counter() - t0
+        logger.debug(f"spent {1000*dt:0.1f}ms building display lines")
+        
         out_lines.extend(display_lines)
         
         out_lines = self.join_rows(out_lines)
@@ -255,27 +273,27 @@ class LineArtist(BaseArtist):
 
         return feat_rows, label_rows
 
-    # def _get_display_coords(self, f, f_start, f_end, f_len, start, scale, display_width):
-    #     """Calculate display coordinates for a feature."""
-    #     hmm_full_start = f.start - f_start
-    #     hmm_full_end = f.end + (f_len - f_end)
-    #     hmm_start_d = max(0, int(scale * (hmm_full_start - start)))
-    #     hmm_end_d = min(display_width - 1, int(scale * (hmm_full_end - start)))
-    #     match_start_d = max(0, int(scale * (f.start - start)))
-    #     match_end_d = min(display_width - 1, int(scale * (f.end - start)))
-    #     return hmm_start_d, hmm_end_d, match_start_d, match_end_d
-    
-    def _get_display_coords(self, f, f_start, f_end, f_len, disp_start, scale, display_width):
+    def _get_display_coords(self, f, f_start, f_end, f_len, start, scale, display_width):
         """Calculate display coordinates for a feature."""
-        # hmm_full_start = f.start - f.get("hmm_start", 0)
-        # hmm_full_end = f.start + (f_len - f.get("hmm_end", 0))
-        hmm_full_start = f.start
-        hmm_full_end = f.end
-        hmm_start_d = max(0, int(scale * (hmm_full_start - disp_start)))
-        hmm_end_d = min(display_width - 1, int(scale * (hmm_full_end - disp_start)))
-        match_start_d = max(0, int(scale * (f.start - disp_start)))
-        match_end_d = min(display_width - 1, int(scale * (f.end - disp_start)))
+        hmm_full_start = f.start - f_start
+        hmm_full_end = f.end + (f_len - f_end)
+        hmm_start_d = max(0, int(scale * (hmm_full_start - start)))
+        hmm_end_d = min(display_width - 1, int(scale * (hmm_full_end - start)))
+        match_start_d = max(0, int(scale * (f.start - start)))
+        match_end_d = min(display_width - 1, int(scale * (f.end - start)))
         return hmm_start_d, hmm_end_d, match_start_d, match_end_d
+    
+    # def _get_display_coords(self, f, f_start, f_end, f_len, disp_start, scale, display_width):
+    #     """Calculate display coordinates for a feature."""
+    #     # hmm_full_start = f.start - f.get("hmm_start", 0)
+    #     # hmm_full_end = f.start + (f_len - f.get("hmm_end", 0))
+    #     hmm_full_start = f.start
+    #     hmm_full_end = f.end
+    #     hmm_start_d = max(0, int(scale * (hmm_full_start - disp_start)))
+    #     hmm_end_d = min(display_width - 1, int(scale * (hmm_full_end - disp_start)))
+    #     match_start_d = max(0, int(scale * (f.start - disp_start)))
+    #     match_end_d = min(display_width - 1, int(scale * (f.end - disp_start)))
+    #     return hmm_start_d, hmm_end_d, match_start_d, match_end_d
 
     def _draw_feature(self, row, f, start, scale, display_width, display_rev,
                       is_reverse, needs_label, head, body, tail, small, tiny, cont, gray_color, min_arrow_width):
@@ -296,7 +314,7 @@ class LineArtist(BaseArtist):
         # hmm_end_d = match_end_d
         
         feature_width = match_end_d - match_start_d
-        col = self.get_display_color(f) + FColors.BOLD
+        col = str(self.get_display_color(f)) + BOLD
         
         # Very small: single arrow
         if feature_width < min_arrow_width:
@@ -323,10 +341,10 @@ class LineArtist(BaseArtist):
                 if 0 <= i < display_width:
                     row[i] = body[0]
             
-            for j in range(hmm_start_d, hmm_end_d):
-                if 0 <= j < display_width:
-                    if not row[j]:
-                        row[j] = "⋯"
+            # for j in range(hmm_start_d, hmm_end_d):
+            #     if 0 <= j < display_width:
+            #         if not row[j]:
+            #             row[j] = "⋯"
                 
                 pass
 
@@ -335,6 +353,7 @@ class LineArtist(BaseArtist):
                 nname = self.format_feature_name(f, f_type, name, f.strand, display_rev=display_rev)
                 name_len = len(nname)
                 name_start = match_start_d + (feature_width // 2) - (name_len // 2)
+                logger.debug(f"drawing feature with name {nname}")
                 for i, char in enumerate(nname):
                     pos = name_start + i
                     if match_start_d <= pos <= match_end_d and 0 <= pos < display_width:
@@ -345,6 +364,8 @@ class LineArtist(BaseArtist):
                                    vline, vline_up, vline_down, dim_color, display_width):
         """Draw label text and vertical connector between label and feature."""
         # Draw label text
+        # logger.debug(f"drawing label text {label_text} {repr(label_text)}")
+        
         for i, char in enumerate(label_text):
             pos = label_start + i
             if 0 <= pos < display_width:
@@ -439,7 +460,8 @@ class LineArtist(BaseArtist):
         elif feat_type == "variant":
             return self._format_var(f)
         elif feat_type == "dfam_hit":
-            name = f.family_name
+            name = f.name
+            logger.debug(f"assigned dfam name {name}")
         else:  
             name = feat_name
             paren.append(feat_type)

@@ -3,6 +3,7 @@ from typing import List, Tuple, Dict, Any, Optional, TYPE_CHECKING
 from dataclasses import dataclass, field, replace
 
 from ggene.draw.chars import HLINES
+from ggene.draw.color import RESET, BOLD
 from ggene.display.colors import FColors
 from ggene.display.artists.base import BaseArtistParams, BaseArtist, logger
 
@@ -67,14 +68,14 @@ class TextArtist(BaseArtist):
             
             col = FColors.get_feature_type_color(ftype)
             feats = features_ft.get(ftype, [])
-            
+
             if not feats:
                 continue
-            
+
             if ftype == "variant":
                 print(feats[0])
-            
-            txtlines.append(f"{FColors.BOLD}{col}{ftype}:{FColors.RESET}")
+
+            txtlines.append(f"{BOLD}{col}{ftype}:{RESET}")
             if len(feats) > max_feat_per_type:
                 flines = self.summarize_features(ftype, feats, tabs= 1)
                 txtlines.extend(flines)
@@ -214,7 +215,7 @@ class TextArtist(BaseArtist):
         elif feature_type == "repeat":
             return ["name","start","end","length","type","motif"]
         elif feature_type == "dfam_hit":
-            return ["family_name", "start","end","length","bits","family_acc","e-value","bias","kimura_div","start_hmm","end_hmm"]
+            return ["name", "start","end","length","bits","family_acc","e-value","bias","kimura_div","start_hmm","end_hmm"]
         elif feature_type == "tf_binding":
             return ["name","start","end","length","id","match_seq","score"]
         else:

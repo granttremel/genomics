@@ -212,15 +212,22 @@ class ScalarPlot:
             self.ruler.options.update(ruler_kwargs)
             self.ruler.render()
 
-    def show(self, plot_label = "", fmt = "") -> None:
+    def show(self, suppress = False, plot_label = "", fmt = "") -> None:
         """Print the rendered plot to stdout."""
+        lines = []
         if not fmt:
             fmt = "{}"
         for i, row in enumerate(self.rows):
             rlbl = plot_label if i==0 else ""
-            print(f"{rlbl.ljust(len(plot_label))}{fmt.format(row)}")
+            line = f"{rlbl.ljust(len(plot_label))}{fmt.format(row)}"
+            lines.append(line)
+            if not suppress:
+                print(line)
         if self.ruler:
-            self.ruler.show()
+            rlines = self.ruler.show(suppress=suppress)
+            lines.extend(rlines)
+        
+        return lines
 
     def show_chunks(self, chunksz = 256):
         
@@ -501,11 +508,8 @@ def scalar_to_text_nb(scalars, minval = None, maxval = None, fg_color = 53, bg_c
     rng = (maxval - minval)/1
     c = (minval+ maxval)/2
     if rng == 0:
-        rng = 2
-        c = minval
-    # print([format(sc, "0.2f") for sc in scalars])
-    # print(f"scalar to text with {minval}, {maxval}, {rng}, {c}")
-    # print(f"data with {min(scalars)}, {max(scalars)}")
+        rng = 1
+        c = minval + rng/2 - rng/bit_depth
     
     for s in scalars:
         sv = int(nvals*((s - c)/rng)) + bit_depth // 2

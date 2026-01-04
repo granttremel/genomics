@@ -167,7 +167,7 @@ def test_vtrna(gm:GenomeManager, context_sz = 128, pct = 90, show_scplots = Fals
         for k, data in hmdata.items():
             print(f"Heatmap of {k}")
             color_scheme = "unterra" if "rev" in k else "terra"
-            draw.heatmap(data, color_scheme = color_scheme, **hmkwargs)
+            draw.make_heatmap(data, color_scheme = color_scheme, **hmkwargs)
         
             
         

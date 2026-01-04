@@ -42,6 +42,7 @@ class MatchResult:
     score: float
     name: str
     motif_id: str = ""
+    motif_class: str = ""
     strand: str = "+"
     seq: str = ""
     chrom: str = ""
@@ -75,6 +76,7 @@ class MatchResult:
             'score': self.score,
             'name': self.name,
             'id': self.motif_id,
+            'motif_class':self.motif_class,
             'strand': self.strand,
             'feature_type': feature_type,
             'source': source,
@@ -260,7 +262,7 @@ class MotifLibrary(ABC):
         """Create a MotifStream for UGenomeAnnotations integration.
 
         Args:
-            min_score: Minimum score threshold for matches
+        min_score: Minimum score threshold for matches
 
         Returns:
             A MotifStream instance bound to this library

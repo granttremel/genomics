@@ -31,8 +31,8 @@ logger.setLevel("DEBUG")
 @dataclass
 class TestBrowserState(BaseBrowserState):    
     # feature_types:Optional[Tuple[str]] = ("gene", "exon", "CDS", "three_prime_utr", "five_prime_utr", "variant", "motif", "dfam_hit", "repeat")
-    feature_types:Optional[Tuple[str]] = ("gene", "exon", "CDS", "motif", "dfam_hit", "pseudogene", "lncRNA", "ncRNA", "tf_binding")
-    detect_motifs:bool = False
+    feature_types:Optional[Tuple[str]] = ("gene", "exon", "CDS", "dfam_hit", "pseudogene", "lncRNA", "ncRNA", "three_prime_utr", "five_prime_utr", "start_codon","stop_codon" )
+    detect_motifs:bool = True
     _detect_motifs_once:bool = False
     
     mm_height:int = 8
@@ -88,7 +88,7 @@ class TestBrowser(BaseBrowser):
         )
         
         state.update(**kwargs)
-        iterator = UGenomeIterator(gm, state.chrom, state.position, window_size = state.window_size, stride = state.stride)
+        iterator = UGenomeIterator(gm, state.chrom, state.position, window_size = state.window_size, stride = state.stride, detect_motifs = True)
         
         super().__init__(gm, state = state, iterator = iterator, **kwargs)
         self.logger = logger
@@ -109,6 +109,10 @@ class TestBrowser(BaseBrowser):
         
         self.log_to_display("finished with init!", "TestBrowser.intialize", skip_update = True)
         logger.debug(f"initted with position chr{self.state.chrom}:{self.state.position}, window_size = {self.state.window_size}")
+    
+    def update(self):
+        super().update()
+        
     
     def log_to_display(self, message, caller, skip_update = False):
         
@@ -152,8 +156,8 @@ class TestBrowser(BaseBrowser):
         scale = 0.01
         ps = [
             [-1, "genes", "gc"],
-            [0.05, "genes", "gc"],
-            [0.01, "genes", "gc"],
+            [0.01, "lncRNA", "pseudo"],
+            [0.01, "polyy", "cpg"],
             # [5*scale, "protein_coding", "lncrna"],
             # [scale, "polya", "cpg"]
             # [scale, "ncRNA", "lncRNA"]
@@ -239,11 +243,12 @@ class TestBrowser(BaseBrowser):
         for i in range(num_map//nmm):
             row1 = rndr.add_row(height = self.state.mm_height, valign = VAlignment.CENTER)
             for ra in minimap_artists:
-                row1.add_artist(
+                p =row1.add_artist(
                     ra,
                     width = display_width // nmm,
                     top_label = ra.top_label,
                 )
+                # p.enabled = False
         
         """
         - curses (stdlib) - low-level but cross-platform terminal control
@@ -255,15 +260,19 @@ class TestBrowser(BaseBrowser):
         # for artist in artists:
         seqa = artists.get("sequence_artist")
         height = self.state.get_height(seqa)
-        rndr.add_full_width_row(seqa, height = height, top_label = seqa.top_label, valign = VAlignment.CENTER, fixed_height = height)
+        p = rndr.add_full_width_row(seqa, height = height, top_label = seqa.top_label, valign = VAlignment.CENTER, fixed_height = height)
+        # p.enabled = False
+        
         
         seqa = artists.get("scalar_artist")
         height = self.state.get_height(seqa)
-        rndr.add_full_width_row(seqa, height = height, top_label = seqa.top_label, valign = VAlignment.CENTER, fixed_height = height)
+        p = rndr.add_full_width_row(seqa, height = height, top_label = seqa.top_label, valign = VAlignment.CENTER, fixed_height = height)
+        # p.enabled = False
         
         seqa = artists.get("feature_artist")
         height = self.state.get_height(seqa)
-        rndr.add_full_width_row(seqa, height = height, top_label = seqa.top_label, valign = VAlignment.CENTER)
+        p = rndr.add_full_width_row(seqa, height = height, top_label = seqa.top_label, valign = VAlignment.CENTER)
+        p.enabled = True
         
         seqa = artists.get("text_artist")
         height = self.state.get_height(seqa)

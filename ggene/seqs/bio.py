@@ -629,6 +629,10 @@ def consensus_to_RY(cons):
 def consensus_to_MK(cons):
     return consensus_to_alias(cons, "MK")
 
+def sample_consensus(cons):
+    cs = [random.choice(ALIASES.get(b, "X")) for b in cons]
+    return "".join(cs)
+
 # simple motifs ig
 #idk
 splice_donor = 'GG*GURAGU'

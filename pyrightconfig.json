@@ -1,4 +1,7 @@
 {
+    "include": [
+        "./ggene",
+    ],
     "exclude": [
         "**/__pycache__",
         "**/*.egg_info",

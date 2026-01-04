@@ -6,6 +6,7 @@ import logging
 
 from ggene.draw import Colors, format_genomic, Ruler
 from ggene.draw.colors import visible_slice, visible_len
+from ggene.draw.color import Color, RESET, BOLD
 from ggene.display.colors import FColors
 
 if TYPE_CHECKING:
@@ -13,8 +14,8 @@ if TYPE_CHECKING:
     from ggene.browser.genome_browser import BrowserState
 
 logger = logging.getLogger(__name__)
-# logger.setLevel("WARNING")
-logger.setLevel("DEBUG")
+logger.setLevel("WARNING")
+# logger.setLevel("DEBUG")
 
 @dataclass
 class BaseArtistParams:
@@ -199,7 +200,8 @@ class BaseArtist:
             for n in range(num_chunks):
                 for eachline in lines:
                     bline = visible_slice(eachline, chunksz*n, stop = chunksz*(n+1))
-                    outlines.append(bline)
+                    if bline:
+                        outlines.append(bline)
             
         else:
             outlines = lines
@@ -270,7 +272,12 @@ class BaseArtist:
         
         return f_type, f_start, f_end, f_len, rev, name
         
-    def get_display_color(self, feature):
+    def get_display_color(self, feature) -> Color:
+        """Get display color for a feature.
+
+        Returns:
+            Color object - use str() to convert to ANSI escape code
+        """
         return FColors.get_feature_color(feature)
 
 class ProxyArtist(BaseArtist):

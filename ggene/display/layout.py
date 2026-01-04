@@ -9,6 +9,7 @@ from typing import List, Dict, Optional, Union, Tuple, TYPE_CHECKING
 from dataclasses import dataclass, field
 from enum import Enum
 import logging
+import time
 
 from ggene.display.colors import FColors
 
@@ -440,7 +441,10 @@ class GridLayout:
             cell_widths = []
             for cell in row_cells:
                 if cell.panel:
+                    t0 = time.perf_counter()
                     rendered = cell.panel.render(state, window)
+                    dt = time.perf_counter() - t0
+                    logger.debug(f"spent {1000*dt:0.1f}ms on panel with artist {cell.panel.artist.name}")
                     cells_rendered.append(rendered)
                     cell_widths.append(cell.panel.width)
 

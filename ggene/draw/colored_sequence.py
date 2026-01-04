@@ -5,75 +5,21 @@ Stores bases and colors separately, allowing multiple rounds of coloring
 before final rendering to an ANSI string.
 """
 
-from typing import List, Tuple, Dict, Optional, Union, Callable, Iterable
-from dataclasses import dataclass, field
-from enum import IntEnum
+from typing import List, Tuple, Dict, Optional, Union, Iterable
 import regex
-import random
 
-from .colors import Colors
-
-
-class Layer(IntEnum):
-    """Priority layers for coloring (higher = rendered on top)."""
-    BASE = 0        # Default/background color
-    FEATURE = 10    # Genomic features (genes, exons, etc.)
-    MATCH = 20      # Sequence matches
-    MOTIF = 30      # Motifs and patterns
-    HIGHLIGHT = 40  # User highlights
-    CURSOR = 50     # Cursor position
-
-
-@dataclass
-class ColorSpec:
-    """Specification for a color at a position."""
-    fg: Optional[int] = None      # Foreground color (256-color)
-    bg: Optional[int] = None      # Background color (256-color)
-    bold: bool = False
-    underline: bool = False
-    layer: int = Layer.BASE
-
-    def to_ansi(self) -> str:
-        """Convert to ANSI escape sequence."""
-        codes = []
-        if self.bold:
-            codes.append("1")
-        if self.underline:
-            codes.append("4")
-        if self.fg is not None:
-            codes.append(f"38;5;{self.fg}")
-        if self.bg is not None:
-            codes.append(f"48;5;{self.bg}")
-
-        if not codes:
-            return ""
-        return f"\x1b[{';'.join(codes)}m"
-
-    def merge_over(self, other: 'ColorSpec') -> 'ColorSpec':
-        """Merge this color over another (this takes precedence where set)."""
-        return ColorSpec(
-            fg=self.fg if self.fg is not None else other.fg,
-            bg=self.bg if self.bg is not None else other.bg,
-            bold=self.bold or other.bold,
-            underline=self.underline or other.underline,
-            layer=max(self.layer, other.layer)
-        )
-
-    @classmethod
-    def from_int(cls, color: int, layer: int = Layer.BASE) -> 'ColorSpec':
-        """Create from a single integer (foreground color)."""
-        return cls(fg=color, layer=layer)
+from .color import Color, StyledColor, Layer, RESET
 
 
 # Common color presets
 DEFAULT_COLORS = {
-    'base': ColorSpec(fg=240),
-    'match': ColorSpec(fg=142, bold=True),
-    'match_rc': ColorSpec(fg=168, bold=True),
-    'highlight': ColorSpec(fg=226, bold=True),
-    'feature': ColorSpec(fg=81),
-    'motif': ColorSpec(fg=208),
-    'error': ColorSpec(fg=196),
+    'base': StyledColor.from_8bit(fg=240),
+    'match': StyledColor.from_8bit(fg=142, bold=True),
+    'match_rc': StyledColor.from_8bit(fg=168, bold=True),
+    'highlight': StyledColor.from_8bit(fg=226, bold=True),
+    'feature': StyledColor.from_8bit(fg=81, layer=Layer.FEATURE),
+    'motif': StyledColor.from_8bit(fg=208, layer=Layer.MOTIF),
+    'error': StyledColor.from_8bit(fg=196),
 }
 
 
@@ -86,12 +32,12 @@ class ColoredSequence:
 
     Example:
         cs = ColoredSequence("ATCGATCG")
-        cs.color_range(0, 4, ColorSpec(fg=81))           # Color first 4 bases
-        cs.color_matches("TCG", ColorSpec(fg=208))       # Highlight TCG matches
-        print(cs.render())                                # Get ANSI string
+        cs.color_range(0, 4, StyledColor.from_8bit(fg=81))    # Color first 4 bases
+        cs.color_matches("TCG", StyledColor.from_8bit(fg=208)) # Highlight TCG matches
+        print(cs.render())                                      # Get ANSI string
     """
 
-    def __init__(self, sequence: str, default_color: Optional[ColorSpec] = None):
+    def __init__(self, sequence: str, default_color: Optional[StyledColor] = None):
         """
         Initialize a ColoredSequence.
 
@@ -102,18 +48,13 @@ class ColoredSequence:
         self.sequence = sequence
         self.length = len(sequence)
 
-        # Per-position color info (list of ColorSpec, one per position)
+        # Per-position color info
         if default_color is None:
             default_color = DEFAULT_COLORS['base']
-        self._colors: List[ColorSpec] = [
-            ColorSpec(fg=default_color.fg, bg=default_color.bg,
-                     bold=default_color.bold, underline=default_color.underline,
-                     layer=default_color.layer)
-            for _ in range(self.length)
-        ]
+        self._colors: List[StyledColor] = [default_color for _ in range(self.length)]
 
         # Track named regions for legend/key generation
-        self._named_regions: Dict[str, Tuple[ColorSpec, List[Tuple[int, int]]]] = {}
+        self._named_regions: Dict[str, Tuple[StyledColor, List[Tuple[int, int]]]] = {}
 
     def __len__(self) -> int:
         return self.length
@@ -132,21 +73,20 @@ class ColoredSequence:
     def copy(self) -> 'ColoredSequence':
         """Create a deep copy."""
         new_seq = ColoredSequence(self.sequence)
-        new_seq._colors = [
-            ColorSpec(fg=c.fg, bg=c.bg, bold=c.bold, underline=c.underline, layer=c.layer)
-            for c in self._colors
-        ]
+        # StyledColor is immutable/frozen, so we can share references
+        new_seq._colors = list(self._colors)
         new_seq._named_regions = {
             name: (spec, list(spans))
             for name, (spec, spans) in self._named_regions.items()
         }
         return new_seq
 
-    # ─────────────────────────────────────────────────────────────────────────
+    # -------------------------------------------------------------------------
     # Core coloring methods
-    # ─────────────────────────────────────────────────────────────────────────
+    # -------------------------------------------------------------------------
 
-    def color_position(self, pos: int, color: ColorSpec, replace: bool = False) -> 'ColoredSequence':
+    def color_position(self, pos: int, color: StyledColor,
+                       replace: bool = False) -> 'ColoredSequence':
         """
         Color a single position.
 
@@ -163,7 +103,7 @@ class ColoredSequence:
                     self._colors[pos] = color.merge_over(self._colors[pos])
         return self
 
-    def color_range(self, start: int, end: int, color: ColorSpec,
+    def color_range(self, start: int, end: int, color: StyledColor,
                     name: Optional[str] = None, replace: bool = False) -> 'ColoredSequence':
         """
         Color a range of positions.
@@ -188,24 +128,25 @@ class ColoredSequence:
 
         return self
 
-    def color_spans(self, spans: Iterable[Tuple[int, int]], color: ColorSpec,
+    def color_spans(self, spans: Iterable[Tuple[int, int]], color: StyledColor,
                    name: Optional[str] = None) -> 'ColoredSequence':
         """Color multiple spans with the same color."""
         for start, end in spans:
             self.color_range(start, end, color, name=name)
         return self
 
-    def color_positions(self, positions: Iterable[int], color: ColorSpec) -> 'ColoredSequence':
+    def color_positions(self, positions: Iterable[int],
+                        color: StyledColor) -> 'ColoredSequence':
         """Color multiple individual positions."""
         for pos in positions:
             self.color_position(pos, color)
         return self
 
-    # ─────────────────────────────────────────────────────────────────────────
+    # -------------------------------------------------------------------------
     # Pattern-based coloring
-    # ─────────────────────────────────────────────────────────────────────────
+    # -------------------------------------------------------------------------
 
-    def color_matches(self, pattern: str, color: ColorSpec,
+    def color_matches(self, pattern: str, color: StyledColor,
                      name: Optional[str] = None) -> 'ColoredSequence':
         """
         Color all exact matches of a pattern.
@@ -228,7 +169,7 @@ class ColoredSequence:
 
         return self
 
-    def color_regex(self, pattern: str, color: ColorSpec,
+    def color_regex(self, pattern: str, color: StyledColor,
                    name: Optional[str] = None) -> 'ColoredSequence':
         """
         Color all regex matches.
@@ -242,8 +183,8 @@ class ColoredSequence:
             self.color_range(match.start(), match.end(), color, name=name)
         return self
 
-    def color_fuzzy(self, pattern: str, color: ColorSpec, max_errors: int = 1,
-                   error_colors: Optional[List[ColorSpec]] = None,
+    def color_fuzzy(self, pattern: str, color: StyledColor, max_errors: int = 1,
+                   error_colors: Optional[List[StyledColor]] = None,
                    name: Optional[str] = None) -> 'ColoredSequence':
         """
         Color fuzzy matches (allowing substitutions/insertions/deletions).
@@ -259,10 +200,10 @@ class ColoredSequence:
             # Default: color degrades with errors
             error_colors = [color]
             for i in range(1, max_errors + 1):
-                # Shift hue toward gray with more errors
+                # Shift color toward gray with more errors
                 if color.fg:
-                    dimmed_fg = max(232, color.fg - i * 3)
-                    error_colors.append(ColorSpec(fg=dimmed_fg, bold=color.bold))
+                    dimmed = color.fg.adjust_lightness(-0.1 * i).adjust_saturation(-0.15 * i)
+                    error_colors.append(StyledColor(fg=dimmed, bold=color.bold))
                 else:
                     error_colors.append(color)
 
@@ -277,12 +218,12 @@ class ColoredSequence:
 
         return self
 
-    # ─────────────────────────────────────────────────────────────────────────
+    # -------------------------------------------------------------------------
     # Comparison coloring
-    # ─────────────────────────────────────────────────────────────────────────
+    # -------------------------------------------------------------------------
 
-    def color_matching_positions(self, other: str, match_color: ColorSpec,
-                                 mismatch_color: Optional[ColorSpec] = None) -> 'ColoredSequence':
+    def color_matching_positions(self, other: str, match_color: StyledColor,
+                                 mismatch_color: Optional[StyledColor] = None) -> 'ColoredSequence':
         """
         Color positions that match/mismatch with another sequence.
 
@@ -299,7 +240,7 @@ class ColoredSequence:
                 self.color_position(i, mismatch_color)
         return self
 
-    def color_complement_matches(self, other: str, color: ColorSpec) -> 'ColoredSequence':
+    def color_complement_matches(self, other: str, color: StyledColor) -> 'ColoredSequence':
         """Color positions where self matches complement of other (for RC detection)."""
         from ggene.seqs.bio import complement
 
@@ -309,12 +250,12 @@ class ColoredSequence:
                 self.color_position(i, color)
         return self
 
-    # ─────────────────────────────────────────────────────────────────────────
+    # -------------------------------------------------------------------------
     # Feature-based coloring
-    # ─────────────────────────────────────────────────────────────────────────
+    # -------------------------------------------------------------------------
 
     def color_features(self, features: Dict[str, List[Tuple[int, int]]],
-                      colors: Optional[Dict[str, ColorSpec]] = None,
+                      colors: Optional[Dict[str, StyledColor]] = None,
                       auto_color: bool = True) -> 'ColoredSequence':
         """
         Color named features with their spans.
@@ -327,12 +268,14 @@ class ColoredSequence:
         if colors is None:
             colors = {}
 
-        for name, spans in features.items():
+        for idx, (name, spans) in enumerate(features.items()):
             if name in colors:
                 color = colors[name]
             elif auto_color:
-                # Generate a random but consistent color
-                color = ColorSpec(fg=random.randint(20, 230), layer=Layer.FEATURE)
+                # Generate a consistent color based on index
+                hue = (idx * 137.5) % 360  # Golden angle for good distribution
+                base_color = Color.from_hsl(hue, 0.6, 0.5)
+                color = StyledColor(fg=base_color, layer=Layer.FEATURE)
                 colors[name] = color
             else:
                 continue
@@ -341,9 +284,29 @@ class ColoredSequence:
 
         return self
 
-    # ─────────────────────────────────────────────────────────────────────────
+    def color_feature(self, feature, color: Optional[StyledColor] = None) -> 'ColoredSequence':
+        """
+        Color a single feature object.
+
+        Args:
+            feature: Feature with start, end, name attributes
+            color: Color to use (if None, auto-generates from feature)
+        """
+        from .color import get_styled_feature_color
+
+        if color is None:
+            color = get_styled_feature_color(feature, layer=Layer.FEATURE)
+
+        start = getattr(feature, 'start', 0)
+        end = getattr(feature, 'end', 0)
+        name = getattr(feature, 'name', None)
+
+        self.color_range(start, end, color, name=name)
+        return self
+
+    # -------------------------------------------------------------------------
     # Rendering
-    # ─────────────────────────────────────────────────────────────────────────
+    # -------------------------------------------------------------------------
 
     def render(self, include_reset: bool = True) -> str:
         """
@@ -355,17 +318,17 @@ class ColoredSequence:
         parts = []
         last_ansi = ""
 
-        for i, (base, color) in enumerate(zip(self.sequence, self._colors)):
+        for base, color in zip(self.sequence, self._colors):
             ansi = color.to_ansi()
             if ansi != last_ansi:
                 if last_ansi:  # Reset before changing
-                    parts.append(Colors.RESET)
+                    parts.append(RESET)
                 parts.append(ansi)
                 last_ansi = ansi
             parts.append(base)
 
         if include_reset:
-            parts.append(Colors.RESET)
+            parts.append(RESET)
 
         return "".join(parts)
 
@@ -394,29 +357,24 @@ class ColoredSequence:
         for name, (color, spans) in self._named_regions.items():
             count = len(spans)
             ansi = color.to_ansi()
-            parts.append(f" {ansi}{name}{Colors.RESET}({count})")
+            parts.append(f" {ansi}{name}{RESET}({count})")
 
         return " ".join(parts)
 
-    # ─────────────────────────────────────────────────────────────────────────
+    # -------------------------------------------------------------------------
     # Utility methods
-    # ─────────────────────────────────────────────────────────────────────────
+    # -------------------------------------------------------------------------
 
-    def reset_colors(self, default_color: Optional[ColorSpec] = None) -> 'ColoredSequence':
+    def reset_colors(self, default_color: Optional[StyledColor] = None) -> 'ColoredSequence':
         """Reset all colors to default."""
         if default_color is None:
             default_color = DEFAULT_COLORS['base']
 
-        self._colors = [
-            ColorSpec(fg=default_color.fg, bg=default_color.bg,
-                     bold=default_color.bold, underline=default_color.underline,
-                     layer=default_color.layer)
-            for _ in range(self.length)
-        ]
+        self._colors = [default_color for _ in range(self.length)]
         self._named_regions.clear()
         return self
 
-    def get_color_at(self, pos: int) -> ColorSpec:
+    def get_color_at(self, pos: int) -> StyledColor:
         """Get color at a position."""
         return self._colors[pos]
 
@@ -425,15 +383,18 @@ class ColoredSequence:
         return self._colors[pos].layer > Layer.BASE
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # Factory functions for common highlighting patterns
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 
 def highlight_subsequence(seq: str, pattern: str,
-                         color: Optional[ColorSpec] = None) -> ColoredSequence:
+                         color: Optional[StyledColor] = None) -> ColoredSequence:
     """Highlight all occurrences of a pattern in a sequence."""
     if color is None:
-        color = ColorSpec(fg=random.randint(20, 230), layer=Layer.MATCH)
+        # Generate color from pattern hash
+        hue = hash(pattern) % 360
+        base_color = Color.from_hsl(hue, 0.6, 0.5)
+        color = StyledColor(fg=base_color, layer=Layer.MATCH)
 
     cs = ColoredSequence(seq)
     cs.color_matches(pattern, color, name=pattern)
@@ -441,8 +402,8 @@ def highlight_subsequence(seq: str, pattern: str,
 
 
 def highlight_comparison(seq_a: str, seq_b: str,
-                        match_color: Optional[ColorSpec] = None,
-                        mismatch_color: Optional[ColorSpec] = None) -> Tuple[ColoredSequence, ColoredSequence]:
+                        match_color: Optional[StyledColor] = None,
+                        mismatch_color: Optional[StyledColor] = None) -> Tuple[ColoredSequence, ColoredSequence]:
     """
     Highlight matching/mismatching positions between two sequences.
 
@@ -451,7 +412,7 @@ def highlight_comparison(seq_a: str, seq_b: str,
     if match_color is None:
         match_color = DEFAULT_COLORS['match']
     if mismatch_color is None:
-        mismatch_color = ColorSpec(fg=240)  # Gray for mismatch
+        mismatch_color = StyledColor.from_8bit(fg=240)  # Gray for mismatch
 
     cs_a = ColoredSequence(seq_a)
     cs_b = ColoredSequence(seq_b)
@@ -464,7 +425,7 @@ def highlight_comparison(seq_a: str, seq_b: str,
 
 def highlight_features_in_sequence(seq: str,
                                   features: Dict[str, List[Tuple[int, int]]],
-                                  colors: Optional[Dict[str, ColorSpec]] = None) -> ColoredSequence:
+                                  colors: Optional[Dict[str, StyledColor]] = None) -> ColoredSequence:
     """Highlight features with named spans in a sequence."""
     cs = ColoredSequence(seq)
     cs.color_features(features, colors)

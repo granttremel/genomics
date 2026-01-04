@@ -26,7 +26,7 @@ from ggene.genome.features import Gene, Feature, shorten_variant
 from ggene.genome.translate import Ribosome
 from ggene.database.genome_iterator import UGenomeIterator
 from ggene.browser.genome_browser_v2 import InteractiveGenomeBrowser
-from ggene.database.annotations import UGenomeAnnotations
+from ggene.database.annotations import UGenomeAnnotations, chr_lens
 from ggene.database.ufeature import UFeature
 from ggene.motifs import MotifDetector, PatternMotif, PatternLibrary, Jaspar, JasparLibrary
 from ggene.seqs.lambdas import needs_features
@@ -93,7 +93,7 @@ class GenomeManager:
                 self.annotations.add_variants(vcf_path)
             
             # Initialize motif detector
-            self.motif_detector = MotifDetector()
+            # self.motif_detector = MotifDetector()
             # self._setup_default_motifs()
             
             self.ribo = Ribosome()
@@ -133,9 +133,8 @@ class GenomeManager:
                     self.annotations.add_motifs(jaspars, name = "jaspars")
             
             if not kwargs.get("skip_patterns"):
-                
                 pattern_lib = PatternLibrary()
-                pattern_lib.load_defaults()
+                pattern_lib.load_defaults(class_names = ["splice","promoter"])
                 ptrn_stream = pattern_lib.to_stream("pattern","grant's re's")
                 
                 self.annotations.add_motifs(ptrn_stream, name = "patterns")
@@ -143,6 +142,9 @@ class GenomeManager:
         except Exception as e:
             logger.error(f"Failed to initialize GenomeManager: {e}")
             raise
+    
+    def get_chrom_len(self, chrom):
+        return chr_lens.get(chrom, -1)
     
     def get_all_annotations(self, chrom: str, start: int, end: int,
                            include_motifs: bool = True) -> List[UFeature]:
@@ -169,56 +171,56 @@ class GenomeManager:
         
         return sorted(annotations)
     
-    def scan_motifs(self, sequence: str, chrom: str, start_pos: int, strand = '+') -> List[UFeature]:
-        """Scan a sequence for motifs.
+    # def scan_motifs(self, sequence: str, chrom: str, start_pos: int, strand = '+') -> List[UFeature]:
+    #     """Scan a sequence for motifs.
         
-        Args:
-            sequence: DNA sequence to scan
-            chrom: Chromosome name
-            start_pos: Genomic start position of the sequence
+    #     Args:
+    #         sequence: DNA sequence to scan
+    #         chrom: Chromosome name
+    #         start_pos: Genomic start position of the sequence
             
-        Returns:
-            List of UFeature objects for found motifs
-        """
-        features = []
+    #     Returns:
+    #         List of UFeature objects for found motifs
+    #     """
+    #     features = []
         
-        all_insts = self.motif_detector.identify(sequence)
+    #     all_insts = self.motif_detector.identify(sequence)
         
-        for motif_name, instances in all_insts.items():
-            if instances:
-                # for motif_start, motif_end, score, is_rc in instances:
-                for motif in instances:
+    #     for motif_name, instances in all_insts.items():
+    #         if instances:
+    #             # for motif_start, motif_end, score, is_rc in instances:
+    #             for motif in instances:
                     
-                    motif_start = motif.get("start", 0)
-                    motif_end = motif.get("end", 0)
-                    score = motif.get("score", 0)
-                    is_rc = motif.get("is_rc", False)
-                    mtf_cls = motif.get("class", "")
+    #                 motif_start = motif.get("start", 0)
+    #                 motif_end = motif.get("end", 0)
+    #                 score = motif.get("score", 0)
+    #                 is_rc = motif.get("is_rc", False)
+    #                 mtf_cls = motif.get("class", "")
                     
-                    mseq = sequence[motif_start:motif_end]
-                    mtfstrand = strand
-                    if is_rc:
-                        mseq = reverse_complement(mseq)
-                        mtfstrand = '-' if mtfstrand == '+' else '+'
+    #                 mseq = sequence[motif_start:motif_end]
+    #                 mtfstrand = strand
+    #                 if is_rc:
+    #                     mseq = reverse_complement(mseq)
+    #                     mtfstrand = '-' if mtfstrand == '+' else '+'
                     
-                    features.append(UFeature(
-                        chrom=chrom,
-                        start=start_pos + motif_start,
-                        end=start_pos + motif_end - 1,
-                        feature_type="motif",
-                        source="MotifDetector",
-                        score=score,
-                        strand=mtfstrand,
-                        name=motif_name,
-                        attributes={
-                            'sequence': mseq,
-                            'is_rc':is_rc,
-                            'motif_class':mtf_cls,
-                            'caller':'GenomeManager'
-                        }
-                    ))
+    #                 features.append(UFeature(
+    #                     chrom=chrom,
+    #                     start=start_pos + motif_start,
+    #                     end=start_pos + motif_end - 1,
+    #                     feature_type="motif",
+    #                     source="MotifDetector",
+    #                     score=score,
+    #                     strand=mtfstrand,
+    #                     name=motif_name,
+    #                     attributes={
+    #                         'sequence': mseq,
+    #                         'is_rc':is_rc,
+    #                         'motif_class':mtf_cls,
+    #                         'caller':'GenomeManager'
+    #                     }
+    #                 ))
         
-        return features
+    #     return features
     
     def find_and_assemble_genes(self, genes):
         outgenes = []

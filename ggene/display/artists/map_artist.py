@@ -96,13 +96,14 @@ class MapArtist(BaseArtist):
         num_chunks = self.params.display_width - (5 if self.params.show_range else 0)
         chunksz = int(length / num_chunks)
         
+        # logger.debug(f"num_chunks for minimap {self.name}: {num_chunks}, chunksz {chunksz:0.1f}")
         qts = [self.params.quantity]
         if self.params.quantity2:
             qts.append(self.params.quantity2)
         
         marker_pos = max(0, min(num_chunks - 1, int(num_chunks * (state.position - start) / length)))
         
-        map_lines = self.get_map_lines(self.seq_gen, self.feat_gen, qts, state.chrom, start, length, chunksz, marker_pos = marker_pos)
+        map_lines = self.get_map_lines(self.seq_gen, self.feat_gen, qts, state.chrom, start, length, chunksz, num_chunks = num_chunks, marker_pos = marker_pos)
         
         map_lines = ["".join(ml) for ml in map_lines]
         
@@ -124,9 +125,10 @@ class MapArtist(BaseArtist):
         super().update(**kwargs)
         self._data_cache = {}
     
-    def get_map_lines(self, seq_gen, feat_gen, qts, chrom, start, length, chunksz, marker_pos = None):
+    def get_map_lines(self, seq_gen, feat_gen, qts, chrom, start, length, chunksz, num_chunks = None, marker_pos = None):
 
-        data = self.get_data(qts, seq_gen, feat_gen, chrom, start, length, chunksz)
+        data = self.get_data(qts, seq_gen, feat_gen, chrom, start, length, chunksz, num_chunks = num_chunks)
+        logger.debug(f"data for minimap {self.name}: {len(data)}, {len(data[0])}, with length {length} so num_chunks {length/chunksz:0.1f}")
         
         if len(qts) > 1:
             if self.params.show_paired:
@@ -145,49 +147,60 @@ class MapArtist(BaseArtist):
             
         return lines
     
-    def get_data(self, qts, seq_gen, feat_gen, chrom, start, length, chunksz):
-        
+    def get_data(self, qts, seq_gen, feat_gen, chrom, start, length, chunksz, num_chunks = None):
+
         datas = {}
         ssps = qts.copy()
-        
+
         for seq_spec in qts:
-            
+
             if seq_spec in self.samplers:
-                
+
                 sampler = self.samplers[seq_spec]
-                
-                data = sampler.sample(chrom, start, length, chunksz)
+
+                data = sampler.sample(chrom, start, length, chunksz, num_chunks = num_chunks)
                 datas[seq_spec] = data
                 ssps.remove(seq_spec)
-                # logger.debug(f"sampler returned data {type(data)}, {len(data)} with {type(data[0])}")
-            
+
             else:
-                
+
                 cseq_specs = self.gnm_cache.list_cached_specs(chrom)
-                
+
                 if seq_spec in cseq_specs:
-                
-                    sampler = self.gnm_cache.get_sampler(seq_spec) 
+
+                    sampler = self.gnm_cache.get_sampler(seq_spec)
                     self.samplers[seq_spec] = sampler
-                    
-                    data = sampler.sample(chrom, start, length, chunksz)
+
+                    data = sampler.sample(chrom, start, length, chunksz, num_chunks = num_chunks)
                     datas[seq_spec] = data
                     ssps.remove(seq_spec)
-                    # logger.debug(f"sampler returned data {type(data)}, {len(data)} with {type(data[0])}")
-        
-        if ssps:    
-            data = self.compute_data(ssps, seq_gen, feat_gen, chrom, start, length, chunksz)
+
+        if ssps:
+            data = self.compute_data(ssps, seq_gen, feat_gen, chrom, start, length, chunksz, num_chunks = num_chunks)
             datas.update(data)
-        
+
         return [datas.get(qt, []) for qt in qts]
     
-    def compute_data(self, qts, seq_gen, feat_gen, chrom, start, length, chunksz):
-        
+    def compute_data(self, qts, seq_gen, feat_gen, chrom, start, length, chunksz, num_chunks = None):
+
+        import numpy as np
+
         cm = ChromeMapper(seq_gen, feat_gen)
-        
+
         new_data, _ = cm.get_chromosomal_quantities(chrom, qts, chunksz=chunksz, start=start, length=length)
-        
-        datas = {qt:data for qt, data in zip(qts, new_data)}
+
+        # Resample to exact num_chunks if needed
+        if num_chunks is not None:
+            resampled_data = []
+            for data in new_data:
+                if len(data) != num_chunks:
+                    x_old = np.linspace(0, 1, len(data))
+                    x_new = np.linspace(0, 1, num_chunks)
+                    data = np.interp(x_new, x_old, data)
+                resampled_data.append(data)
+            new_data = resampled_data
+
+        datas = {qt: data for qt, data in zip(qts, new_data)}
         return datas
         
     def get_marker_row(self, marker_index, num_chunks):

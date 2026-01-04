@@ -81,6 +81,7 @@ class Heatmap:
             # Colors
             'colors': None,
             'color_scheme': 'terra',
+            'add_middle':True,
             'brightness': 1.0,
             'contrast': 1.0,
             'hue_shift': 1.0,
@@ -100,9 +101,11 @@ class Heatmap:
             # Labels
             'row_labels': None,
             'col_labels': None,
+
+            # Value labels (only for non-half-block mode)
             'show_values': False,
             'value_fmt': '0.2f',
-            'value_labels': None,
+            'value_labels': None,  # Pre-formatted labels (2D list/array)
 
             # Colorbar
             'colorbar': False,
@@ -147,25 +150,18 @@ class Heatmap:
         if self.options['colors']:
             cols = self.options['colors']
         else:
-            min_color, max_color = Colors.get_color_scheme_24b(
+            cols = Colors.get_color_scheme_24b(
                 self.options['color_scheme'], 
                 brightness = self.options['brightness'],
                 contrast = self.options['contrast'],
                 hue_shift = self.options['hue_shift'],
                 saturation = self.options['saturation'])
-            
-            cols = Colors.add_middle(min_color, max_color, saturation = 0.5)
         
-        # num_colors = self.options['num_colors']
+        if self.options['add_middle']:
+            cols = Colors.add_middle(cols[0], cols[-1], brightness = 0.3, saturation = 0.5)
+        
         colors = Colors()
-        num_colors = len(cols)
-        
-
-        if self.options['symmetric_color'] and self.options['center'] is not None:
-            self._color_scale = colors.get_color_scale_24b(num_colors, *cols)
-        else:
-            # Linear scale: min -> max
-            self._color_scale = colors.get_color_scale_24b(num_colors, *cols)
+        self._color_scale = colors.get_color_scale_24b(self.options['num_colors'], *cols)
 
     def _value_to_color(self, val: float) -> Tuple[int, int, int]:
         """Map a value to an RGB color tuple."""
@@ -219,24 +215,36 @@ class Heatmap:
                 short_lbl = str(col_lbl).center(col_width + col_space)
                 header_items += short_lbl
 
-            header_line = row_fmt.format(" ", header_items)
+            header_line = row_fmt.format("", header_items)  # Empty string gets padded by row_fmt
             self.rows.append(header_line)
 
     def _render_standard(self, row_labels, row_fmt, col_width, col_space, max_row_label_len):
         """Render in standard mode (1+ terminal rows per data row)."""
         row_height = self.options['row_height']
         row_space = self.options['row_space']
+        show_values = self.options['show_values']
+        value_fmt = self.options['value_fmt']
+        value_labels = self.options['value_labels']
 
         for i, data_row in enumerate(self.data):
             row_lbl = str(row_labels[i]).ljust(max_row_label_len) if row_labels and i < len(row_labels) else ""
 
+            # Generate value labels for this row if show_values is enabled
+            value_row = None
+            if show_values:
+                if value_labels and i < len(value_labels):
+                    value_row = value_labels[i]
+                else:
+                    value_row = [format(v, value_fmt) if v is not None else "" for v in data_row]
+
             for nr in range(row_height):
                 rlbl = row_lbl if nr == 0 else ""
+                vr = value_row if nr == 0 else None  # Only show values on first row
 
                 # Use thin border for fractional row_space
                 use_border = row_space > 0 and row_space < 1 and nr == row_height - 1
 
-                line = self._make_row(data_row, col_width, col_space, row_border=use_border)
+                line = self._make_row(data_row, col_width, col_space, row_border=use_border, value_labels=vr)
                 self.rows.append(row_fmt.format(rlbl, line))
 
             # Add full row spaces
@@ -276,7 +284,7 @@ class Heatmap:
                 self.rows.append("")
 
     def _make_row(self, data_row: List[float], col_width: int, col_space: int,
-                  row_border: bool = False) -> str:
+                  row_border: bool = False, value_labels: Optional[List[str]] = None) -> str:
         """Create a single heatmap row string."""
         block = " " if not row_border else OTHER.get("lower_eighth", "▁")
         space = SCALE[-1]
@@ -284,7 +292,7 @@ class Heatmap:
         line = ""
         bg_code = Colors(fg=234).fg_code
 
-        for val in data_row:
+        for j, val in enumerate(data_row):
             if val is None:
                 line += " " * (col_width + col_space)
                 continue
@@ -292,7 +300,13 @@ class Heatmap:
             color = self._value_to_color(val)
             fg_code = Colors(bg=color).bg_code
 
-            col_str = block * col_width
+            # Use value label if provided, otherwise use block
+            if value_labels and j < len(value_labels):
+                val_str = value_labels[j]
+                col_str = str(val_str)[:col_width].center(col_width)
+            else:
+                col_str = block * col_width
+
             space_str = space * col_space
 
             line += bg_code + fg_code + col_str + space_str + Colors.RESET
@@ -435,6 +449,27 @@ class Heatmap:
         self.render()
         return self
 
+    def set_value_labels(self, show_values: bool = True, value_fmt: str = None,
+                        value_labels: List[List[str]] = None) -> 'Heatmap':
+        """Enable/configure value labels (only works in non-half-block mode).
+
+        Args:
+            show_values: Whether to show values in cells
+            value_fmt: Format string for values (e.g., '0.2f', '0.1e')
+            value_labels: Pre-formatted 2D list of labels (overrides value_fmt)
+        """
+        if self.options['half_block']:
+            print("Warning: value labels only supported in non-half-block mode")
+            return self
+
+        self.options['show_values'] = show_values
+        if value_fmt is not None:
+            self.options['value_fmt'] = value_fmt
+        if value_labels is not None:
+            self.options['value_labels'] = value_labels
+        self.render()
+        return self
+
     def enable_colorbar(self, enabled: bool = True, width: int = 40) -> 'Heatmap':
         """Enable or disable colorbar."""
         self.options['colorbar'] = enabled
@@ -467,7 +502,7 @@ class Heatmap:
 
 # === Legacy functional interface below ===
 
-def heatmap(data, row_labels=None, col_labels=None, minval=None, maxval=None, center=0, color_scheme = "terra",
+def make_heatmap(data, row_labels=None, col_labels=None, minval=None, maxval=None, center=0, color_scheme = "terra",
             show_values=False, value_fmt="0.2f", value_labels = None, colorbar=True, suppress = False, **kwargs):
 
     out_rows = []
@@ -621,7 +656,7 @@ def heatmap(data, row_labels=None, col_labels=None, minval=None, maxval=None, ce
 def heatrow(data, label = None, col_labels = None, **kwargs):
     
     kwargs["colorbar"] = False
-    row = heatmap([data], row_labels = [label], col_labels = col_labels, **kwargs)
+    row = make_heatmap([data], row_labels = [label], col_labels = col_labels, **kwargs)
     
     return row
     

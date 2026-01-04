@@ -11,6 +11,7 @@ from ggene.draw.colors import Colors
 from ggene.display.colors import FColors
 
 from ggene.display.artists import BaseArtist, BaseArtistParams
+from ggene.display import layout
 from ggene.display.layout import GridLayout, RowBuilder, FullWidthRow, Panel, Label, Alignment, VAlignment
 
 if TYPE_CHECKING:
@@ -18,6 +19,8 @@ if TYPE_CHECKING:
     from ggene.database.genome_iterator import GenomeWindow
 
 import logging
+
+# layout.logger.setLevel("DEBUG")
 
 logger = logging.getLogger(__name__)
 

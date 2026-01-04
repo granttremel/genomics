@@ -33,7 +33,7 @@ class CacheSampler:
         self,
         cache: "GenomeCache",
         seq_spec: str,
-        base_resolution: int = 16384
+        base_resolution: int = 4096
     ):
         """
         Initialize sampler for a specific quantity.
@@ -71,7 +71,8 @@ class CacheSampler:
         start: int,
         length: int,
         chunksz: int,
-        agg_func=None
+        agg_func=None,
+        num_chunks: int = None
     ) -> Optional[np.ndarray]:
         """
         Sample data for a genomic region.
@@ -82,6 +83,8 @@ class CacheSampler:
             length: Length of region in bp
             chunksz: Desired chunk size (bp per data point)
             agg_func: Aggregation function for resampling (default: np.mean)
+            num_chunks: Exact number of output samples desired (if provided,
+                       guarantees output length matches this value)
 
         Returns:
             Numpy array of sampled values, or None if no data
@@ -105,53 +108,44 @@ class CacheSampler:
 
         region_data = data[start_idx:end_idx]
 
-        # Resample if requested chunksz differs from base resolution
-        if chunksz != self.base_resolution:
-            region_data = self._resample(region_data, chunksz, agg_func)
+        # Calculate target number of samples if not provided
+        if num_chunks is None:
+            num_chunks = int(length / chunksz)
+
+        # Resample to exact target length
+        if len(region_data) != num_chunks:
+            region_data = self._resample(region_data, num_chunks, agg_func)
 
         return region_data
 
     def _resample(
         self,
         data: np.ndarray,
-        target_chunksz: int,
+        target_length: int,
         agg_func
     ) -> np.ndarray:
         """
-        Resample data to a different resolution.
+        Resample data to an exact target length.
 
         Args:
             data: Input array
-            target_chunksz: Target chunk size
-            agg_func: Aggregation function
+            target_length: Exact number of output samples desired
+            agg_func: Aggregation function for downsampling
 
         Returns:
-            Resampled array
+            Resampled array with exactly target_length elements
         """
-        # Calculate resampling factor
-        factor = target_chunksz / self.base_resolution
-
-        if factor > 1:
-            # Downsample: aggregate multiple base chunks into one
-            bin_size = int(round(factor))
-            n_bins = len(data) // bin_size
-            if n_bins == 0:
-                return np.array([agg_func(data)])
-
-            # Trim to exact multiple
-            trimmed = data[:n_bins * bin_size]
-            reshaped = trimmed.reshape(n_bins, bin_size)
-            return agg_func(reshaped, axis=1)
-
-        elif factor < 1:
-            # Upsample: interpolate
-            target_len = int(len(data) / factor)
-            x_old = np.linspace(0, 1, len(data))
-            x_new = np.linspace(0, 1, target_len)
-            return np.interp(x_new, x_old, data)
-
-        else:
+        if len(data) == target_length:
             return data
+
+        if target_length <= 0:
+            return np.array([agg_func(data)]) if len(data) > 0 else np.array([0])
+
+        # Use interpolation to get exact target length
+        # This works for both upsampling and downsampling
+        x_old = np.linspace(0, 1, len(data))
+        x_new = np.linspace(0, 1, target_length)
+        return np.interp(x_new, x_old, data)
 
     def get_full_chrom(self, chrom: str) -> Optional[np.ndarray]:
         """Get full chromosome data without resampling."""
@@ -191,9 +185,11 @@ class CacheSampler:
 
 class GenomeCache:
     
-    def __init__(self, gm:GenomeManager = None):
+    def __init__(self, gm:GenomeManager = None, base_resolution = 4096, dtype = 'float32'):
         self.gm = gm
         self.cache_dir:Path = DEFAULT_CHRDATA_CACHE_PATH 
+        self.base_resolution = base_resolution
+        self.dtype=  dtype
     
     def bind_genome_manager(self, genome_manager:GenomeManager):
         self.gm = genome_manager
@@ -201,53 +197,53 @@ class GenomeCache:
     def get_cache_fname(self, chrom, seq_spec):
         return self.cache_dir / f"chr{chrom}" / f"chr{chrom}_{seq_spec}.npz"
     
-    def cache_all_chromes(self, seq_specs, base_resolution = 16384, overwrite = False):
+    def cache_all_chromes(self, seq_specs,overwrite = False):
         
         if not self.gm:
             print("genome manager not set! cannot compute chromosomal quantities")
             return
         
         chromes =[chrom for chrom in  self.gm.iter_chromes()]
-        self.cache_chromes(chromes, seq_specs, base_resolution=base_resolution, overwrite=overwrite)
+        self.cache_chromes(chromes, seq_specs, overwrite=overwrite)
     
-    def cache_chromes(self, chromes, seq_specs, base_resolution = 16384, overwrite = False):
+    def cache_chromes(self, chromes, seq_specs, overwrite = False):
         
         if not self.gm:
             print("genome manager not set! cannot compute chromosomal quantities")
             return
         
         for chrom in chromes:
-            self.cache_quantities(chrom, seq_specs, base_resolution=base_resolution, overwrite=overwrite)
+            self.cache_quantities(chrom, seq_specs, overwrite=overwrite)
     
-    def cache_quantities(self, chrom, seq_specs, base_resolution = 16384, overwrite = False):
+    def cache_quantities(self, chrom, seq_specs, overwrite = False):
         
         if not self.gm:
             print("genome manager not set! cannot compute chromosomal quantities")
             return
         
-        datas = self.precompute_quantities(chrom, seq_specs, base_resolution)
+        datas = self.precompute_quantities(chrom, seq_specs)
         
         for sp, data in zip(seq_specs, datas):
             print(f"caching quantity {sp} at chr{chrom}")
             self.write_quantity_cache(data, chrom, sp, overwrite=overwrite)
     
-    def cache_quantity(self, chrom, seq_spec, base_resolution = 16384, overwrite = False):
+    def cache_quantity(self, chrom, seq_spec, overwrite = False):
         
         if not self.gm:
             print("genome manager not set! cannot compute chromosomal quantities")
             return
         
-        data = self.precompute_quantities(chrom, [seq_spec], base_resolution)[0]
+        data = self.precompute_quantities(chrom, [seq_spec],)[0]
         self.write_quantity_cache(data, chrom, seq_spec, overwrite=overwrite)
     
-    def precompute_quantities(self, chrom, seq_specs, base_resolution):
+    def precompute_quantities(self, chrom, seq_specs):
         
         if not self.gm:
             print("genome manager not set! cannot compute chromosomal quantities")
             return
         
         chr_len = chr_lens.get(chrom, -1)
-        num_chunks = int(chr_len / base_resolution) + 1
+        num_chunks = int(chr_len / self.base_resolution) + 1
         chunksz = int(chr_len / num_chunks)
         
         sg, fg = ChromeMapper.get_generators(self.gm, None)
@@ -263,7 +259,7 @@ class GenomeCache:
         
         qts, _ = cm.get_chromosomal_quantities(chrom, seq_specs, chunksz = chunksz, start = 1, needs_feats = needs)
         
-        return [np.array(qts[i]) for i in range(len(seq_specs))]
+        return [np.array(qts[i], dtype = self.dtype) for i in range(len(seq_specs))]
         
 
     def write_quantity_cache(self, qt:np.ndarray, chrom, seq_spec, overwrite = False):
@@ -278,6 +274,7 @@ class GenomeCache:
             return
         
         if np.isclose(np.mean(qt),0.0):
+            print("quantity is null, skipping write")
             return
         
         print(f"writing array with shape {qt.shape}, mean {np.mean(qt)}, range {np.min(qt)}-{np.max(qt)} to file {fname}")
@@ -300,7 +297,7 @@ class GenomeCache:
 
         return data
 
-    def get_sampler(self, seq_spec: str, base_resolution: int = 16384) -> CacheSampler:
+    def get_sampler(self, seq_spec: str, base_resolution: int = 4096) -> CacheSampler:
         """
         Get a sampler for a cached quantity.
 

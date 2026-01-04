@@ -1,6 +1,10 @@
 
+from typing import Dict
 import random
 
+
+from pathlib import Path
+import subprocess
 import numpy as np
 import os
 import matplotlib.pyplot as plt
@@ -53,13 +57,13 @@ class AlignmentResult:
         
         return spec
         
-    def print(self, chunksz = 128, emph_match = True, emph_subs = True, emph_indels = False, color_subs = False, show_middle = False, show_consensus = False):
+    def print(self, chunksz = 128, emph_match = True, emph_subs = True, emph_indels = False, color_subs = False, show_middle = False, show_consensus = False, file=None):
         
-        print(Colors.BOLD + f"Score: {self.score:0.1f} with {self.identities} identities, {self.gaps} gaps, {self.mismatches} mismatches" + Colors.RESET)
-        print()
+        print(Colors.BOLD + f"Score: {self.score:0.1f} with {self.identities} identities, {self.gaps} gaps, {self.mismatches} mismatches" + Colors.RESET, file=file)
+        print(file=file)
         
         tgt_algn, q_algn = self.get_aligned_seqs()
-        print_aligned_seqs(tgt_algn, q_algn, chunksz = chunksz, consensus = self.consensus if show_consensus else "", emph_match=emph_match,  emph_subs=emph_subs,  emph_indels=emph_indels, color_subs = color_subs, show_middle=show_middle)
+        print_aligned_seqs(tgt_algn, q_algn, chunksz = chunksz, consensus = self.consensus if show_consensus else "", emph_match=emph_match,  emph_subs=emph_subs,  emph_indels=emph_indels, color_subs = color_subs, show_middle=show_middle, file=file)
     
     def __len__(self):
         return self.length
@@ -163,6 +167,80 @@ def align_multi(seqs, topk = 1):
     
     return algnr
 
+
+def align_sequences_muscle(seqs: Dict[str, str], name: str = "msa"):
+    """Align sequences using MUSCLE"""
+
+    # Write sequences to temp FASTA
+    temp_in = Path(f"/tmp/{name}_input.fasta")
+    temp_out = Path(f"/tmp/{name}_aligned.fasta")
+
+    with open(temp_in, 'w') as f:
+        for seq_name, seq in seqs.items():
+            f.write(f">{seq_name}\n{seq}\n")
+
+    # Run MUSCLE
+    subprocess.run([
+        "muscle",
+        "-in", str(temp_in),
+        "-out", str(temp_out)
+    ], check=True, capture_output = True)
+
+    # Read aligned FASTA back
+    aligned_seqs = {}
+    with open(temp_out) as f:
+        current_name = None
+        current_seq = []
+
+        for line in f:
+            if line.startswith('>'):
+                if current_name:
+                    aligned_seqs[current_name] = ''.join(current_seq)
+                current_name = line[1:].strip()
+                current_seq = []
+            else:
+                current_seq.append(line.strip())
+
+        if current_name:
+            aligned_seqs[current_name] = ''.join(current_seq)
+
+    # Cleanup
+    temp_in.unlink()
+    temp_out.unlink()
+
+    # return msa
+    return aligned_seqs
+
+def trim_msa(msa:Dict[str,str], min_occ = 2):
+    
+    seq_len = len(next(iter(msa.values())))
+    
+    names = list(msa.keys())
+    
+    start = 0
+    end = seq_len
+    
+    for i in range(seq_len):
+        num_bs = sum([1 for n in names if msa[n][i] != '-'])
+        if num_bs < min_occ:
+            start = i+1
+        else:
+            break
+        
+    for i in range(seq_len-1, -1, -1):
+        
+        num_bs = sum([1 for n in names if msa[n][i] != '-'])
+        if num_bs < min_occ:
+            end = i
+        else:
+            break
+    
+    print(f"chose start {start} and end {end}")
+    
+    trimmed_seqs = {n:seq[start:end] for n, seq in msa.items()}
+    return trimmed_seqs
+    
+
 def print_aligned_seqs(algn_target, algn_query, 
                         chunksz = 128, 
                         consensus = "",
@@ -172,6 +250,7 @@ def print_aligned_seqs(algn_target, algn_query,
                         color_subs = False,
                         show_middle = False, 
                         show_subs = False,
+                        file = None,
                     ):
     
     line_frm = "{:<4}{:>4} {}"
@@ -181,21 +260,21 @@ def print_aligned_seqs(algn_target, algn_query,
         sub_tgt = algn_target[n*chunksz:(n+1)*chunksz]
         sub_q =  algn_query[n*chunksz:(n+1)*chunksz]
         ctgt, cquery = get_colored_aligned_seqs(sub_tgt, sub_q, emph_match=emph_match,  emph_subs=emph_subs,  emph_indels=emph_indels, color_subs = color_subs)
-        print(line_frm.format("T", n*chunksz, ctgt))
+        print(line_frm.format("T", n*chunksz, ctgt), file=file)
         
         if show_middle:
             mid = get_middle(sub_tgt, sub_q, show_subs = show_subs)
             print(line_frm.format("", "", mid))
         
-        print(line_frm.format("Q", "", cquery))
+        print(line_frm.format("Q", "", cquery), file=file)
         
         if consensus:
             sub_cons = consensus[n*chunksz:(n+1)*chunksz]
-            print(line_frm.format("C","", sub_cons))
+            print(line_frm.format("C","", sub_cons), file=file)
         
-        print()
+        print(file=file)
     
-def get_colored_aligned_seqs(tgt, query, emph_match = True, emph_subs = False, emph_indels = False, color_subs = False):
+def get_colored_aligned_seqs(tgt, query, emph_match = True, emph_subs = False, emph_indels = False, color_subs = False, allow_alias = False):
     
     curr_tcol = Colors.SUBTLE
     curr_qcol = Colors.SUBTLE
@@ -206,7 +285,7 @@ def get_colored_aligned_seqs(tgt, query, emph_match = True, emph_subs = False, e
     cmap = get_colormap(emph_match=emph_match, emph_subs=emph_subs, emph_indels=emph_indels, color_subs = color_subs)
     
     for t, q in zip(tgt, query):
-        ct, cq = get_aligned_color(t, q, colormap = cmap)
+        ct, cq = get_aligned_color(t, q, colormap = cmap, allow_alias = allow_alias)
         
         if ct != curr_tcol:
             tgt_col.append(Colors.RESET + ct)
@@ -280,9 +359,16 @@ def get_colormap(emph_match, emph_subs, emph_indels, color_subs):
     
     return colormap
 
-def get_aligned_color(tgt_base, q_base, colormap = {}):
+def get_aligned_color(tgt_base, q_base, colormap = {}, allow_alias = False):
     
-    if tgt_base == q_base:
+    if allow_alias:
+        tgt_ali = bio.ALIASES.get(tgt_base, '-')
+        q_ali = bio.ALIASES.get(q_base, '-')
+        same = bool(set(q_ali).intersection(tgt_ali))
+    else:
+        same = tgt_base == q_base
+    
+    if same:
         return colormap.get("m", css), colormap.get("m", css)
     elif tgt_base == '-':
         return colormap.get("", css), colormap.get("ins", css)

@@ -57,10 +57,11 @@ class PatternMotif(BaseMotif):
             if score >= threshold:
                 results.append(MatchResult(
                     start=offset + match.start() if offset else match.start(),
-                    end=offset + match.end() if offset else match.end(),
+                    end=offset + 1 + match.end() if offset else match.end(),
                     score=score,
                     name=self.name,
                     motif_id=self.id,
+                    motif_class = self.motif_class,
                     strand="+",
                     seq=matched_seq,
                     chrom=chrom,
@@ -107,6 +108,34 @@ class PatternLibrary(MotifLibrary):
         """Scan with all patterns."""
         return {pid: self._patterns[pid].scan(seq) for pid in self._pattern_ids}
 
+    def find_all_instances(self, seq: str, threshold: float = 0.0,
+                          chrom: str = "", offset: int = 0):
+        """Find instances of all patterns above threshold.
+
+        Overrides base class to use actual regex match boundaries
+        instead of estimated motif lengths.
+
+        Args:
+            seq: Sequence to scan
+            threshold: Minimum score threshold
+            chrom: Chromosome for genomic coordinates
+            offset: Genomic offset for coordinates
+
+        Yields:
+            MatchResult objects sorted by position
+        """
+        
+        results = []
+        # TODO: some patterns require being positioned relative to others. add conditional?
+        # Use each pattern's find_instances which gets actual match boundaries
+        for motif_id in self._pattern_ids:
+            motif = self._patterns[motif_id]
+            results.extend(motif.find_instances(seq, threshold, chrom, offset))
+
+        # Sort by position for heapq.merge compatibility
+        results.sort(key=lambda r: (r.start, r.end))
+        yield from results
+
     @classmethod
     def from_dict(cls, patterns: Dict[str, str],
                   motif_class: str = "") -> 'PatternLibrary':
@@ -129,7 +158,7 @@ class PatternLibrary(MotifLibrary):
                 pre_ptrn = default_patterns.get(ptrn_name)
                 ptrn = consensus_to_re(pre_ptrn)
                 
-                ptrn_mtf = PatternMotif(ptrn_name, ptrn, allow_rc = False, motif_class = clsn)
+                ptrn_mtf = PatternMotif(ptrn_name, ptrn, motif_id = ptrn_name, allow_rc = False, motif_class = clsn)
                 
                 self.add(ptrn_mtf)
     
@@ -140,14 +169,24 @@ default_patterns = {
     "splice_branch": "CTCAY",
     "splice_acceptor": "Y{5,}YAG",
     
-    "TATA_box":"TATAYAY",
+    "TATA_box":"TATAAA", # Bucher 1986
+    "TATA_box_ext":"TATAWAWR", # Haberle 2018
     "CAAT_box":"GGCCAATCT",
     "E_box":"CAGCTG|CACGTG",
+    # "INR":"BBCABW", # Haberle 2018, too short..
+    "Y_box":"CTGATTGGCT", # Goldsmith 1993
+    "tRNA_euk_1":"TRNQNNARNGG", # Sharp 1981
+    "tRNA_euk_2":"GTRCRANNC", # Sharp 1981
+    "DRE":"WATCGATW", # Haberle 2018
+    "TCT":"YYCTTTYY", # Haberle 2018
+    "DCE(I,II,III)":"CTTCCTGTAGC", # Haberle 2018
     
+    
+    "Cap_site":"CANYYY", # Bucher 1986
+    "PolyA":"A{7,}|T{7,}",
     "AU_rich":"ATTTA",
     # "Shine-Dalgarno":"AGGAGGT", # prokaryotes and archaea ... 
     "Kozak":"ACCATGG",
-    "PolyA":"A{7,}|T{7,}",
     
     "hammerhead":"YYRRGCCGTTACCTRCAGCTGATGAGCTCCAARAAGAGCGAAACCNRNYAGGTCCTGYAGTAYTGGCYNR",
     "hammerhead_stem1":"RGCCGN{45,65}TGGCY", # nominal 55
@@ -193,16 +232,25 @@ default_patterns = {
 }
 
 pattern_classes = {
-    "splice":["splice_donor","splice_acceptor"],
+    "splice":["splice_donor","splice_branch","splice_acceptor"],
     
     "promoter":[
         "TATA_box",
         "CAAT_box",
         "E_box", 
+        "Y_box",
+        "tRNA_euk_1",
+        "tRNA_euk_2",
+        # "INR",
+        "DRE",
+        "TCT",
+        "DCE(I,II,III)",
+        
+        "Cap_site",
         "PolyA",
         "AU_rich",
-        # "Shine-Dalgarno",
-        "Kozak"
+        "Kozak",
+        
     ],
     
     "hammerhead":["hammerhead","hammerhead_stem1","hammerhead_stem2","hammerhead_big_loop"],

@@ -9,7 +9,10 @@ from ggene.browser.builds.justlines_browser import JustLinesBrowser, JustLinesBr
 from ggene.browser.builds.scalar_browser import ScalarBrowser, ScalarBrowserState
 from ggene.browser.builds.seqs_browser import SeqsBrowser, SeqsBrowserState
 from ggene.browser.builds.exp_browser import ExpBrowser, ExpBrowserState
+from ggene.browser.builds.map_browser import MapBrowser, MapBrowserState
 from ggene.database.annotations import get_experiment_stream
+from ggene.draw import Colors
+
 
 exp_path = DATA_DIR / "rna_seq" / "deepbase3_lncRNA_human" / "GSE43335.xls.gz"
 
@@ -26,15 +29,14 @@ def get_browser(browser_type:str, gm, **kwargs):
     elif browser_type == "exp":
         exp_path = kwargs.pop("file_path", "")
         return ExpBrowser(exp_path, gm=gm, min_exp = 0.05, **kwargs)
+    elif browser_type == "map":
+        return MapBrowser(gm, **kwargs)
     else:
         return None
 
 def load_genome():
-    
     a,b,c, lib_path, other_paths = get_paths()
-    gm = GenomeManager(**other_paths)
-    
-    
+    gm = GenomeManager(load_jaspars = False, skip_patterns = False, **other_paths)
     return gm
 
 def test_exp(gm):
@@ -50,9 +52,6 @@ def test_exp(gm):
 def main():
     
     gm = load_genome()
-    
-    # test_exp(gm)
-    # return
     
     parser = argparse.ArgumentParser()
     parser.add_argument("--chrom", "-c", default = "1", type = str,
@@ -107,6 +106,14 @@ def main():
     
     brws = get_browser(btp, gm, **argdict)
     brws.start(**argdict)
+    
+    view = brws._rendered_view
+    with open("./data/browser_views/map_alignment.txt","w") as f:
+        for line in view:
+            f.write(Colors.scrub_codes(line) + "\n")
+    
+    # for name, artist in brws.renderer.artists.items():
+    #     print(name, type(artist), artist.params)
     
     # exp_stream = brws.exp_stream
     

@@ -475,6 +475,109 @@ class Dyad:
             cdyads = cls.sort_dyads(dyads[n:nn], sortby = "stem_length", reverse = True)
 
 
+
+# Lookup table: base_i XOR complement_j == 3 for valid pairs
+_BASE_MAP = {'A': 0, 'C': 1, 'G': 2, 'T': 3, 'N': 4}
+_COMP_XOR = 3  # A(0)^T(3)=3, C(1)^G(2)=3
+
+def find_dyads_numpy(seq, arm_length, spacer_range=(0, 20)):
+    """
+    Fast dyad detection using numpy.
+    
+    For a dyad: seq[i:i+k] == revcomp(seq[j:j+k]) where j = i+k+spacer
+    Which means: seq[i+m] complements seq[j+k-1-m] for all m in [0,k)
+    """
+    seq = seq.upper()
+    n = len(seq)
+    arr = np.array([_BASE_MAP.get(b, 4) for b in seq], dtype=np.uint8)
+
+    min_sp, max_sp = spacer_range
+    dyads = []
+
+    for spacer in range(min_sp, max_sp + 1):
+        total_len = 2 * arm_length + spacer
+        if total_len > n:
+            continue
+
+        # For position i, compare arr[i:i+arm] with arr[i+arm+spacer:i+total][::-1]
+        # Using XOR trick: complementary bases XOR to 3
+
+        for i in range(n - total_len + 1):
+            left = arr[i:i + arm_length]
+            right = arr[i + arm_length + spacer:i + total_len][::-1]
+
+            # Check all positions complement (XOR to 3, ignoring N's)
+            mask = (left < 4) & (right < 4)  # valid bases
+            if mask.all() and ((left ^ right) == _COMP_XOR).all():
+                dyads.append((i, i + total_len, spacer))
+
+    return dyads
+
+
+def find_all_dyads_zalgo(seq, min_arm=4):
+    """
+    Find all reverse-complement palindromes using Z-algorithm.
+    O(n) time complexity.
+    """
+    seq = seq.upper()
+    rc = reverse_complement(seq)
+
+    print(seq)
+    print(rc)
+
+    # Concatenate: seq + '$' + reversed(rc)
+    # Matches indicate palindrome centers
+    combined = seq + '$' + rc[::-1]
+
+    # Compute Z-array
+    z = compute_z_array(combined)
+
+    n = len(seq)
+    dyads = []
+
+    # Z[n+1+i] tells us match length starting at position i in reversed(rc)
+    # which corresponds to match at position (n-1-i) in rc
+    # A match of length L at position i means seq[i:i+L] == rc[n-1-i-L+1:n-1-i+1]
+
+    for i in range(n + 1, len(combined)):
+        match_len = z[i]
+        print(match_len, min_arm)
+        if match_len >= min_arm:
+            seq_pos = i - n - 1
+            # This indicates a palindrome centered around seq_pos
+            dyads.append((seq_pos, match_len))
+
+    return dyads
+
+def compute_z_array(s):
+    """Standard Z-algorithm."""
+    n = len(s)
+    z = [0] * n
+    z[0] = n
+    l, r = 0, 0
+
+    for i in range(1, n):
+        if i < r:
+            z[i] = min(r - i, z[i - l])
+        while i + z[i] < n and s[z[i]] == s[i + z[i]]:
+            z[i] += 1
+        if i + z[i] > r:
+            l, r = i, i + z[i]
+
+    return z
+
+def reverse_complement(seq):
+    comp = str.maketrans('ACGT', 'TGCA')
+    return seq.translate(comp)[::-1]
+
+
+
+
+
+
+
+
+
 def get_next_symbols(num_symbols):
     
     global vocab, COMPLEMENT_MAP

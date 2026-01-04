@@ -540,10 +540,14 @@ class Ruler:
             else:
                 return lambda s: format(s, f".{decimals}f")
 
-    def show(self) -> None:
+    def show(self, suppress = False) -> None:
         """Print the rendered ruler to stdout."""
+        
         for row in self.rows:
-            print(row)
+            if not suppress:
+                print(row)
+        
+        return self.rows
 
     def get_rows(self) -> List[str]:
         """Get the rendered rows without printing."""

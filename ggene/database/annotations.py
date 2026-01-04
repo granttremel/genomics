@@ -449,8 +449,6 @@ def get_gs_feature_name(f):
 
 def get_gs_gene_id(f):
     
-    fd = f.to_dict()
-    
     fid = ""
     
     if f.gene_id:
@@ -459,22 +457,6 @@ def get_gs_gene_id(f):
         fid = f.transcript_id
     else:
         fid = f"{f.feature_type}:chr{f.chrom}:{f.start}-{f.end}"
-    
-    # if 'id' in fd and fd.get('id'):
-    #     # print("id")
-    #     fid = fd['id']
-    # elif 'gene_id' in fd:
-    #     fid = fd['gene_id']
-    #     # print("gene_id")
-    # elif 'gene_id' in fd.get('attributes',{}):
-    #     fid = fd['attributes']['gene_id']
-    #     # print("gene_id in atts")
-    # elif 'transcript_id' in fd:
-    #     fid = fd['transcript_id']
-    #     # print("transcript_id")
-    
-    # if "lncRNA" in f.feature_type:
-    #     print(f"get_gs_gene_id called producing id {fid} with {f.to_dict()}")
     
     return fid
 
@@ -489,7 +471,7 @@ class GeneStream(TabularStream):
         "chrom","source",
         # "feature_type",
         ColumnSpec("feature_type", str, ""),
-        "start","end", None, "strand", None,
+        "start","end", None, "strand", ColumnSpec("frame", int, default = 0),
         ColumnSpec("gene_id", str, ""),
         ColumnSpec("gene_name", str, ""),
         ColumnSpec("gene_source", str, ""),
@@ -523,15 +505,6 @@ class GeneStream(TabularStream):
     
     def __init__(self, filepath: str):
         super().__init__(filepath, source_name="GTF")
-        # print(self.derived)
-    
-    def parse_line(self, line:str):
-        f = super().parse_line(line)
-        # if f.feature_type == 'lncRNA':
-        #     print(f"parse_line {f.to_dict()}")
-        
-        return f
-        
     
     def preparse_line(self, line:str):
         
@@ -569,7 +542,7 @@ class VariantStream(TabularStream):
     columns = [
         "chrom", "start", None,
         ColumnSpec("ref", str, ""),
-        ColumnSpec("alt", str, "", formatter = lambda s: ",".split(s) if ',' in s else (s,s)),
+        ColumnSpec("alt", str, "", formatter = lambda s: s.split(',') if ',' in s else (s,s)),
         ColumnSpec("qual", float, ""),
         ColumnSpec("depth_result", str, ""),
         
@@ -607,12 +580,12 @@ class VariantStream(TabularStream):
     def __init__(self, filepath):
         super().__init__(filepath, source_name = "Variants")
     
-    
+    def parse_line(self, line:str):
+        f = super().parse_line(line)
+        f.attributes['_raw_line'] = line
+        return f
     
     def preparse_line(self, line:str):
-        
-        # print("call to preparse_line")
-        
         parts = line.split(self.delimiter)
         
         fe0, fe1ks, fe1vs = parts[-3:]
@@ -876,6 +849,7 @@ class UGenomeAnnotations:
         # Merge all iterators by position
         for feature in heapq.merge(*iterators):
             yield feature
+
     
     def query_point(self, chrom: str, position: int) -> List[UFeature]:
         """Query all features at a specific position."""
@@ -897,7 +871,22 @@ class UGenomeAnnotations:
             except Exception as e:
                 logger.warning(f"Query failed for {name}: {e}")
         return sorted(features)
-    
+        
+    def stream_all_motifs(self, chrom: Optional[str] = None,
+                   start: Optional[int] = None,
+                   end: Optional[int] = None) -> Iterator[UFeature]:
+        iterators = []
+        # Add motif stream iterators (they'll scan sequences lazily)
+        for name, stream in self.motif_streams.items():
+            try:
+                iterator = stream.stream(chrom, start, end)
+                iterators.append(iterator)
+            except Exception as e:
+                logger.warning(f"Failed to create motif stream for {name}: {e}")
+                
+        for feature in heapq.merge(*iterators):
+            yield feature
+            
     def query_motifs(self, chrom:str, start: int, end:int):
         
         seq = self.get_sequence(chrom, start, end)
@@ -915,6 +904,8 @@ class UGenomeAnnotations:
                        start: Optional[int] = None,
                        end: Optional[int] = None) -> Iterator[UFeature]:
         """Stream only specific feature types."""
+        
+        # maybe should make this one not stream_all dependent (for performance)
         for feature in self.stream_all(chrom, start, end):
             if feature.feature_type in feature_types:
                 yield feature

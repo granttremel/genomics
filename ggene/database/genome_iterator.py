@@ -184,9 +184,9 @@ class UGenomeIterator:
         
         # Motif detection
         self._motif_cache = {}  # Cache detected motifs by position
-        self._motif_detector = None
-        if detect_motifs:
-            self._motif_detector = self.gm.motif_detector
+        # self._motif_detector = None
+        # if detect_motifs:
+        #     self._motif_detector = self.gm.motif_detector
 
             # self._setup_motif_detection()
 
@@ -210,55 +210,67 @@ class UGenomeIterator:
         Returns:
             Dictionary of position -> motif list
         """
-        if not self._motif_detector or not seq:
+        if not seq:
             return {}
         
         motif_results = {}
         
         strand = "+"
         
-        all_insts = self._motif_detector.identify(seq)
+        for src, mtf_strm in self.gm.annotations.motif_streams.items():
+            
+            mtfs = mtf_strm.scan_sequence(seq, self.chrom, buffer_start, strand = strand)
+            
+            for f in mtfs:
+                
+                genomic_start = f.start
+                
+                if not genomic_start in motif_results:
+                    motif_results[genomic_start] = []
+                
+                motif_results[genomic_start].append(f)
         
-        for motif_name, instances in all_insts.items():
-            if instances:
-                # for motif_start, motif_end, score, is_rc, mtf_cls in instances:
-                for motif in instances:
-                    
-                    motif_start = motif.get("start", 0)
-                    motif_end = motif.get("end", 0)
-                    score = motif.get("score", 0)
-                    is_rc = motif.get("is_rc", False)
-                    mtf_cls = motif.get("class", "")
-                    
-                    genomic_start = buffer_start + motif_start
-                    
-                    if not genomic_start in motif_results:
-                        motif_results[genomic_start] = []
-                    
-                    mseq = seq[motif_start:motif_end]
-                    mtfstrand = strand
-                    if is_rc:
-                        # mseq = reverse_complement(mseq)
-                        mtfstrand = '-' if mtfstrand == '+' else '+'
-                    
-                    motif_results[genomic_start].append(UFeature(
-                        chrom=self.chrom,
-                        start=buffer_start + motif_start,
-                        end=buffer_start + motif_end - 1,
-                        feature_type="motif",
-                        source="MotifDetector",
-                        score=score,
-                        strand=mtfstrand,
-                        name=motif_name,
-                        attributes={
-                            'sequence': mseq,
-                            'is_rc':is_rc,
-                            'class':mtf_cls,
-                            'caller':'iterator',
-                        }
-                    ))
-
         return motif_results
+    #     for motif_name, instances in all_insts.items():
+    #         if instances:
+    #             # for motif_start, motif_end, score, is_rc, mtf_cls in instances:
+    #             for motif in instances:
+                    
+    #                 motif_start = motif.get("start", 0)
+    #                 motif_end = motif.get("end", 0)
+    #                 score = motif.get("score", 0)
+    #                 is_rc = motif.get("is_rc", False)
+    #                 mtf_cls = motif.get("class", "")
+                    
+    #                 genomic_start = buffer_start + motif_start
+                    
+    #                 if not genomic_start in motif_results:
+    #                     motif_results[genomic_start] = []
+                    
+    #                 mseq = seq[motif_start:motif_end]
+    #                 mtfstrand = strand
+    #                 if is_rc:
+    #                     # mseq = reverse_complement(mseq)
+    #                     mtfstrand = '-' if mtfstrand == '+' else '+'
+                    
+    #                 motif_results[genomic_start].append(UFeature(
+    #                     chrom=self.chrom,
+    #                     start=buffer_start + motif_start,
+    #                     end=buffer_start + motif_end - 1,
+    #                     feature_type="motif",
+    #                     source="MotifDetector",
+    #                     score=score,
+    #                     strand=mtfstrand,
+    #                     name=motif_name,
+    #                     attributes={
+    #                         'sequence': mseq,
+    #                         'is_rc':is_rc,
+    #                         'class':mtf_cls,
+    #                         'caller':'iterator',
+    #                     }
+    #                 ))
+
+    #     return motif_results
     
     def _preload_buffer(self) -> None:
         """Preload sequence and variant buffer, and scan for motifs (synchronous version for initial load)."""
@@ -294,6 +306,7 @@ class UGenomeIterator:
             clean_seq = self._ref_buffer.replace('-', '')
             if clean_seq:
                 motif_results = self._scan_buffer_for_motifs(clean_seq, buffer_start)
+                # motif_results = {}
                 # Update cache with new motif results
                 self._motif_cache.update(motif_results)
                 logger.debug(f"Found {len(motif_results)} motif positions in buffer")
@@ -331,6 +344,7 @@ class UGenomeIterator:
             clean_seq = aligned_ref.replace('-', '')
             if clean_seq:
                 motif_cache = self._scan_buffer_for_motifs(clean_seq, buffer_start)
+                # motif_cache = {}
                 logger.debug(f"Found {len(motif_cache)} motif positions in async buffer")
 
         logger.debug(f"Async preloaded buffer {buffer_start}-{buffer_end}: "
@@ -393,10 +407,11 @@ class UGenomeIterator:
 
         streams = list(self.annotations.streams.keys())
         logger.debug(f"available streams: {streams}")
-                
+        
         # Query features
         # features = self.annotations.query_range(self.chrom, start, end)
-        features = [f for f in self.annotations.stream_all(self.chrom, start, end)]
+        # features = [f for f in self.annotations.stream_all(self.chrom, start, end)]
+        features = [f for f in self.annotations.stream_by_types(self.feature_types,self.chrom, start, end)]
         
         fts = set()
         for f in features:
@@ -413,7 +428,7 @@ class UGenomeIterator:
     
     def _get_motifs_in_window(self, start:int, end:int):
         if not self.detect_motifs:
-            # logger.debug("skipping motifs")
+            logger.debug("skipping motifs")
             return []
         
         # logger.debug("detecting motifs")
@@ -541,19 +556,21 @@ class UGenomeIterator:
             except Exception as e:
                 logger.debug(f"Failed to get variant features: {e}")
         
-        window_motifs = self._get_motifs_in_window(window_start_ref, window_end_ref)
+        window_motifs = []
         # Get motifs in this window from cache
         # window_motifs = []
-        # if self.detect_motifs and self._motif_cache:
-        #     for pos in range(window_start_ref, window_end_ref + 1):
-        #         if pos in self._motif_cache:
-        #             # Filter motifs that actually overlap with the window
-        #             for motif in self._motif_cache[pos]:
-        #                 if motif['start'] < window_end_ref and motif['end'] > window_start_ref:
-        #                     # Only add if not already in list (avoid duplicates)
-        #                     if motif not in window_motifs:
-        #                         window_motifs.append(motif)
+        if self.detect_motifs and self._motif_cache:
+            window_motifs = self._get_motifs_in_window(window_start_ref, window_end_ref)
             
+            for pos in range(window_start_ref, window_end_ref + 1):
+                if pos in self._motif_cache:
+                    # Filter motifs that actually overlap with the window
+                    for motif in self._motif_cache[pos]:
+                        if motif['start'] < window_end_ref and motif['end'] > window_start_ref:
+                            # Only add if not already in list (avoid duplicates)
+                            if motif not in window_motifs:
+                                window_motifs.append(motif)
+            logger.debug(f"found {len(window_motifs)} motifs in _extract_window")
         #     # Sort motifs by position for display
         #     window_motifs.sort(key=lambda m: m['start'])
         #     logger.debug(f"Found {len(window_motifs)} motifs in window {window_start_ref}-{window_end_ref}")
