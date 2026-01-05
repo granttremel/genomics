@@ -308,6 +308,10 @@ class FASTAWriter:
         self._record_count = 0
         self._opened = False
 
+    @property
+    def is_open(self):
+        return self._opened
+
     def open(self):
         if self._opened:
             return self
@@ -910,10 +914,10 @@ class GenomeLibrary:
     def create_fasta_writer(
         self,
         name: str,
+        description: str = "",
         source: str = "",
         organism: str = "Hsa",
-        assembly: str = "",
-        description: str = "",
+        assembly: str = "GRCh38",
         overwrite: bool = False,
         **extra_meta
     ) -> FASTAWriter:

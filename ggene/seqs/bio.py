@@ -590,6 +590,44 @@ def merge_with_gaps(seqa, seqb, default = 'N'):
     
     return "".join(outseq)
 
+def get_consensus(aligned_seqs, min_p_ratio = 2):
+    
+    num_seqs = len(aligned_seqs)
+    names = list(aligned_seqs.keys())
+    seq_len = len(aligned_seqs[names[0]])
+    
+    cons = []
+    
+    for p in range(seq_len):
+        
+        p_bases = {k:0 for k in 'ATGC-'}
+        
+        for nm in names:
+            base = aligned_seqs[nm][p]
+            p_bases[base] += 1/num_seqs
+        
+        n_bases = 5
+
+        while n_bases > 1:
+            min_base, min_p = min(p_bases.items(), key=lambda x: x[1])
+            threshold = 1 / n_bases / min_p_ratio
+
+            if min_p < threshold:
+                del p_bases[min_base]
+                n_bases -= 1
+            else:
+                break
+        
+        remaining = list(p_bases.keys())
+        
+        if remaining == ['-']:
+            b_ali = '-'
+        else:
+            b_ali = get_alias(*remaining)
+        cons.append(b_ali)
+
+    return "".join(cons)
+        
 def is_consensus(seq, consensus):
     
     for ba, bc in zip(seq, consensus):

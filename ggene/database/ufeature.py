@@ -218,7 +218,7 @@ class UFeature:
         """Compact repr showing key fields and non-empty attributes."""
         # Core info
         loc = f"{self.chrom}:{self.start}-{self.end}"
-        parts = [f"UFeature({self.feature_type}, {loc}"]
+        parts = [f"UFeature({self.feature_type}, {loc} ({self.length}bp)"]
 
         if self.strand:
             parts.append(f", strand={self.strand!r}")

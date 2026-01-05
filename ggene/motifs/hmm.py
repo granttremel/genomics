@@ -282,6 +282,19 @@ def prepare_seqs(seqs, do_rc = False):
     
     return db, names
 
+def prepare_seqs_iter(seqs, do_rc = False):
+        
+    dseqs = []
+    names = []
+    for name, seq in seqs:
+        dseq = DigitalSequence(AB, sequence = AB.encode(seq), name = str(name).encode())
+        dseqs.append(dseq)
+        names.append(str(name))
+    
+    db = DigitalSequenceBlock(AB, dseqs)
+    
+    return db, names
+
 def search_hmm(hmm, seqs):
     
     dseqs = []

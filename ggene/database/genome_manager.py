@@ -1,6 +1,4 @@
 
-
-
 from cyvcf2 import VCF
 from cyvcf2 import Variant
 import random
@@ -79,7 +77,6 @@ class GenomeManager:
             self.library_path = library_path
             
             self.search = GenomeSearch(self)
-            # print(f"loading sequence from {DEFAULT_FASTA_PATH} (exists = {os.path.exists(DEFAULT_FASTA_PATH)})")
             
             # Initialize new unified annotation system with sequence streaming
             self.annotations = UGenomeAnnotations(
@@ -91,10 +88,6 @@ class GenomeManager:
                 self.annotations.add_genes(gtf_path)
             if vcf_path and not kwargs.get("skip_variants"):
                 self.annotations.add_variants(vcf_path)
-            
-            # Initialize motif detector
-            # self.motif_detector = MotifDetector()
-            # self._setup_default_motifs()
             
             self.ribo = Ribosome()
             self.genes: Dict[str, 'Gene'] = {}
@@ -170,57 +163,6 @@ class GenomeManager:
                 annotations.extend(motif_features)
         
         return sorted(annotations)
-    
-    # def scan_motifs(self, sequence: str, chrom: str, start_pos: int, strand = '+') -> List[UFeature]:
-    #     """Scan a sequence for motifs.
-        
-    #     Args:
-    #         sequence: DNA sequence to scan
-    #         chrom: Chromosome name
-    #         start_pos: Genomic start position of the sequence
-            
-    #     Returns:
-    #         List of UFeature objects for found motifs
-    #     """
-    #     features = []
-        
-    #     all_insts = self.motif_detector.identify(sequence)
-        
-    #     for motif_name, instances in all_insts.items():
-    #         if instances:
-    #             # for motif_start, motif_end, score, is_rc in instances:
-    #             for motif in instances:
-                    
-    #                 motif_start = motif.get("start", 0)
-    #                 motif_end = motif.get("end", 0)
-    #                 score = motif.get("score", 0)
-    #                 is_rc = motif.get("is_rc", False)
-    #                 mtf_cls = motif.get("class", "")
-                    
-    #                 mseq = sequence[motif_start:motif_end]
-    #                 mtfstrand = strand
-    #                 if is_rc:
-    #                     mseq = reverse_complement(mseq)
-    #                     mtfstrand = '-' if mtfstrand == '+' else '+'
-                    
-    #                 features.append(UFeature(
-    #                     chrom=chrom,
-    #                     start=start_pos + motif_start,
-    #                     end=start_pos + motif_end - 1,
-    #                     feature_type="motif",
-    #                     source="MotifDetector",
-    #                     score=score,
-    #                     strand=mtfstrand,
-    #                     name=motif_name,
-    #                     attributes={
-    #                         'sequence': mseq,
-    #                         'is_rc':is_rc,
-    #                         'motif_class':mtf_cls,
-    #                         'caller':'GenomeManager'
-    #                     }
-    #                 ))
-        
-    #     return features
     
     def find_and_assemble_genes(self, genes):
         outgenes = []

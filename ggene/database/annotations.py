@@ -542,7 +542,7 @@ class VariantStream(TabularStream):
     columns = [
         "chrom", "start", None,
         ColumnSpec("ref", str, ""),
-        ColumnSpec("alt", str, "", formatter = lambda s: s.split(',') if ',' in s else (s,s)),
+        ColumnSpec("alt", str, "", formatter = lambda s: sorted(s.split(','), key = lambda s:-len(s)) if ',' in s else (s,s)),
         ColumnSpec("qual", float, ""),
         ColumnSpec("depth_result", str, ""),
         

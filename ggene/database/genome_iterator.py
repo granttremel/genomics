@@ -219,59 +219,16 @@ class UGenomeIterator:
         
         for src, mtf_strm in self.gm.annotations.motif_streams.items():
             
-            mtfs = mtf_strm.scan_sequence(seq, self.chrom, buffer_start, strand = strand)
-            
+            mtfs = mtf_strm.scan_sequence(seq, self.chrom, buffer_start, strand = strand)            
             for f in mtfs:
+
+                if not f.start in motif_results:
+                    motif_results[f.start] = []
                 
-                genomic_start = f.start
-                
-                if not genomic_start in motif_results:
-                    motif_results[genomic_start] = []
-                
-                motif_results[genomic_start].append(f)
+                motif_results[f.start].append(f)
         
         return motif_results
-    #     for motif_name, instances in all_insts.items():
-    #         if instances:
-    #             # for motif_start, motif_end, score, is_rc, mtf_cls in instances:
-    #             for motif in instances:
-                    
-    #                 motif_start = motif.get("start", 0)
-    #                 motif_end = motif.get("end", 0)
-    #                 score = motif.get("score", 0)
-    #                 is_rc = motif.get("is_rc", False)
-    #                 mtf_cls = motif.get("class", "")
-                    
-    #                 genomic_start = buffer_start + motif_start
-                    
-    #                 if not genomic_start in motif_results:
-    #                     motif_results[genomic_start] = []
-                    
-    #                 mseq = seq[motif_start:motif_end]
-    #                 mtfstrand = strand
-    #                 if is_rc:
-    #                     # mseq = reverse_complement(mseq)
-    #                     mtfstrand = '-' if mtfstrand == '+' else '+'
-                    
-    #                 motif_results[genomic_start].append(UFeature(
-    #                     chrom=self.chrom,
-    #                     start=buffer_start + motif_start,
-    #                     end=buffer_start + motif_end - 1,
-    #                     feature_type="motif",
-    #                     source="MotifDetector",
-    #                     score=score,
-    #                     strand=mtfstrand,
-    #                     name=motif_name,
-    #                     attributes={
-    #                         'sequence': mseq,
-    #                         'is_rc':is_rc,
-    #                         'class':mtf_cls,
-    #                         'caller':'iterator',
-    #                     }
-    #                 ))
 
-    #     return motif_results
-    
     def _preload_buffer(self) -> None:
         """Preload sequence and variant buffer, and scan for motifs (synchronous version for initial load)."""
         # Ensure buffer boundaries
@@ -434,21 +391,16 @@ class UGenomeIterator:
         # logger.debug("detecting motifs")
         
         # Check cache
-        # cache_key = (start, end)
-        # if cache_key in self._feature_cache:
-        #     return self._feature_cache[cache_key]
         
         # Query motifs
         motifs = self.annotations.query_motifs(self.chrom, start, end)
-        
-        # logger.debug(f"identified {len(motifs)} motifs")
         
         # Filter by type if specified
         if self.feature_types:
             motifs = [f for f in motifs if f.feature_type in self.feature_types]
         
         # Cache result
-        # self._feature_cache[cache_key] = features
+        
         return motifs
         
     def _calculate_display_coordinate(self, ref_pos: int, alt_pos: int) -> int:
