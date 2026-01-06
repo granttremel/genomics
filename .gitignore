@@ -15,5 +15,5 @@ gene
 
 local.yaml
 
-**/scripts/*
+**/dev/
 **/notes

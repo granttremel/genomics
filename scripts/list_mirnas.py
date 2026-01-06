@@ -109,7 +109,8 @@ def show_mirna(f, gm = None):
         print("  no parent gene")
     
     if seq:
-        algn = align.align_sequences(seq, rcseq)[0]
+        algns = align.align_sequences(seq, rcseq)
+        algn = next(iter(algns))
         algn.print(chunksz = 256, emph_indels = True, color_subs = True)
     
     return pg, bt, in_ex, in_3putr, in_5putr 
@@ -152,7 +153,7 @@ def main():
     gm = load_genome()
     
 
-    fs = list_mirnas(gm, "1", limit = 512)
+    fs = list_mirnas(gm, "1", limit = 4)
 
 
 

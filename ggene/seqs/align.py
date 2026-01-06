@@ -68,6 +68,9 @@ class AlignmentResult:
     def __len__(self):
         return self.length
 
+import itertools
+pair_cost_dna = {(a,b):float(a==b) for a, b in itertools.product('ATGC','ATGC')}
+
 pair_cost = {
     ("A","T"):0.0,
     ("G","C"):0.0,
@@ -125,7 +128,8 @@ _default_scores = {
 def get_scores(**scores):
     sc = _default_scores.copy()
     sc.update(scores)
-    return sc
+    # return sc
+    return {}
 
 def get_consensus_scores():
     cscores = _all_scores.copy()
