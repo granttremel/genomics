@@ -3,6 +3,7 @@
 import re
 import regex
 import functools
+from typing import List, Callable, Optional, Union
 
 from ggene import seqs
 from ggene.seqs.bio import reverse_complement
@@ -11,6 +12,71 @@ from ggene.motifs.motif import MotifDetector
 
 md:MotifDetector = MotifDetector()
 md.setup_default_motifs()
+
+# Decorator for annotating seq functions with their requirements
+def requires_features(feature_types: List[str] = None, source_name: Union[List[str],str] = ""):
+    """Decorator to annotate seq functions with their feature requirements.
+
+    Args:
+        feature_types: List of feature types needed (e.g., ["gene", "exon"])
+        source_name: Specific annotation source name if needed
+
+    Example:
+        @requires_features(["gene"], source_name="GTF")
+        def seq_genes(seq, feats):
+            return sum(1 for f in feats if f.feature_type == "gene")
+    """
+    def decorator(func):
+        func._feature_types = feature_types or []
+        func._source_names = [source_name] if isinstance(source_name, str) else source_name
+        return func
+    return decorator
+
+def get_feature_types(seq_spec: Union[Callable, str]) -> List[str]:
+    """Get feature types required by a seq function.
+
+    Args:
+        seq_spec: Either a function or a string key from lambda_map
+
+    Returns:
+        List of feature type strings, or empty list if no features needed
+    """
+    # Resolve string to function
+    if isinstance(seq_spec, str):
+        seq_spec = lambda_map.get(seq_spec)
+
+    if seq_spec is None:
+        return []
+
+    # Check if decorated with requires_features
+    if hasattr(seq_spec, '_feature_types'):
+        return seq_spec._feature_types
+
+    # Fallback to old needs_features logic for undecorated functions
+    return needs_features(seq_spec)
+
+def get_sources(seq_spec: Union[Callable, str]) -> Optional[str]:
+    """Get annotation source name required by a seq function.
+
+    Args:
+        seq_spec: Either a function or a string key from lambda_map
+
+    Returns:
+        Source name string, or None if no specific source needed
+    """
+    # Resolve string to function
+    if isinstance(seq_spec, str):
+        seq_spec = lambda_map.get(seq_spec)
+
+    if seq_spec is None:
+        print(f"returning empty due to None")
+        return []
+
+    # Check if decorated with requires_features
+    if hasattr(seq_spec, '_source_names'):
+        return seq_spec._source_names or []
+
+    return []
 
 def seq_gc(seq, feats):
     return (seq.count("G") + seq.count("C")) / len(seq)
@@ -83,39 +149,49 @@ def _seq_polyn(seq, feats, b, do_rc = False):
         max_run = max(max_run, en-st)
     return max_run
 
+@requires_features(["all"])
 def seq_feats(seq, feats):
     return sum(1 for f in feats)
 
+@requires_features(["gene"], source_name = 'genes')
 def seq_genes(seq, feats):
     return sum(1 for f in feats if f.feature_type == "gene")
 
+@requires_features(["exon"], source_name = 'genes')
 def seq_exons(seq, feats):
     return sum(1 for f in feats if f.feature_type == "exon")
 
+@requires_features(["motif"])
 def seq_motifs(seq, feats):
     return sum(1 for f in feats if f.feature_type == "motif")
 
+@requires_features(["pseudogene"], source_name = 'genes')
 def seq_pseudo(seq, feats):
     return sum(1 for f in feats if f.feature_type == "pseudogene")
 
+@requires_features(["lncRNA"], source_name = 'genes')
 def seq_lncrna(seq, feats):
     return sum(1 for f in feats if f.feature_type == "lncRNA")
 
+@requires_features(["ncRNA"], source_name = 'genes')
 def seq_ncrna(seq, feats):
     return sum(1 for f in feats if f.feature_type == "ncRNA")
 
-# ?
+@requires_features(["lncRNA", "ncRNA", "pseudogene"], source_name = 'genes')
 def seq_nongenes(seq, feats):
     return sum(1 for f in feats if f.feature_type in ["lncRNA","ncRNA","pseudogene"])
 
+@requires_features(["repeat", "simple_repeat"], source_name = 'dfam')
 def seq_simple_rpts(seq, feats):
     return sum(1 for f in feats if f.feature_type == "repeat" and f.attributes.get("type","") == "Simple_repeat")
 
+@requires_features(["CDS"], source_name = 'genes')
 def seq_cds_len(seq, feats):
     if not feats:
         return 0
     return sum([f.get("end") - f.get("start") for f in feats if f.get("type","") == "CDS"])/len(feats)
 
+@requires_features(["CDS"], source_name = 'genes')
 def seq_cds_pct(seq, feats):
     return seq_cds_len(seq, feats) / len(seq)
 
@@ -133,16 +209,18 @@ def _seq_biotype(seq, feats, biotype):
     
     return out / (max_pos - min_pos)
 
+@requires_features(["gene"], source_name = 'genes')
 def seq_pc_bt(seq, feats):
     """
     protein coding biotype
     """
     return _seq_biotype(seq, feats, "protein_coding")
 
+@requires_features(["ncRNA", "lncRNA"], source_name = 'genes')
 def seq_lncrna_bt(seq, feats):
     """
     long noncoding RNA biotype
-    """    
+    """
     return _seq_biotype(seq, feats, "lncRNA")
 
 
@@ -170,48 +248,63 @@ def seq_hammerhead_st1(seq, feats):
 def _seq_te(seq, feats, te_name):
     return sum([1 for f in feats if f.get("feature_type") == "dfam_hit" and te_name in f.get("name")])
 
+@requires_features(["dfam_hit"], source_name = 'dfam')
 def seq_alu(seq, feats):
     return _seq_te(seq, feats, "Alu")
 
+@requires_features(["dfam_hit"], source_name = 'dfam')
 def seq_aluJ(seq, feats):
     return _seq_te(seq, feats, "AluJ")
 
+@requires_features(["dfam_hit"], source_name = 'dfam')
 def seq_aluY(seq, feats):
     return _seq_te(seq, feats, "AluY")
 
+@requires_features(["dfam_hit"], source_name = 'dfam')
 def seq_aluS(seq, feats):
     return _seq_te(seq, feats, "AluS")
 
+@requires_features(["dfam_hit"], source_name = 'dfam')
 def seq_line1(seq, feats):
     return _seq_te(seq, feats, "L1")
 
+@requires_features(["dfam_hit"], source_name = 'dfam')
 def seq_L1HS(seq, feats):
     return _seq_te(seq, feats, "L1HS")
 
+@requires_features(["dfam_hit"], source_name = 'dfam')
 def seq_L1PA(seq, feats):
     return _seq_te(seq, feats, "L1PA")
 
+@requires_features(["dfam_hit"], source_name = 'dfam')
 def seq_L1P(seq, feats):
     return _seq_te(seq, feats, "L1P")
 
+@requires_features(["dfam_hit"], source_name = 'dfam')
 def seq_L1M(seq, feats):
     return _seq_te(seq, feats, "L1M")
 
+@requires_features(["dfam_hit"], source_name = 'dfam')
 def seq_line2(seq, feats):
     return _seq_te(seq, feats, "L2")
 
+@requires_features(["dfam_hit"], source_name = 'dfam')
 def seq_LTR(seq, feats):
     return _seq_te(seq, feats, "LTR")
 
+@requires_features(["dfam_hit"], source_name = 'dfam')
 def seq_MIR(seq, feats):
     return _seq_te(seq, feats, "MIR")
 
+@requires_features(["dfam_hit"], source_name = 'dfam')
 def seq_SVA(seq, feats):
     return _seq_te(seq, feats, "SVA")
 
+@requires_features(["dfam_hit"], source_name = 'dfam')
 def seq_ALR(seq, feats):
     return _seq_te(seq, feats, "ALR")
 
+@requires_features(["dfam_hit"], source_name = 'dfam')
 def seq_MER(seq, feats):
     return _seq_te(seq, feats, "MER")
 
@@ -234,27 +327,35 @@ def _seq_repeat_motif(seq, feats, motif):
     
     return res
 
+@requires_features(["repeat", "simple_repeat"], source_name = 'repeats')
 def seq_ttctt(seq, feats):
     return _seq_repeat_motif(seq, feats, "TTCTT")
 
+@requires_features(["repeat", "simple_repeat"], source_name = 'repeats')
 def seq_tataat(seq, feats):
     return _seq_repeat_motif(seq, feats, "TATAAT")
 
+@requires_features(["repeat", "simple_repeat"], source_name = 'repeats')
 def seq_tatatc(seq, feats):
     return _seq_repeat_motif(seq, feats, "TATATC")
 
+@requires_features(["repeat", "simple_repeat"], source_name = 'repeats')
 def seq_ttga(seq, feats):
     return _seq_repeat_motif(seq, feats, "TTGA")
 
+@requires_features(["repeat", "simple_repeat"], source_name = 'repeats')
 def seq_aattaag(seq, feats):
     return _seq_repeat_motif(seq, feats, "AATTAAG")
 
+@requires_features(["repeat", "simple_repeat"], source_name = 'repeats')
 def seq_atgt(seq, feats):
     return _seq_repeat_motif(seq, feats, "ATGT")
 
+@requires_features(["repeat", "simple_repeat"], source_name = 'repeats')
 def seq_gaggat(seq, feats):
     return _seq_repeat_motif(seq, feats, "GAGGAT")
 
+@requires_features(["repeat", "simple_repeat"], source_name = 'repeats')
 def seq_ccctgc(seq, feats):
     return _seq_repeat_motif(seq, feats, "CCCTGC")
 
@@ -403,3 +504,13 @@ lambda_map = {
     "penta_repeats":seq_penta_repeats,
     "hexa_repeats":seq_hexa_repeats,
 }
+
+def make_custom_lambda(func_name, func, feature_types = [], source_names = []):
+    
+    @requires_features(feature_types, source_names)
+    def seq_custom(seq, feats):
+        return func(seq, feats)
+    
+    lambda_map[func_name] = seq_custom
+    
+    return seq_custom

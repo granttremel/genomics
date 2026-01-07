@@ -135,6 +135,7 @@ class UGenomeIterator:
                  stride: Optional[int] = None,
                  integrate_variants: bool = True,
                  track_features: bool = True,
+                 sources: Optional[List[str]] = None,
                  feature_types: Optional[List[str]] = None,
                  detect_motifs: bool = True):
         """Initialize the unified genome iterator.
@@ -160,6 +161,7 @@ class UGenomeIterator:
         self.stride = stride or window_size
         self.integrate_variants = integrate_variants
         self.track_features = track_features
+        self.sources = sources
         self.feature_types = feature_types
         self.detect_motifs = detect_motifs
         
@@ -268,8 +270,8 @@ class UGenomeIterator:
                 self._motif_cache.update(motif_results)
                 logger.debug(f"Found {len(motif_results)} motif positions in buffer")
 
-        logger.debug(f"Preloaded buffer {buffer_start}-{buffer_end}: "
-                    f"{len(self._ref_buffer)} ref bases, {len(self._variant_list)} variants")
+        # logger.debug(f"Preloaded buffer {buffer_start}-{buffer_end}: "
+        #             f"{len(self._ref_buffer)} ref bases, {len(self._variant_list)} variants")
 
     def _load_buffer_async_worker(self, buffer_start: int, buffer_end: int) -> Tuple[str, str, List, int]:
         """Worker function that runs in thread pool to load buffer data."""
@@ -304,8 +306,8 @@ class UGenomeIterator:
                 # motif_cache = {}
                 logger.debug(f"Found {len(motif_cache)} motif positions in async buffer")
 
-        logger.debug(f"Async preloaded buffer {buffer_start}-{buffer_end}: "
-                    f"{len(aligned_ref)} ref bases, {len(variant_list)} variants")
+        # logger.debug(f"Async preloaded buffer {buffer_start}-{buffer_end}: "
+        #             f"{len(aligned_ref)} ref bases, {len(variant_list)} variants")
 
         return aligned_ref, aligned_alt, variant_list, cumulative_delta, motif_cache
 
@@ -319,7 +321,7 @@ class UGenomeIterator:
         self._next_buffer_start = buffer_start
         self._next_buffer_end = buffer_end
 
-        logger.debug(f"Starting async preload for {buffer_start}-{buffer_end}")
+        # logger.debug(f"Starting async preload for {buffer_start}-{buffer_end}")
         self._preload_future = self._executor.submit(
             self._load_buffer_async_worker, buffer_start, buffer_end
         )
@@ -366,9 +368,10 @@ class UGenomeIterator:
         logger.debug(f"available streams: {streams}")
         
         # Query features
-        # features = self.annotations.query_range(self.chrom, start, end)
-        # features = [f for f in self.annotations.stream_all(self.chrom, start, end)]
-        features = [f for f in self.annotations.stream_by_types(self.feature_types,self.chrom, start, end)]
+        if self.sources:
+            features = [f for f in self.annotations.stream_by_sources(self.sources, self.chrom, start, end) if f.feature_type in self.feature_types]
+        else:
+            features = [f for f in self.annotations.stream_by_types(self.feature_types, self.chrom, start, end)]
         
         fts = set()
         for f in features:
@@ -423,7 +426,7 @@ class UGenomeIterator:
         # Display coordinate includes space for both insertions and deletions
         return ref_pos + positive_delta + negative_delta
     
-    def _extract_window(self, window_start_ref: int, window_end_ref: int) -> GenomeWindow:
+    def _extract_window(self, window_start_ref: int, window_end_ref: int, filter = None) -> GenomeWindow:
         """Extract a window from the buffer."""
         # Check if we need to reload buffer
         logger.debug(f"buffer offsets before: {self._buffer_start}, {self._buffer_end}")
@@ -495,7 +498,12 @@ class UGenomeIterator:
         
         # Get features
         features = self._get_features_in_window(window_start_ref, window_end_ref)
-        
+        if filter:
+            nfs = len(features)
+            features = [f for f in features if filter(f)]
+            newnfs = len(features)
+            logger.debug(f"filter reduced features from {nfs} to {newnfs}")
+            
         # Get variant features separately (these are UFeature objects)
         variant_features = []
         if self.annotations and hasattr(self.annotations, 'streams') and 'variants' in self.annotations.streams:
@@ -578,8 +586,8 @@ class UGenomeIterator:
                 current_ref_pos, self.coords.alt_pos
             )
     
-    def get_window(self):
-        return self._extract_window(self.start, self.start + self.window_size)
+    def get_window(self, filter = None):
+        return self._extract_window(self.start, self.start + self.window_size, filter = filter)
     
     def get_window_at(self, position):
         return self._extract_window(position, position + self.window_size)

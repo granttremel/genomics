@@ -13,7 +13,6 @@ from ggene.draw import add_ruler, ScalarPlot
 if TYPE_CHECKING:
     from ggene.database.genome_manager import GenomeManager
 
-
 class ChromeMapper:
     max_indices = {'1': 248937043, '10': 133778498, '11': 135075908, '12': 133238549, '13': 114346637, '14': 106879812, '15': 101979093, '16': 90222678, '17': 83240391, '18': 80247514, '19': 58599303, '2': 242175634, '20': 64327972, '21': 46691226, '22': 50799123, '3': 198228376, '4': 190195978, '5': 181472430, '6': 170745977, '7': 159233377, '8': 145066516, '9': 138320835, 'MT': 16023, 'X': 156027877, 'Y': 57214397}
     def __init__(self, seq_gen, feat_gen):
@@ -60,7 +59,7 @@ class ChromeMapper:
                 seq = reverse_complement(seq)
             
             if needs_feats:
-                ufeats =[uf for uf in self.feat_gen(chrstr, start, start+step, needs_feats)]
+                ufeats =[uf for uf in self.feat_gen(chrstr, start, start+step)]
             else:
                 ufeats = []
             
@@ -74,8 +73,8 @@ class ChromeMapper:
                 qts[i].append(qt)
             start = end
             
-            if n%int(num_chunks/10)==0:
-                print(f"n={n}/{num_chunks}")
+            # if n%int(num_chunks/10)==0:
+            #     print(f"n={n}/{num_chunks}")
             
         if resample:
             rsqts = [[] for i in range(len(seq_fns))]

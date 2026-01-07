@@ -25,8 +25,8 @@ from ggene.display.layout import Label, FullWidthRow, Alignment, VAlignment
 from ggene.display.colors import FColors
 
 logger = logging.getLogger(__name__)
-# logger.setLevel("WARNING")
-logger.setLevel("DEBUG")
+logger.setLevel("WARNING")
+# logger.setLevel("DEBUG")
 
 @dataclass
 class TestBrowserState(BaseBrowserState):    
@@ -37,7 +37,7 @@ class TestBrowserState(BaseBrowserState):
     
     mm_height:int = 8
     seq_height:int = 7
-    sc_height:int = 7
+    sc_height:int = 8
     line_height:int = 20
     text_height:int = 8
     log_height:int = 8
@@ -193,12 +193,20 @@ class TestBrowser(BaseBrowser):
         
         artists["top_minimap_group"] = tmmgp
         
-        sqa = SeqArtist("seq",SeqArtistParams(display_width = display_width, display_height =seq_height, display_strategy = "fold"), top_label = "Sequences:")
+        sqa = SeqArtist("seq",SeqArtistParams(display_width = display_width, display_height =seq_height, display_strategy = "crop"), top_label = "Sequences:")
         artists["sequence_artist"] = sqa
         
         scalar_qts = ["correlation"]
         qt = scalar_qts[0]
-        sca = ScalarArtist(f"scalar_{qt}",ScalarArtistParams(display_width = display_width, display_height = sc_height,  quantity = qt), top_label = qt)
+        sca = ScalarArtist(f"scalar_{qt}",ScalarArtistParams(
+                display_width = display_width, 
+                display_height = sc_height,  
+                quantity = qt, 
+                max1 = 0.5, 
+                max2 = 0.5
+            ), 
+            top_label = qt
+        )
         artists["scalar_artist"] = sca
         
         fa = LineArtist("feature_lines", LineArtistParams(

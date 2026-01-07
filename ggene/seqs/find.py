@@ -19,25 +19,49 @@ def consensus_to_re(seq, err = 0):
     re_syntactic = "\\?*+|" + re_open + re_close + string.digits
     
     enclosed = 0
+    current_token = ""
+    token_ct = 1
     outstr = []
     for s in seq:
         if s in re_open:
             enclosed +=1
+            current_token = ""
         elif s in re_close and enclosed > 0:
             enclosed -= 1
+            current_token = ""
             
         if enclosed > 0:
-            ias = alias_to_set(s, ia, default = s)
-            outstr.append(ias)
+            nstr = alias_to_set(s, ia, default = s)
         elif s in VOCAB or s in re_syntactic:
-            outstr.append(s)
+            nstr = s
         elif s in ia:
-            ias = alias_to_set(s, ia, default = s)
-            outstr.append(ias)
+            nstr = alias_to_set(s, ia, default = s)
         else:
-            outstr.append(".")
+            nstr = "."
+        
+        outstr.append(nstr)
+        # if current_token:
+        #     if nstr == current_token:
+        #         token_ct += 1
+        #     else:
+        #         if token_ct == 1:
+        #             outstr.append(current_token)
+        #         else:
+        #             outstr.append(current_token + "{" + str(token_ct) + "}")
+        #         token_ct = 1
+        
+        # current_token = nstr
     
-    return "".join(outstr)
+    # if token_ct == 1:
+    #     outstr.append(current_token)
+    # else:
+    #     outstr.append(current_token + "{" + str(token_ct) + "}")
+    # token_ct = 1
+    
+    outstr = "".join(outstr)
+    # print(f"produced re {outstr} from cons {seq}")
+    
+    return outstr
 
 def alias_to_set(alias, aliases, default = None, do_rc = False):
     

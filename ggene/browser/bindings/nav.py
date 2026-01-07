@@ -5,7 +5,7 @@ import subprocess
 
 from . import register_bindings
 from ggene.browser.commands import CommandRegistry, Command
-from .defaults import elicit_input, elicit_and_change, toggle_param, modify_param
+from .defaults import elicit_input, elicit_and_change, toggle_param, modify_param, parse_position
 
 if TYPE_CHECKING:
     from ggene.browser.base_browser import BaseBrowser,BaseBrowserState
@@ -21,7 +21,8 @@ def _window_zoom(brws:'BaseBrowser', state:'BaseBrowserState', window:'BaseWindo
         new_window_size = brws.renderer.params.display_width
         z = state.window_size / new_window_size
     
-    state.stride = int(state.stride / z)
+    # state.stride = int(state.stride / z)
+    state.stride = round(state.window_size / 8)
     state.window_size = new_window_size
     state.position = old_pos - state.window_size // 2
 
@@ -70,6 +71,18 @@ def map_zoom_in(brws:'BaseBrowser', state:'BaseBrowserState', window:'BaseWindow
 def map_zoom_out(brws:'BaseBrowser', state:'BaseBrowserState', window:'BaseWindow'):
     z = 1/default_map_zoom
     return _map_zoom(brws, state, window, z)
+
+def jump(brws:'BaseBrowser', state:'BaseBrowserState', window:'BaseWindow'):
+    
+    res = elicit_input("Size of jump? (e.g. -20M)")
+    
+    pos = parse_position(res)
+    if pos is not None:
+        state.position += pos
+    
+    return state
+    
+    
 
 def next_feature(brws:'BaseBrowser', state:'BaseBrowserState', window:'BaseWindow'):
     
@@ -135,7 +148,13 @@ nav_bindings = {
         "description":"Zoom out of window by factor (default=5)",
         "_bound_method": map_zoom_out
     },
-    
+    "j":{
+        "key":"j",
+        "name":"jump",
+        "method":jump.__name__,
+        "description":"Jump by a given distance (e.g. -20M)",
+        "_bound_method": jump
+    },
     "n":{
         "key":"n",
         "name":"next_feature",

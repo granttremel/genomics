@@ -14,23 +14,9 @@ from ggene.database.annotations import get_experiment_stream
 from ggene.database.databases import find_and_load_database, find_databases, find_directory
 from ggene.draw import Colors
 
-def get_browser(browser_type:str, gm, **kwargs):
-    
-    if browser_type == "test":
-        return TestBrowser(gm=gm, **kwargs)
-    elif browser_type == "scalar":
-        return ScalarBrowser(gm=gm, **kwargs)
-    elif browser_type == "seqs":
-        return SeqsBrowser(gm=gm, **kwargs)
-    elif browser_type == "lines":
-        return JustLinesBrowser(gm=gm, **kwargs)
-    elif browser_type == "exp":
-        exp_keys = kwargs.pop("exp_keys", [])
-        return ExpBrowser(exp_keys, gm=gm, min_exp = 0.05, **kwargs)
-    elif browser_type == "map":
-        return MapBrowser(gm, **kwargs)
-    else:
-        return None
+def get_browser(gm, **kwargs):
+    exp_keys = kwargs.pop("exp_keys", [])
+    return ExpBrowser(exp_keys, gm=gm, min_exp = 0.05, **kwargs)
 
 def get_experiment_keys(exps, exp_ptrn, exp_dir=""):
     
@@ -53,22 +39,19 @@ def get_experiment_filter(filter_str):
     if not filter_str:
         return None
     
-    print(f"enter get_experiment_filter with {filter_str}")
-    
     comps = ['<=','>=','==']
     comp_char = fa = fb = ""
     for c in comps:
         if c in filter_str:
             fa, fb = filter_str.split(c)
             comp_char = c
-            print(f"chose comp_char {c}")
             break
     
     op = None
     if comp_char=='<=':
-        op = '__lte__'
+        op = '__le__'
     elif comp_char=='>=':
-        op = '__gte__'
+        op = '__ge__'
     elif comp_char=='==':
         op = '__eq__'
     
@@ -81,12 +64,20 @@ def get_experiment_filter(filter_str):
     if not op or not fa or not fb:
         return None
     
-    print(fa, fb, op)
-    
-    filter = lambda f: getattr(float, op)(getattr(f, fa), fb)
-    
-    return None
-    # return filter
+    def filter(f):
+        if not f:
+            return False
+        
+        if not hasattr(f, fa):
+            return True
+        
+        fval = getattr(f, fa)
+        if not fval:
+            return True
+        
+        return getattr(float, op)(fval, fb)
+        
+    return filter
     
 
 def load_genome(**kwargs):
@@ -102,10 +93,10 @@ def main():
                         help="Chromosome (1-23, X, Y, MT)")
     parser.add_argument("--position", "-p", default = int(1e6), type = int,
                         help="Window size, in bp (default 4096)")
-    parser.add_argument("--window", "-w", default = 4096, type = int,
-                        help="Window size, in bp (default 4096)", dest = "window_size")
-    parser.add_argument("--stride", "-s", default = 256, type = int, 
-                        help="Window size, in bp (default 4096)")
+    parser.add_argument("--window", "-w", default = 16000, type = int,
+                        help="Window size, in bp (default 16000)", dest = "window_size")
+    parser.add_argument("--stride", "-s", default = 1600, type = int, 
+                        help="Window size, in bp (default 1600)")
     parser.add_argument("--zoom", "-z", default = 0.0, type = float, 
                         help="Every additional 1 increases zoom by 4x")
     parser.add_argument("--random", "-r", default = False, action = "store_true", 
@@ -120,8 +111,6 @@ def main():
                         help="Load last state")
     parser.add_argument("--debug", "-d", default = False, action = "store_true", 
                         help="Debug mode")
-    parser.add_argument("--browser-type", "-b", default = "test", type = str, 
-                        help="Browser type (test, scalar, lines, seqs, exp)")
     
     parser.add_argument("--exps", "-x", default = "", type = str,
                         help = "experiment database keys (comma separated)")
@@ -129,7 +118,7 @@ def main():
                         help = "experiment database pattern to discover keys (in_name)")
     parser.add_argument("--exp-dir", "-xd", default = "", type = str,
                         help = "Experiment directory to search in")
-    parser.add_argument("--filter","-fr", default = "", type = str,
+    parser.add_argument("--filter","-xf", default = "", type = str,
                         help = "Filter to refine features from experiment. form 'att>=val', 'att<=val', 'att==val'")
     
     display_width = 256
@@ -140,9 +129,9 @@ def main():
     gm = load_genome(load_jaspars = argdict.pop("jaspars", False), load_patterns = argdict.pop("patterns", False))
     
     argdict["display_width"] = display_width
-    btp = argdict.pop("browser_type","")
     
-    exp_keys = get_experiment_keys(argdict.pop("exps",""), argdict.pop("exp_ptrn",""), argdict.pop("exp_dir",""))
+    # exp_keys = get_experiment_keys(argdict.pop("exps",""), argdict.pop("exp_ptrn",""), argdict.pop("exp_dir",""))
+    exp_keys = ()
     argdict["exp_keys"] = exp_keys
     
     print(f"enter exp_filt with {argdict.get("filter","")}")
@@ -168,7 +157,7 @@ def main():
     # argdict["feature_type"] = "★exp_hit★"
     argdict["feature_type"] = "auto"
     
-    brws = get_browser(btp, gm, **argdict)
+    brws = get_browser(gm, **argdict)
     brws.start(**argdict)
     
     # view = brws._rendered_view

@@ -60,13 +60,13 @@ class UFeature:
 
         # Everything else goes to attributes (skip empty values)
         for key, value in all_data.items():
-            if key != 'attributes' and value not in (None, "", []):
+            if key != 'attributes' and value is not None:
                 self.attributes[key] = value
 
         # Merge any pre-existing attributes dict
         if 'attributes' in (data or {}):
             for k, v in data['attributes'].items():
-                if v not in (None, "", []):
+                if v is not None:
                     self.attributes[k] = v
     
     
@@ -94,16 +94,29 @@ class UFeature:
                 if result is not None:
                     # Derived can override core fields too
                     if spec.name in cls._core_fields:
-                        prev = getattr(feature, spec.name)
                         object.__setattr__(feature, spec.name, result)
-                        curr = getattr(feature, spec.name)
                     else:
                         feature.attributes[spec.name] = result
                     canonical.add(spec.name)
 
-        # feature.attributes["_raw_line"] = raw_line
-
         return feature
+
+    def purge(self, atts):
+        
+        res = {}
+        
+        for att in atts:
+            
+            if hasattr(att, 'name'):
+                name = att.name
+            else:
+                name = att
+            
+            if name in self.attributes:
+                res[name] = self.attributes[name]
+                del self.attributes[name]
+        
+        return res
 
     @property
     def chr(self):

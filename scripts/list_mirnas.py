@@ -7,7 +7,7 @@ from ggene.database.ufeature import UFeat
 
 from ggene.genome import genes, ncrna
 
-from ggene.seqs import process, bio, vocab, lambdas, align
+from ggene.seqs import process, bio, vocab, lambdas, align, compare
 
 from ggene import draw
 from ggene.draw.scalar_plot import ScalarPlot
@@ -15,11 +15,13 @@ from ggene.draw.colored_sequence import ColoredSequence, StyledColor
 
 
 def load_genome():
-    return GenomeManager(skip_clinvar = True)
+    return GenomeManager(skip_clinvar = True, skip_patterns = True)
 
-def list_mirnas(gm, chrom, limit = 128):
+def list_rnas(gm, chrom, limit = 128, rna_biotype = "miRNA", show_alignment = True):
     
     gs = gm.annotations.streams.get("genes")
+    
+    rna_bt_lwr = rna_biotype.lower()
     
     feats = []
     n = 0
@@ -28,14 +30,14 @@ def list_mirnas(gm, chrom, limit = 128):
         gn = f.gene_name if f.gene_name else ""
         bt = f.gene_biotype if f.gene_biotype else ""
         
-        if f.gene_name and "mirna" in f.gene_name.lower():
+        if f.gene_name and rna_bt_lwr in f.gene_name.lower():
             feats, n = process_mirna(f, feats=feats,n=n)
-        elif f.gene_biotype and "mirna" in f.gene_biotype.lower():
+        elif f.gene_biotype and rna_bt_lwr in f.gene_biotype.lower():
             feats, n = process_mirna(f, feats=feats,n=n)
         else:
             pass
         
-        if limit and n > limit:
+        if limit and len(feats) >= limit:
             break
     
     gene_org = {}
@@ -45,7 +47,7 @@ def list_mirnas(gm, chrom, limit = 128):
     num_in_5p = 0
     
     for f in feats:
-        pg, gbt, in_exon, in_3putr, in_5putr  = show_mirna(f, gm=gm)
+        pg, gbt, in_exon, in_3putr, in_5putr  = show_mirna(f, gm=gm, show_alignment = show_alignment)
         print()
         if not gbt in feats_org:
             feats_org[gbt] = []
@@ -61,14 +63,14 @@ def list_mirnas(gm, chrom, limit = 128):
             gene_org[pgn].append(f)
             
     for gbt, fs in feats_org.items():
-        print(f"biotype {gbt} contains {len(fs)} miRNA genes")
+        print(f"biotype {gbt} contains {len(fs)} {rna_biotype} genes")
     print()
     
     for pgn, fs in gene_org.items():
-        print(f"gene {pgn} contains {len(fs)} miRNA genes")
+        print(f"gene {pgn} contains {len(fs)} {rna_biotype} genes")
     print()
     
-    print(f"MIR genes found in: exons {num_in_exon}, 3p UTR {num_in_3p}, 5p UTR {num_in_5p}")
+    print(f"{rna_biotype} genes found in: exons {num_in_exon}, 3p UTR {num_in_3p}, 5p UTR {num_in_5p}")
     
     return feats
 
@@ -82,7 +84,7 @@ def process_mirna(f, feats = [], n = 0):
     
     return feats, n
 
-def show_mirna(f, gm = None):
+def show_mirna(f, gm = None, show_alignment = True):
     
     in_ex = in_3putr = in_5putr = False
     seq = ""
@@ -108,10 +110,33 @@ def show_mirna(f, gm = None):
     else:
         print("  no parent gene")
     
-    if seq:
+    if seq and show_alignment and len(seq) < 256:
         algns = align.align_sequences(seq, rcseq)
         algn = next(iter(algns))
         algn.print(chunksz = 256, emph_indels = True, color_subs = True)
+        
+        nmatch = compare.count_matching_wobble(seq, rcseq)
+        sim = nmatch / len(seq)
+        print(f"similarity {sim:0.2f}")
+        
+        scores = {
+            ("G","A"):0.5, # G-U complementarity
+            ("A","G"):0.5,
+            ("G","T"):0.5, # G-A complementarity
+            ("G","T"):0.5,
+            # ("C","T"):0.5, 
+            # ("T","C"):0.5,
+        }
+        
+        sf = lambda a,b,sc: scores.get((a,b), scores.get((b,a), int(a==b)))/len(fseq)
+        
+        corr, rccorr = process.correlate(fseq, fseq, fill = None, score_func = sf)
+        sc1 = ScalarPlot(corr, add_range = True, minval = 0, maxval = 0.5, fg_color = 65)
+        sc2 = ScalarPlot(rccorr, add_range = True, minval = 0, maxval = 0.5)
+        ScalarPlot.show_paired(sc1, sc2, xlabel = [fseq, bio.reverse_complement(fseq)], center_xlabel = True)
+        print(f"Corr: mean={np.mean(corr):0.2}, sd={np.std(corr):0.3f}, range=({min(corr):0.2f},{max(corr):0.2f})")
+        print(f"RC Corr: mean={np.mean(rccorr):0.2}, sd={np.std(rccorr):0.3f}, range=({min(rccorr):0.2f},{max(rccorr):0.2f})")
+        
     
     return pg, bt, in_ex, in_3putr, in_5putr 
 
@@ -152,8 +177,10 @@ def main():
     
     gm = load_genome()
     
-
-    fs = list_mirnas(gm, "1", limit = 4)
+    
+    for chrom in gm.iter_chromes():
+        print(f"chrom {chrom}")
+        fs = list_rnas(gm, chrom, limit = 1, rna_biotype = "MIR", show_alignment = True)
 
 
 

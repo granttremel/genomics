@@ -19,19 +19,20 @@ logger.setLevel("CRITICAL")
 from ggene import draw
 from ggene import dev
 from ggene.config import get_config, get_paths
-from ggene.database.search import GenomeSearch
 from ggene.genome.features import Gene, Feature, shorten_variant
 from ggene.genome.translate import Ribosome
-from ggene.database.genome_iterator import UGenomeIterator
 from ggene.browser.genome_browser_v2 import InteractiveGenomeBrowser
 from ggene.database.annotations import UGenomeAnnotations, chr_lens
+from ggene.database.genome_iterator import UGenomeIterator
 from ggene.database.ufeature import UFeature
+from ggene.database.search import GenomeSearch
+from ggene.database.download import DatabaseDownloader
+from ggene.database.motifs import JasparStream, MotifStream, PatternStream, HMMStream
 from ggene.motifs import MotifDetector, PatternMotif, PatternLibrary, Jaspar, JasparLibrary
 from ggene.seqs.lambdas import needs_features
 from ggene.seqs.bio import reverse_complement, to_rna, to_dna, is_rna, is_dna, COMPLEMENT_MAP
 from ggene.seqs.lambdas import lambda_map
 
-from ggene.database.motifs import JasparStream, MotifStream, PatternStream, HMMStream
 
 class GenomeManager:
     """Main class for managing genomic data including VCF and GTF files."""
@@ -55,6 +56,7 @@ class GenomeManager:
         """
         # Lazy import to avoid circular dependency
         # from ggene import get_paths
+        cfg =get_config()
         DEFAULT_VCF_PATH, DEFAULT_GTF_PATH, DEFAULT_FASTA_PATH, DEFAULT_LIBRARY, other_paths = get_paths()
 
         # Use defaults if not provided
@@ -77,6 +79,7 @@ class GenomeManager:
             self.library_path = library_path
             
             self.search = GenomeSearch(self)
+            self.download = DatabaseDownloader(data_dir = cfg.get("data_dir",""), library_dir = DEFAULT_LIBRARY)
             
             # Initialize new unified annotation system with sequence streaming
             self.annotations = UGenomeAnnotations(
@@ -125,7 +128,7 @@ class GenomeManager:
                     jaspars.load()
                     self.annotations.add_motifs(jaspars, name = "jaspars")
             
-            if not kwargs.get("skip_patterns"):
+            if kwargs.get("load_patterns"):
                 pattern_lib = PatternLibrary()
                 pattern_lib.load_defaults(class_names = ["splice","promoter"])
                 ptrn_stream = pattern_lib.to_stream("pattern","grant's re's")

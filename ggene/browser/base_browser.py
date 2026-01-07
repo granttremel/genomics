@@ -36,6 +36,7 @@ class BaseBrowserState:
     window_size:int = -1
     stride:int = -1
     display_height:int = 32
+    sources:Optional[Tuple[str]] = tuple()
     feature_types:Optional[Tuple[str]] = tuple()
     show_reverse_strand = False
     show_rna = False
@@ -180,6 +181,7 @@ class BaseBrowser:
             print(line + Colors.RESET)
     
     def refresh_display(self):
+        t0 = time.perf_counter()
         self.render()
         dt = time.perf_counter()
         

@@ -33,6 +33,9 @@ def elicit_input(message, cast_to_type = str, min_val = None, max_val = None, cu
     inp=input(full_msg)
     
     try:
+        if inp in [None, ""]:
+            raise ValueError
+        
         if cast_to_type is bool:
             res = 'y' in inp.lower()
         else:
@@ -47,7 +50,7 @@ def elicit_input(message, cast_to_type = str, min_val = None, max_val = None, cu
         print(f"failed to parse input {inp} to type {cast_to_type}")
         return default
 
-    if not res:
+    if res in ["", None]:
         return default
 
     return res
@@ -79,14 +82,14 @@ def move(brws:'BaseBrowser', state:'BaseBrowserState', window:'BaseWindow', delt
     state.position += delta
 
 def move_forward(brws:'BaseBrowser', state:'BaseBrowserState', window:'BaseWindow', large = False):
-    delta = state.stride * 10 if large else state.stride
+    delta = state.stride * 8 if large else state.stride
     return move(brws, state, window, delta)
 
 def move_forward_large(brws:'BaseBrowser', state:'BaseBrowserState', window:'BaseWindow'):
     return move_forward(brws, state, window, large = True)
 
 def move_backward(brws:'BaseBrowser', state:'BaseBrowserState', window:'BaseWindow', large = False):
-    delta = state.stride * 10 if large else state.stride
+    delta = state.stride * 8 if large else state.stride
     return move(brws, state, window, -delta)
 
 def move_backward_large(brws:'BaseBrowser', state:'BaseBrowserState', window:'BaseWindow'):
@@ -133,7 +136,11 @@ def change_window_size(brws:'BaseBrowser', state:'BaseBrowserState', window:'Bas
     min_val = None
     max_val = None
     
-    return elicit_and_change(brws, state, window, param_name, message, cast_to_type, min_val, max_val)
+    elicit_and_change(brws, state, window, param_name, message, cast_to_type, min_val, max_val)
+    
+    state.stride = round(state.window_size/8)
+    
+
 
 def change_stride(brws:'BaseBrowser', state:'BaseBrowserState', window:'BaseWindow'):
     param_name = 'stride'
@@ -149,8 +156,11 @@ def change_features(brws:'BaseBrowser', state:'BaseBrowserState', window:'BaseWi
     cast_to_type = str
     
     toggle_feat = elicit_input(message, cast_to_type)
-    
-    return toggle_param_collection(brws, state, window, param_name, toggle_feat)
+    if toggle_feat:
+        return toggle_param_collection(brws, state, window, param_name, toggle_feat)
+    else:
+        print(f"unable to parse input {toggle_feat}")
+        
 
 def focus_on_feature(brws:'BaseBrowser', state:'BaseBrowserState', window:'BaseWindow'):
     

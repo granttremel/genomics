@@ -12,12 +12,14 @@ from ggene.processing.chrome_mapper import ChromeMapper
 from ggene.display.colors import FColors
 from ggene.display.artists.base import BaseArtistParams, BaseArtist, logger
 
-from ggene.seqs.lambdas import needs_features, lambda_map
+from ggene.seqs.lambdas import needs_features, lambda_map, get_feature_types, get_sources
 
 if TYPE_CHECKING:
     from ggene.database.genome_manager import GenomeManager
     from ggene.database.genome_iterator import GenomeWindow
     from ggene.browser.genome_browser import BrowserState
+
+# logger.setLevel("DEBUG")
 
 @dataclass
 class MapArtistParams(BaseArtistParams):
@@ -26,12 +28,14 @@ class MapArtistParams(BaseArtistParams):
     scale:float = 1024 # -1 for full chromosome. larger = zoom out
     telo_buffer:int = int(1e6)
     quantity:Union[Any,str] = "gc" # "gc", "genes", ..?
-    quantity2:Union[Any,str] = "genes"
+    quantity2:Union[Any,str] = ""
     bit_depth:int = 16
     show_range:bool = True
     show_ruler:bool = True
     show_fella:bool = False
     show_paired:bool = True
+    qt_label:str = ""
+    qt2_label:str = ""
     fg1:int = 52
     fg2:int = 96
     bg:int = 242
@@ -53,7 +57,7 @@ class MapArtist(BaseArtist):
         self.current_pos = None
         self.current_chrom = ""
         self._data_cache = {}
-        self.top_label = self.get_top_label()
+        self.top_label = kwargs.get("top_label", self.get_top_label())
         
         self.gnm_cache = GenomeCache()
         self.samplers = {}
@@ -128,7 +132,7 @@ class MapArtist(BaseArtist):
     def get_map_lines(self, seq_gen, feat_gen, qts, chrom, start, length, chunksz, num_chunks = None, marker_pos = None):
 
         data = self.get_data(qts, seq_gen, feat_gen, chrom, start, length, chunksz, num_chunks = num_chunks)
-        logger.debug(f"data for minimap {self.name}: {len(data)}, {len(data[0])}, with length {length} so num_chunks {length/chunksz:0.1f}")
+        # logger.debug(f"data for minimap {self.name}: {len(data)}, {len(data[0])}, with length {length} so num_chunks {length/chunksz:0.1f}")
         
         if len(qts) > 1:
             if self.params.show_paired:
@@ -186,21 +190,57 @@ class MapArtist(BaseArtist):
         import numpy as np
 
         cm = ChromeMapper(seq_gen, feat_gen)
+        
+        if self.current_pos in self._data_cache:
+            new_data = self._data_cache[self.current_pos]
+        else:
+            new_data, _ = cm.get_chromosomal_quantities(chrom, qts, chunksz=chunksz, start=start, length=length)
+            self.cache_data(new_data)
+        
+        stitched = new_data
+        
+        #TODO: bring back the stitching functionality
+        # stitched, fetch_start, fetch_end = self.stitch_data(start, length, len(qts), num_chunks = num_chunks)
+        # fetch_len = fetch_end - fetch_start
+        
+        # logger.debug(f"stitched returns {stitched[0]}")
+        # # logger.debug(f"after stitch, fetch {fetch_start} {fetch_end} {fetch_len}")
+        
+        # if fetch_len > 0:
+        #     # new_data, _ = cm.get_chromosomal_quantities(chrom, qts, chunksz=chunksz, start=start, length=length)
+        #     fetch_start_gnm = start+int(fetch_start * chunksz)
+        #     fetch_len_gnm = int(fetch_len * chunksz)
+        #     logger.debug(f"fetching from {fetch_start_gnm} - {fetch_start_gnm+fetch_len_gnm} ({fetch_len_gnm})")
+        #     new_data, _ = cm.get_chromosomal_quantities(chrom, qts, chunksz=chunksz, start=fetch_start_gnm, length=fetch_len_gnm)
+            
+        #     logger.debug(f"new data returns {new_data[0]}")
+        #     # logger.debug(f"new data {len(new_data)}, {len(new_data[0])}")
+            
+        #     for chk in range(0, fetch_len):
+        #         for i in range(len(qts)):
+        #             stitched[i][chk + fetch_start] = new_data[i][chk]
+            
+        #     self.cache_data(stitched)
+            
+        #     logger.debug(f"cached stitched data at {self.current_pos}")
+            
+        #     # logger.debug(f"stitched data from {fetch_start} length {fetch_len} with chunk start {fetch_start}, num chunks {fetch_len}")
+        #     # logger.debug(f"new_data: len {len(new_data[0])}, {sum(1 for s in new_data[0] if s!=0)} nonzero")
 
-        new_data, _ = cm.get_chromosomal_quantities(chrom, qts, chunksz=chunksz, start=start, length=length)
-
+        # logger.debug(f"stitched: len {len(stitched[0])}, {sum(1 for s in stitched[0] if s!=0)} nonzero")
+        
         # Resample to exact num_chunks if needed
         if num_chunks is not None:
             resampled_data = []
-            for data in new_data:
+            for data in stitched:
                 if len(data) != num_chunks:
                     x_old = np.linspace(0, 1, len(data))
                     x_new = np.linspace(0, 1, num_chunks)
                     data = np.interp(x_new, x_old, data)
                 resampled_data.append(data)
-            new_data = resampled_data
+            stitched = resampled_data
 
-        datas = {qt: data for qt, data in zip(qts, new_data)}
+        datas = {qt: data for qt, data in zip(qts, stitched)}
         return datas
         
     def get_marker_row(self, marker_index, num_chunks):
@@ -259,16 +299,33 @@ class MapArtist(BaseArtist):
 
 
     @classmethod
-    def get_generators(cls, gm:'GenomeManager', seq_specs = [], needs_feats = []):
-        
-        for seq_spec in seq_specs:
-            feats = needs_features(seq_spec)
-            needs_feats.extend(feats)
-        
-        needs_feats = list(set(needs_feats))
+    def get_generators(cls, gm:'GenomeManager', seq_specs = [], use_sources = True, use_features = False):
         
         seq_gen = lambda chr, start, end: gm.get_sequence(chr, start, end = end)
-        feat_gen = lambda chr, start, end, feature_types: gm.annotations.stream_by_types(feature_types, chr, start, end=end)
+        if use_sources:
+            
+            sources = []
+            for seq_spec in seq_specs:
+                sources.extend(get_sources(seq_spec))
+            sources = list(set(sources))
+            
+            # logger.debug(f"making feat gen with sources {sources}")
+            
+            feat_gen = lambda chr, start, end: gm.annotations.stream_by_sources(sources, chr, start, end)
+        elif use_features:
+            
+            ftypes = []
+            for seq_spec in seq_specs:
+                fts = get_feature_types(seq_spec)
+                ftypes.extend(fts)
+            
+            ftypes = list(set(ftypes))
+            
+            feat_gen = lambda chr, start, end: gm.annotations.stream_by_types(ftypes, chr, start, end=end)
+        
+        else:
+            print("idk")
+            feat_gen = lambda chr, start, end: gm.annotations.stream_all(chr, start, end)
         
         return seq_gen, feat_gen
     
@@ -286,7 +343,7 @@ class MapArtist(BaseArtist):
     ############ no longer used but could be useful tbh ########################
     
     def cache_data(self, data):
-        self._data_cache[(self.current_chrom, self.current_pos)] = data
+        self._data_cache[self.current_pos] = data
     
     def stitch_data(self, target_position, length, num_qts, num_chunks):
         """
@@ -307,7 +364,7 @@ class MapArtist(BaseArtist):
         # The target range is [target_position - length/2, target_position + length/2]
         target_start = target_position - length // 2
 
-        for (chrom, cached_pos), cached_data in self._data_cache.items():
+        for cached_pos, cached_data in self._data_cache.items():
             # The cached range is [cached_pos - length/2, cached_pos + length/2]
             cached_start = cached_pos - length // 2
 
@@ -317,6 +374,8 @@ class MapArtist(BaseArtist):
             # Skip if no overlap
             if abs(offset) >= length:
                 continue
+            
+            # logger.debug(f"retreiving data from cache at {cached_pos} containing {cached_data}")
 
             # Calculate chunk offset (how many chunks the data has shifted)
             chunk_offset = round(offset * num_chunks / length)

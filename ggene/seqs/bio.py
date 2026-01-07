@@ -434,14 +434,17 @@ def get_adjacent_codons(aa_str, mutations = "N"):
     return coddict, adjdict
 
 def convert_to_aliases(seq, aliases, default = "N"):
+    """
+    set default to "" to preserve bases with no associated alias
     
+    """
     alias_map = get_alias_map(aliases)
     
     outseq = []
     
     for b in seq:
-        
-        newb = alias_map.get(b, default)
+        _def = default if default else b
+        newb = alias_map.get(b, _def)
         outseq.append(newb)
     
     return "".join(outseq)

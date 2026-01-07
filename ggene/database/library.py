@@ -21,6 +21,7 @@ Example usage:
     samples = lib.sample("snrnas", n=5)
 """
 
+import os
 import json
 import gzip
 import subprocess
@@ -600,6 +601,75 @@ def bgzip_file(filepath: Path, keep_original: bool = False, force: bool = True) 
 
     return Path(str(filepath) + ".gz")
 
+def trim_header(filepath:Path, output_path = None):
+    
+    if not output_path:
+        tmp = True
+        output_path = Path(f"/tmp/{filepath.stem}_tmp")
+    
+    with open(filepath, 'r') as f_r:
+        with open(output_path, 'w') as f_w:
+            for i, line in enumerate(f_r):
+                if i==0:
+                    continue
+                f_w.write(line)
+    
+    if tmp:
+        os.rename(output_path, filepath)
+        output_path.unlink()
+        output_path = filepath
+        
+    return output_path
+
+def scrub_header(filepath:Path, output_path = None, header_start = "C"):
+    
+    if not output_path:
+        tmp = True
+        output_path = Path(f"/tmp/{filepath.stem}_tmp")
+    
+    with open(filepath, 'r') as f_r:
+        with open(output_path, 'w') as f_w:
+            for i, line in enumerate(f_r):
+                if line.startswith(header_start):
+                    continue
+                else:
+                    f_w.write(line)
+
+    if tmp:
+        os.rename(output_path, filepath)
+        try:
+            output_path.unlink()
+        except:
+            pass
+        output_path = filepath
+        
+    return output_path
+    
+
+def gzip_file(filepath:Path, keep_original:bool = False, force: bool = True):
+    
+    if '.gz' in filepath.suffixes:
+        decompress = True
+        outpath = Path(str(filepath).removesuffix(".gz"))
+    else:
+        decompress = False
+        outpath = Path(str(filepath) + ".gz")
+        
+    args = ["gzip"]
+    # if force:
+    #     args.append("-f")
+    if keep_original:
+        args.append("-k")
+    if decompress:
+        args.append("-d")
+    args.append(str(filepath))
+    
+    result = subprocess.run(args, capture_output=True, text=True)
+    if result.returncode != 0:
+        raise IndexingError(f"bgzip failed: {result.stderr}")
+    
+    return outpath
+
 
 def tabix_index(filepath: Path, preset: str = "bed") -> Path:
     """
@@ -650,7 +720,7 @@ def index_fasta(filepath: Path) -> Path:
     return Path(str(filepath) + ".fai")
 
 
-def prepare_features_file(filepath: Path, preset: str = "bed") -> Path:
+def prepare_features_file(filepath: Path, preset: str = "bed", do_trim = False, do_scrub = False, header_start = "C") -> Path:
     """
     Full pipeline: sort, compress, and index a features file.
 
@@ -662,14 +732,23 @@ def prepare_features_file(filepath: Path, preset: str = "bed") -> Path:
         Path to final compressed and indexed file
     """
     logger.info(f"Preparing features file: {filepath}")
-
+    
+    newpath = filepath
+    if '.gz' in filepath.suffixes:
+        newpath = gzip_file(newpath)
+    
+    if do_scrub:
+        newpath = scrub_header(newpath, header_start = header_start)
+    elif do_trim:
+        newpath = trim_header(newpath)
+        
     # Sort
     logger.info("  Sorting...")
-    sort_bed(filepath)
+    newpath = sort_bed(newpath)
 
     # Compress
     logger.info("  Compressing with bgzip...")
-    gz_path = bgzip_file(filepath)
+    gz_path = bgzip_file(newpath)
 
     # Index
     logger.info("  Creating tabix index...")

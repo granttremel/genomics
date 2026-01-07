@@ -2,6 +2,8 @@
 from typing import List, Tuple, Dict, Any, Optional, TYPE_CHECKING
 from dataclasses import dataclass, field, replace
 
+import numpy as np
+
 from ggene.draw.chars import HLINES
 from ggene.draw.colors import Colors
 from ggene.draw import ScalarPlot
@@ -24,6 +26,9 @@ class ScalarArtistParams(BaseArtistParams):
     bit_depth:int = 24
     show_range:bool = True
     show_xlabel:bool = False
+    show_stats:bool = True
+    max1:float = None
+    max2:float = None
     fg1:int = 65
     fg2:int = 53
     bg:int = 242
@@ -69,8 +74,13 @@ class ScalarArtist(BaseArtist):
         
         if self.params.show_single or not rcqt:
             plot_lines = self.format_scalar_plot_single(qt, bit_depth, show_range, display_length, xlabel)
+            stat_lines = self.format_stats(qt, quantity)
         else:
             plot_lines = self.format_scalar_plot_double(qt, rcqt, bit_depth, show_range, display_length, xlabel)
+            stat_lines = self.format_stats_double(qt, quantity, rcqt, "RC" + quantity, inline = True)
+        
+        if self.params.show_stats:
+            plot_lines.extend(stat_lines)
         
         return plot_lines
         
@@ -85,12 +95,14 @@ class ScalarArtist(BaseArtist):
     
     def _get_correlation(self, seqa, seqb, fill = 0, scale=None, step=1, keep=None, shift_step = 1):
         
-        cf = lambda a,b: a==b
-        sf = lambda a,b,sc: 1/sc
+        # cf = lambda a,b: a==b
+        # sf = lambda a,b,sc: 1/sc
+        cf = None
+        sf = None
+        # ff = process.CorrFuncs.ff_entropy()
+        ff = process.CorrFuncs.ff_standard()
         
-        d, rcd = process.correlate(seqa, seqb, comparison_func = cf, score_func = sf, fill = fill, scale=scale, step=step, keep=keep, shift_step=shift_step)
-        
-        # print(f"correlation has result length {len(d)}")
+        d, rcd = process.correlate(seqa, seqb, comparison_func = cf, score_func = sf, factor_func = ff, fill = fill, scale=scale, step=step, keep=keep, shift_step=shift_step)
         
         return d, rcd
     
@@ -110,10 +122,27 @@ class ScalarArtist(BaseArtist):
     
     def format_scalar_plot_double(self, qt1, qt2, bit_depth, show_range, display_length, xlabel):
         
-        sc1 = ScalarPlot(qt1, add_range = show_range, bit_depth=bit_depth, fg_color = self.params.fg1)
-        sc2 = ScalarPlot(qt2, add_range = show_range, bit_depth=bit_depth, fg_color = self.params.fg2)
+        sc1 = ScalarPlot(qt1, add_range = show_range, bit_depth=bit_depth, fg_color = self.params.fg1, minval = 0, maxval = self.params.max1)
+        sc2 = ScalarPlot(qt2, add_range = show_range, bit_depth=bit_depth, fg_color = self.params.fg2, minval= 0, maxval = self.params.max2)
         plot_lines = ScalarPlot.show_paired(sc1, sc2, chunksz = display_length, xlabel = xlabel, suppress = True)
         
         return plot_lines
     
+    def format_stats(self, data1, qt_name):
+        outstr = f"{qt_name}: mean={np.mean(data1):0.2}, sd={np.std(data1):0.3f}, min={min(data1):0.2f}, max={max(data1):0.2f}"
+        return [outstr]
     
+    def format_stats_double(self, data1, qt_name1, data2, qt_name2, inline = True):
+        
+        outstrs = []
+        
+        st1 = self.format_stats(data1, qt_name1)
+        st2 = self.format_stats(data2, qt_name2)
+        if inline:
+            maxlen = max(len(st1[0]), len(st2[0]))
+            outstr = "{}{}".format(st1[0].center(self.params.display_width//2), st2[0].center(self.params.display_width//2))
+            outstrs.append(outstr)
+        else:
+            outstrs.extend(st1+st2)
+        
+        return outstrs

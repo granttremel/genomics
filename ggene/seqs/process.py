@@ -81,6 +81,140 @@ def crop_sequence(seq, to_length, mode = "center"):
     
     return seq[offset:offset+to_length]
 
+def get_comp_entropy(seq):
+    
+    ent = 0
+    for b in "ATGC":
+        p = seq.count(b) / len(seq)
+        if p > 0:
+            ent += -p*np.log2(p)
+    
+    return ent
+
+def get_ngram_entropy(seq, n):
+    
+    ngs = {}
+    
+    for s in range(len(seq) - n):
+        
+        ng = seq[s:s+n]
+        if not ng in ngs:
+            ngs[ng] = 0
+        ngs[ng] += 1
+
+    # num_ngs = 4**n
+    num_ngs = (len(seq) - n)
+    ent = 0
+    for ng, num_ng in ngs.items():
+        
+        p_ng = num_ng / num_ngs
+        if p_ng > 0:
+            ent += -np.log2(p_ng) * p_ng
+    
+    return ent
+
+def get_ngrams_entropy(seq, max_n):
+    
+    ns = list(range(1, max_n + 1))
+    nds = {n:{} for n in ns}
+    
+    for s in range(len(seq)):
+        
+        for n in ns:
+            if s+n > len(seq):
+                continue
+            
+            nss = seq[s:s+n]
+            if not nss in nds[n]:
+                nds[n][nss] = 0
+            nds[n][nss] += 1
+            
+    ent = 0
+    for n in ns:
+        num_ngs = len(seq) - n
+        for ng, num_ng in nds[n].items():
+            
+            if num_ng > 0:
+                
+                p = num_ng/num_ngs
+                ent += -np.log(p)*p
+        
+    return ent
+
+def sum_tree(tree, depth = 0):
+    
+    if not tree:
+        return 0, 0
+    
+    sum_ng = 0
+    num_unique = 0
+    for b, (ng, subtree) in tree.items():
+        sum_ng += ng
+        v_ng, v_unique = sum_tree(subtree, depth=depth+1)
+        sum_ng += ng + v_ng
+        num_unique += 1 + v_unique
+        
+    return sum_ng, num_unique
+
+def diff_trees(tree1, tree2, depth = 0):
+    
+    if not tree1 and not tree2:
+        return 0, 0
+    
+    sum_ng = 0
+    num_unique = 0    
+    
+    for b, (ng, subtree) in tree1.items():
+        
+        if b in tree2:
+            ng2, subtree2 = tree2[b]
+        else:
+            ng2 = 0
+            subtree2 = {}
+        
+        v_ng, v_unique = diff_trees(subtree, subtree2, depth=depth+1)
+        
+        sum_ng += v_ng + ng - ng2
+        num_unique += v_unique + 1 - int(ng2 > 0)
+        
+    return sum_ng, num_unique        
+
+def place_sample(samp, tree):
+    
+    new_branch = tree
+    
+    for b in samp:
+        branch = new_branch
+        if b in branch:
+            nb, new_branch = branch[b]
+        else:
+            nb, new_branch = 0, {}
+            branch[b] = (0, {})
+        
+        # nb += 1
+        branch[b] = (nb, new_branch)
+    
+    nb, last_branch = branch[b]
+    branch[b] = (nb+1, last_branch)
+    
+    return tree
+
+def get_LZ_complexity(seq, cond = {}):
+    
+    tree = {}
+    
+    for i in range(1, len(seq)+1):
+        for j in range(0, i):
+            sseq = seq[j:i]        
+            tree = place_sample(sseq, tree)
+    
+    if cond:
+        num_subseqs, num_unique = diff_trees(tree, cond)
+    else:
+        num_subseqs, num_unique = sum_tree(tree)
+    return tree, num_unique
+
+
 def get_inter_matrix(seqa, seqb, cmp_func = None, score_func = None):
     
     if not cmp_func:
@@ -313,138 +447,57 @@ def bin_data(data, bin_size = 2, bin_func = None):
         d = bin_func(data[i:i+bin_size])
         outdata.append(d)
     return outdata
-    
-def correlate_old(seq1, seq2, comparison_func = None, score_func = None, fill = 0, scale = None):
-    
-    if not comparison_func:
-        cmp = lambda x, y:x==y
-    else:
-        cmp = comparison_func
-    
-    if not score_func:
-        sf = lambda a, b, sc: int(a==b)/sc
-    else:
-        sf = score_func
-    
-    seq_len = min(len(seq1), len(seq2))
-    seq1, seq2 = seq1[:seq_len], seq2[:seq_len]
-    rcseq2 = reverse_complement(seq2)
-    
-    max_shift = seq_len//2
-    
-    ips = []
-    comp_ips = []
-    n = 0
-    for t in range(-max_shift, max_shift + 1):
-        
-        sslen = seq_len - abs(t)
-        if scale is None:
-            sc = sslen
-        else:
-            sc = scale
-        
-        s1start = max(t, 0)
-        s1c = s1start + sslen//2
-        seq1t = seq1[s1c-sc//2:s1c+sc//2]
-        s2start = max(-t, 0)
-        s2c = s2start + sslen//2
-        seq2t = seq2[s2c - sc//2:s2c+sc//2]
-        rcseq2t = rcseq2[s2c - sc//2:s2c+sc//2]
-        
-        summ = 0
-        csumm = 0
-        for sa, sb, rcsb in zip(seq1t, seq2t, rcseq2t):
-            
-            if not sa in VOCAB or not sb in VOCAB:
-                continue
-            
-            if cmp(sa, sb):
-                summ += sf(sa, sb, sc)
-            elif cmp(sa, rcsb):
-                csumm += sf(sa, rcsb, sc)
-        
-        if t == 0 and fill is not None:
-            ips.append(fill)
-            comp_ips.append(fill/2)
-        else:
-            ips.append(summ)
-            comp_ips.append(csumm)
-        n+=1
-    
-    return ips, comp_ips
 
-def correlate_longest_subseq_old(seq1, seq2, comparison_func = None, scale = None, fill = None, err_tol = 0):
+def _cf_std(a, b):
+    return a==b
+
+def _sf_std(a, b, sc):
+    return int(a==b)/sc
+
+def _ff_std(seqa, seqb):
+    return 1.0
+
+def _ff_entropy(seqa, seqb):
     
-    if not comparison_func:
-        cmp = lambda x, y:x==y
-    else:
-        cmp = comparison_func
+    compa = {b:seqa.count(b)/len(seqa) for b in "ATGC"}
+    compb = {b:seqb.count(b)/len(seqb) for b in "ATGC"}
     
-    seq_len = min(len(seq1), len(seq2))
-    seq1, seq2 = seq1[:seq_len], seq2[:seq_len]
+    pxy = {(b1, b2):(seqa.count(b1) + seqb.count(b2))/(len(seqa) + len(seqb)) for b1, b2 in itertools.product("ATGC","ATGC")}
+    px = compa
     
-    start = seq_len // 2
-    runs = []
-    inds = []
-    shifts = []
-    found = set()
+    # diffs = {}
+    # sumdiffs = 0
+    # for b in compa.keys():
+        
+    #     diff = abs(compa[b] - compb[b])
+    #     diffs[b] = diff
+    #     sumdiffs += diff
     
-    for i,t in enumerate(range(-start, start+1)):
-        
-        sslen = seq_len - abs(t)
-        
-        if scale is None:
-            sc = sslen//2
-        else:
-            sc = scale//2
-        
-        s1start = max(t, 0)
-        s1c = s1start + sslen//2
-        seq1t = seq1[s1c-sc:s1c+sc]
-        s2start = max(-t, 0)
-        s2c = s2start + sslen//2
-        seq2t = seq2[s2c-sc:s2c+sc]
-        
-        max_run = 0
-        max_run_end = -1
-        max_run_shift = -1
-        run = 0
-        err = 0
-        for j, (sa, sb) in enumerate(zip(seq1t, seq2t)):
-            
-            if cmp(sa, sb):
-                run += 1
-            else:
-                # run = 0
-                err += 1
-            
-            if err > err_tol:
-                run = 0
-                err = 0
-                
-            if run > max_run:
-                max_run = run
-                max_run_end = j + s1start
-                max_run_shift = t
-        
-        if t == 0 and fill is not None:
-            runs.append(fill)
-        else:
-            runs.append(max_run)
-        s1sp = max_run_end - max_run + 1
-        s2sp = s1sp - max_run_shift
-        if (s1sp, s2sp) in found:
-            inds.append(-1)
-            shifts.append(-1)
-            continue
-        else:
-            found.add((s1sp, s2sp))
-            found.add((s2sp, s1sp))
-            
-            inds.append(max_run_end - max_run + 1)
-            shifts.append(max_run_shift)
+    # p=diff[b]/sumdiffs is excess p_b in a that is not explained by b, and vice versa 
+    # sumdiffs = 1
     
-    return runs, inds, shifts
+    # entr = sum([-np.log(d/sumdiffs) * d/sumdiffs if d else 0 for d in diffs.values()])
+    entr = sum([np.log(pxy[(b1, b2)]/px[b1]) * pxy[(b1, b2)] for b1, b2 in pxy.keys()])
+    return entr
+    
+
+class CorrFuncs:
+    
+    @classmethod
+    def cf_standard(cls):
+        return _cf_std
+    
+    @classmethod
+    def sf_standard(cls):
+        return _sf_std
+    
+    @classmethod
+    def ff_standard(cls):
+        return _ff_std
+    
+    @classmethod
+    def ff_entropy(cls):
+        return _ff_entropy
 
 def convolve_generator(seq1, seq2, scale=None, step=1, keep=None, shift_step = 1):
     if keep is None:
@@ -532,7 +585,6 @@ def correlate_general(seq1, seq2, analysis_func, scale=None, step=1, keep=None, 
     for shift, seq1_subseq, seq2_subseq, overlap_len in convolve_generator(seq1, seq2, scale, step, keep, shift_step):
         # Handle fill at zero shift
         if shift == 0 and fill_at_zero is not None:
-            # print("filling at zero")
             values = fill_at_zero
         else:
             # Call the analysis function
@@ -554,16 +606,24 @@ def correlate_general(seq1, seq2, analysis_func, scale=None, step=1, keep=None, 
     return results if results is not None else tuple()
 
 
-def correlate(seq1, seq2, comparison_func=None, score_func=None, fill=0, scale=None, step=1, keep=None, shift_step = 1):
+def correlate(seq1, seq2, comparison_func=None, score_func=None, factor_func = None, fill=0, scale=None, step=1, keep=None, shift_step = 1):
     if not comparison_func:
-        cmp = lambda x, y: x == y
+        cmp = CorrFuncs.cf_standard()
     else:
         cmp = comparison_func
 
     if not score_func:
-        sf = lambda a, b, sc: int(a == b)*len(seq1)/sc
+        # sf = lambda a, b, sc: int(a == b)/sc
+        
+        sf = CorrFuncs.sf_standard()
     else:
         sf = score_func
+
+    if not factor_func:
+        # ff = lambda seqa, seqb: 1.0
+        ff = CorrFuncs.ff_standard()
+    else:
+        ff = factor_func
 
     rcseq2 = reverse_complement(seq2)
 
@@ -584,19 +644,39 @@ def correlate(seq1, seq2, comparison_func=None, score_func=None, fill=0, scale=N
         rc_sum = 0
 
         for sa, sb, rcsb in zip(seq1_subseq, seq2_subseq, rcseq2_subseq):
+            
+            # rcsb = reverse_complement(sb)
             if sa not in VOCAB or sb not in VOCAB:
                 continue
-
+            
+            score = 0
             if cmp(sa, sb):
                 score = sf(sa, sb, sc)
-                direct_sum += score
-                
-            elif cmp(sa, rcsb):
-                rc_sum += sf(sa, rcsb, sc)
+            
+            rcscore=0
+            if cmp(sa, rcsb):
+                rcscore = sf(sa, rcsb, sc)
+            
+            direct_sum += score
+            rc_sum += rcscore
+            
+        
+        fact = ff(seq1_subseq, seq2_subseq)
+        rcfact = ff(seq1_subseq, seq2_subseq)
+        
+        direct_sum *= fact
+        rc_sum *= rcfact
+        
+        if shift == 0:
+            print(f"{direct_sum:0.3f}, {rc_sum:0.3f}")
+            print(seq2_subseq, "seqb")
+            print(seq1_subseq, "seqa")
+            print(rcseq2_subseq, "rcseqb")
 
         return direct_sum, rc_sum
 
     fill_tuple = (fill, fill) if fill is not None else None
+    print(fill_tuple)
     return correlate_general(seq1, seq2, analyze_match, scale=scale, step=step, keep=keep,
                             fill_at_zero=fill_tuple, shift_step=shift_step)
 
@@ -830,3 +910,150 @@ def extract_top_correlated(seqa, seqb, corr, topk, scale = None):
     return seqs
     
     
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+################ deprecated ###############
+        
+def correlate_old(seq1, seq2, comparison_func = None, score_func = None, fill = 0, scale = None):
+    
+    if not comparison_func:
+        cmp = lambda x, y:x==y
+    else:
+        cmp = comparison_func
+    
+    if not score_func:
+        sf = lambda a, b, sc: int(a==b)/sc
+    else:
+        sf = score_func
+    
+    seq_len = min(len(seq1), len(seq2))
+    seq1, seq2 = seq1[:seq_len], seq2[:seq_len]
+    rcseq2 = reverse_complement(seq2)
+    
+    max_shift = seq_len//2
+    
+    ips = []
+    comp_ips = []
+    n = 0
+    for t in range(-max_shift, max_shift + 1):
+        
+        sslen = seq_len - abs(t)
+        if scale is None:
+            sc = sslen
+        else:
+            sc = scale
+        
+        s1start = max(t, 0)
+        s1c = s1start + sslen//2
+        seq1t = seq1[s1c-sc//2:s1c+sc//2]
+        s2start = max(-t, 0)
+        s2c = s2start + sslen//2
+        seq2t = seq2[s2c - sc//2:s2c+sc//2]
+        rcseq2t = rcseq2[s2c - sc//2:s2c+sc//2]
+        
+        summ = 0
+        csumm = 0
+        for sa, sb, rcsb in zip(seq1t, seq2t, rcseq2t):
+            
+            if not sa in VOCAB or not sb in VOCAB:
+                continue
+            
+            if cmp(sa, sb):
+                summ += sf(sa, sb, sc)
+            elif cmp(sa, rcsb):
+                csumm += sf(sa, rcsb, sc)
+        
+        if t == 0 and fill is not None:
+            ips.append(fill)
+            comp_ips.append(fill/2)
+        else:
+            ips.append(summ)
+            comp_ips.append(csumm)
+        n+=1
+    
+    return ips, comp_ips
+
+def correlate_longest_subseq_old(seq1, seq2, comparison_func = None, scale = None, fill = None, err_tol = 0):
+    
+    if not comparison_func:
+        cmp = lambda x, y:x==y
+    else:
+        cmp = comparison_func
+    
+    seq_len = min(len(seq1), len(seq2))
+    seq1, seq2 = seq1[:seq_len], seq2[:seq_len]
+    
+    start = seq_len // 2
+    runs = []
+    inds = []
+    shifts = []
+    found = set()
+    
+    for i,t in enumerate(range(-start, start+1)):
+        
+        sslen = seq_len - abs(t)
+        
+        if scale is None:
+            sc = sslen//2
+        else:
+            sc = scale//2
+        
+        s1start = max(t, 0)
+        s1c = s1start + sslen//2
+        seq1t = seq1[s1c-sc:s1c+sc]
+        s2start = max(-t, 0)
+        s2c = s2start + sslen//2
+        seq2t = seq2[s2c-sc:s2c+sc]
+        
+        max_run = 0
+        max_run_end = -1
+        max_run_shift = -1
+        run = 0
+        err = 0
+        for j, (sa, sb) in enumerate(zip(seq1t, seq2t)):
+            
+            if cmp(sa, sb):
+                run += 1
+            else:
+                # run = 0
+                err += 1
+            
+            if err > err_tol:
+                run = 0
+                err = 0
+                
+            if run > max_run:
+                max_run = run
+                max_run_end = j + s1start
+                max_run_shift = t
+        
+        if t == 0 and fill is not None:
+            runs.append(fill)
+        else:
+            runs.append(max_run)
+        s1sp = max_run_end - max_run + 1
+        s2sp = s1sp - max_run_shift
+        if (s1sp, s2sp) in found:
+            inds.append(-1)
+            shifts.append(-1)
+            continue
+        else:
+            found.add((s1sp, s2sp))
+            found.add((s2sp, s1sp))
+            
+            inds.append(max_run_end - max_run + 1)
+            shifts.append(max_run_shift)
+    
+    return runs, inds, shifts

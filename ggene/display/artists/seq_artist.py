@@ -18,8 +18,8 @@ if TYPE_CHECKING:
     from ggene.browser.genome_browser import BrowserState
     
 logger = logging.getLogger(__name__)
-# logger.setLevel("WARNING")
-logger.setLevel("DEBUG")
+logger.setLevel("WARNING")
+# logger.setLevel("DEBUG")
 
 @dataclass
 class SeqArtistParams(BaseArtistParams):

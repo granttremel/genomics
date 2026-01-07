@@ -1,9 +1,10 @@
 
-from typing import List, Tuple, Dict, Any, Optional, TYPE_CHECKING
+from typing import List, Tuple, Dict, Any, Callable, Optional, TYPE_CHECKING
 from dataclasses import dataclass, field, replace
 
 from ggene.draw.chars import HLINES
 from ggene.draw.color import RESET, BOLD
+from ggene.draw.color import Color
 from ggene.display.colors import FColors
 from ggene.display.artists.base import BaseArtistParams, BaseArtist, logger
 
@@ -17,6 +18,9 @@ class TextArtistParams(BaseArtistParams):
     display_height:int = 8
     use_global_features:bool = True
     feature_types:Tuple[str] = ("gene","exon","CDS","motif","dfam_hit","repeat", "variant")
+    emphasized_features: Tuple[str] = tuple()
+    emphasized_formatter: Optional[Callable] = None
+    highlight_color: int = 148
     biotypes:Tuple[str] = ("protein_coding","lncRNA","processed_pseudogene")
 
 class TextArtist(BaseArtist):
@@ -30,13 +34,20 @@ class TextArtist(BaseArtist):
     
     def render(self, state:'BrowserState', window:'GenomeWindow', **kwargs):
         
+        logger.debug(f"emphs {type(self.params.emphasized_features)}, params {type(self.params.feature_types)}, state {type(state.feature_types)}")
+        
         if self.params.use_global_features and state.feature_types:
-            fts = state.feature_types
+            fts = self.params.emphasized_features + state.feature_types
         else:
-            fts = self.params.feature_types
+            fts = self.params.emphasized_features + self.params.feature_types
+        all_fts = []
+        for ft in fts:
+            if not ft in all_fts:
+                all_fts.append(ft)
+        
         
         features = window.features + window.motifs
-        txtlines = self.get_text_lines(features, fts)
+        txtlines = self.get_text_lines(features, all_fts)
         
         if not txtlines:
             txtlines = ["no features in here"]
@@ -63,17 +74,17 @@ class TextArtist(BaseArtist):
         
         for ftype in feature_types:
             
-            # if ftype == "CDS":
-            #     continue
-            
-            col = FColors.get_feature_type_color(ftype)
+            if ftype in self.params.emphasized_features:
+                col = Color.from_8bit(self.params.highlight_color).to_ansi()
+            else:
+                col = FColors.get_feature_type_color(ftype)
             feats = features_ft.get(ftype, [])
 
             if not feats:
                 continue
 
-            if ftype == "variant":
-                print(feats[0])
+            # if ftype == "variant":
+            #     print(feats[0])
 
             txtlines.append(f"{BOLD}{col}{ftype}:{RESET}")
             if len(feats) > max_feat_per_type:
@@ -120,7 +131,9 @@ class TextArtist(BaseArtist):
     def summarize_features(self, ftype, feats, tabs = 1):
         
         atts = self.get_feature_atts(ftype)
-        if ftype in ["gene","transcript","exon","CDS"]:
+        if ftype in self.params.emphasized_features:
+            return self.summarize_emphasized(feats, tabs = tabs)
+        elif ftype in ["gene","transcript","exon","CDS"]:
             return self.summarize_genomic_features(feats, atts, tabs=tabs)
         else:
             return self.summarize_simple_features(feats, atts[0], tabs=tabs)
@@ -175,7 +188,30 @@ class TextArtist(BaseArtist):
         
         return [tabstr+", ".join(parts)]
     
+    def summarize_emphasized(self, feats, tabs = 1):
+        
+        fstrs = []
+        
+        if self.params.emphasized_formatter:
+            for feat in feats:
+                fstr = self.describe_emphasized(feat)
+                fstrs.append(fstr)
+        else:
+            fstrs = self.summarize_genomic_features(feats, tabs=tabs)
+        
+        return fstrs
+    
+    def describe_emphasized(self, feat, tabs = 1):
+        
+        if self.params.emphasized_formatter:
+            fstr = "  "*tabs + self.params.emphasized_formatter(feat)
+
+        return fstr
+        
     def describe_feature(self, feat, tabs = 1):
+        
+        if feat.feature_type in self.params.emphasized_features:
+            return self.describe_emphasized(feat, tabs=tabs)
         
         atts = self.get_feature_atts(feat.feature_type)
         name_att = atts.pop(0)
@@ -219,5 +255,5 @@ class TextArtist(BaseArtist):
         elif feature_type == "tf_binding":
             return ["name","start","end","length","id","match_seq","score"]
         else:
-            return ["name","start","end","length","id"]
+            return ["name","start","end","length","id", "attributes"]
     

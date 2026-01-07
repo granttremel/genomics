@@ -227,7 +227,7 @@ class BaseArtist:
         rlr_rows = rlr.get_rows()
         return [rlr_rows]
     
-    def collect_features(self, features, feature_types, unique_spans = False, unique_startends = False, rm_only_simple = True, predicate = None):
+    def collect_features(self, features, feature_types, unique_spans = False, unique_startends = False, unique_key = "feature_type", predicate = None):
         
         spans = set()
         starts = set()
@@ -237,12 +237,13 @@ class BaseArtist:
         for feat in features:
             if feat and feat.feature_type in feature_types:
                 
-                skey = (feat.start, feat.feature_type, feat.strand)
-                ekey = (feat.end, feat.feature_type, feat.strand)
+                uk = getattr(feat, unique_key, None)
+                skey = (feat.start, feat.strand, uk)
+                ekey = (feat.end, feat.strand, uk)
                 if unique_startends and skey in starts or ekey in ends:
                     continue
                 
-                span_key = (feat.start, feat.end, feat.feature_type, feat.strand)
+                span_key = (feat.start, feat.end, feat.strand, uk)
                 if unique_spans and span_key in spans:
                     continue
                 
@@ -251,6 +252,8 @@ class BaseArtist:
                 
                 if predicate and not predicate(feat):
                     continue
+                
+                logger.debug(f"collected feature with span_key {span_key}")
                 
                 starts.add(skey)
                 ends.add(ekey)
@@ -278,6 +281,7 @@ class BaseArtist:
         Returns:
             Color object - use str() to convert to ANSI escape code
         """
+        
         return FColors.get_feature_color(feature)
 
 class ProxyArtist(BaseArtist):

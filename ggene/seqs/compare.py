@@ -683,10 +683,7 @@ def count_matching_wobble(s1: str, s2: str, err_tol: Optional[int] = None, wobbl
     if err_tol is None:
         err_tol = len(s1)
     if wobble_tol is None:
-        # wobble_tol = len(s1)
-        allow_wobble = False
-    else:
-        allow_wobble = True
+        wobble_tol = len(s1)
 
     ia, iar = get_aliases(VOCAB)
     
@@ -699,18 +696,18 @@ def count_matching_wobble(s1: str, s2: str, err_tol: Optional[int] = None, wobbl
             pass
         elif allow_alias and b in ia and a in ia[b]:
             pass
-        elif allow_wobble and a+b in ["TG","GT"]:
+        elif a+b in ["TG","GT"]:
                 nwob += 1
-        elif allow_wobble and a+b in ["AG","GA"]:
+        elif a+b in ["AG","GA"]:
                 nwob += 1
-        elif allow_wobble and a+b in ["AC","CA"]:
+        elif a+b in ["AC","CA"]:
                 nwob += 1
         else:
             nerr += 1
             
         if nerr > err_tol:
             return nerr
-        if allow_wobble and nwob > wobble_tol:
+        if nwob > wobble_tol:
             return nwob
         
     return nerr

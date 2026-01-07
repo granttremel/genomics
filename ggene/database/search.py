@@ -175,7 +175,9 @@ class GenomeSearch:
         done = False
         
         ni = 0
-                
+        
+        print(ptrn)
+        
         cfg.start_timer()
         for chrom, poss, seqs in self.iter_chromes(cfg.chromes, cfg.start, end=cfg.end, chunksz = cfg.chunksz, batch_len = cfg.batch_len, personal = cfg.personal):
             

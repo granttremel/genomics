@@ -48,6 +48,8 @@ class ColumnSpec:
     default: Any = None
     target: str = "attribute"  # 'core' or 'attribute'
     formatter: Optional[Callable[[str], Any]] = None
+    verbose: bool = False
+    temp: bool = False
 
     def parse(self, value: str) -> Any:
         """Parse a string value according to this spec."""
@@ -56,8 +58,14 @@ class ColumnSpec:
 
         try:
             if self.formatter:
-                return self.formatter(value)
-            return self.type_(value)
+                if callable(self.formatter):
+                    return self.formatter(value)
+                elif isinstance(self.formatter, str):
+                    return list(value.split(self.formatter))
+            if self.type_ is int:
+                return int(float(value))
+            else:
+                return self.type_(value)
         except (ValueError, TypeError):
             return self.default
 
@@ -77,6 +85,8 @@ class DerivedSpec:
     name: str
     compute: Callable[['UFeature'], Any]
     default: Any = None
+    verbose: bool = False
+    temp: bool = False
 
     def evaluate(self, feature: 'UFeature') -> Any:
         """Compute the derived value for a feature."""
@@ -138,12 +148,14 @@ class TabularStream(AnnotationStream):
         "start":ColumnSpec("start", int, -1, "core"),
         "end":ColumnSpec("end", int, -1, "core"),
         "name":ColumnSpec("name", str, "", "core"),
+        "feature_type":ColumnSpec("feature_type", str, target = "core", formatter = lambda s:s),
         "score":ColumnSpec("score", float, None, "core"),
         "strand":ColumnSpec("strand", str, "", "core"),
         "id":ColumnSpec("id", str, "", "core"),
     }
     
     # Subclasses override these
+    start_ind:int = 0
     columns: List[Union[ColumnSpec, str]] = []
     derived: List[DerivedSpec] = []
     feature_type: str = "region"
@@ -154,7 +166,11 @@ class TabularStream(AnnotationStream):
     fe_delimiter:str = ';'
     fe_kv_delimiter:str = " "
 
-    def __init__(self, filepath: str, source_name: str = "Tabular"):
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        cls._setup_columns()
+
+    def __init__(self, filepath: str, source_name: str = "Tabular", feature_type = ""):
         super().__init__(source_name)
         self.filepath = Path(filepath).absolute()
 
@@ -171,6 +187,12 @@ class TabularStream(AnnotationStream):
 
         if not self.tabix and self.filepath.suffix == '.gz':
             logger.warning(f"No index found for {self.filepath}.")
+            
+        if feature_type:
+            if feature_type == "auto":
+                self.feature_type = Path(filepath).stem.split(".")[0] + "_hit"
+            else:
+                self.feature_type = feature_type
             
     def stream(self, chrom: Optional[str] = None,
                start: Optional[int] = None,
@@ -190,10 +212,11 @@ class TabularStream(AnnotationStream):
 
         try:
             for line in self.tabix.fetch(chr_formatted, start=query_start, end=query_end):
-                feature = self.parse_line(line)
-                if self.validate_feature(feature):
-                    
-                    # Apply region filter
+                
+                init_feat = self.parse_line(line)
+                feature = self.process_feature(init_feat)
+                
+                if self.validate_feature(feature):    
                     if chrom and feature.chrom != chr_raw:
                         continue
                     if start and feature.end < start:
@@ -206,7 +229,47 @@ class TabularStream(AnnotationStream):
         except Exception as e:
             logger.error(f"Error fetching {chr_formatted}:{query_start}-{query_end}: {e}")
 
-    def validate_feature(self, feature):
+    @classmethod
+    def get_temp_columns(cls):
+        return [col for col in cls.columns if col.temp]
+    
+    @classmethod
+    def get_headers(cls, verbose = False):
+        core_hdrs = []
+        hdrs = []
+        for c in cls.columns + cls.derived:
+            
+            if c.temp:
+                continue
+            
+            if c.verbose and not verbose:
+                continue
+            
+            if c.name in cls.core_columns:
+                core_hdrs.append(c.name)
+            else:
+                hdrs.append(c.name)
+        
+        return core_hdrs + hdrs
+    
+    @classmethod
+    def _setup_columns(cls):
+        normalized = []
+        for col in cls.columns:
+            if isinstance(col, str):
+                if col in cls.core_columns:
+                    normalized.append(cls.core_columns[col])
+                else:
+                    normalized.append(ColumnSpec(col, str))
+            elif isinstance(col, ColumnSpec):
+                normalized.append(col)
+        cls.columns = normalized
+
+    def process_feature(self, init_feat:UFeature)->UFeature:
+        init_feat.purge(self.get_temp_columns())
+        return init_feat
+
+    def validate_feature(self, feature:UFeature)->bool:
         return bool(feature)
 
     def preparse_line(self, line:str):
@@ -227,7 +290,11 @@ class TabularStream(AnnotationStream):
         data = {}
         for i, col in enumerate(self.columns):
             if isinstance(col, str):
-                col = self.core_columns.get(col)
+                if col in self.core_columns:
+                    col = self.core_columns.get(col)
+                else:
+                    col = ColumnSpec(col, str)
+                self.columns[i] = col
             if col is None:
                 continue
             
@@ -300,17 +367,7 @@ class TabularStream(AnnotationStream):
         chr_formatted = cls.chr_format.format(chrstr=chr_raw)
         return chr_formatted, chr_raw
     
-    @classmethod
-    def get_headers(cls):
-        hdrs = []
-        for c in cls.columns + cls.derived:
-            if isinstance(c, str):
-                c = cls.core_columns.get(c, "")
-            if not c:
-                continue
-            hdrs.append(c.name)
-        # hdrs= [c.name for c in cls.columns] + [c.name for c in cls.derived]
-        return hdrs
+
 
 
 class MiniStream(TabularStream):
@@ -414,6 +471,8 @@ def get_gs_feature_type(f):
             ft = 'lncRNA'
         else:
             ft = "lncRNA" +'_'+ f.feature_type
+    elif "miRNA" in f.gene_biotype:
+        return "miRNA"
     elif "RNA" in f.gene_biotype:
         return "ncRNA"
     else:
@@ -819,6 +878,23 @@ class UGenomeAnnotations:
         motif_stream.bind_sequence_getter(self.get_sequence)
         self.motif_streams[name] = motif_stream
         logger.info(f"Added motif source: {name}")
+    
+    def stream_by_sources(self, sources:List[str],
+                    chrom: Optional[str] = None, 
+                    start: Optional[int] = None,
+                      end: Optional[int] = None) -> Iterator[UFeature]:
+        
+        iterators = []
+        
+        for name in sources:
+            if name in self.streams:
+                stream = self.streams[name]
+                iterator = stream.stream(chrom, start, end)
+                iterators.append(iterator)
+        
+        for feature in heapq.merge(*iterators):
+            yield feature
+        
     
     def stream_all(self, chrom: Optional[str] = None,
                    start: Optional[int] = None,

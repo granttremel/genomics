@@ -116,9 +116,6 @@ class MapBrowser(BaseBrowser):
         self.change_qt = change_qt
         
         self.keybindings.bind("h","change_qt")
-        
-            
-            
     
     def register_default_commands(self):
         
