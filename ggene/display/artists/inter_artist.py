@@ -21,7 +21,7 @@ class InterArtistParams(BaseArtistParams):
     display_width:int = 256
     display_height:int = 8 # kernel is max twice this
     seq_name:str = "ref"
-    color_scheme:str = "gray"
+    color_scheme:str = "terracotta"
     focus:str = "all" # "N", "SW", "RY", "MK"
     show_rc:bool = False
     show_both:bool = False
@@ -65,6 +65,7 @@ class InterArtist(BaseArtist):
         else:
             seq_crop = seq
         
+        
         return seq_crop
     
     def get_inter_heatmap(self, seq):
@@ -79,20 +80,25 @@ class InterArtist(BaseArtist):
         
         if not self.params.show_rc or self.params.show_both:
             
-            hm_rows = self.get_heatmap_rows(mat, cols, row_labels = row_labels, col_labels = col_labels)
+            hm_rows = self.get_heatmap_rows(mat, cols, row_labels = row_labels, col_labels = col_labels, label = "Forward")
             rows.extend(hm_rows)
             
         if self.params.show_rc or self.params.show_both:
-            
-            hm_rows = self.get_heatmap_rows(rcmat, cols, row_labels = row_labels, col_labels = col_labels)
+            if rows:
+                rows.append("")
+            hm_rows = self.get_heatmap_rows(rcmat, cols, row_labels = row_labels, col_labels = col_labels, label = "Reverse Complement")
             rows.extend(hm_rows)
             
         return rows
     
-    def get_heatmap_rows(self, mat, cols, row_labels = [], col_labels = []):
+    def get_heatmap_rows(self, mat, cols, row_labels = [], col_labels = [], label=  ""):
+        
+        rows = []
+        if label:
+            rows = [label]
         
         hm = Heatmap(mat, half_block = True, colobar = False, colors = cols, row_labels = row_labels, col_labels = col_labels)
-        rows = hm.get_rows()
+        rows.extend(hm.get_rows())
 
         return rows
         
@@ -152,4 +158,21 @@ class InterArtist(BaseArtist):
             mat = mat[:, :, w-max_width//2:w+max_width//2]
         
         return mat
+
+    @classmethod
+    def display_artist(cls, seqa, seqb, **kwargs):
         
+        params = InterArtistParams(**kwargs)
+        
+        @dataclass
+        class FakeGenomeWindow:
+            ref_seq:str
+            alt_seq:str
+        
+        gw = FakeGenomeWindow(seqa, seqa)
+        
+        artist = InterArtist("temp_artist", params, kernel = seqb)
+        
+        rnd = artist.render(None, gw)
+        for row in rnd:
+            print(row)

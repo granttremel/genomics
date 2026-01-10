@@ -437,8 +437,12 @@ class FeatureColorRegistry:
         "gene": Color.from_hsl(220, 0.6, 0.55),       # Blue
         "transcript": Color.from_hsl(300, 0.5, 0.5),  # Magenta
         "exon": Color.from_hsl(180, 0.6, 0.5),        # Cyan
-        "cds": Color.from_hsl(50, 0.7, 0.55),         # Yellow
+        "CDS": Color.from_hsl(50, 0.7, 0.55),         # Yellow
         "utr": Color.from_hsl(0, 0, 0.5),             # Gray
+        "lncRNA": Color.from_hsl(200, 0.6, 0.5),
+        "miRNA": Color.from_hsl(190, 0.6, 0.5),
+        "ncRNA": Color.from_hsl(180, 0.6, 0.5),
+        "pseudogene": Color.from_hsl(240, 0.6, 0.55),
         "variant": Color.from_hsl(25, 0.8, 0.55),     # Orange
         "motif": Color.from_hsl(170, 0.6, 0.5),       # Teal
         "tf_binding": Color.from_hsl(140, 0.6, 0.4),  # Green

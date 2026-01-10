@@ -5,7 +5,7 @@ import time
 
 import numpy as np
 
-from ggene.seqs.lambdas import lambda_map, needs_features
+from ggene.seqs.lambdas import lambda_map, needs_features, get_sources, get_feature_types
 from ggene.seqs.bio import reverse_complement
 
 from ggene.draw import add_ruler, ScalarPlot
@@ -19,7 +19,7 @@ class ChromeMapper:
         self.seq_gen = seq_gen
         self.feat_gen = feat_gen
     
-    def get_chromosomal_quantities(self, chr, seq_specs, chunksz = 10e6, start = 1e6, length = None, resample = False, do_rc = False, needs_feats = []):
+    def get_chromosomal_quantities(self, chr, seq_specs, chunksz = 10e6, start = 1e6, length = None, resample = False, do_rc = False):
         
         seq_fns = []
         for seq_spec in seq_specs:
@@ -33,11 +33,11 @@ class ChromeMapper:
         if not seq_fns:
             return None, None
         
-        if not needs_feats:
-            needs_feats = []
-            for sfn in seq_fns:
-                needs_feats += needs_features(sfn)
-        needs_feats = list(set([v for v in needs_feats if v is not None]))
+        # if not needs_feats:
+        #     needs_feats = []
+        #     for sfn in seq_fns:
+        #         needs_feats += needs_features(sfn)
+        # needs_feats = list(set([v for v in needs_feats if v is not None]))
         
         chrmax = self.max_indices.get(str(chr), 10e6)
         if not length:
@@ -58,10 +58,11 @@ class ChromeMapper:
             if do_rc:
                 seq = reverse_complement(seq)
             
-            if needs_feats:
-                ufeats =[uf for uf in self.feat_gen(chrstr, start, start+step)]
-            else:
-                ufeats = []
+            ufeats =[uf for uf in self.feat_gen(chrstr, start, start+step)]
+            # if needs_feats:
+            #     ufeats =[uf for uf in self.feat_gen(chrstr, start, start+step)]
+            # else:
+            #     ufeats = []
             
             if len(seq) < 1:
                 start = end
@@ -212,19 +213,50 @@ class ChromeMapper:
         return lines
 
     @classmethod
-    def get_generators(cls, gm:'GenomeManager', seq_specs):
+    def get_generators(cls, gm:'GenomeManager', seq_specs = [], use_sources = True, use_features = False):
         
-        sg = lambda chrom, start, end: gm.get_sequence(chrom, start, end)
-        
-        # fg_streams = {}
-        # for sp in seq_specs:
+        seq_gen = lambda chr, start, end: gm.get_sequence(chr, start, end = end)
+        if use_sources:
             
-        #     needs = needs_features(sp)
+            sources = []
+            for seq_spec in seq_specs:
+                sources.extend(get_sources(seq_spec))
+            sources = list(set(sources))
             
-        #     for need in needs:
-        #         if need not in fg_streams:
-        #             fg_streams[need] = gm.annotations.streams.get(need, None)
+            # logger.debug(f"making feat gen with sources {sources}")
+            
+            feat_gen = lambda chr, start, end: gm.annotations.stream_by_sources(sources, chr, start, end)
+        elif use_features:
+            
+            ftypes = []
+            for seq_spec in seq_specs:
+                fts = get_feature_types(seq_spec)
+                ftypes.extend(fts)
+            
+            ftypes = list(set(ftypes))
+            
+            feat_gen = lambda chr, start, end: gm.annotations.stream_by_types(ftypes, chr, start, end=end)
         
-        fg = lambda chrom, start, end, feature_types: gm.annotations.stream_by_types(feature_types, chrom, start, end)
+        else:
+            print("idk")
+            feat_gen = lambda chr, start, end: gm.annotations.stream_all(chr, start, end)
         
-        return sg, fg
+        return seq_gen, feat_gen
+
+    # @classmethod
+    # def get_generators(cls, gm:'GenomeManager', seq_specs):
+        
+    #     sg = lambda chrom, start, end: gm.get_sequence(chrom, start, end)
+        
+    #     # fg_streams = {}
+    #     # for sp in seq_specs:
+            
+    #     #     needs = needs_features(sp)
+            
+    #     #     for need in needs:
+    #     #         if need not in fg_streams:
+    #     #             fg_streams[need] = gm.annotations.streams.get(need, None)
+        
+    #     fg = lambda chrom, start, end, feature_types: gm.annotations.stream_by_types(feature_types, chrom, start, end)
+        
+    #     return sg, fg

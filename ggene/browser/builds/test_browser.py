@@ -171,7 +171,7 @@ class TestBrowser(BaseBrowser):
             seq_specs.add(qt1)
             seq_specs.add(qt2)
         
-        seq_gen, feat_gen = MapArtist.get_generators(self.gm, seq_specs = tuple(seq_specs), needs_feats=['gene','pseudogene','ncRNA','lncRNA'])
+        seq_gen, feat_gen = MapArtist.get_generators(self.gm, seq_specs = tuple(seq_specs))
         
         for i in range(len(ps)):
             scale, qt1, qt2 = ps[i]

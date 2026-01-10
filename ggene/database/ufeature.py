@@ -6,6 +6,8 @@ if TYPE_CHECKING:
     from ggene.database.annotations import ColumnSpec, DerivedSpec
 
 
+
+
 class UFeature:
     """Common representation for all genomic features.
 

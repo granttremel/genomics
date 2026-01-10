@@ -246,7 +246,7 @@ class GenomeCache:
         num_chunks = int(chr_len / self.base_resolution) + 1
         chunksz = int(chr_len / num_chunks)
         
-        sg, fg = ChromeMapper.get_generators(self.gm, None)
+        sg, fg = ChromeMapper.get_generators(self.gm, seq_specs)
         cm = ChromeMapper(sg, fg)
         
         needs = []
@@ -257,7 +257,7 @@ class GenomeCache:
         
         print(f"beginning precompute with chr{chrom}, seq_specs {", ".join(seq_specs)}")
         
-        qts, _ = cm.get_chromosomal_quantities(chrom, seq_specs, chunksz = chunksz, start = 1, needs_feats = needs)
+        qts, _ = cm.get_chromosomal_quantities(chrom, seq_specs, chunksz = chunksz, start = 1)
         
         return [np.array(qts[i], dtype = self.dtype) for i in range(len(seq_specs))]
         

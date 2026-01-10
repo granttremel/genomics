@@ -210,6 +210,9 @@ def make_mutation_spec_relative(mutation_spec, mutation_rate = None):
     if not mutation_rate:
         mutation_rate = sum(mutation_spec.values())
     
+    if mutation_rate == 0:
+        mutation_rate = 1.0
+    
     for mt, r in mutation_spec.items():
         
         rr = r / mutation_rate - 1/num_mtns 

@@ -275,7 +275,7 @@ class ExpBrowser(BaseBrowser):
         scale = 0.01
         ps = [
             [0.05, "genes", "ncRNA"],
-            [0.01, "gc", "polyy"],
+            [0.01, "lncRNA", "miRNA"],
             [0.002, "Alu", "Line1"]
         ]
         
@@ -312,7 +312,6 @@ class ExpBrowser(BaseBrowser):
         seq_fn = make_custom_lambda(seq_spec, seq_lam, feature_types = self.exp_ftypes, source_names = source_names)
         sg, fg = MapArtist.get_generators(self.gm, [seq_fn], use_sources = True)
         
-        mm_scale = -1
         mm_scales = [-1, 0.1, 0.01]
         expmas = []
         

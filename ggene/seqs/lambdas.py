@@ -177,6 +177,10 @@ def seq_lncrna(seq, feats):
 def seq_ncrna(seq, feats):
     return sum(1 for f in feats if f.feature_type == "ncRNA")
 
+@requires_features(["miRNA"], source_name = 'genes')
+def seq_mirna(seq, feats):
+    return sum(1 for f in feats if f.feature_type == "miRNA")
+
 @requires_features(["lncRNA", "ncRNA", "pseudogene"], source_name = 'genes')
 def seq_nongenes(seq, feats):
     return sum(1 for f in feats if f.feature_type in ["lncRNA","ncRNA","pseudogene"])
@@ -464,6 +468,7 @@ lambda_map = {
     "pseudo":seq_pseudo,
     "lncRNA":seq_lncrna,
     "ncRNA":seq_ncrna,
+    "miRNA":seq_mirna,
     "nongenes":seq_nongenes,
     "simple_repeats":seq_simple_rpts,
     

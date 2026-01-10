@@ -41,6 +41,7 @@ class SearchConfig:
     personal:bool = False
     collect_sequences:bool = True
     collect_features:bool = True
+    sources:Tuple[str] = None
     do_rc:bool = True
     
     context_sz:int = 32
@@ -305,6 +306,9 @@ class GenomeSearch:
                 if cfg.feature_predicate(f):
                     if cfg.collect_sequences:
                         seq, full_seq = self.collect_sequences(chrom, f.start, f.end, cfg.context_sz, personal = cfg.personal)
+                        # print(f"collecting sequences from feature {f}")
+                    else:
+                        seq = full_seq = ""
                     
                     sr = SearchResult(chrom, f.start, f.end, f.strand, seq, full_seq, features = [f])
                     

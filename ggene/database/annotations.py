@@ -576,6 +576,54 @@ class GeneStream(TabularStream):
         
         return parts, fe_dict
 
+class GeneInfoStream(TabularStream):
+    
+    columns = [
+        ColumnSpec("tax_id", int),
+        ColumnSpec("gene_id", int),
+        ColumnSpec("gene_name", str),
+        ColumnSpec("locus_tag", str),
+        ColumnSpec("synonyms", str, formatter = '|'),
+        ColumnSpec("dbXrefs_chromosome", formatter = '|'),
+        "map_location",
+        "description",
+        "type_of_gene",
+        "symbol_from_nomenclature_authority",
+        "full_name_from_nomenclature_authority",
+        "nomenclature_status",
+        "other_designations",
+        "modification_data",
+        "feature_type"
+    ]
+
+    def __init__(self, filepath:str):
+        super().__init__(filepath, source_name = "GeneInfo")
+        
+    def stream(self, chrom: Optional[str] = None,
+               start: Optional[int] = None,
+               end: Optional[int] = None) -> Iterator[UFeature]:
+        
+        with gzip.open(self.filepath, 'rb') as f:
+            
+            for bline in f:
+                line = bline.decode()
+                f = self.parse_line(line)
+                yield f
+                
+    def get_entry(self, **kwargs):
+        
+        for f in self.stream():
+            
+            if not f:
+                continue
+            
+            for k, v in kwargs.items():
+                
+                if getattr(f, k) != v:
+                    continue
+                
+                return f
+
 def get_genotype(f):
     
     gts = {"0":f.ref, "1":f.alt[0], "2":f.alt[1]}

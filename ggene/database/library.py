@@ -537,7 +537,7 @@ def _check_tool(tool: str) -> bool:
     return shutil.which(tool) is not None
 
 
-def sort_bed(input_path: Path, output_path: Optional[Path] = None) -> Path:
+def sort_bed(input_path: Path, output_path: Optional[Path] = None, sort_term1 = "-k1,1", sort_term2 = '-k2,2n') -> Path:
     """
     Sort a BED/GTF file by chromosome and position.
 
@@ -554,9 +554,12 @@ def sort_bed(input_path: Path, output_path: Optional[Path] = None) -> Path:
     temp_sorted = Path(tempfile.mktemp(suffix=".sorted"))
 
     try:
+        sort_terms = [sort_term1]
+        if sort_term2:
+            sort_terms.append(sort_term2)
         # Use sort with natural chromosome ordering
         result = subprocess.run(
-            ["sort", "-k1,1", "-k2,2n", str(input_path), "-o", str(temp_sorted)],
+            ["sort"] + sort_terms + [str(input_path), "-o", str(temp_sorted)],
             capture_output=True,
             text=True
         )

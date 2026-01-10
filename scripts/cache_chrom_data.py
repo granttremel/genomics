@@ -61,7 +61,8 @@ def main():
     # seq_specs += ['TTCTT']
     # seq_specs += [ 'TTCTT', 'TATAAT', 'TATATC', 'TTGA', 'AATTAAG', 'ATGT', 'GAGGAT', 'CCCTGC']
     # seq_specs += ['protein_coding', 'lncrna', 'cds_len', 'cds_pct']
-    seq_specs += ["L1HS","L1PA"]
+    # seq_specs += ["L1HS","L1PA"]
+    seq_specs = ["miRNA"]
 
     gc.cache_all_chromes(seq_specs, overwrite = True)
     
