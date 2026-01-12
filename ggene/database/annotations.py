@@ -21,7 +21,9 @@ import os
 import warnings
 import gzip
 
-from ggene.database.ufeature import UFeature
+import traceback
+
+from ggene.database.uobject import UFeature, UInfo, UObject
 
 logger = logging.getLogger(__name__)
 
@@ -83,12 +85,12 @@ class DerivedSpec:
         default: Default value if computation fails
     """
     name: str
-    compute: Callable[['UFeature'], Any]
+    compute: Callable[['UObject'], Any]
     default: Any = None
     verbose: bool = False
     temp: bool = False
 
-    def evaluate(self, feature: 'UFeature') -> Any:
+    def evaluate(self, feature: 'UObject') -> Any:
         """Compute the derived value for a feature."""
         try:
             return self.compute(feature)
@@ -104,18 +106,18 @@ class AnnotationStream(ABC):
         self._buffer = []
         
     @abstractmethod
-    def parse_line(self, line: str) -> Optional[UFeature]:
+    def parse_line(self, line: str) -> Optional[UObject]:
         """Parse a single line into a UFeature."""
         pass
     
     @abstractmethod
     def stream(self, chrom: Optional[str] = None, 
                start: Optional[int] = None,
-               end: Optional[int] = None) -> Iterator[UFeature]:
+               end: Optional[int] = None) -> Iterator[UObject]:
         """Stream features, optionally filtered by region."""
         pass
     
-    def query_range(self, chrom: str, start: int, end: int) -> List[UFeature]:
+    def query_range(self, chrom: str, start: int, end: int) -> List[UObject]:
         """Query features in a specific range."""
         features = []
         for feature in self.stream(chrom, start, end):
@@ -162,6 +164,8 @@ class TabularStream(AnnotationStream):
     comment_chars: Tuple[str, ...] = ('#', 'track')
     delimiter: str = '\t'
     chr_format: str = "{chrstr}"  # or "chr{chrstr}"
+    
+    data_type = UFeature
 
     fe_delimiter:str = ';'
     fe_kv_delimiter:str = " "
@@ -196,7 +200,7 @@ class TabularStream(AnnotationStream):
             
     def stream(self, chrom: Optional[str] = None,
                start: Optional[int] = None,
-               end: Optional[int] = None) -> Iterator[UFeature]:
+               end: Optional[int] = None) -> Iterator[UObject]:
         """Stream features using indexed access."""
         if not self.tabix:
             logger.warning(f"No tabix index for {self.filepath}")
@@ -214,6 +218,10 @@ class TabularStream(AnnotationStream):
             for line in self.tabix.fetch(chr_formatted, start=query_start, end=query_end):
                 
                 init_feat = self.parse_line(line)
+                
+                if not init_feat:
+                    continue
+                
                 feature = self.process_feature(init_feat)
                 
                 if self.validate_feature(feature):    
@@ -224,10 +232,12 @@ class TabularStream(AnnotationStream):
                     if end and feature.start > end:
                         continue
                     
-                    
                     yield feature
+        
         except Exception as e:
-            logger.error(f"Error fetching {chr_formatted}:{query_start}-{query_end}: {e}")
+            logger.error(f"Error fetching {chr_formatted}:{query_start}-{query_end} for stream {type(self).__name__}: {e}")
+            traceback.print_exc()
+            
 
     @classmethod
     def get_temp_columns(cls):
@@ -265,52 +275,62 @@ class TabularStream(AnnotationStream):
                 normalized.append(col)
         cls.columns = normalized
 
-    def process_feature(self, init_feat:UFeature)->UFeature:
+    def process_feature(self, init_feat:UObject)->UObject:
         init_feat.purge(self.get_temp_columns())
         return init_feat
 
-    def validate_feature(self, feature:UFeature)->bool:
+    def validate_feature(self, feature:UObject)->bool:
         return bool(feature)
 
     def preparse_line(self, line:str):
         parts = line.strip().split(self.delimiter)
         return parts, {}
 
-    def parse_line(self, line: str) -> Optional[UFeature]:
+    def parse_line(self, line: str) -> Optional[UObject]:
         """Parse a line using column specs."""
         # Skip comments
         if any(line.startswith(c) for c in self.comment_chars):
             return None
-        
+
         parts, fe_dict = self.preparse_line(line)
-        
+
         uf_cols = []
-        
+
         # Build data dict from parts
         data = {}
-        for i, col in enumerate(self.columns):
+        parts_index = 0  # Track position in parts separately from column index
+
+        for col_index, col in enumerate(self.columns):
             if isinstance(col, str):
                 if col in self.core_columns:
                     col = self.core_columns.get(col)
                 else:
                     col = ColumnSpec(col, str)
-                self.columns[i] = col
+                self.columns[col_index] = col
+
+            # Skip null columns (they consume a field but don't store it)
             if col is None:
+                parts_index += 1  # Advance past this field
                 continue
-            
+
             uf_cols.append(col)
             try:
-                if i < len(parts):
-                    v = col.parse(parts[i])
+                if parts_index < len(parts):
+                    v = col.parse(parts[parts_index])
                     data[col.name] = v
+                    parts_index += 1  # Advance to next field
                 else:
                     data[col.name] = ""
                     break
             except Exception as e:
                 print(f"exception on column {col}: {str(e)}")
-        
-        for j, col in enumerate(self.columns[i:]):
-            
+        else:
+            # Loop completed normally, set col_index to end
+            col_index = len(self.columns) - 1
+
+        # Process any remaining columns that might be in fe_dict
+        for j, col in enumerate(self.columns[col_index + 1:]):
+
             if col and col.name in fe_dict:
                 data[col.name] = fe_dict[col.name]
                 uf_cols.append(col)
@@ -322,7 +342,7 @@ class TabularStream(AnnotationStream):
         data['source'] = self.source_name
 
         # Create UFeature with flat data and compute derived attributes
-        return UFeature.from_parsed(data, columns=uf_cols, derived=self.derived, raw_line = line)
+        return self.data_type.from_parsed(data, columns=uf_cols, derived=self.derived)
 
 
     def format_group_entry(self, group_entry:str):
@@ -367,9 +387,6 @@ class TabularStream(AnnotationStream):
         chr_formatted = cls.chr_format.format(chrstr=chr_raw)
         return chr_formatted, chr_raw
     
-
-
-
 class MiniStream(TabularStream):
     
     delimiter = "\t"
@@ -424,7 +441,7 @@ class MiniStream(TabularStream):
                     continue
                 if query_end and feature.start > query_end:
                     continue
-                logger.debug(f"feature passed all challenges: {feature.name}")
+                
                 yield feature
     
     def validate_feature(self, feature):        
@@ -472,7 +489,10 @@ def get_gs_feature_type(f):
         else:
             ft = "lncRNA" +'_'+ f.feature_type
     elif "miRNA" in f.gene_biotype:
-        return "miRNA"
+        if f.feature_type == 'gene':
+            ft = 'miRNA'
+        else:
+            ft = 'miRNA' + '_' + f.feature_type
     elif "RNA" in f.gene_biotype:
         return "ncRNA"
     else:
@@ -530,7 +550,7 @@ class GeneStream(TabularStream):
         "chrom","source",
         # "feature_type",
         ColumnSpec("feature_type", str, ""),
-        "start","end", None, "strand", ColumnSpec("frame", int, default = 0),
+        "start","end", ColumnSpec("temp1", str, temp=True), "strand", ColumnSpec("frame", int, default = 0),
         ColumnSpec("gene_id", str, ""),
         ColumnSpec("gene_name", str, ""),
         ColumnSpec("gene_source", str, ""),
@@ -564,6 +584,24 @@ class GeneStream(TabularStream):
     
     def __init__(self, filepath: str):
         super().__init__(filepath, source_name="GTF")
+        self._gene_info:Optional[GeneInfoStream] = None
+        
+    def bind_geneinfo(self, gene_info_stream):
+        self._gene_info = gene_info_stream
+    
+    def process_feature(self, init_feat:UObject)->UObject:
+        
+        f = super().process_feature(init_feat)
+        
+        if self._gene_info:
+            if self._gene_info.contains(init_feat.name):
+                finfo = self._gene_info.get_entry(name=f.name)
+                fd = finfo.to_dict()
+                atts = fd.pop("attributes", {})
+                fd.update(atts)
+                f.attributes.update(fd)
+        
+        return f
     
     def preparse_line(self, line:str):
         
@@ -581,36 +619,56 @@ class GeneInfoStream(TabularStream):
     columns = [
         ColumnSpec("tax_id", int),
         ColumnSpec("gene_id", int),
-        ColumnSpec("gene_name", str),
+        "name",
         ColumnSpec("locus_tag", str),
         ColumnSpec("synonyms", str, formatter = '|'),
-        ColumnSpec("dbXrefs_chromosome", formatter = '|'),
+        ColumnSpec("temp1", str, temp=True),
+        "dbXrefs_chromosome",
         "map_location",
         "description",
         "type_of_gene",
-        "symbol_from_nomenclature_authority",
-        "full_name_from_nomenclature_authority",
-        "nomenclature_status",
-        "other_designations",
-        "modification_data",
+        ColumnSpec("temp2", str, temp=True),
+        ColumnSpec("temp3", str, temp=True),
+        ColumnSpec("temp4", str, temp=True),
+        ColumnSpec("temp5", str, temp=True),
+        "modification_date",
         "feature_type"
     ]
 
+    data_type = UInfo
+
     def __init__(self, filepath:str):
         super().__init__(filepath, source_name = "GeneInfo")
+        self._data = self.load_data()
         
+    def load_data(self):
+        
+        data = {}
+        for f in self.stream():
+            if f:
+                data[f.name] = f
+        
+        return data
+    
     def stream(self, chrom: Optional[str] = None,
                start: Optional[int] = None,
-               end: Optional[int] = None) -> Iterator[UFeature]:
+               end: Optional[int] = None) -> Iterator[UInfo]:
         
-        with gzip.open(self.filepath, 'rb') as f:
+        with gzip.open(self.filepath, 'rt') as f:
             
-            for bline in f:
-                line = bline.decode()
-                f = self.parse_line(line)
-                yield f
-                
+            for line in f:
+                f = self.parse_line(line.strip())
+                if not f:
+                    continue
+                f = self.process_feature(f)
+                if self.validate_feature(f):
+                    yield f
+    
     def get_entry(self, **kwargs):
+        
+        name = kwargs.get("name","")
+        if name and name in self._data:
+            return self._data[name]
         
         for f in self.stream():
             
@@ -623,6 +681,15 @@ class GeneInfoStream(TabularStream):
                     continue
                 
                 return f
+
+    def contains(self, gene_name):
+        return gene_name in self._data
+
+    def __iter__(self):
+        if self._data:
+            return iter(self._data)
+        else:
+            return None
 
 def get_genotype(f):
     
@@ -887,9 +954,23 @@ class UGenomeAnnotations:
         self.streams[name] = stream
         logger.info(f"Added annotation source: {name}")
     
-    def add_genes(self, filepath:str, name:str = "genes"):
-        self.add_source(name, GeneStream(filepath))
+    def add_genes(self, filepath:str, name:str = "genes", gene_info_path:str = ""):
+        gs = GeneStream(filepath)
+        self.add_source(name, gs)
         
+        if gene_info_path:
+            gis = GeneInfoStream(gene_info_path)
+            gs.bind_geneinfo(gis)
+        
+    def add_geneinfo(self, filepath:str, name:str = "gene_info"):
+        genes = self.streams.get("genes", None)
+        if not genes:
+            return
+        gis = GeneInfoStream(filepath, name=name)
+        genes.bind_geneinfo(gis)
+        
+        # self.add_source(name, GeneInfoStream(filepath))
+    
     def add_variants(self, filepath:str, name:str = "variants"):
         self.add_source(name, VariantStream(filepath))
     

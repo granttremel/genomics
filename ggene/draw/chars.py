@@ -5,6 +5,8 @@ SCALE_H = " ▏▎▍▌▋▊▉█"   # ⎸⎹
 SCALAR_PLOT = {
     "range_hi":"⌝", # hilo = "⎴⎵", "⏋⏌"
     "range_lo":"⌟",
+    "range_hi_left":"⌜",
+    "range_lo_left":"⌞",
 }
 
 HLINES = {

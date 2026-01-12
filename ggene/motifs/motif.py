@@ -20,7 +20,7 @@ from abc import ABC, abstractmethod
 import numpy as np
 
 if TYPE_CHECKING:
-    from ggene.database.ufeature import UFeature
+    from ggene.database.uobject.ufeature import UFeature
 
 
 @dataclass
@@ -68,7 +68,7 @@ class MatchResult:
     def to_ufeature(self, feature_type: str = "motif",
                     source: str = "Motif") -> 'UFeature':
         """Convert to UFeature for streaming integration."""
-        from ggene.database.ufeature import UFeature
+        from ggene.database.uobject.ufeature import UFeature
         return UFeature({
             'chrom': self.chrom,
             'start': self.start,

@@ -81,7 +81,8 @@ class ScalarPlot:
             'effect': None,
 
             # Normal mode options
-            'add_range': False,
+            'add_range': True,
+            'left_range':False,
             'range_fstr': '0.2f',
 
             # Mid mode options
@@ -141,6 +142,7 @@ class ScalarPlot:
             'flip': self.options['flip'],
             'effect': self.options['effect'],
             'add_range': self.options['add_range'],
+            'left_range': self.options['left_range'],
             'range_fstr': self.options['range_fstr'],
         }
         return scalar_to_text_nb(self.scalars, **kwargs)
@@ -303,7 +305,13 @@ class ScalarPlot:
             print()
         
         return outlines
-        
+    
+    def write(self, file_handle):
+        rows = self.get_rows()
+        for r in rows:
+            file_handle.write(r + "\n")
+        file_handle.write("\n")
+    
     def set_color(self, fg: Optional[int] = None, bg: Optional[int] = None) -> 'ScalarPlot':
         """
         Set foreground and/or background colors.
@@ -502,9 +510,9 @@ def scalar_to_text_nb(scalars, minval = None, maxval = None, fg_color = 53, bg_c
     bit_ranges = [base_bit_depth*i for i in range(nrows)]
     
     if minval is None:
-        minval = min(scalars)
+        minval = min(s for s in scalars if s is not None)
     if maxval is None:
-        maxval = max(scalars)
+        maxval = max(s for s in scalars if s is not None)
     rng = (maxval - minval)/1
     c = (minval+ maxval)/2
     if rng == 0:
@@ -512,7 +520,10 @@ def scalar_to_text_nb(scalars, minval = None, maxval = None, fg_color = 53, bg_c
         c = minval + rng/2 - rng/bit_depth
     
     for s in scalars:
-        sv = int(nvals*((s - c)/rng)) + bit_depth // 2
+        if s is None:
+            sv = minval
+        else:
+            sv = int(nvals*((s - c)/rng)) + bit_depth // 2
             
         for row, bit_range in zip(rows, bit_ranges):
             if sv < bit_range:
@@ -538,14 +549,22 @@ def scalar_to_text_nb(scalars, minval = None, maxval = None, fg_color = 53, bg_c
         outstrs.append(f"{brdc} " + OTHER.get("upper_eighth","")*ncols + f" {Colors.RESET}")
     
     if add_range:
+        left_range = kwargs.get("left_range", False)
+        
         ran_fstr = kwargs.get("range_fstr", "0.2f")
-        hi, lo = SCALAR_PLOT.get("range_hi"), SCALAR_PLOT.get("range_lo")
+        
+        hi, lo = SCALAR_PLOT.get("range_hi_left" if left_range else "range_hi"), SCALAR_PLOT.get("range_lo_left" if left_range else "range_lo")
         hi, lo = (lo, hi) if flip else (hi, lo)
         minstr = format(minval, ran_fstr)[:4]
         maxstr = format(maxval, ran_fstr)[:4]
-        outstrs[0] += hi + maxstr
-        if bit_depth > 8:
-            outstrs[-1] += lo + minstr
+        if left_range:
+            outstrs[0] = maxstr + hi + outstrs[0]
+            if bit_depth > 8:
+                outstrs[-1] = minstr + lo + outstrs[-1]
+        else:
+            outstrs[0] += hi + maxstr
+            if bit_depth > 8:
+                outstrs[-1] += lo + minstr
         
     if flip:
         outstrs = flip_scalar_text(outstrs)

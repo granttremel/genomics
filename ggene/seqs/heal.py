@@ -220,10 +220,10 @@ def make_mutation_spec_relative(mutation_spec, mutation_rate = None):
     
     return mtn_spc_rel
 
-def plot_mutation_spectrum(mutation_spec, do_heatmap = False, aliases = "", relative = True, suppress = False, **kwargs):
+def plot_mutation_spectrum(mutation_spec, do_heatmap = True, aliases = "", relative = False, suppress = False, **kwargs):
     """
     for dist, first line is "to", second line is "from"
-    
+    for hm, the rows are target (from) and the cols are query (to)
     """
     
     if aliases:
@@ -258,9 +258,10 @@ def _mutation_heatmap(mutation_spec, suppress = False, **kwargs):
     
     ab = kwargs.get("ab", VOCAB)
     
-    for b in ab:
+    hm_data = []
+    for i, bb in enumerate(ab):
         hm_row = []
-        for bb in ab:
+        for b in ab:
             hm_row.append(mutation_spec.get(b + bb))
         hm_data.append(hm_row)
     
@@ -290,7 +291,7 @@ def _mutation_dist(mutation_spec, suppress = False, **kwargs):
             lbl2s.append(bb)
         
         data.append(minval)
-        lbl1s.append(b+" "*(len(ab)-1))
+        lbl1s.append(b.center(len(ab)))
         lbl2s.append(" ")
     
     scd = ScalarPlot(data, minval=minval, add_range = True, **kwargs)
@@ -302,6 +303,46 @@ def _mutation_dist(mutation_spec, suppress = False, **kwargs):
         print()
     
     return scd
+
+def _get_mutation_dist_labels(ab = None):
+    
+    if not ab:
+        ab = VOCAB
+    
+    lbl1s = []
+    lbl2s = []
+    
+    for b in ab:
+        for bb in ab:
+            
+            if b==bb:
+                continue
+        
+        lbl1s.append(b.center(len(ab)))
+        lbl2s.append(" ")
+    
+    lbl1 = "".join(lbl1s)
+    lbl2 = "".join(lbl2s)
+    return lbl2, lbl1
+
+def plot_bulge_dist(bulge_spec, space = 1, **kwargs):
+    
+    ab = kwargs.get("ab", VOCAB)
+    
+    lbls = []
+    data = []
+    for b in ab:
+        data.append(bulge_spec[b])
+        lbls.append(b)
+        for ns in range(space):
+            data.append(None)
+            lbls.append(" ")
+            
+    scd = ScalarPlot(data, minval = 0, **kwargs)
+    scd.show()
+    print("".join(lbls))
+    return scd
+    
 
 def get_variant_data(vars, subs = {}, ins = [], dels = []):
     

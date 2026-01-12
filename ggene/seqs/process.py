@@ -667,16 +667,15 @@ def correlate(seq1, seq2, comparison_func=None, score_func=None, factor_func = N
         direct_sum *= fact
         rc_sum *= rcfact
         
-        if shift == 0:
-            print(f"{direct_sum:0.3f}, {rc_sum:0.3f}")
-            print(seq2_subseq, "seqb")
-            print(seq1_subseq, "seqa")
-            print(rcseq2_subseq, "rcseqb")
+        # if shift == 0:
+        #     print(f"{direct_sum:0.3f}, {rc_sum:0.3f}")
+        #     print(seq2_subseq, "seqb")
+        #     print(seq1_subseq, "seqa")
+        #     print(rcseq2_subseq, "rcseqb")
 
         return direct_sum, rc_sum
 
     fill_tuple = (fill, fill) if fill is not None else None
-    print(fill_tuple)
     return correlate_general(seq1, seq2, analyze_match, scale=scale, step=step, keep=keep,
                             fill_at_zero=fill_tuple, shift_step=shift_step)
 

@@ -392,6 +392,12 @@ class Heatmap:
         """Get rendered rows without printing."""
         return self.rows.copy()
 
+    def write(self, file_handle):
+        rows = self.get_rows()
+        for r in rows:
+            file_handle.write(r + "\n")
+        file_handle.write("\n")
+
     # === Chainable setters ===
 
     def set_range(self, minval: Optional[float] = None, maxval: Optional[float] = None) -> 'Heatmap':

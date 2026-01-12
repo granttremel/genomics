@@ -3,7 +3,7 @@ import numpy as np
 from ggene.config import other_paths
 from ggene.database.genome_manager import GenomeManager
 from ggene.database.cache import GenomeCache
-from ggene.database.ufeature import UFeat
+from ggene.database.uobject import UFeat
 
 from ggene.genome import genes, ncrna
 

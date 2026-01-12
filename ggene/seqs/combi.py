@@ -3,7 +3,6 @@ import math
 
 from .vocab import VOCAB
 
-
 def totient(n):
     
     if n==1:

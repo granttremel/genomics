@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 # logger.setLevel("WARNING")
 logger.setLevel("DEBUG")
 
-from ggene.database.ufeature import UFeature
+from ggene.database.uobject.ufeature import UFeature
 
 
 class MotifStream(ABC):

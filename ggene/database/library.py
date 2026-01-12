@@ -41,7 +41,7 @@ from ggene.config import DEFAULT_LIBRARY
 
 if TYPE_CHECKING:
     from ggene.database.annotations import TabularStream
-    from ggene.database.ufeature import UFeature
+    from ggene.database.uobject.ufeature import UFeature
 
 logger = logging.getLogger(__name__)
 
@@ -380,6 +380,10 @@ class LibrarySequence:
     end: Optional[int] = None
     strand: Optional[str] = None
     description: str = ""
+
+    @property
+    def length(self):
+        return len(self.sequence)
 
     @classmethod
     def parse_header(cls, header: str) -> Dict[str, Any]:

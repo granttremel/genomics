@@ -11,9 +11,11 @@ import matplotlib.pyplot as plt
 
 from ggene import draw
 from ggene.display.colors import Colors
+from ggene.draw.color import Color
 from ggene.seqs import process, bio, heal
 
 from Bio import Align
+from Bio.Align import substitution_matrices
 
 class AlignmentResult:
     
@@ -43,19 +45,37 @@ class AlignmentResult:
     def get_aligned_seqs(self):
         return self.target_algn, self.query_algn
     
-    def get_mutation_spectrum(self):
+    def get_mutation_spectrum(self, normalize = False):
         
         spec = {}
         
-        for b, row in zip("ATGC", self.subs):
-            rsum = sum(row)
-            for bb, v in zip("ATGC", row):
+        for b, row in zip(self.subs.alphabet, self.subs):
+            rsum = sum(row) if normalize else 1
+            for bb, v in zip(self.subs.alphabet, row):
                 
                 if b==bb:
                     continue
                 spec[bb+b] = v/rsum
         
         return spec
+        
+    def get_bulge_spectrum(self, separate = False):
+        
+        tgt_spec = {b:0 for b in "ATGC"}
+        q_spec = {b:0 for b in "ATGC"}
+        
+        for b, bb in zip(self.target_algn, self.query_algn):
+            
+            if b == '-':
+                q_spec[bb] += 1
+            if bb == '-':
+                tgt_spec[b] += 1
+        
+        if not separate:
+            res = {k:tgt_spec[k] + q_spec[k] for k in tgt_spec.keys()}
+            return res
+        else:
+            return tgt_spec, q_spec
         
     def print(self, chunksz = 128, emph_match = True, emph_subs = True, emph_indels = False, color_subs = False, show_middle = False, show_consensus = False, file=None):
         
@@ -67,6 +87,14 @@ class AlignmentResult:
     
     def __len__(self):
         return self.length
+
+def view_substitution_matrices():
+    
+    names = substitution_matrices.load()
+    for name in names:
+        mat = substitution_matrices.load(name)
+        print(name)
+        print(mat)
 
 import itertools
 pair_cost_dna = {(a,b):float(a==b) for a, b in itertools.product('ATGC','ATGC')}
@@ -128,8 +156,7 @@ _default_scores = {
 def get_scores(**scores):
     sc = _default_scores.copy()
     sc.update(scores)
-    # return sc
-    return {}
+    return sc
 
 def get_consensus_scores():
     cscores = _all_scores.copy()
@@ -306,6 +333,132 @@ def get_colored_aligned_seqs(tgt, query, emph_match = True, emph_subs = False, e
     q_col.append(Colors.RESET)
     
     return "".join(tgt_col), "".join(q_col)
+
+def print_aligned_rna(tgt, query, file = None):
+    
+    tgt_track, upper_track = format_single_rna(tgt, query)
+    que_track, lower_track = format_single_rna(query, tgt)
+    
+    line_frm = "{:<4}{:>4} {}"
+    print(line_frm.format("", "", upper_track), file=file)
+    print(line_frm.format("T", "", tgt_track), file=file)
+    print(line_frm.format("Q", "", que_track), file=file)
+    print(line_frm.format("", "", lower_track), file=file)
+
+
+def format_single_rna(aligned_rna, other_rna):
+    """
+    Format aligned RNA with bulges shown on separate track.
+
+    Bulges (where one sequence has bases and the other has gaps) are:
+    - Displayed on a separate track (above/below the main sequence)
+    - Colored along with flanking bases (1 before, 1 after)
+    - Positioned to align with where they occur
+
+    Example input (aligned sequences):
+        T: GCCCCGCCGCCTGGC-CTCT-GGC-CCGCTGGGG-CGCGGGCTTTCG-CTTTCAGTCGAGGGCTAGCGAGCGCAGCGGAGCCTGGAGAGA-AGGCG-CTGGG-
+        Q: -CCCAGC-GCCTT-CTCTCCAGGCTCCGCTGCGCTCGCTAGCCCTCGACTGAAAG-CGAAAGCCCGCGCCC-CAGCGG-GCCAG-AG-GCCAGGCGGCGGGGC
+
+    Example output (bulges on separate track):
+        G    C   G                                  T             G    A   GA
+        CCCCGCGCCTGCCTCTGGCCCGCTGGGGCGCGGGCTTTCGCTTTCAGCGAGGGCTAGCGAGCCAGCGGGCCTGAGGAAGGCGCTGGG
+        CCCAGCGCCTTCCTCCGGCCCGCTGCGCCGCTAGCCCTCGCTGAAAGCGAAAGCCCGCGCCCCAGCGGGCCAGAGGCAGGCGCGGGG
+                    T  A T       T          A                                   C   G
+
+    Args:
+        aligned_rna: First aligned RNA sequence (with gaps as '-')
+        other_rna: Second aligned RNA sequence (with gaps as '-')
+
+    Returns:
+        (main_track, bulge_track): Two strings for display
+    """
+
+    # Build main track (non-gap bases) and track bulge positions
+    rna_track = []           # The main sequence track (no gaps)
+    bulge_data = []          # List of (position, bases, color) for bulges
+
+    in_bulge = False
+    bulge_bases = []
+    bulge_start_pos = -1
+
+    # Color generator for bulges
+    bcol = Color(150, 0.8, 0.4)
+    hue_shift=  40
+
+    # Track position in the gapless sequence
+    main_pos = 0
+
+    for b, bb in zip(aligned_rna, other_rna):
+
+        # Skip gaps in this sequence
+        if b == '-':
+            continue
+
+        if bb == '-':
+            # Other sequence has gap = this is a bulge
+            if not in_bulge:
+                # Starting a new bulge
+                in_bulge = True
+                bulge_start_pos = main_pos
+                bulge_bases = [b]
+            else:
+                # Continue current bulge
+                bulge_bases.append(b)
+        else:
+            # Both sequences have bases (no gap)
+            if in_bulge:
+                # Just ended a bulge - record it
+                # Position is where the bulge ends (current main_pos)
+                bulge_data.append((bulge_start_pos, main_pos, bulge_bases.copy(), str(bcol)))
+                bcol = bcol.shift_hue(hue_shift)
+                in_bulge = False
+                bulge_bases = []
+
+            # Add base to main track
+            rna_track.append(b)
+            main_pos += 1
+
+    # Handle bulge at end of sequence
+    if in_bulge:
+        bulge_data.append((bulge_start_pos, main_pos, bulge_bases.copy(), str(bcol)))
+
+    # Build colored main track
+    colored_track = list(rna_track)  # Start with uncolored bases
+
+    for start_pos, end_pos, bases, color in bulge_data:
+        # Color the flanking bases
+        # Base before bulge
+        if start_pos > 0:
+            colored_track[start_pos - 1] = color + colored_track[start_pos - 1] + Colors.RESET
+
+        # Base after bulge (if it exists)
+        if end_pos < len(colored_track):
+            colored_track[end_pos] = color + colored_track[end_pos] + Colors.RESET
+
+    # Build bulge track
+    bulge_track = [' '] * len(rna_track)
+
+    for start_pos, end_pos, bases, color in bulge_data:
+        # Calculate position to place bulge
+        # Center it between start and end positions
+        num_bases = len(bases)
+        bulge_center = (start_pos + end_pos) / 2.0
+        bulge_left = int(bulge_center - num_bases / 2.0)
+
+        # Place bulge bases
+        for i, base in enumerate(bases):
+            pos = bulge_left + i
+            # Clamp to valid range
+            if 0 <= pos < len(bulge_track):
+                if i == 0:
+                    bulge_track[pos] = color + base
+                elif i == num_bases - 1:
+                    bulge_track[pos] = base + Colors.RESET
+                else:
+                    bulge_track[pos] = base
+
+    return ''.join(colored_track) + Colors.RESET, ''.join(bulge_track) + Colors.RESET
+    
 
 css = "\x1b[38;5;232m"
 cs = "\x1b[38;5;238m"

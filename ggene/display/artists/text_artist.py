@@ -239,7 +239,7 @@ class TextArtist(BaseArtist):
     def get_feature_atts(self, feature_type):
         
         if feature_type == "gene":
-            return ["name","start","end","length","strand","gene_name", "gene_source", "gene_biotype"]
+            return ["name","start","end","length","strand","gene_name", "description", "gene_source", "gene_biotype"]
         elif feature_type == "transcript":
             return ["name","start","end","length","transcript_name","transcript_source","transcript_biotype"]
         elif feature_type == "exon":

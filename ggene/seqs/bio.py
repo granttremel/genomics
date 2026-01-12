@@ -214,7 +214,8 @@ def is_seq(seq):
         if not b in voc_comb:
             return False
     return True
-    
+
+
 def order_sequences(seqs):
     
     nbs = len(VOCAB)

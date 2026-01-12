@@ -486,4 +486,38 @@ class LineArtist(BaseArtist):
         gt =f.attributes.get("genotype","")
         
         return f"{ref}->{gt}"
+    
+    @classmethod
+    def display_artist(cls, feats, **kwargs):
         
+        params = LineArtistParams(**kwargs)
+        
+        fts = kwargs.get("feature_types")
+        if not fts:
+            fts = list(set([f.feature_type for f in feats]))
+        
+        @dataclass
+        class FakeGenomeState:
+            feature_types:Tuple[str] = tuple()
+        
+        gs = FakeGenomeState(fts)
+        
+        start = min(f.start for f in feats)
+        end = max(f.end for f in feats)
+        
+        @dataclass
+        class FakeGenomeWindow:
+            features:Tuple[Any] = tuple()
+            start_alt:int = start
+            start_ref:int = start
+            end_alt:int = end
+            end_ref:int = end
+        
+        gw = FakeGenomeWindow(feats)
+        
+        artist = LineArtist("temp_artist", params)
+        
+        rnd = artist.render(gs, gw)
+        for row in rnd:
+            print(row)
+        print("" + Colors.RESET)

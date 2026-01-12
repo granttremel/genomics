@@ -6,7 +6,7 @@ import re
 import time
 
 from ggene import motifs
-from ggene.database.ufeature import UFeature
+from ggene.database.uobject.ufeature import UFeature
 from ggene.seqs import bio
 from ggene.seqs.find import consensus_to_re
 from ggene.motifs import hmm as ghmm
@@ -52,6 +52,7 @@ class SearchConfig:
     timeout:float = None # s i guess
     
     _t0 = 0
+    _n = 0
     
     def test_hit(self, sr):
         if not self.hit_predicate:
@@ -74,12 +75,21 @@ class SearchConfig:
     def get_elapsed(self):
         return time.perf_counter() - self._t0
     
+    def check_limit(self):
+        if self.limit:
+            return self._n <= self.limit
+        else:
+            return True
+    
     def check_timer(self):
         dt = self.get_elapsed()
         if self.timeout and dt > self.timeout:
             return False
         else:
             return True
+
+    def check(self):
+        return self.check_limit() and self.check_timer()
 
 def get_search_config(chromes = [], start = 1, end = None, chunksz = 256, batch_len = 32, personal = False, context_sz = 32, hit_predicate = None, feature_predicate = None, limit = None, timeout = None, do_rc = True ):
     
@@ -116,8 +126,6 @@ class GenomeSearch:
             bothseqs.append(rcsseq)
         done = False
         
-        ni = 0
-        
         cfg.start_timer()
         for chrom, poss, seqs in self.iter_chromes(cfg.chromes, cfg.start, end=cfg.end, chunksz = cfg.chunksz, batch_len = cfg.batch_len, personal = cfg.personal):
             
@@ -141,11 +149,11 @@ class GenomeSearch:
                             
                             res = SearchResult(chrom, hit_start, hit_end, strand, hitseq, fullseq, feats)
                             yield res
-                            ni += 1
+                            cfg._n += 1
                     
                     strand = '-'
                     
-                    if cfg.limit and ni >= cfg.limit:
+                    if not cfg.check_limit():
                         logger.info(f"collected requested results {cfg.limit}, ending search")
                         done = True
                     if not cfg.check_timer():
@@ -175,7 +183,7 @@ class GenomeSearch:
         
         done = False
         
-        ni = 0
+        # ni = 0
         
         print(ptrn)
         
@@ -195,9 +203,10 @@ class GenomeSearch:
                     fullseq = seq[subpos - cfg.context_sz//2:subend+cfg.context_sz//2]
                     res = SearchResult(chrom, hit_start, hit_end, strand, hitseq, fullseq, feats)
                     yield res
-                    ni += 1
+                    # ni += 1
+                    cfg._n += 1
                 
-                if cfg.limit and ni >= cfg.limit:
+                if not cfg.check_limit():
                     logger.info(f"collected requested results {cfg.limit}, ending search")
                     done = True
                 if not cfg.check_timer():
@@ -221,8 +230,6 @@ class GenomeSearch:
             ppl = ghmm.Pipeline(ghmm.AB, ghmm.BG, Z = 10, E = 0.1)
                 
         done = False
-        
-        ni = 0
                 
         cfg.start_timer()
         for chrom, poss, seqs in self.iter_chromes(cfg.chromes, cfg.start, end=cfg.end, chunksz = cfg.chunksz, batch_len = cfg.batch_len, personal = cfg.personal):
@@ -267,11 +274,12 @@ class GenomeSearch:
                     full_sr = SearchResult(chrom, pos + hit_start, pos+hit_end, strand, hitseq, fullseq, features=feats, attributes = sr.__dict__)
                     
                     yield full_sr
-                    ni += 1
+                    cfg._n +=1
+                    # ni += 1
                 else:
                     logger.info(f"rejected hit {sr}")
                 
-                if cfg.limit and ni >= cfg.limit:
+                if cfg.check_limit():
                     logger.info(f"collected requested results {cfg.limit}, ending search")
                     done = True
                 if not cfg.check_timer():
@@ -293,8 +301,6 @@ class GenomeSearch:
         
         done = False
         
-        nf = 0
-        
         cfg.start_timer()
         for chrom in self.gm.iter_chromes():
             
@@ -313,9 +319,9 @@ class GenomeSearch:
                     sr = SearchResult(chrom, f.start, f.end, f.strand, seq, full_seq, features = [f])
                     
                     yield sr
-                    nf += 1
+                    cfg._n += 1
                 
-                if cfg.limit and nf >= cfg.limit:
+                if not cfg.check_limit():
                     logger.info(f"collected requested results {cfg.limit}, ending search")
                     done = True
                 if not cfg.check_timer():

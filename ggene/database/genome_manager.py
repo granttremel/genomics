@@ -18,13 +18,13 @@ logger.setLevel("CRITICAL")
 
 from ggene import draw
 from ggene import dev
-from ggene.config import get_config, get_paths
+from ggene.config import get_all_paths
 from ggene.genome.features import Gene, Feature, shorten_variant
 from ggene.genome.translate import Ribosome
 from ggene.browser.genome_browser_v2 import InteractiveGenomeBrowser
 from ggene.database.annotations import UGenomeAnnotations, chr_lens
 from ggene.database.genome_iterator import UGenomeIterator
-from ggene.database.ufeature import UFeature
+from ggene.database.uobject.ufeature import UFeature
 from ggene.database.search import GenomeSearch
 from ggene.database.download import DatabaseDownloader
 from ggene.database.motifs import JasparStream, MotifStream, PatternStream, HMMStream
@@ -44,7 +44,6 @@ class GenomeManager:
                  vcf_path: str = None,
                  gtf_path: str = None,
                  ref_path: str = None,
-                 my_path: str = '',
                  library_path: str = None, 
                  **kwargs) -> None:
         """Initialize GenomeManager.
@@ -55,19 +54,18 @@ class GenomeManager:
             fasta_path: Path to FASTA file for genomic sequences
         """
         # Lazy import to avoid circular dependency
-        # from ggene import get_paths
-        cfg =get_config()
-        DEFAULT_VCF_PATH, DEFAULT_GTF_PATH, DEFAULT_FASTA_PATH, DEFAULT_LIBRARY, other_paths = get_paths()
-
+        
+        all_paths = get_all_paths()
+        data_dir = all_paths.get("data_dir","")
         # Use defaults if not provided
         if vcf_path is None:
-            vcf_path = DEFAULT_VCF_PATH
+            vcf_path = all_paths.get("variants_filename", "")
         if gtf_path is None:
-            gtf_path = DEFAULT_GTF_PATH
+            gtf_path = all_paths.get("genes_filename", "")
         if ref_path is None:
-            ref_path = DEFAULT_FASTA_PATH
+            ref_path = all_paths.get("sequence_filename", "")
         if library_path is None:
-            library_path = DEFAULT_LIBRARY
+            library_path = all_paths.get("library_dir", "")
 
         try:
             self.vcf = VCF(vcf_path)
@@ -79,7 +77,7 @@ class GenomeManager:
             self.library_path = library_path
             
             self.search = GenomeSearch(self)
-            self.download = DatabaseDownloader(data_dir = cfg.get("data_dir",""), library_dir = DEFAULT_LIBRARY)
+            self.download = DatabaseDownloader(data_dir = data_dir, library_dir = library_path)
             
             # Initialize new unified annotation system with sequence streaming
             self.annotations = UGenomeAnnotations(
@@ -87,8 +85,9 @@ class GenomeManager:
                 vcf_path=vcf_path if vcf_path and os.path.exists(vcf_path) else None
             )
             
+            geneinfo_filename = all_paths.get("geneinfo_filename","") if not kwargs.get("skip_geneinfo") else ""
             if gtf_path:
-                self.annotations.add_genes(gtf_path)
+                self.annotations.add_genes(gtf_path, gene_info_path = geneinfo_filename)
             if vcf_path and not kwargs.get("skip_variants"):
                 self.annotations.add_variants(vcf_path)
             
@@ -104,29 +103,21 @@ class GenomeManager:
                     logger.info(f"Loaded FASTA file: {ref_path}")
                 except Exception as e:
                     logger.warning(f"Could not load FASTA file: {e}")
-                    
-            self.mine = None
-            if my_path and os.path.exists(my_path):
-                try:
-                    self.mine = pysam.FastqFile(my_path)
-                    logger.info(f"Loaded FASTQ file: {my_path}")
-                except Exception as e:
-                    logger.warning(f"Could not load FASTQ file: {e}")
             
-            other_paths.update(kwargs)
+            all_paths.update(kwargs)
             
-            for k, v in other_paths.items():
+            for k, v in all_paths.items():
                 if k == "repeatmasker_path" and not kwargs.get("skip_repeatmasker"):
                     self.annotations.add_repeatmasker(v)
                 if k == "dfam_path" and not kwargs.get("skip_dfam"):
                     self.annotations.add_dfam(v)
                 if k == "clinvar_path" and not kwargs.get("skip_clinvar"):
                     self.annotations.add_clinvar(v)
-                    logger.debug(f"added clinvar from path {v}")
                 if k=="jaspar_path" and kwargs.get("load_jaspars"):
                     jaspars = JasparStream(v)
                     jaspars.load()
                     self.annotations.add_motifs(jaspars, name = "jaspars")
+            
             
             if kwargs.get("load_patterns"):
                 pattern_lib = PatternLibrary()
