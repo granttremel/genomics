@@ -735,8 +735,8 @@ def count_matching(s1: str, s2: str, err_tol: Optional[int] = None) -> int:
 
 def score_sequences_corrs(seqa, seqb, topk = 5, scale = None, **kwargs):
     min_len = min(len(seqa), len(seqb))
-    # corrs, rccorrs = process.correlate(seqa, seqb, scale = scale, fill = 0.25)
-    corrs, rccorrs = process.correlate_fast(seqa, seqb)
+    corrs, rccorrs = process.correlate(seqa, seqb, scale = scale, fill = 0.25)
+    # corrs, rccorrs = process.correlate_fast(seqa, seqb)
     topk_corrs = sorted(corrs)[:topk]
     topk_rccorrs = sorted(rccorrs)[:topk]
     return sum(topk_corrs)/topk, sum(topk_rccorrs)/topk

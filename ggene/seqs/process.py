@@ -547,13 +547,13 @@ def correlate_fast(seq1, seq2, convert_to_onehot = True, ab = "ATGC"):
     
     res = signal.correlate(seq1_oh, seq2_oh, mode = 'same')
     rcres = signal.correlate(seq1_oh, rcseq2_oh, mode = 'same')
-    print(res.shape)
+    # print(res.shape)
     # res = res[seq_len//2:-seq_len//2]
     # rcres = rcres[seq_len//2:-seq_len//2]
     # print(res.shape)
     res = res.sum(axis = -1) / len(seq1)
     rcres = rcres.sum(axis = -1) / len(seq1)
-    print(res.shape)
+    # print(res.shape)
     
     return res, rcres
 

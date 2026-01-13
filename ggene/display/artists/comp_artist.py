@@ -22,6 +22,7 @@ class CompArtistParams(BaseArtistParams):
     display_height:int = 8 # kernel is max twice this
     seq_name:str = "ref"
     score_mode:str = "corrs"
+    heatmap_maxval: float = None
     mini_chunksz:int = 32
     show_stats: bool = True
     show_minimap:bool = False
@@ -142,7 +143,7 @@ class CompArtist(BaseArtist):
         
     def format_heatmap(self, scores):
         
-        hm = Heatmap(scores, center = None, minval = 0, maxval = 1.0, row_labels = [], color_scheme = self.params.color_scheme, col_space = 0, row_space = 0, add_middle = False, half_block = self.params.half_block , colorbar = True)
+        hm = Heatmap(scores, center = None, minval = 0, maxval = self.params.heatmap_maxval, row_labels = [], color_scheme = self.params.color_scheme, col_space = 0, row_space = 0, add_middle = False, half_block = self.params.half_block , colorbar = True)
         
         return hm
 
@@ -165,13 +166,17 @@ class CompArtist(BaseArtist):
         rel_pos = pos - start
         
         num_blocks = int(us * rel_end / window_sz)
+        logger.debug(f"make_minimap: {num_blocks} {rel_end} {us} {window_sz}")
+        if num_blocks > self.params.display_height:
+            num_blocks = 2*self.params.display_height if self.params.half_block else self.params.display_height
+            window_sz = int(us * rel_end / num_blocks)
+        
+        logger.debug(f"make_minimap after val: {num_blocks} {rel_end} {us} {window_sz}")
+        # window_sz = int(us * rel_end / num_blocks)
 
         data = np.zeros((num_blocks, num_blocks))
         
         for aind, bind in self.visited:
-            
-            # aind = int(us * a / window_sz)
-            # bind = int(us * b / window_sz)
             
             if aind < num_blocks and bind < num_blocks:
                 data[bind, aind] = 0.5

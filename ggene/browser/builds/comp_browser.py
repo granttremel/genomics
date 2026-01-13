@@ -78,7 +78,7 @@ class CompBrowser(BaseBrowser):
             window_size=window_size, 
             stride=window_size//4, 
             display_height=kwargs.pop("display_height", 32),
-            feature_types = kwargs.pop("feature_types", ("gene","transcript","exon","CDS","simple_repeat","dfam_hit","pseudogene","lncRNA","ncRNA", "miRNA"))
+            feature_types = kwargs.pop("feature_types", ("gene","exon","CDS","simple_repeat","dfam_hit","pseudogene","lncRNA","ncRNA", "miRNA"))
         )
         state.update(**kwargs)
         iterator = UGenomeIterator(gm, state.chrom, state.position, window_size = state.window_size, stride = state.stride, feature_types = state.feature_types)
@@ -249,7 +249,8 @@ class CompBrowser(BaseBrowser):
                 CompArtistParams(display_width = display_width, display_height = self.state.comp_height,
                     seq_name = "ref",
                     score_mode = "corrs",
-                    mini_chunksz = 64,
+                    heatmap_maxval = 0.4,
+                    mini_chunksz = 16,
                     color_scheme = "autumn_canopy",
                     half_block = True,
                     show_minimap = True,
