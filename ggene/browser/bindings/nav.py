@@ -81,8 +81,6 @@ def jump(brws:'BaseBrowser', state:'BaseBrowserState', window:'BaseWindow'):
         state.position += pos
     
     return state
-    
-    
 
 def next_feature(brws:'BaseBrowser', state:'BaseBrowserState', window:'BaseWindow'):
     

@@ -97,6 +97,7 @@ class GenomeWindow:
     variant_deltas: List[Tuple[int, int]]  # List of (position, delta) tuples for coordinate tracking
     variant_features: List[Any] = None  # Actual variant feature objects
     motifs: List[Any] = None  # Detected motifs in this window
+    # attributes: Dict[str, Any] = {}
     
     @property
     def has_gaps(self) -> bool:

@@ -15,7 +15,7 @@ from scipy import cluster
 
 # from ggene.database.genome_manager import GenomeManager
 from ggene import draw
-from ggene.draw.scalar_plot import ScalarPlot
+from ggene.draw import Heatmap, ScalarPlot
 from ggene.seqs import bio, process, align
 from ggene.seqs.bio import ALIASES, ALIASES_REV, get_aliases, VOCAB
 
@@ -735,7 +735,8 @@ def count_matching(s1: str, s2: str, err_tol: Optional[int] = None) -> int:
 
 def score_sequences_corrs(seqa, seqb, topk = 5, scale = None, **kwargs):
     min_len = min(len(seqa), len(seqb))
-    corrs, rccorrs = process.correlate(seqa, seqb, scale = scale, fill = 0.25)
+    # corrs, rccorrs = process.correlate(seqa, seqb, scale = scale, fill = 0.25)
+    corrs, rccorrs = process.correlate_fast(seqa, seqb)
     topk_corrs = sorted(corrs)[:topk]
     topk_rccorrs = sorted(rccorrs)[:topk]
     return sum(topk_corrs)/topk, sum(topk_rccorrs)/topk
@@ -776,10 +777,30 @@ def get_score_function(score_mode):
     else:
         return None
 
+def calc_sequence_comparison(seqa, seqb, nchksa, nchksb, chunksz, score_func, q = 1):
+    
+    scores = [[] for n in range(nchksb)]
+    rcscores = [[] for n in range(nchksb)]
+    
+    for ia in range(nchksa):
+        ssa = seqa[chunksz*ia:chunksz*(ia+q)]
+        
+        for ib in range(nchksb):
+            
+            ssb = seqb[chunksz*ib:chunksz*(ib+q)]
+            if not ssa or not ssb:
+                continue
+                
+            score, rcscore = score_func(ssa, ssb)
+            scores[ib].append(score)
+            rcscores[ib].append(rcscore)
+    
+    return scores, rcscores
+
 def compare_sequences(seqa, seqb, chunksz = 128, score_modes = ["alignment", "runs", "corrs"], resample = True, **kwargs):
     
-    if len(seqb) > len(seqa):
-        seqa, seqb = seqb, seqa
+    # if len(seqb) > len(seqa):
+    #     seqa, seqb = seqb, seqa
     
     q = 1
     if resample:
@@ -795,10 +816,14 @@ def compare_sequences(seqa, seqb, chunksz = 128, score_modes = ["alignment", "ru
     rcscores = [[[] for n in range(nchksb)] for sf in score_funcs]
     row_lbls = [f"b{n}" for n in range(nchksb)]
     
+    file = kwargs.pop("file", None)
     ruler = kwargs.pop("add_ruler", False)
     xmin = kwargs.pop("xmin", None)
     xmax = kwargs.pop("xmax", None)
     num_labels = kwargs.pop("num_labels", 5)
+    half_block = kwargs.pop("half_block", True)
+    
+    cs = kwargs.pop("color_scheme", "moss")
     
     for ia in range(nchksa):
         ssa = seqa[chunksz*ia:chunksz*(ia+q)]
@@ -829,27 +854,25 @@ def compare_sequences(seqa, seqb, chunksz = 128, score_modes = ["alignment", "ru
             scores_rs = scores[nsm]
             rcscores_rs = rcscores[nsm]
         
-        cs = "coolwarm"
+        hm = Heatmap(scores_rs, center = None, minval = 0, row_labels = row_lbls, suppress = True, color_scheme = cs, col_space = 0, row_space = 0, add_middle = False, half_block = half_block , colorbar = True)
         
-        hm = draw.make_heatmap(scores_rs, center = None, row_labels = row_lbls, suppress = True, color_scheme = cs, col_space = 0, row_space = 0,
-                          ruler = ruler, xmin = xmin, xmax = xmax, num_labels=num_labels)
+        rows = hm.get_rows()
+        for nr in range(len(rows)):
+            all_hms[nr].append(rows[nr])
         
-        for nr in range(len(hm)):
-            all_hms[nr].append(hm[nr])
+        rchm = Heatmap(rcscores_rs, center = None, minval = 0, row_labels = row_lbls, suppress = True, color_scheme = cs, col_space = 0, row_space = 0, add_middle = False, half_block = half_block, colorbar = True)
         
-        rchm = draw.make_heatmap(rcscores_rs, center = None, row_labels = row_lbls, suppress = True, color_scheme = cs, col_space = 0, row_space = 0,
-                          ruler = ruler, xmin = xmin, xmax = xmax, num_labels=num_labels)
-        
-        for nr in range(len(rchm)):
-            all_rchms[nr].append(rchm[nr])
+        rcrows = rchm.get_rows()
+        for nr in range(len(rcrows)):
+            all_hms[nr].append(rcrows[nr])
     
-    frm = "{:^32}       " * len(score_modes)
+    frm = "{:^32}       " * 2
     for row in all_hms:
         if row:
-            print(frm.format(*row))
-    for row in all_rchms:
-        if row:
-            print(frm.format(*row))
+            print(frm.format(*row), file = file)
+    # for row in all_rchms:
+    #     if row:
+    #         print(frm.format(*row))
     
     return scores
 

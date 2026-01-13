@@ -178,7 +178,7 @@ def get_hmmmotifs(names = [], classes = [], families = []):
     return motifs
 
 
-def load_hmms(hmm_path = hmm_path, name_filt = None):
+def load_hmms(hmm_path = hmm_path, name_filt = None) -> List[HMM]:
     
     hmms = []
     
@@ -191,6 +191,10 @@ def load_hmms(hmm_path = hmm_path, name_filt = None):
             
             hmms.append(hh)
     return hmms
+
+def load_hmm_dict(hmm_path = hmm_path, name_filt = None) -> Dict[str, HMM]:
+    hmms = load_hmms(hmm_path=hmm_path, name_filt=name_filt)
+    return {hmm.name.decode():hmm for hmm in hmms}
 
 hmm_cls = ["Alu","LTR","MER", "L1", "L2", "L3", "L4", "L5", "CR1", "Charlie", "Tigger", "Arthur", "Zaphod", "Ricksha", "Kanga", "MamGyp", "MST","UCON", "HERV", "Eulor", "MLT", "tRNA", "Eutr", "EUTRE", "MARE", "MADE", "ERVL", "U", "HAL", "HSAT", "GSAT", "THE1", "HUERS", "X", "hAT", "SVA", "PRIMA", "MamTip", "MamRep", "MIR", "PABL", "HY", "Eut", "COMP", "BSR"]
 
@@ -222,6 +226,17 @@ def load_hmm_classes(classes = []):
         cnd[fn].append(hmm)
     
     return out_hmms
+
+def list_repeat_types(name_prefix):
+    
+    print(f"repeats with prefix {name_prefix}:")
+    
+    hmmd = load_hmm_dict()
+    
+    for name in hmmd:
+        if name.startswith(name_prefix):
+            print(f"  {name}")
+    
 
 def get_repeat_class(name):
     

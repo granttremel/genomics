@@ -286,7 +286,7 @@ class ArtistRenderer:
             yield artist
     
     def render(self, state: 'BrowserState', window: 'GenomeWindow',
-              footer_text: str = "") -> List[str]:
+              footer_text: str = "", **kwargs) -> List[str]:
         """
         Render the complete view.
 

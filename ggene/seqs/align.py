@@ -45,7 +45,7 @@ class AlignmentResult:
     def get_aligned_seqs(self):
         return self.target_algn, self.query_algn
     
-    def get_mutation_spectrum(self, normalize = False):
+    def get_mutation_spectrum(self, normalize = False, ignore_aliases = True):
         
         spec = {}
         
@@ -55,11 +55,14 @@ class AlignmentResult:
                 
                 if b==bb:
                     continue
+                if ignore_aliases and b not in "ATGC" or bb not in "ATGC":
+                    continue
+                
                 spec[bb+b] = v/rsum
         
         return spec
         
-    def get_bulge_spectrum(self, separate = False):
+    def get_gap_spectrum(self, separate = False):
         
         tgt_spec = {b:0 for b in "ATGC"}
         q_spec = {b:0 for b in "ATGC"}

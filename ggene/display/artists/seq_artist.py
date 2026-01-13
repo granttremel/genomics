@@ -25,6 +25,7 @@ logger.setLevel("WARNING")
 class SeqArtistParams(BaseArtistParams):
     display_width = 256
     display_height = 6
+    max_seq_rows:int = 4
     seqa_name:str = "ref" # "ref", "alt"
     seqb_name:str = ""
     
@@ -59,7 +60,7 @@ class SeqArtist(BaseArtist):
         
         feats, spans, cols, key = self.get_detail_features(window.motifs, window.start_ref, window.display_length)
         
-        logger.debug(f"colors: {cols}")
+        # logger.debug(f"colors: {cols}")
         
         # seqa = self.crop_seq(window.ref_seq, self.params.display_width)
         
@@ -72,8 +73,8 @@ class SeqArtist(BaseArtist):
             seq_lines = self.render_single_seq(seqa, spans, cols)
         
         
-        if self.params.display_strategy == "fold":
-            seq_lines = self.break_lines(seq_lines, self.params.display_width)
+        # if self.params.display_strategy == "fold":
+        seq_lines = self.break_lines(seq_lines, self.params.display_width)
         
         if self.params.highlight_details:
             seq_lines.append(key)
@@ -108,8 +109,9 @@ class SeqArtist(BaseArtist):
     def crop_seq(self, seq, display_width):
         
         seq_len = len(seq)
-        if seq_len > self.params.display_width:
-            seq = seq[(seq_len - display_width)//2:(seq_len + display_width)//2]
+        max_seq_len = self.params.display_width * self.params.max_seq_rows
+        if seq_len > max_seq_len:
+            seq = seq[(seq_len - max_seq_len)//2:(seq_len + max_seq_len)//2]
         
         return seq
     

@@ -77,7 +77,7 @@ class SearchConfig:
     
     def check_limit(self):
         if self.limit:
-            return self._n <= self.limit
+            return self._n < self.limit
         else:
             return True
     
@@ -311,7 +311,7 @@ class GenomeSearch:
                 
                 if cfg.feature_predicate(f):
                     if cfg.collect_sequences:
-                        seq, full_seq = self.collect_sequences(chrom, f.start, f.end, cfg.context_sz, personal = cfg.personal)
+                        seq, full_seq = self.collect_sequences(chrom, f.start, f.end, cfg.context_sz, personal = cfg.personal, strand = f.strand)
                         # print(f"collecting sequences from feature {f}")
                     else:
                         seq = full_seq = ""
@@ -334,12 +334,16 @@ class GenomeSearch:
             if done:
                 break
 
-    def collect_sequences(self, chrom, start, end, contextsz, personal = False):
+    def collect_sequences(self, chrom, start, end, contextsz, personal = False, strand = "+"):
         r = contextsz//2
         if personal:
             full_seq = self.gm.annotations.get_personal_sequence(chrom, start-r, end+r)
         else:
             full_seq = self.gm.annotations.get_sequence(chrom, start-r, end+r)
+        
+        if strand == '-':
+            full_seq = bio.reverse_complement(full_seq)
+        
         seq = full_seq[r:-r-1]
         
         return "".join(seq), "".join(full_seq)

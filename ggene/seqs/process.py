@@ -2,10 +2,11 @@
 import random
 
 import numpy as np
+from scipy import signal
 import itertools
 
 from typing import Optional, Dict, List, Tuple, Any
-from .bio import reverse_complement, ALIASES, ORDER, ALIASES_REV
+from .bio import complement, reverse_complement, ALIASES, ORDER, ALIASES_REV
 from .vocab import VOCAB
 
 def rotate_seq(seq, nr = 1):
@@ -498,6 +499,63 @@ class CorrFuncs:
     @classmethod
     def ff_entropy(cls):
         return _ff_entropy
+
+def to_onehot(seq, ab = "ATGC"):
+    
+    ind_map = {b:i for i, b in enumerate(ab)}
+    
+    oh = np.zeros((len(seq), 4), dtype= np.int8)
+    for i,b in enumerate(seq):
+        oh[i, ind_map[b]] = 1
+        
+    return oh
+
+def onehot_reverse_complement(onehot, ab = "ATGC"):
+    
+    ind_map = {b:i for i, b in enumerate(ab)}
+    rcab = complement(ab)
+    ind_order = [ind_map[b] for b in rcab]
+    
+    rconehot = onehot[::-1, ind_order]
+    return rconehot
+
+def onehot_to_sequence(onehot, ab = "ATGC"):
+    
+    vec_map = {tuple([int(i==ii) for ii in range(len(ab))]):b for i, b in enumerate(ab)}
+    
+    seq = []
+    onehot = onehot.astype(np.int8)
+    
+    for bv in onehot:
+        
+        b = vec_map.get(tuple(bv), "X")
+        seq.append(b)
+    
+    return "".join(seq)
+
+def correlate_fast(seq1, seq2, convert_to_onehot = True, ab = "ATGC"):
+    
+    seq_len = len(seq1)
+    if convert_to_onehot:
+        seq1_oh = to_onehot(seq1, ab=ab)
+        seq2_oh = to_onehot(seq2, ab=ab)
+        rcseq2_oh = onehot_reverse_complement(seq2_oh, ab=ab)
+    else:
+        seq1_oh = seq1
+        seq2_oh = seq2
+        rcseq2_oh = onehot_reverse_complement(seq2_oh, ab=ab)
+    
+    res = signal.correlate(seq1_oh, seq2_oh, mode = 'same')
+    rcres = signal.correlate(seq1_oh, rcseq2_oh, mode = 'same')
+    print(res.shape)
+    # res = res[seq_len//2:-seq_len//2]
+    # rcres = rcres[seq_len//2:-seq_len//2]
+    # print(res.shape)
+    res = res.sum(axis = -1) / len(seq1)
+    rcres = rcres.sum(axis = -1) / len(seq1)
+    print(res.shape)
+    
+    return res, rcres
 
 def convolve_generator(seq1, seq2, scale=None, step=1, keep=None, shift_step = 1):
     if keep is None:

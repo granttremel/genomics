@@ -4,6 +4,26 @@ import numpy as np
 from ggene.seqs import bio, find, process, align, heal, compare
 from ggene.seqs.bio import reverse_complement
 
+class miRNA:
+    
+    def __init__(self, feat, seq = ""):
+        
+        self.name = feat.name
+        self.chrom = feat.chrom
+        self.start = feat.start
+        self.end = feat.end
+        self.strand = feat.strand
+        
+        self.seq = seq
+        
+        self._feature = feat
+    
+    def infer_guide(self):
+        
+        
+        
+        pass
+    
 
 def get_gc_bias(seq):
     
@@ -85,8 +105,8 @@ def analyze_mirna(seq, allow_swap = True, did_swap = False, file = None):
     hm = heal.plot_mutation_spectrum(ms, do_heatmap = True, relative = False, colorbar = False)
     
     
-    bs = algn.get_bulge_spectrum(separate = False)
-    scp = heal.plot_bulge_dist(bs)
+    bs = algn.get_gap_spectrum(separate = False)
+    scp = heal.plot_gap_spectrum(bs)
     
     return ms, bs, gcm, rcgcm, did_swap
 

@@ -188,6 +188,17 @@ def get_mutation_spectrum(seqa, seqb, mutation_spec = {},  b_is_rc = False, allo
     
     return ms
 
+def aggregate_mutation_spectra(mspecs, ms_agg = {}):
+    
+    if not ms_agg:
+        ms_agg = {k:0 for k in mspecs[0].keys()}
+    
+    for ms in mspecs:
+        for b, nbs in ms.items():
+            ms_agg[b] += nbs
+
+    return ms_agg
+
 def convert_mutation_spectrum(mutation_spec, aliases):
     
     alias_map = bio.get_alias_map(aliases)
@@ -254,7 +265,8 @@ def _mutation_heatmap(mutation_spec, suppress = False, **kwargs):
     kwargs["row_height"] = kwargs.pop("row_height", 1)
     kwargs["row_space"] = kwargs.pop("row_space", 0)
     kwargs["symmetric_color"] = kwargs.pop("symmetric_color", False)
-    kwargs["colorbar"] = kwargs.get("colorbar", True)
+    kwargs["add_middle"] = kwargs.pop("add_middle", False)
+    kwargs["colorbar"] = kwargs.get("colorbar", False)
     
     ab = kwargs.get("ab", VOCAB)
     
@@ -267,7 +279,6 @@ def _mutation_heatmap(mutation_spec, suppress = False, **kwargs):
     
     hm = draw.Heatmap(hm_data, row_labels = ab, col_labels = ab, **kwargs)
     hm.show(suppress = suppress)
-    print()
     
     return hm
     
@@ -287,7 +298,7 @@ def _mutation_dist(mutation_spec, suppress = False, **kwargs):
             if b==bb:
                 continue
             
-            data.append(mutation_spec[b+bb])
+            data.append(mutation_spec[bb+b])
             lbl2s.append(bb)
         
         data.append(minval)
@@ -325,24 +336,74 @@ def _get_mutation_dist_labels(ab = None):
     lbl2 = "".join(lbl2s)
     return lbl2, lbl1
 
-def plot_bulge_dist(bulge_spec, space = 1, **kwargs):
+def plot_gap_spectrum(gap_spec, space = 1, suppress = False, **kwargs):
     
     ab = kwargs.get("ab", VOCAB)
     
     lbls = []
     data = []
     for b in ab:
-        data.append(bulge_spec[b])
+        data.append(gap_spec[b])
         lbls.append(b)
         for ns in range(space):
             data.append(None)
             lbls.append(" ")
             
     scd = ScalarPlot(data, minval = 0, **kwargs)
-    scd.show()
-    print("".join(lbls))
+    scd.show(suppress = suppress)
+    if not suppress:
+        print("".join(lbls))
     return scd
+
+def plot_gap_spectra(tgt_gap_spec, query_gap_spec, space= 1, suppress = False, plot_inter = False, **kwargs):
     
+    # if plot_inter:
+    #     pass
+    # else:
+    #     return plot_gap_spectra_side(tgt_gap_spec, query_gap_spec, space=space, **kwargs)
+    return plot_gap_spectra_side(tgt_gap_spec, query_gap_spec, space=space, suppress=suppress, **kwargs)
+
+def plot_gap_spectra_side(tgt_gap_spec, query_gap_spec, space = 1, suppress = False, **kwargs):
+    
+    ab = kwargs.get("ab", VOCAB)
+    
+    maxval = 0
+    lbls = []
+    tgtdata = []
+    qdata = []
+    for i,b in enumerate(ab):
+        tgtdata.append(tgt_gap_spec[b])
+        qdata.append(query_gap_spec[b])
+        maxval= max(maxval, tgtdata[-1], qdata[-1])
+        lbls.append(b)
+        if i < len(ab)-1:
+            for ns in range(space):
+                tgtdata.append(None)
+                qdata.append(None)
+                lbls.append(" ")
+        
+    lblstr = "".join(lbls)
+    
+    tgt_fg_color = kwargs.get("target_fg_color", 99)
+    query_fg_color = kwargs.get("query_fg_color", 124)
+    
+    tscd = ScalarPlot(tgtdata, minval = 0, maxval = maxval, left_range = True, fg_color = tgt_fg_color, **kwargs)
+    qscd = ScalarPlot(qdata, minval = 0, maxval = maxval, fg_color = query_fg_color, **kwargs)
+    
+    trows = tscd.get_rows()
+    qrows = qscd.get_rows()
+    row_len = len(ab)*2 + 4
+    
+    if not suppress:
+        print("{} {}".format("Target".rjust(row_len), "Query".ljust(row_len)))
+        
+        for trow, qrow in zip(trows, qrows):
+            print(" ".join((trow, qrow)))
+        
+        print("{} {}".format(lblstr.rjust(row_len), lblstr.ljust(row_len)))
+    
+    return tscd, qscd
+
 
 def get_variant_data(vars, subs = {}, ins = [], dels = []):
     

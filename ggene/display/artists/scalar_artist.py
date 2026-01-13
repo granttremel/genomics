@@ -112,7 +112,6 @@ class ScalarArtist(BaseArtist):
         
         d, _, _ = process.correlate_longest_subseq(seqa, seqb, comparison_func = cf, fill = fill, scale=scale, step=step, keep=keep)
         
-        # print(f"run has result length {len(d)}")
         return d, []
     
     def format_scalar_plot_single(self, qt, bit_depth, show_range, display_length, show_xlabel):

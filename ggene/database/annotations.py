@@ -24,6 +24,7 @@ import gzip
 import traceback
 
 from ggene.database.uobject import UFeature, UInfo, UObject
+from ggene.seqs.bio import reverse_complement
 
 logger = logging.getLogger(__name__)
 
@@ -236,7 +237,8 @@ class TabularStream(AnnotationStream):
         
         except Exception as e:
             logger.error(f"Error fetching {chr_formatted}:{query_start}-{query_end} for stream {type(self).__name__}: {e}")
-            traceback.print_exc()
+            logger.error(traceback.format_exc())
+            # traceback.print_exc()
             
 
     @classmethod
@@ -921,11 +923,14 @@ class UGenomeAnnotations:
         except Exception as e:
             logger.error(f"Failed to setup sequence stream: {e}")
     
-    def get_sequence(self, chrom: str, start: int, end: int) -> str:
+    def get_sequence(self, chrom: str, start: int, end: int, strand = '+') -> str:
         """Get reference sequence for a region."""
         # logger.debug("get_sequence called on UGenomeAnnotations")
         if self.sequence_stream:
-            return self.sequence_stream.get_sequence(chrom, start, end)
+            seq = self.sequence_stream.get_sequence(chrom, start, end)
+            if strand == '-':
+                seq = reverse_complement(seq)
+            return seq
         return ""
     
     def get_personal_sequence(self, chrom: str, start: int, end: int) -> str:

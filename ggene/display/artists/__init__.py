@@ -8,6 +8,7 @@ from .map_artist import MapArtist, MapArtistParams
 from .text_artist import TextArtist, TextArtistParams
 from .log_artist import LogArtist, LogArtistParams
 from .inter_artist import InterArtist, InterArtistParams
+from .comp_artist import CompArtist, CompArtistParams
 
 __all__ = [
     'BaseArtist','BaseArtistParams', 'ProxyArtist',
@@ -18,5 +19,6 @@ __all__ = [
     'TextArtist', 'TextArtistParams',
     'LogArtist', 'LogArtistParams',
     'InterArtist', 'InterArtistParams',
+    'CompArtist', 'CompArtistParams'
 ]
 

@@ -181,6 +181,8 @@ class Heatmap:
         col_labels = self.options['col_labels']
 
         max_row_label_len = max(len(str(lbl)) for lbl in row_labels) if row_labels else 0
+        if self.options['half_block']:
+            max_row_label_len *= 2
         row_fmt = "{:<%s}{}" % str(max_row_label_len + 2)
 
         col_width = self.options['col_width']
@@ -391,6 +393,9 @@ class Heatmap:
     def get_rows(self) -> List[str]:
         """Get rendered rows without printing."""
         return self.rows.copy()
+
+    def get_display(self):
+        return "\n".join(self.get_rows())
 
     def write(self, file_handle):
         rows = self.get_rows()
@@ -634,23 +639,6 @@ def make_heatmap(data, row_labels=None, col_labels=None, minval=None, maxval=Non
         out_rows.append("")
         cb_rows = make_heatmap_colorbar(max_row_label_len, value_to_color, minval, maxval, rng=rng, value_fmt = value_fmt)
         out_rows.extend(cb_rows)
-        # colorbar_len = 40
-        # colorbar_line = " " * (max_row_label_len + 2)
-
-        # for i in range(colorbar_len):
-        #     normalized = i / (colorbar_len - 1)
-        #     val = minval + normalized * rng
-        #     color_code = value_to_color(val)
-        #     fg = Colors.get_color(color_code)
-        #     colorbar_line += fg + SCALE[-1] + Colors.RESET
-
-        # out_rows.append(colorbar_line)
-
-        # # Colorbar labels
-        # label_line = " " * (max_row_label_len + 2)
-        # label_line += format(minval, value_fmt).ljust(colorbar_len // 2)
-        # label_line += format(maxval, value_fmt).rjust(colorbar_len // 2)
-        # out_rows.append(label_line)
     
     if not suppress:
         for row in out_rows:

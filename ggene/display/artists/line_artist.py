@@ -31,6 +31,8 @@ class LineArtistParams(BaseArtistParams):
     min_label_width:int = 16            # Min display chars to show inline label
     min_arrow_width:int = 3             # Below this, use single arrow char
     arrowhead_style:str = "head" # head_filled, head_triangle, head_harpoon, etc.
+    
+    use_second:bool = False
 
 
 class LineArtist(BaseArtist):
@@ -46,6 +48,9 @@ class LineArtist(BaseArtist):
     def render(self, state:'BrowserState', window:'GenomeWindow', **kwargs):
         
         out_lines = []
+        
+        if type(window).__name__ == "DualWindow" and self.params.use_second:
+            window = window.window2
         
         start = window.start_alt if self.params.show_alt else window.start_ref
         end = window.end_alt if self.params.show_alt else window.end_ref
@@ -490,7 +495,6 @@ class LineArtist(BaseArtist):
     @classmethod
     def display_artist(cls, feats, **kwargs):
         
-        params = LineArtistParams(**kwargs)
         
         fts = kwargs.get("feature_types")
         if not fts:
@@ -502,8 +506,11 @@ class LineArtist(BaseArtist):
         
         gs = FakeGenomeState(fts)
         
-        start = min(f.start for f in feats)
-        end = max(f.end for f in feats)
+        fstart = min(f.start for f in feats)
+        fend = max(f.end for f in feats)
+        
+        start = kwargs.pop("start", fstart)
+        end = kwargs.pop("end", fend)
         
         @dataclass
         class FakeGenomeWindow:
@@ -515,6 +522,7 @@ class LineArtist(BaseArtist):
         
         gw = FakeGenomeWindow(feats)
         
+        params = LineArtistParams(**kwargs)
         artist = LineArtist("temp_artist", params)
         
         rnd = artist.render(gs, gw)

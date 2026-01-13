@@ -150,6 +150,7 @@ class ScalarPlot:
     def _render_mid(self) -> List[str]:
         """Render in mid mode using scalar_to_text_mid."""
         kwargs = {
+            # 'bit_depth': self.options['bit_depth'],
             'center': self.options['center'],
             'rng': self.options['rng'],
             'fg_color': self.options['fg_color'],
@@ -557,6 +558,7 @@ def scalar_to_text_nb(scalars, minval = None, maxval = None, fg_color = 53, bg_c
         hi, lo = (lo, hi) if flip else (hi, lo)
         minstr = format(minval, ran_fstr)[:4]
         maxstr = format(maxval, ran_fstr)[:4]
+        midstr = " "*len(minstr)
         if left_range:
             outstrs[0] = maxstr + hi + outstrs[0]
             if bit_depth > 8:
@@ -565,15 +567,20 @@ def scalar_to_text_nb(scalars, minval = None, maxval = None, fg_color = 53, bg_c
             outstrs[0] += hi + maxstr
             if bit_depth > 8:
                 outstrs[-1] += lo + minstr
-        
+    
+    # if add_range:
+    #     left_range = kwargs.get("left_range", False)
+    #     ran_fstr = kwargs.get("ran_fstr", "0.2f")
+    #     outstrs = add_range_to_plot(outstrs, minval, maxval, left_range=left_range, ran_fstr = ran_fstr, flip=flip, num_range_chars = 4)
+    
     if flip:
         outstrs = flip_scalar_text(outstrs)
     
     return outstrs
 
-def scalar_to_text_mid(scalars, center = None, rng = None, fg_color = 53, bg_color = 234,  effect = None):
+def scalar_to_text_mid(scalars, center = None, rng = None, fg_color = 53, bg_color = 234,  effect = None, bit_depth = 16):
     
-    bit_depth = 16
+    # bit_depth = 16
     
     ifg, ibg = Colors.get_colors_fgbg(fg_color, bg_color)
     bg, fg = Colors.get_colors_fgbg(bg_color, fg_color)
@@ -668,6 +675,49 @@ def scalar_plot_distribution(dist, key_order = [], bit_depth = 8, labels = False
     
     return sctxt
 
+def add_range_to_plot(rows, minval, maxval, left_range = False, ran_fstr = "0.2f", flip = False, num_range_chars = 4):
+        
+    hi, lo = SCALAR_PLOT.get("range_hi_left" if left_range else "range_hi"), SCALAR_PLOT.get("range_lo_left" if left_range else "range_lo")
+    hi, lo = (lo, hi) if flip else (hi, lo)
+
+    outrows = []
+    for i in range(len(rows)):
+        new_row = add_range_to_row(rows, i, minval, maxval, left_range = left_range, ran_fstr = ran_fstr, flip = flip, num_range_chars = num_range_chars)
+        outrows.append(new_row)
+    
+    return outrows
+
+def add_range_to_row(rows, row_index, minval, maxval, left_range = False, ran_fstr = "0.2f", flip = False, num_range_chars = 4):
+    
+    max_row_index = len(rows)
+    rowstr = rows[row_index]
+
+    sym_key = "range"
+    
+    if row_index == 0:
+        rangestr = format(maxval, ran_fstr)
+        lsym, rsym = SCALAR_PLOT.get("range_hi_left"), SCALAR_PLOT.get("range_hi")
+    elif row_index == max_row_index-1:
+        rangestr = format(minval, ran_fstr)
+        lsym = SCALAR_PLOT.get("range_hi_left") if flip else SCALAR_PLOT.get("range_lo_left")
+        rsym = SCALAR_PLOT.get("range_hi") if flip else SCALAR_PLOT.get("range_lo")
+    else:
+        fill_char = SCALE[-1] if flip else SCALE[0]
+        rangestr = fill_char*num_range_chars
+        lsym = rsym = fill_char
+    
+    rangestr = rangestr[:num_range_chars]
+    
+    if left_range:
+        outrow = rangestr + lsym + rowstr
+    else:
+        outrow = rowstr + rsym + rangestr
+    
+    return outrow
+
+def _add_range_left(rowstr, rangestr, sym):
+    return rangestr + sym + rowstr
+    
 
 def flip_scalar_text(sctext):
     
