@@ -107,7 +107,7 @@ class ExpBrowser(BaseBrowser):
         self.logger = logger
         self._log_artist = None
         
-        self.initialize_streams(kwargs.get("exp_keys", self.exp_keys))
+        self.initialize_streams(kwargs.get("exp_keys", self.exp_keys), exp_suffix = kwargs.get("exp_suffix",""), exp_parent_dir = kwargs.get("exp_parent_dir", ""))
         
         self.logger.debug(f"feature_types: {self.state.feature_types}")
         
@@ -117,24 +117,24 @@ class ExpBrowser(BaseBrowser):
         
         self.set_renderer(rndr)
     
-    def initialize_streams(self, exp_keys):
+    def initialize_streams(self, exp_keys, exp_suffix = "", exp_parent_dir = ""):
         
         srcs = []
         fts = []
         
-        db = find_and_load_database(gm = self.gm, feature_type = "auto", parent_dir = "piRBase")
+        db = find_and_load_database(gm = self.gm, feature_type = "auto", has_suffix = exp_suffix, parent_dir = exp_parent_dir)
         fts.append(db.feature_type)
         self.exp_streams[db.source_name] = db
         srcs.append(db.source_name)
-        # for k in exp_keys:
-        #     # db = find_and_load_database(gm = self.gm, feature_type = "auto", in_name = k)
-        #     db = find_and_load_database(gm = self.gm, feature_type = "auto", in_name = k)
-        #     if not db:
-        #         logger.debug(f"failed to load database with key {k}")
-        #         continue
-        #     fts.append(db.feature_type)
-        #     self.exp_streams[db.source_name] = db
-        #     srcs.append(db.source_name)
+        for k in exp_keys:
+            # db = find_and_load_database(gm = self.gm, feature_type = "auto", in_name = k)
+            db = find_and_load_database(gm = self.gm, feature_type = "auto", in_name = k, has_suffix = exp_suffix, parent_dir = exp_parent_dir)
+            if not db:
+                logger.debug(f"failed to load database with key {k}")
+                continue
+            fts.append(db.feature_type)
+            self.exp_streams[db.source_name] = db
+            srcs.append(db.source_name)
         self.exp_ftypes = tuple(fts)
         self.state.feature_types = tuple(set(self.exp_ftypes + self.state.feature_types))
         # self.state.sources = tuple(list(self.state.sources))
@@ -176,7 +176,7 @@ class ExpBrowser(BaseBrowser):
         # logger.debug(f"update: _active_streams {self.state._active_streams}")
         
         self.iterator.update(**update_dict)
-        self.window = self.iterator.get_window(filter = self.exp_filter)
+        self.window = self.iterator.get_window(filter = None)
         
         logger.debug(f"iterator sources: {self.iterator.sources}")
         logger.debug(f"iterator feature types: {self.iterator.feature_types}")

@@ -14,6 +14,12 @@ from ggene.database.annotations import get_experiment_stream
 from ggene.database.databases import find_and_load_database, find_databases, find_directory
 from ggene.draw import Colors
 
+def load_genome(**kwargs):
+    a,b,c, lib_path, other_paths = get_paths()
+    kwargs.update(other_paths)
+    gm = GenomeManager(**kwargs)
+    return gm
+
 def get_browser(gm, **kwargs):
     exp_keys = kwargs.pop("exp_keys", [])
     return ExpBrowser(exp_keys, gm=gm, min_exp = 0.05, **kwargs)
@@ -80,12 +86,6 @@ def get_experiment_filter(filter_str):
     return filter
     
 
-def load_genome(**kwargs):
-    a,b,c, lib_path, other_paths = get_paths()
-    kwargs.update(other_paths)
-    gm = GenomeManager(**kwargs)
-    return gm
-
 def main():
     
     parser = argparse.ArgumentParser()
@@ -116,8 +116,10 @@ def main():
                         help = "experiment database keys (comma separated)")
     parser.add_argument("--exp-ptrn", "-xp", default = "", type = str,
                         help = "experiment database pattern to discover keys (in_name)")
-    parser.add_argument("--exp-dir", "-xd", default = "", type = str,
+    parser.add_argument("--exp-dir", "-xd", default = "", type = str, dest ="exp_parent_dir" ,
                         help = "Experiment directory to search in")
+    parser.add_argument("--exp-suffix", "-xs", default = "", type = str,
+                        help = "the file type (suffix) of the targeted experiment")
     parser.add_argument("--filter","-xf", default = "", type = str,
                         help = "Filter to refine features from experiment. form 'att>=val', 'att<=val', 'att==val'")
     

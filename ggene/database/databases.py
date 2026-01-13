@@ -223,7 +223,7 @@ def print_databases(parent_dir = "", all_data = False, max_items = 20):
         print()
     return dbs
 
-def find_databases(name = "", in_name = "", parent_dir = "", all_data =  False, max_items = 20):
+def find_databases(name = "", in_name = "",has_suffix = "",  parent_dir = "", all_data =  False, max_items = 20):
     
     out_dbs = []
     dbs = list_databases(all_data = all_data, max_items = max_items)
@@ -239,6 +239,9 @@ def find_databases(name = "", in_name = "", parent_dir = "", all_data =  False, 
         if in_name and in_name not in fn:
             continue
         
+        if has_suffix and has_suffix not in filepath.suffixes:
+            continue
+        
         out_dbs.append((fn, filepath, has_index))
     
     if not out_dbs:
@@ -248,12 +251,12 @@ def find_databases(name = "", in_name = "", parent_dir = "", all_data =  False, 
         return out_dbs
 
 
-def find_database(name = "", in_name = "", parent_dir = "", all_data =  False, max_items = 20):
-    dbs = find_databases(name=name, in_name = in_name, parent_dir = parent_dir, all_data = all_data, max_items = max_items)
+def find_database(name = "", in_name = "",has_suffix = "",  parent_dir = "", all_data =  False, max_items = 20):
+    dbs = find_databases(name=name, in_name = in_name,has_suffix=has_suffix, parent_dir = parent_dir, all_data = all_data, max_items = max_items)
     return dbs[0]
 
-def find_and_load_database(gm = None, source_name = "", feature_type = "", name = "", in_name = "", parent_dir = "", all_data = False, max_items = 20):
-    db = find_database(name=name, in_name = in_name, parent_dir = parent_dir, all_data = all_data, max_items = max_items)
+def find_and_load_database(gm = None, source_name = "", feature_type = "", name = "", in_name = "", has_suffix = "", parent_dir = "", all_data = False, max_items = 20):
+    db = find_database(name=name, in_name = in_name, has_suffix=has_suffix, parent_dir = parent_dir, all_data = all_data, max_items = max_items)
     if not db:
         return None
     else:
