@@ -22,6 +22,10 @@ class CompArtistParams(BaseArtistParams):
     display_height:int = 8 # kernel is max twice this
     seq_name:str = "ref"
     score_mode:str = "corrs"
+    topk: int = 5
+    corr_scale: int = None
+    q:int = 1
+    heatmap_minval: float = None
     heatmap_maxval: float = None
     mini_chunksz:int = 32
     show_stats: bool = True
@@ -86,7 +90,6 @@ class CompArtist(BaseArtist):
             self.active_gene = ag
         
         return ag
-        
     
     def get_seq(self, window):
         
@@ -133,10 +136,10 @@ class CompArtist(BaseArtist):
         return hmrows, rchmrows, stat, rcstat
         
     def get_heatmap_data(self, seqa, seqb):
-        nchksa = round(len(seqa) / self.params.mini_chunksz) + 1
-        nchksb = round(len(seqb) / self.params.mini_chunksz) + 1
+        nchksa = self.params.q * round(len(seqa) / self.params.mini_chunksz) + 1
+        nchksb = self.params.q * round(len(seqb) / self.params.mini_chunksz) + 1
         score_func = compare.get_score_function(self.params.score_mode)
-        scores, rcscores = compare.calc_sequence_comparison(seqa, seqb, nchksa, nchksb, self.params.mini_chunksz, score_func)
+        scores, rcscores = compare.calc_sequence_comparison(seqa, seqb, nchksa, nchksb, self.params.mini_chunksz, score_func, q = self.params.q, topk = self.params.topk, scale = self.params.corr_scale)
         scores = [row for row in scores if row]
         rcscores = [row for row in rcscores if row]
         return scores, rcscores

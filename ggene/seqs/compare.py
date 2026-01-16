@@ -735,10 +735,10 @@ def count_matching(s1: str, s2: str, err_tol: Optional[int] = None) -> int:
 
 def score_sequences_corrs(seqa, seqb, topk = 5, scale = None, **kwargs):
     min_len = min(len(seqa), len(seqb))
-    corrs, rccorrs = process.correlate(seqa, seqb, scale = scale, fill = 0.25)
+    corrs, rccorrs = process.correlate(seqa, seqb, scale = scale, fill = None)
     # corrs, rccorrs = process.correlate_fast(seqa, seqb)
-    topk_corrs = sorted(corrs)[:topk]
-    topk_rccorrs = sorted(rccorrs)[:topk]
+    topk_corrs = sorted(corrs, reverse = True)[:topk]
+    topk_rccorrs = sorted(rccorrs, reverse = True)[:topk]
     return sum(topk_corrs)/topk, sum(topk_rccorrs)/topk
 
 def score_sequences_runs(seqa, seqb, topk = 5, max_err = 16, scale = None, **kwargs):
@@ -777,7 +777,7 @@ def get_score_function(score_mode):
     else:
         return None
 
-def calc_sequence_comparison(seqa, seqb, nchksa, nchksb, chunksz, score_func, q = 1):
+def calc_sequence_comparison(seqa, seqb, nchksa, nchksb, chunksz, score_func, q = 1, **kwargs):
     
     scores = [[] for n in range(nchksb)]
     rcscores = [[] for n in range(nchksb)]
@@ -791,7 +791,7 @@ def calc_sequence_comparison(seqa, seqb, nchksa, nchksb, chunksz, score_func, q 
             if not ssa or not ssb:
                 continue
                 
-            score, rcscore = score_func(ssa, ssb)
+            score, rcscore = score_func(ssa, ssb, **kwargs)
             scores[ib].append(score)
             rcscores[ib].append(rcscore)
     

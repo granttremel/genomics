@@ -157,7 +157,7 @@ class TestBrowser(BaseBrowser):
         ps = [
             [-1, "genes", "gc"],
             [0.01, "lncRNA", "pseudo"],
-            [0.01, "polyy", "cpg"],
+            [0.01, "polyw", "cpg"],
             # [5*scale, "protein_coding", "lncrna"],
             # [scale, "polya", "cpg"]
             # [scale, "ncRNA", "lncRNA"]
